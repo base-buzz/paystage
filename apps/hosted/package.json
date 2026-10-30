@@ -7,7 +7,8 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "e2e:paid": "node scripts/e2e-paid.mjs"
   },
   "dependencies": {
     "@paystage/auth-watch": "file:../../packages/auth-watch",
@@ -16,7 +17,9 @@
     "@x402/core": "^2.29.0",
     "@x402/evm": "^2.29.0",
     "@x402/hono": "^2.29.0",
-    "hono": "^4.7.0"
+    "hono": "^4.7.0",
+    "@x402/fetch": "^2.29.0",
+    "viem": "^2.21.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
