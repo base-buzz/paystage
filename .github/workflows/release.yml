@@ -1,0 +1,80 @@
+# Release workflow for @paystage/policy and @paystage/preflight.
+#
+# Trusted publishing (npm OIDC) must be configured on npmjs.com for EACH package
+# before this workflow can publish:
+#   - Package: @paystage/policy     -> Trusted Publisher: GitHub Actions
+#   - Package: @paystage/preflight  -> Trusted Publisher: GitHub Actions
+#   For both, point at:
+#     Repository: base-buzz/paystage
+#     Workflow file: release.yml
+#     Environment: (leave blank unless you use one)
+#
+# With trusted publishing, npm verifies provenance via OIDC. No long-lived
+# NPM_TOKEN is required. NODE_AUTH_TOKEN is unused for OIDC publishing.
+
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - name: Ensure npm >= 11.5.1
+        run: |
+          corepack enable
+          npm install -g npm@latest
+          npm --version
+          node --version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish @paystage/policy (skip if version exists)
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./packages/policy/package.json').version")
+          echo "policy version: $VERSION"
+          if npm view "@paystage/policy@$VERSION" version >/dev/null 2>&1; then
+            echo "@paystage/policy@$VERSION already exists on npm; skipping publish."
+          else
+            npm publish -w @paystage/policy --access public
+          fi
+
+      - name: Publish @paystage/preflight (skip if version exists)
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./packages/preflight/package.json').version")
+          echo "preflight version: $VERSION"
+          if npm view "@paystage/preflight@$VERSION" version >/dev/null 2>&1; then
+            echo "@paystage/preflight@$VERSION already exists on npm; skipping publish."
+          else
+            npm publish -w @paystage/preflight --access public
+          fi

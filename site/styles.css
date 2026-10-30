@@ -316,6 +316,12 @@ a:hover {
   white-space: nowrap;
 }
 
+.badge-now {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 1px solid var(--accent-strong);
+}
+
 .badge-soon {
   background: rgba(110, 231, 183, 0.14);
   color: var(--accent);

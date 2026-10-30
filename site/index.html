@@ -56,7 +56,7 @@
           "@type": "Offer",
           "price": "0",
           "priceCurrency": "USD",
-          "availability": "https://schema.org/ComingSoon"
+          "availability": "https://schema.org/InStock"
         }
       }
     ]
@@ -94,9 +94,10 @@
         </p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="#tools">See the tools</a>
+          <a class="btn btn-ghost" href="https://www.npmjs.com/package/@paystage/preflight" rel="noopener">Get it on npm</a>
           <a class="btn btn-ghost" href="https://github.com/base-buzz/paystage" rel="noopener">View on GitHub</a>
         </div>
-        <p class="hero-note">Early stage. Packages are <strong>Available soon</strong> — not yet on npm.</p>
+        <p class="hero-note">Early stage. Tool #1 is <strong>Available now</strong> on npm; the rest are on the roadmap.</p>
       </div>
     </section>
 
@@ -109,54 +110,89 @@
           <article class="card card-featured">
             <div class="card-head">
               <h3>MCP payment preflight</h3>
-              <span class="badge badge-soon">Available soon</span>
+              <span class="badge badge-now">Available now</span>
             </div>
             <p>
               An MCP server that evaluates a proposed x402 payment against a local policy file
               and returns a verdict before the agent signs anything.
             </p>
-            <pre class="code"><code>npx -y @paystage/preflight</code></pre>
-            <p class="card-note">Not yet published to npm. Command shown for reference.</p>
+            <pre class="code"><code>npx @paystage/preflight</code></pre>
+            <p class="card-note">Published on npm. Non-interactive variant: <code>npx -y @paystage/preflight</code>.</p>
+            <p class="card-note">
+              <a href="https://www.npmjs.com/package/@paystage/preflight" rel="noopener">npm: @paystage/preflight</a>
+              ·
+              <a href="https://github.com/base-buzz/paystage" rel="noopener">GitHub: base-buzz/paystage</a>
+            </p>
+            <p class="card-note">Example <code>policy.json</code>:</p>
+            <pre class="code"><code>{
+  "version": 1,
+  "max_amount": { "value": "1.00", "asset": "USDC", "decimals": 6 },
+  "allowed_pay_to": ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
+  "allowed_networks": ["eip155:8453", "eip155:84532"],
+  "unknown_payee": "review"
+}</code></pre>
           </article>
 
           <article class="card">
             <div class="card-head">
-              <h3>Policy engine</h3>
-              <span class="badge badge-roadmap">Roadmap</span>
+              <h3>Outstanding-auth watch</h3>
+              <span class="badge badge-soon">Available soon</span>
             </div>
             <p>
-              Declarative rules for spend limits, allowed payees, and allowed networks.
-              One <code>policy.json</code> per agent.
+              Watches for payments that are authorized but never settled, so an agent doesn't
+              double-pay or leave funds in limbo.
             </p>
           </article>
 
           <article class="card">
             <div class="card-head">
-              <h3>Payee allowlist</h3>
-              <span class="badge badge-roadmap">Roadmap</span>
+              <h3>Farcaster approve mini-app</h3>
+              <span class="badge badge-soon">Available soon</span>
             </div>
             <p>
-              Known-good payees pass. Unknown payees route to review instead of silently paying.
+              A mini-app for approving or rejecting a pending agent payment from a phone,
+              instead of auto-paying.
             </p>
           </article>
 
           <article class="card">
             <div class="card-head">
-              <h3>Spend guardrails</h3>
-              <span class="badge badge-roadmap">Roadmap</span>
+              <h3>Dead-seller watch</h3>
+              <span class="badge badge-soon">Available soon</span>
             </div>
             <p>
-              Per-call and rolling budget limits so a runaway agent can't drain a wallet.
+              Flags payees that stop responding or stop settling, and routes new payments to review.
             </p>
           </article>
 
           <article class="card">
             <div class="card-head">
-              <h3>Audit log</h3>
+              <h3>MCP listing provenance receipt</h3>
+              <span class="badge badge-soon">Available soon</span>
+            </div>
+            <p>
+              A signed receipt tying an MCP listing to its source, so an agent can tell a real
+              listing from a lookalike.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>Micro-escrow</h3>
               <span class="badge badge-roadmap">Roadmap</span>
             </div>
             <p>
-              Every verdict recorded with the inputs that produced it, for later review.
+              Small-value escrow for agent-to-agent payments, released on delivery or timeout.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>Publish-and-register one-shot</h3>
+              <span class="badge badge-roadmap">Roadmap</span>
+            </div>
+            <p>
+              One command to publish an MCP server and register it with a provenance receipt.
             </p>
           </article>
         </div>
@@ -166,36 +202,8 @@
     <section id="roadmap" class="section section-alt">
       <div class="wrap">
         <h2>Roadmap</h2>
-        <ol class="roadmap">
-          <li>
-            <span class="badge badge-soon">Available soon</span>
-            <div>
-              <h3>Preflight MCP server</h3>
-              <p>Policy-driven verdicts for x402 payments over MCP. Not yet on npm.</p>
-            </div>
-          </li>
-          <li>
-            <span class="badge badge-roadmap">Roadmap</span>
-            <div>
-              <h3>Policy engine</h3>
-              <p>Richer rules: per-asset limits, time windows, per-tool budgets.</p>
-            </div>
-          </li>
-          <li>
-            <span class="badge badge-roadmap">Roadmap</span>
-            <div>
-              <h3>Payee reputation</h3>
-              <p>Signals beyond the allowlist for deciding when to escalate to review.</p>
-            </div>
-          </li>
-          <li>
-            <span class="badge badge-roadmap">Roadmap</span>
-            <div>
-              <h3>Audit and reporting</h3>
-              <p>Structured logs and summaries of what an agent paid and why.</p>
-            </div>
-          </li>
-        </ol>
+        <p class="section-lede">One tool a week.</p>
+        <p class="roadmap-note">Outstanding-auth watch is next.</p>
       </div>
     </section>
   </main>
@@ -207,13 +215,14 @@
         <p class="footer-tag">Safety tools for AI agent payments.</p>
       </div>
       <nav class="footer-nav" aria-label="Footer">
+        <a href="https://www.npmjs.com/package/@paystage/preflight" rel="noopener">npm</a>
         <a href="https://github.com/base-buzz/paystage" rel="noopener">GitHub</a>
         <a href="/llms.txt">llms.txt</a>
         <a href="/llms-full.txt">llms-full.txt</a>
       </nav>
     </div>
     <div class="wrap footer-fine">
-      <p>Packages are <strong>Available soon</strong>. Not yet published to npm.</p>
+      <p>Tool #1 (<code>@paystage/preflight</code>) is <strong>Available now</strong> on npm. Other tools are on the roadmap.</p>
     </div>
   </footer>
 </body>
