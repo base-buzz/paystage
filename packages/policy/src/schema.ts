@@ -22,6 +22,21 @@ const assetSchema = z.object({
     .regex(/^eip155:\d+$/, "Expected a network id like eip155:8453")
 });
 
+
+const velocityAmountSchema = z.object({
+  value: z
+    .string()
+    .regex(/^\d+(?:\.\d+)?$/, "Amount value must be a non-negative decimal string"),
+  decimals: z.number().int().min(0),
+  asset: z.string().min(1).optional(),
+});
+
+const velocityWindowSchema = z.object({
+  window_seconds: z.number().int().positive(),
+  max_count: z.number().int().nonnegative().optional(),
+  max_amount: velocityAmountSchema.optional(),
+});
+
 export const PolicySchema = z.object({
   version: z.literal(1),
   max_amount: amountSpecSchema,
@@ -36,7 +51,10 @@ export const PolicySchema = z.object({
   unknown_payee: z.enum(["review", "deny"]),
   max_auth_validity_seconds: z.number().int().positive().optional(),
   allowed_spenders: z.array(addressSchema).optional(),
-  disallow_unlimited_approvals: z.boolean().optional()
+  disallow_unlimited_approvals: z.boolean().optional(),
+  velocity: z
+    .object({ windows: z.array(velocityWindowSchema).min(1) })
+    .optional()
 });
 
 export type PolicyFromSchema = z.infer<typeof PolicySchema>;

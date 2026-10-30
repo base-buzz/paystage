@@ -24,12 +24,18 @@ import type {
   Snapshot,
   TradeProposal,
 } from "@paystage/trade-preflight";
+import {
+  evaluateVelocity,
+  serializeVelocityResult,
+  EvaluateVelocityInputSchema,
+} from "@paystage/velocity";
 
 export const TOOL_NAMES = [
   "evaluate_mcp_payment",
   "list_outstanding_auths",
   "evaluate_outstanding_auths",
   "evaluate_hip3_trade",
+  "evaluate_velocity",
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];
@@ -233,6 +239,47 @@ function registerAllTools(server: McpServer): void {
         );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          isError: true,
+          content: [{ type: "text", text: `Error: ${message}` }],
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "evaluate_velocity",
+    {
+      description:
+        "Rolling-window rate and spend-pattern check for a proposed payment against recent action history and a policy.velocity config",
+      inputSchema: {
+        history: EvaluateVelocityInputSchema.shape.history,
+        proposed: EvaluateVelocityInputSchema.shape.proposed,
+        policy: z.unknown().optional(),
+        policy_path: z.string().optional(),
+        now_ms: z.number().int().nonnegative().optional(),
+      },
+    },
+    async (input: {
+      history?: unknown;
+      proposed: unknown;
+      policy?: unknown;
+      policy_path?: string;
+      now_ms?: number;
+    }) => {
+      try {
+        const parsed = EvaluateVelocityInputSchema.parse(input);
+        const result = await evaluateVelocity(parsed);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(serializeVelocityResult(result), null, 2),
+            },
+          ],
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
