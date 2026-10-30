@@ -39,7 +39,6 @@ function makeAccept(overrides: Partial<AcceptOption> = {}): AcceptOption {
     scheme: "exact",
     network: "eip155:84532",
     amount: "10000",
-    resource: "https://example.com/resource",
     payTo: KNOWN_PAY_TO,
     maxTimeoutSeconds: 60,
     asset: BASE_SEPOLIA_USDC,
@@ -65,39 +64,39 @@ describe("evaluatePayment", () => {
     expect(r.decision).toBe("do_not_pay");
   });
 
-  it("rejects wrong network", () => {
+  it("returns do_not_pay for wrong network", () => {
     const r = evaluatePayment(
       makeRequest([makeAccept({ network: "eip155:1" })]),
       policy,
     );
-    expect(r.decision).toBe("reject");
-    expect(r.acceptResults[0].status).toBe("reject");
+    expect(r.decision).toBe("do_not_pay");
+    expect(r.acceptResults[0].status).toBe("do_not_pay");
   });
 
-  it("rejects unknown asset", () => {
+  it("returns do_not_pay for unknown asset", () => {
     const r = evaluatePayment(
       makeRequest([
         makeAccept({ asset: "0x0000000000000000000000000000000000000000" }),
       ]),
       policy,
     );
-    expect(r.decision).toBe("reject");
+    expect(r.decision).toBe("do_not_pay");
   });
 
-  it("rejects over max amount", () => {
+  it("returns do_not_pay for over max amount", () => {
     const r = evaluatePayment(
       makeRequest([makeAccept({ amount: "2000000" })]),
       policy,
     );
-    expect(r.decision).toBe("reject");
+    expect(r.decision).toBe("do_not_pay");
   });
 
-  it("rejects timeout over policy max", () => {
+  it("returns do_not_pay for timeout over policy max", () => {
     const r = evaluatePayment(
       makeRequest([makeAccept({ maxTimeoutSeconds: 301 })]),
       policy,
     );
-    expect(r.decision).toBe("reject");
+    expect(r.decision).toBe("do_not_pay");
   });
 
   it("reviews unknown payee when unknown_payee=review", () => {
@@ -111,7 +110,7 @@ describe("evaluatePayment", () => {
     expect(r.acceptResults[0].status).toBe("review");
   });
 
-  it("rejects unknown payee when unknown_payee=deny", () => {
+  it("returns do_not_pay for unknown payee when unknown_payee=deny", () => {
     const denyPolicy: Policy = { ...policy, unknown_payee: "deny" };
     const r = evaluatePayment(
       makeRequest([
@@ -119,7 +118,7 @@ describe("evaluatePayment", () => {
       ]),
       denyPolicy,
     );
-    expect(r.decision).toBe("reject");
+    expect(r.decision).toBe("do_not_pay");
   });
 
   it("reviews when amount exceeds require_human_above", () => {
@@ -164,9 +163,7 @@ describe("evaluatePayment", () => {
 
   it("matches asset address case-insensitively", () => {
     const r = evaluatePayment(
-      makeRequest([
-        makeAccept({ asset: BASE_SEPOLIA_USDC.toUpperCase() }),
-      ]),
+      makeRequest([makeAccept({ asset: BASE_SEPOLIA_USDC.toUpperCase() })]),
       policy,
     );
     expect(r.decision).toBe("pay");

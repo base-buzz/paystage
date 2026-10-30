@@ -2,31 +2,34 @@ import {
   humanToAtomic,
   atomicToHuman,
   type Policy,
-  type AmountSpec,
   type Asset,
 } from "@paystage/policy";
 
 export interface AcceptOption {
   scheme: string;
   network: string;
-  amount: string;
-  resource: string;
-  description?: string;
-  mimeType?: string;
+  amount: string; // ATOMIC
+  asset: string;
   payTo: string;
   maxTimeoutSeconds: number;
-  asset: string;
   extra?: Record<string, unknown>;
+}
+
+export interface PaymentResource {
+  url: string;
+  description?: string;
+  mimeType?: string;
 }
 
 export interface PaymentRequest {
   x402Version: number;
   accepts: AcceptOption[];
   error?: string;
+  resource?: PaymentResource;
 }
 
-export type Decision = "pay" | "review" | "reject" | "do_not_pay";
-export type AcceptStatus = "pay" | "review" | "reject";
+export type Decision = "pay" | "review" | "do_not_pay";
+export type AcceptStatus = "pay" | "review" | "do_not_pay";
 
 export interface AcceptResult {
   accept: AcceptOption;
@@ -57,10 +60,7 @@ function findAsset(
   );
 }
 
-function evaluateAccept(
-  accept: AcceptOption,
-  policy: Policy,
-): AcceptResult {
+function evaluateAccept(accept: AcceptOption, policy: Policy): AcceptResult {
   const reasons: string[] = [];
 
   // Rule 2: network allowlist
@@ -69,7 +69,7 @@ function evaluateAccept(
   );
   if (!networkAllowed) {
     reasons.push(`network ${accept.network} not in allowed_networks`);
-    return { accept, status: "reject", reasons };
+    return { accept, status: "do_not_pay", reasons };
   }
 
   // Rule 3: asset must match allowed_assets with same network
@@ -78,7 +78,7 @@ function evaluateAccept(
     reasons.push(
       `asset ${accept.asset} on ${accept.network} not in allowed_assets`,
     );
-    return { accept, status: "reject", reasons };
+    return { accept, status: "do_not_pay", reasons };
   }
 
   // Rule 4: amount is atomic
@@ -87,7 +87,7 @@ function evaluateAccept(
     amount = BigInt(accept.amount);
   } catch {
     reasons.push(`invalid atomic amount ${accept.amount}`);
-    return { accept, status: "reject", reasons };
+    return { accept, status: "do_not_pay", reasons };
   }
 
   // Rule 5: policy-level max_amount, only if asset symbol matches
@@ -100,7 +100,7 @@ function evaluateAccept(
       reasons.push(
         `amount ${atomicToHuman(amount, asset.decimals)} ${asset.symbol} exceeds max_amount ${policy.max_amount.value} ${policy.max_amount.asset}`,
       );
-      return { accept, status: "reject", reasons };
+      return { accept, status: "do_not_pay", reasons };
     }
   }
 
@@ -109,7 +109,7 @@ function evaluateAccept(
     reasons.push(
       `maxTimeoutSeconds ${accept.maxTimeoutSeconds} exceeds policy max_timeout_seconds ${policy.max_timeout_seconds}`,
     );
-    return { accept, status: "reject", reasons };
+    return { accept, status: "do_not_pay", reasons };
   }
 
   // Rule 7: payee allowlist
@@ -117,7 +117,7 @@ function evaluateAccept(
   if (!payeeAllowed) {
     if (policy.unknown_payee === "deny") {
       reasons.push(`payTo ${accept.payTo} not in allowed_pay_to (deny)`);
-      return { accept, status: "reject", reasons };
+      return { accept, status: "do_not_pay", reasons };
     }
     reasons.push(`payTo ${accept.payTo} not in allowed_pay_to (review)`);
     return { accept, status: "review", reasons };
@@ -198,8 +198,6 @@ export function evaluatePayment(
   } else if (reviewAccepts.length > 0) {
     decision = "review";
     selectedAccept = cheapest(reviewAccepts);
-  } else if (acceptResults.length > 0) {
-    decision = "reject";
   } else {
     decision = "do_not_pay";
   }
@@ -218,12 +216,13 @@ export function evaluatePayment(
   // Rule 12: summary
   let summary: string;
   if (selectedAccept) {
-    const asset = findAsset(policy, selectedAccept.network, selectedAccept.asset);
-    const decimals = asset?.decimals ?? policy.max_amount.decimals;
-    const human = atomicToHuman(
-      BigInt(selectedAccept.amount),
-      decimals,
+    const asset = findAsset(
+      policy,
+      selectedAccept.network,
+      selectedAccept.asset,
     );
+    const decimals = asset?.decimals ?? policy.max_amount.decimals;
+    const human = atomicToHuman(BigInt(selectedAccept.amount), decimals);
     const symbol = asset?.symbol ?? policy.max_amount.asset;
     summary = `Decision: ${decision}. Selected ${human} ${symbol} on ${selectedAccept.network} to ${selectedAccept.payTo}.`;
   } else {

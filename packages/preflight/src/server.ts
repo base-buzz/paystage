@@ -28,7 +28,10 @@ export function createServer(): McpServer {
       payment_required: unknown;
       policy_path?: string;
       policy?: unknown;
-    }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> => {
+    }): Promise<{
+      content: Array<{ type: "text"; text: string }>;
+      isError?: boolean;
+    }> => {
       try {
         const policy = await resolvePolicy(input);
         const pr = normalizePaymentRequired(input.payment_required);
@@ -49,7 +52,10 @@ export function createServer(): McpServer {
   return server;
 }
 
-async function resolvePolicy(input: { policy?: unknown; policy_path?: string }): Promise<Policy> {
+async function resolvePolicy(input: {
+  policy?: unknown;
+  policy_path?: string;
+}): Promise<Policy> {
   if (input.policy !== undefined) {
     return parsePolicy(input.policy);
   }

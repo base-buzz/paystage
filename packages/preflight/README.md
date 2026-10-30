@@ -4,12 +4,13 @@ MCP server and library for evaluating x402 payment required objects against a Pa
 
 ## Features
 
-- `evaluatePayment(paymentRequired, policy)` -> `EvaluationResult`
+- `evaluatePayment(paymentRequired, policy)` -> `EvaluateResult`
 - `normalizePaymentRequired(input)` for parsing direct, structured content, or MCP tool result shapes
 - MCP stdio server exposing tool `evaluate_mcp_payment`
 - BigInt-based atomic amount comparisons
 - Case-insensitive asset and payee matching
 - Daily cap note only (never auto-fails)
+- Three-way decision: `pay` | `review` | `do_not_pay`
 
 ## Installation
 
@@ -24,17 +25,19 @@ import { evaluatePayment, normalizePaymentRequired } from '@paystage/preflight';
 
 const pr = normalizePaymentRequired({
   x402Version: 2,
+  resource: { url: 'https://example.com/resource' },
   accepts: [{
-    network: 'ethereum',
-    asset: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-    amount: '100000',
+    scheme: 'exact',
+    network: 'eip155:84532',
+    asset: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+    amount: '10000',
     maxTimeoutSeconds: 60,
-    payTo: '0x1234567890123456789012345678901234567890'
+    payTo: '0x209693Bc6afc0C5328bA36FaF03C514EF312287C'
   }]
 });
 
 const result = evaluatePayment(pr, policy);
-console.log(result.decision); // 'pay' | 'review' | 'reject' | 'do_not_pay'
+console.log(result.decision); // 'pay' | 'review' | 'do_not_pay'
 ```
 
 ## MCP Server

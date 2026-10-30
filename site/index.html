@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PayStage — Safety tools for AI agent payments</title>
+  <meta name="description" content="PayStage is the safety layer for AI agent payments. Preflight checks, watches, and receipts for x402 and MCP.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="#top" aria-label="PayStage home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">PayStage</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#tools">Tools</a>
+        <a href="#roadmap">Roadmap</a>
+        <a class="nav-gh" href="https://github.com/base-buzz/paystage" rel="noopener noreferrer" target="_blank">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="wrap">
+        <p class="eyebrow">Safety layer for agent payments</p>
+        <h1>Safety tools for AI agent payments.</h1>
+        <p class="lede">
+          Every agent that pays needs a safety layer. PayStage covers
+          <strong>x402</strong> and <strong>MCP</strong> — preflight checks before
+          money moves, watches for what goes wrong, and receipts you can trust.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#tools">Explore tools</a>
+          <a class="btn btn-ghost" href="https://github.com/base-buzz/paystage" rel="noopener noreferrer" target="_blank">View on GitHub</a>
+        </div>
+        <p class="badge-line">
+          <img
+            src="https://img.shields.io/npm/dm/@paystage/preflight"
+            alt="npm downloads for @paystage/preflight"
+            height="20"
+            loading="lazy"
+            decoding="async">
+        </p>
+      </div>
+    </section>
+
+    <section class="tools" id="tools" aria-labelledby="tools-heading">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="tools-heading">Tools</h2>
+          <p class="section-sub">Small, focused utilities. One ships each week.</p>
+        </div>
+
+        <div class="grid">
+          <article class="card card-featured">
+            <div class="card-top">
+              <h3>MCP payment preflight</h3>
+              <span class="badge badge-soon">Available soon</span>
+            </div>
+            <p class="card-desc">
+              Validate an agent's payment intent against your policy before it
+              signs. Blocks unknown payees, caps amounts, and pins allowed networks.
+            </p>
+
+            <p class="label">Install</p>
+            <pre class="code"><code>npx @paystage/preflight</code></pre>
+
+            <p class="label">policy.json</p>
+            <pre class="code"><code>{
+  "version": 1,
+  "max_amount": "0.05",
+  "allowed_pay_to": ["0xabc...123"],
+  "allowed_networks": ["eip155:8453", "eip155:84532"],
+  "unknown_payee": "review"
+}</code></pre>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3>Outstanding-auth watch</h3>
+              <span class="badge badge-roadmap">Roadmap</span>
+            </div>
+            <p class="card-desc">
+              Tracks pending authorizations an agent has requested but not
+              settled, so nothing lingers unnoticed.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3>Farcaster approve mini-app</h3>
+              <span class="badge badge-roadmap">Roadmap</span>
+            </div>
+            <p class="card-desc">
+              Approve or reject agent payment requests from a Farcaster
+              mini-app, right where you already are.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3>Dead-seller watch</h3>
+              <span class="badge badge-roadmap">Roadmap</span>
+            </div>
+            <p class="card-desc">
+              Flags sellers and endpoints that stop responding, so agents don't
+              keep paying into the void.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3>MCP listing provenance receipt</h3>
+              <span class="badge badge-roadmap">Roadmap</span>
+            </div>
+            <p class="card-desc">
+              Verifiable receipts for where an MCP listing came from and who
+              published it.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3>Micro-escrow ($1 or less)</h3>
+              <span class="badge badge-roadmap">Roadmap</span>
+            </div>
+            <p class="card-desc">
+              Tiny escrow for tiny payments — hold a dollar until the job is
+              actually done.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-top">
+              <h3>Publish-and-register one-shot</h3>
+              <span class="badge badge-roadmap">Roadmap</span>
+            </div>
+            <p class="card-desc">
+              Publish an MCP server and register it for payments in a single
+              command.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="roadmap" id="roadmap" aria-labelledby="roadmap-heading">
+      <div class="wrap roadmap-inner">
+        <h2 id="roadmap-heading">Roadmap</h2>
+        <p class="roadmap-line">
+          <span class="pulse" aria-hidden="true"></span>
+          One tool a week.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p class="footer-brand">PayStage</p>
+      <p class="footer-links">
+        <a href="https://github.com/base-buzz/paystage" rel="noopener noreferrer" target="_blank">GitHub</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://paystage.xyz" rel="noopener noreferrer">paystage.xyz</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

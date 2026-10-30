@@ -1,5 +1,6 @@
 export type {
   AcceptOption,
+  PaymentResource,
   PaymentRequest,
   Decision,
   AcceptStatus,

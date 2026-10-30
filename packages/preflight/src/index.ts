@@ -1,6 +1,7 @@
 export { evaluatePayment } from "./evaluate.js";
 export type {
   AcceptOption,
+  PaymentResource,
   PaymentRequest,
   Decision,
   AcceptStatus,
