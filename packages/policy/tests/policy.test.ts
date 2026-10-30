@@ -76,6 +76,21 @@ describe("parsePolicy", () => {
     expect(policy.daily_cap).toBeUndefined();
     expect(policy.require_human_above).toBeUndefined();
   });
+
+  it("parses optional auth fields when present", () => {
+    const policy = parsePolicy({
+      ...validPolicy,
+      max_auth_validity_seconds: 600,
+      allowed_spenders: ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
+      disallow_unlimited_approvals: true
+    });
+
+    expect(policy.max_auth_validity_seconds).toBe(600);
+    expect(policy.allowed_spenders).toEqual([
+      "0x209693Bc6afc0C5328bA36FaF03C514EF312287C"
+    ]);
+    expect(policy.disallow_unlimited_approvals).toBe(true);
+  });
 });
 
 describe("amount conversion", () => {

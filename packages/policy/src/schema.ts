@@ -33,9 +33,13 @@ export const PolicySchema = z.object({
     .min(1),
   max_timeout_seconds: z.number().int().positive(),
   require_human_above: amountSpecSchema.optional(),
-  unknown_payee: z.enum(["review", "deny"])
+  unknown_payee: z.enum(["review", "deny"]),
+  max_auth_validity_seconds: z.number().int().positive().optional(),
+  allowed_spenders: z.array(addressSchema).optional(),
+  disallow_unlimited_approvals: z.boolean().optional()
 });
 
 export type PolicyFromSchema = z.infer<typeof PolicySchema>;
 
 export type ParsedPolicy = Policy;
+

@@ -23,4 +23,8 @@ export interface Policy {
   max_timeout_seconds: number;
   require_human_above?: AmountSpec;
   unknown_payee: UnknownPayee;
+  max_auth_validity_seconds?: number;
+  allowed_spenders?: string[];
+  disallow_unlimited_approvals?: boolean;
 }
+
