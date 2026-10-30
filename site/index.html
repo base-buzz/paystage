@@ -1,4 +1,3 @@
-```
 <!doctype html>
 <html lang="en">
 <head>
@@ -65,6 +64,8 @@
   </script>
 </head>
 <body>
+  <a class="skip" href="#main">Skip to content</a>
+
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="brand" href="/" aria-label="PayStage home">
@@ -80,43 +81,59 @@
         <a href="#tools">Tools</a>
         <a href="#try-it">Try it</a>
         <a href="#roadmap">Roadmap</a>
-        <a href="https://github.com/base-buzz/paystage" rel="noopener">GitHub</a>
+        <a class="nav-gh" href="https://github.com/base-buzz/paystage" rel="noopener">GitHub</a>
       </nav>
     </div>
   </header>
 
-  <main>
+  <main id="main">
     <section class="hero">
-      <div class="wrap">
-        <p class="eyebrow">x402 · MCP · HIP-3 · USDC on Base</p>
-        <h1>Safety tools for AI agent payments</h1>
-        <p class="lede">
-          PayStage sits in front of an agent's wallet and answers one question before money moves:
-          should this payment happen? Preflight checks return <code>pay</code>, <code>review</code>, or <code>do_not_pay</code>.
-        </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#tools">See the tools</a>
-          <a class="btn btn-ghost" href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">Get it on npm</a>
-          <a class="btn btn-ghost" href="https://github.com/base-buzz/paystage" rel="noopener">View on GitHub</a>
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow">x402 · MCP · HIP-3 · USDC on Base</p>
+          <h1>Safety tools for AI agent payments</h1>
+          <p class="lede">
+            PayStage sits in front of an agent's wallet and answers one question before money moves:
+            should this payment happen? Preflight checks return <code>pay</code>, <code>review</code>, or <code>do_not_pay</code>.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#tools">See the tools</a>
+            <a class="btn btn-ghost" href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">Get it on npm</a>
+            <a class="btn btn-ghost" href="https://github.com/base-buzz/paystage" rel="noopener">View on GitHub</a>
+          </div>
+          <p class="hero-note">Early stage. Tools #1, #2, and #3 are <strong>Available now</strong> on npm; the rest are on the roadmap.</p>
         </div>
-        <p class="hero-note">Early stage. Tools #1, #2, and #3 are <strong>Available now</strong> on npm; the rest are on the roadmap.</p>
-        <p class="listed-on" aria-label="Listed on">
-          <span class="listed-label">Listed on</span>
-          <a href="https://mcp.so/server/paystage" rel="noopener noreferrer" target="_blank">mcp.so</a>
-          <span class="listed-sep" aria-hidden="true">·</span>
-          <a href="https://registry.modelcontextprotocol.io/v0/servers?search=xyz.paystage" rel="noopener noreferrer" target="_blank">MCP Registry</a>
-          <span class="listed-sep" aria-hidden="true">·</span>
-          <a href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener noreferrer" target="_blank">npm</a>
-          <span class="listed-sep" aria-hidden="true">·</span>
-          <a href="https://github.com/base-buzz/paystage" rel="noopener noreferrer" target="_blank">GitHub</a>
-        </p>
+
+        <aside class="hero-side" aria-label="At a glance">
+          <div class="chip-row">
+            <span class="chip chip-accent">Available now</span>
+            <span class="chip">Base</span>
+            <span class="chip">Base Sepolia</span>
+            <span class="chip">x402</span>
+            <span class="chip">MCP Registry</span>
+            <span class="chip">npm</span>
+            <span class="chip chip-price">$0.002/call</span>
+          </div>
+          <p class="listed-on" aria-label="Listed on">
+            <span class="listed-label">Listed on</span>
+            <a href="https://mcp.so/server/paystage" rel="noopener noreferrer" target="_blank">mcp.so</a>
+            <span class="listed-sep" aria-hidden="true">·</span>
+            <a href="https://registry.modelcontextprotocol.io/v0/servers?search=xyz.paystage" rel="noopener noreferrer" target="_blank">MCP Registry</a>
+            <span class="listed-sep" aria-hidden="true">·</span>
+            <a href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener noreferrer" target="_blank">npm</a>
+            <span class="listed-sep" aria-hidden="true">·</span>
+            <a href="https://github.com/base-buzz/paystage" rel="noopener noreferrer" target="_blank">GitHub</a>
+          </p>
+        </aside>
       </div>
     </section>
 
     <section id="tools" class="section">
       <div class="wrap">
-        <h2>Tools</h2>
-        <p class="section-lede">Small, focused pieces that compose into a payment safety layer.</p>
+        <header class="section-head">
+          <h2>Tools</h2>
+          <p class="section-lede">Small, focused pieces that compose into a payment safety layer.</p>
+        </header>
 
         <div class="cards">
           <article class="card card-featured">
@@ -186,7 +203,7 @@
               ·
               <a href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">npm: @paystage/mcp</a>
             </p>
-            <p class="card-note">Not financial advice. A local policy gate only — it does not place orders or recommend trades.</p>
+            <p class="card-note card-note-warn">Not financial advice. A local policy gate only — it does not place orders or recommend trades.</p>
           </article>
 
           <article class="card">
@@ -242,7 +259,7 @@
           </article>
         </div>
 
-        <p class="card-note">
+        <p class="card-note card-note-foot">
           Hosted pay-per-call HTTP API: live on Base mainnet at
           <a href="https://api.paystage.xyz" rel="noopener">https://api.paystage.xyz</a>
           (<code>eip155:8453</code>, USDC, payTo treasury) and on Base Sepolia at
@@ -252,15 +269,16 @@
       </div>
     </section>
 
-
     <section id="try-it" class="section section-alt">
       <div class="wrap">
-        <h2>Try it</h2>
-        <p class="section-lede">
-          Run a live paid <code>evaluate_mcp_payment</code> call against the hosted API.
-          Default network is Base Sepolia (test USDC). Mainnet costs $0.002 real USDC per call.
-          Policy evaluation demo only — not trading advice.
-        </p>
+        <header class="section-head">
+          <h2>Try it</h2>
+          <p class="section-lede">
+            Run a live paid <code>evaluate_mcp_payment</code> call against the hosted API.
+            Default network is Base Sepolia (test USDC). Mainnet costs $0.002 real USDC per call.
+            Policy evaluation demo only — not trading advice.
+          </p>
+        </header>
         <div id="try-it-root" class="try-it-root"></div>
         <p class="card-note">
           Sepolia is the default. Get test USDC at
@@ -271,8 +289,10 @@
 
     <section id="roadmap" class="section section-alt">
       <div class="wrap">
-        <h2>Roadmap</h2>
-        <p class="section-lede">One tool a week.</p>
+        <header class="section-head">
+          <h2>Roadmap</h2>
+          <p class="section-lede">One tool a week.</p>
+        </header>
         <p class="roadmap-note">Tools #1, #2, and #3 are shipped (including the HIP-3 / trade.xyz trade preflight). Farcaster approve mini-app is next.</p>
       </div>
     </section>
@@ -299,4 +319,3 @@
   <script type="module" src="/try-it.bundle.js?v=49b6266"></script>
 </body>
 </html>
-```
