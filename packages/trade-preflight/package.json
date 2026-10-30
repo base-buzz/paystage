@@ -1,9 +1,8 @@
 {
   "name": "@paystage/trade-preflight",
-  "version": "0.0.0",
-  "description": "Evaluate a Hyperliquid HIP-3 (trade.xyz) order against a local TradePolicy before an agent trades",
+  "version": "0.1.2",
+  "description": "Evaluate HIP-3/trade.xyz orders against a local TradePolicy before an agent trades",
   "license": "MIT",
-  "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,7 +17,8 @@
   },
   "files": [
     "dist",
-    "server.json"
+    "server.json",
+    "README.md"
   ],
   "mcpName": "xyz.paystage/trade-preflight",
   "engines": {
@@ -55,5 +55,8 @@
     "@types/node": "^20.14.0",
     "typescript": "^5.5.4",
     "vitest": "^2.0.5"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

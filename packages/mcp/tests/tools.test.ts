@@ -7,17 +7,19 @@ describe("paystage umbrella MCP server", () => {
       "evaluate_mcp_payment",
       "list_outstanding_auths",
       "evaluate_outstanding_auths",
+      "evaluate_hip3_trade",
     ]);
   });
 
-  it("getToolNames returns exactly the three registered tools", () => {
+  it("getToolNames returns exactly the four registered tools", () => {
     const names = getToolNames();
-    expect(names).toHaveLength(3);
+    expect(names).toHaveLength(4);
     expect(new Set(names)).toEqual(
       new Set([
         "evaluate_mcp_payment",
         "list_outstanding_auths",
         "evaluate_outstanding_auths",
+        "evaluate_hip3_trade",
       ]),
     );
   });

@@ -1,36 +1,98 @@
 # @paystage/trade-preflight
 
-Preflight checks for Hyperliquid HIP-3 (trade.xyz) trades. Given a `TradeProposal` and a `TradePolicy`, returns a decision of `allow`, `review`, or `do_not_trade` before an agent places an order.
+MCP tool: evaluate HIP-3 / trade.xyz orders against a local `TradePolicy` before trading.
 
-## TradePolicy example
+> Not financial advice. This is a local policy gate only — it does not place orders, route
+> orders, or recommend trades. It evaluates a proposed order against rules you define and
+> returns a decision.
+
+Published on npm as **`@paystage/trade-preflight@0.1.2`**.
+
+## What it does
+
+Given a proposed HIP-3 / trade.xyz order and a local policy file, the server returns one of:
+
+- `allow` — the order satisfies every rule in the policy
+- `review` — the order needs a human or higher-level check before proceeding
+- `do_not_trade` — the order violates a hard rule in the policy
+
+The decision is deterministic and local. No network calls are required to evaluate a policy;
+the tool is a gate you put in front of your own order flow.
+
+## Install
+
+Run directly with `npx`:
+
+```sh
+npx -y @paystage/trade-preflight
+```
+
+Or install it:
+
+```sh
+npm install @paystage/trade-preflight
+```
+
+The package exposes a `stdio` MCP server (bin: `paystage-trade-preflight`).
+
+## MCP configuration
+
+```json
+{
+  "mcpServers": {
+    "paystage-trade-preflight": {
+      "command": "npx",
+      "args": ["-y", "@paystage/trade-preflight"]
+    }
+  }
+}
+```
+
+No environment variables are required. The policy is passed as a tool argument.
+
+## Tool
+
+### `evaluate_hip3_trade`
+
+Evaluates a proposed HIP-3 / trade.xyz order against a local `TradePolicy`.
+
+Inputs (shape):
+
+- `order` — the proposed order (market, side, size, price/limit, etc.)
+- `policy` — the local `TradePolicy` object (or a path to it, depending on your setup)
+
+Output:
+
+- `decision` — `allow` | `review` | `do_not_trade`
+- `reasons` — list of rule results explaining the decision
+
+Example policy shape:
 
 ```json
 {
   "version": 1,
-  "dex": "xyz",
-  "allowed_assets": ["BTC", "ETH"],
-  "max_notional_usd": 5000,
-  "max_leverage": 5,
+  "max_notional": { "value": "100.00", "asset": "USDC", "decimals": 6 },
+  "allowed_markets": ["BTC-USD", "ETH-USD"],
   "allowed_sides": ["buy", "sell"],
-  "allowed_order_types": ["limit"],
-  "require_limit_px": true
+  "max_leverage": 1,
+  "unknown_market": "review"
 }
 ```
 
-## CLI
+## Decisions
 
-```bash
-npx @paystage/trade-preflight evaluate --proposal proposal.json --policy policy.json
-```
+| Decision | Meaning |
+| --- | --- |
+| `allow` | Order satisfies all policy rules. |
+| `review` | Order needs a human or higher-level check. |
+| `do_not_trade` | Order violates a hard policy rule. |
 
-## MCP
+## Links
 
-The package exposes an MCP tool `evaluate_hip3_trade` (also re-exported by `@paystage/mcp`). Inputs: `proposal`, `policy`, optional `snapshot`. If `snapshot` is omitted, the server fetches meta and asset contexts from the Hyperliquid info API for the proposal's `dex` (default `xyz`).
+- Website: [paystage.xyz](https://paystage.xyz)
+- HIP-3 context: [docs.trade.xyz](https://docs.trade.xyz)
+- Source: [github.com/base-buzz/paystage](https://github.com/base-buzz/paystage) (`packages/trade-preflight`)
 
-## HIP-3 / trade.xyz
+## License
 
-HIP-3 perp dexes (e.g. `dex: "xyz"`) are resolved via the Hyperliquid info API (`metaAndAssetCtxs`). See https://docs.trade.xyz for HIP-3 details.
-
-## Status
-
-Private `0.0.0` — not published to npm. Consumed locally via `file:` dependency from `@paystage/mcp`.
+MIT

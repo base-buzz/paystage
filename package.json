@@ -1,10 +1,12 @@
 {
   "name": "paystage",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "build": "npm run build -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/mcp",
-    "test": "npm run test -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/mcp",
-    "typecheck": "npm run typecheck -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/mcp"
+    "build": "npm run build -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/mcp -w @paystage/trade-preflight",
+    "test": "npm run test -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/mcp -w @paystage/trade-preflight",
+    "typecheck": "npm run typecheck -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/mcp -w @paystage/trade-preflight"
   }
 }

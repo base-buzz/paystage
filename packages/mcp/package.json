@@ -1,7 +1,7 @@
 {
   "name": "@paystage/mcp",
-  "version": "0.1.0",
-  "description": "PayStage umbrella MCP server: payment preflight, outstanding-auth watch, and HIP-3 trade preflight",
+  "version": "0.2.0",
+  "description": "PayStage umbrella MCP: payment preflight, auth watch, and HIP-3 trade preflight",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -42,7 +42,7 @@
     "@paystage/policy": "0.1.0",
     "@paystage/preflight": "0.1.0",
     "@paystage/auth-watch": "0.1.0",
-    "@paystage/trade-preflight": "file:../trade-preflight",
+    "@paystage/trade-preflight": "^0.1.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PayStage — Safety tools for AI agent payments</title>
-  <meta name="description" content="PayStage is a safety layer for AI agent payments. Preflight checks for x402 and MCP that decide pay, review, or do not pay. Tools #1 and #2 are available now." />
+  <meta name="description" content="PayStage is a safety layer for AI agent payments. Preflight checks for x402, MCP, and HIP-3 trades that decide pay, review, or do not pay. Tools #1, #2, and #3 are available now." />
   <link rel="canonical" href="https://paystage.xyz/" />
   <meta name="theme-color" content="#0a0b0e" />
   <meta name="robots" content="index,follow" />
@@ -12,7 +12,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PayStage" />
   <meta property="og:title" content="PayStage — Safety tools for AI agent payments" />
-  <meta property="og:description" content="Preflight checks for x402 and MCP payments. Decide pay, review, or do not pay before an agent moves money. Tools #1 and #2 available now." />
+  <meta property="og:description" content="Preflight checks for x402, MCP, and HIP-3 trades. Decide pay, review, or do not pay before an agent moves money. Tools #1, #2, and #3 available now." />
   <meta property="og:url" content="https://paystage.xyz/" />
   <meta property="og:image" content="https://paystage.xyz/og.png" />
   <meta property="og:image:width" content="1200" />
@@ -21,7 +21,7 @@
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="PayStage — Safety tools for AI agent payments" />
-  <meta name="twitter:description" content="Preflight checks for x402 and MCP payments. Decide pay, review, or do not pay before an agent moves money. Tools #1 and #2 available now." />
+  <meta name="twitter:description" content="Preflight checks for x402, MCP, and HIP-3 trades. Decide pay, review, or do not pay before an agent moves money. Tools #1, #2, and #3 available now." />
   <meta name="twitter:image" content="https://paystage.xyz/og.png" />
 
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -49,7 +49,7 @@
         "alternateName": "@paystage/mcp",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "macOS, Linux, Windows",
-        "description": "Umbrella MCP server for AI agent payment safety. Exposes evaluate_mcp_payment, list_outstanding_auths, and evaluate_outstanding_auths, returning pay, review, or do_not_pay.",
+        "description": "Umbrella MCP server for AI agent payment safety. Exposes evaluate_mcp_payment, list_outstanding_auths, evaluate_outstanding_auths, and evaluate_hip3_trade, returning pay, review, or do_not_pay (allow, review, or do_not_trade for trades).",
         "url": "https://paystage.xyz/",
         "codeRepository": "https://github.com/base-buzz/paystage",
         "offers": {
@@ -86,7 +86,7 @@
   <main>
     <section class="hero">
       <div class="wrap">
-        <p class="eyebrow">x402 · MCP · USDC on Base</p>
+        <p class="eyebrow">x402 · MCP · HIP-3 · USDC on Base</p>
         <h1>Safety tools for AI agent payments</h1>
         <p class="lede">
           PayStage sits in front of an agent's wallet and answers one question before money moves:
@@ -97,7 +97,7 @@
           <a class="btn btn-ghost" href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">Get it on npm</a>
           <a class="btn btn-ghost" href="https://github.com/base-buzz/paystage" rel="noopener">View on GitHub</a>
         </div>
-        <p class="hero-note">Early stage. Tools #1 and #2 are <strong>Available now</strong> on npm; the rest are on the roadmap.</p>
+        <p class="hero-note">Early stage. Tools #1, #2, and #3 are <strong>Available now</strong> on npm; the rest are on the roadmap.</p>
         <p class="listed-on" aria-label="Listed on">
           <span class="listed-label">Listed on</span>
           <a href="https://mcp.so/server/paystage" rel="noopener noreferrer" target="_blank">mcp.so</a>
@@ -161,6 +161,25 @@
             </p>
           </article>
 
+          <article class="card card-featured">
+            <div class="card-head">
+              <h3>HIP-3 / trade.xyz trade preflight</h3>
+              <span class="badge badge-now">Available now</span>
+            </div>
+            <p>
+              A local policy gate for HIP-3 perp trades on trade.xyz. Evaluates a proposed order
+              against your policy and returns a verdict before the agent places anything.
+            </p>
+            <pre class="code"><code>npx -y @paystage/mcp</code></pre>
+            <p class="card-note">Tool: <code>evaluate_hip3_trade</code>. Decisions: <code>allow</code>, <code>review</code>, <code>do_not_trade</code>.</p>
+            <p class="card-note">
+              <a href="https://www.npmjs.com/package/@paystage/trade-preflight" rel="noopener">npm: @paystage/trade-preflight</a>
+              ·
+              <a href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">npm: @paystage/mcp</a>
+            </p>
+            <p class="card-note">Not financial advice. A local policy gate only — it does not place orders or recommend trades.</p>
+          </article>
+
           <article class="card">
             <div class="card-head">
               <h3>Farcaster approve mini-app</h3>
@@ -220,7 +239,7 @@
       <div class="wrap">
         <h2>Roadmap</h2>
         <p class="section-lede">One tool a week.</p>
-        <p class="roadmap-note">Tools #1 and #2 are shipped. Farcaster approve mini-app is next.</p>
+        <p class="roadmap-note">Tools #1, #2, and #3 are shipped (including the HIP-3 / trade.xyz trade preflight). Farcaster approve mini-app is next.</p>
       </div>
     </section>
   </main>
@@ -239,7 +258,7 @@
       </nav>
     </div>
     <div class="wrap footer-fine">
-      <p>Tools #1 (<code>@paystage/preflight</code>) and #2 (<code>@paystage/auth-watch</code>) are <strong>Available now</strong> via <code>@paystage/mcp</code>. Other tools are on the roadmap.</p>
+      <p>Tools #1 (<code>@paystage/preflight</code>), #2 (<code>@paystage/auth-watch</code>), and #3 (<code>@paystage/trade-preflight</code>, HIP-3 / trade.xyz trade preflight) are <strong>Available now</strong> via <code>@paystage/mcp</code>. Other tools are on the roadmap.</p>
     </div>
   </footer>
 </body>

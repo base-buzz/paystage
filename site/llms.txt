@@ -1,47 +1,36 @@
 # PayStage
 
-> Safety tools for AI agent payments (x402 + MCP). PayStage sits in front of an agent's wallet and returns pay, review, or do_not_pay before money moves.
+> Payment safety layer for agents. Small, focused MCP tools that compose into a payment
+> safety layer. Three tools available now: payment preflight, auth watch, and HIP-3 trade
+> preflight.
 
-## Available now
+Not financial advice. The trade preflight tool is a local policy gate only — it does not
+place orders or recommend trades.
 
-- MCP payment preflight — evaluates a proposed x402 payment against a local policy.
-- Outstanding-auth watch — lists and evaluates payments that are authorized but not yet settled.
+## Tools (available now)
 
-Install the umbrella MCP server:
+- `evaluate_mcp_payment` — evaluate a proposed x402 payment against a local policy file
+  before signing. Package: `@paystage/mcp` (0.2.0).
+- `list_outstanding_auths` — list outstanding ERC-20, Permit2, and EIP-3009 authorizations.
+  Package: `@paystage/auth-watch` (0.1.0).
+- `evaluate_outstanding_auths` — flag outstanding authorizations that need attention.
+  Package: `@paystage/auth-watch` (0.1.0).
+- `evaluate_hip3_trade` — evaluate a proposed HIP-3 / trade.xyz order against a local
+  `TradePolicy`; returns `allow` | `review` | `do_not_trade`. Package:
+  `@paystage/trade-preflight` (0.1.2), also exposed via `@paystage/mcp` (0.2.0).
 
-    npx -y @paystage/mcp
+## Packages
 
-## Tools
-
-- evaluate_mcp_payment — evaluate a proposed x402 payment against the local policy. Returns pay, review, or do_not_pay.
-- list_outstanding_auths — list payments that are authorized but not yet settled.
-- evaluate_outstanding_auths — evaluate outstanding authorizations and flag double-pay or limbo risk.
-
-## Policy example
-
-    {
-      "version": 1,
-      "max_amount": { "value": "1.00", "asset": "USDC", "decimals": 6 },
-      "allowed_pay_to": ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
-      "allowed_networks": ["eip155:8453", "eip155:84532"],
-      "unknown_payee": "review"
-    }
-
-## Verdicts
-
-- pay — within policy, safe to proceed.
-- review — needs human or higher-level approval.
-- do_not_pay — blocked by policy.
-
-## Listed on
-
-- mcp.so: https://mcp.so/server/paystage
-- MCP Registry: https://registry.modelcontextprotocol.io/v0/servers?search=xyz.paystage
-- npm: https://www.npmjs.com/package/@paystage/mcp
-- GitHub: https://github.com/base-buzz/paystage
+- `@paystage/mcp` (0.2.0) — umbrella MCP server, 4 tools. `npx -y @paystage/mcp`
+- `@paystage/auth-watch` (0.1.0) — outstanding-auth tools
+- `@paystage/trade-preflight` (0.1.2) — HIP-3 / trade.xyz trade preflight.
+  `npx -y @paystage/trade-preflight`
 
 ## Links
 
 - Website: https://paystage.xyz
 - GitHub: https://github.com/base-buzz/paystage
+- HIP-3 context: https://docs.trade.xyz
 - npm: https://www.npmjs.com/package/@paystage/mcp
+- npm: https://www.npmjs.com/package/@paystage/trade-preflight
+- Listed on: https://registry.modelcontextprotocol.io

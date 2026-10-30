@@ -1,70 +1,110 @@
-# PayStage
+# PayStage — full reference
 
-> Safety tools for AI agent payments (x402 + MCP). PayStage sits in front of an agent's wallet and answers one question before money moves: should this payment happen? Tools return pay, review, or do_not_pay.
+PayStage is a payment safety layer for agents: small, focused MCP tools that compose into a
+payment safety layer. Three tools are available now: payment preflight, auth watch, and
+HIP-3 trade preflight.
 
-PayStage is an early-stage project. Two tools are available now, shipped through the umbrella MCP server `@paystage/mcp`. Additional tools are on the roadmap.
+Not financial advice. The trade preflight tool is a local policy gate only — it does not
+place orders or recommend trades.
 
-## Status
+## Umbrella server
 
-Available now:
-- Tool #1 — MCP payment preflight
-- Tool #2 — Outstanding-auth watch
+`@paystage/mcp` version **0.2.0** exposes four tools over stdio:
 
-Available soon:
-- Farcaster approve mini-app
-- Dead-seller watch
-- MCP listing provenance receipt
+- `evaluate_mcp_payment` — Available now
+- `list_outstanding_auths` — Available now
+- `evaluate_outstanding_auths` — Available now
+- `evaluate_hip3_trade` — Available now
 
-Roadmap:
-- Micro-escrow
-- Publish-and-register one-shot
+Install / run:
 
-## Install
+```sh
+npx -y @paystage/mcp
+```
 
-    npx -y @paystage/mcp
+Optional environment variables:
 
-`@paystage/mcp` is the umbrella MCP server. It exposes the PayStage tools over stdio and reads a local policy file.
+- `PAYSTAGE_POLICY_PATH` — path to `policy.json` spending rules
+- `PAYSTAGE_RPC_URL` — Base RPC URL override
 
-Environment variables:
-- PAYSTAGE_POLICY_PATH (required) — path to your local policy.json.
-- PAYSTAGE_RPC_URL (optional) — RPC endpoint used by on-chain checks. Defaults to a public Base RPC.
+## `evaluate_mcp_payment` — Available now
 
-## Tools
+Evaluates a proposed x402 payment against a local policy file and returns a verdict before
+the agent signs anything. Package: `@paystage/mcp` (0.2.0).
 
-### evaluate_mcp_payment (Available now)
-Evaluates a proposed x402 payment against the local policy and returns pay, review, or do_not_pay before the agent signs anything.
+Example `policy.json`:
 
-### list_outstanding_auths (Available now)
-Lists payments that are authorized but not yet settled, so an agent can see what is in flight.
+```json
+{
+  "version": 1,
+  "max_amount": { "value": "1.00", "asset": "USDC", "decimals": 6 },
+  "allowed_pay_to": ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
+  "allowed_networks": ["eip155:8453", "eip155:84532"],
+  "unknown_payee": "review"
+}
+```
 
-### evaluate_outstanding_auths (Available now)
-Evaluates outstanding authorizations and flags double-pay or limbo risk.
+## `list_outstanding_auths` — Available now
 
-## Policy example
+Lists outstanding ERC-20, Permit2, and EIP-3009 authorizations. Package:
+`@paystage/auth-watch` (0.1.0).
 
-    {
-      "version": 1,
-      "max_amount": { "value": "1.00", "asset": "USDC", "decimals": 6 },
-      "allowed_pay_to": ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
-      "allowed_networks": ["eip155:8453", "eip155:84532"],
-      "unknown_payee": "review"
-    }
+## `evaluate_outstanding_auths` — Available now
 
-## Verdicts
+Flags outstanding authorizations that need attention (e.g. authorized but never settled).
+Package: `@paystage/auth-watch` (0.1.0).
 
-- pay — within policy, safe to proceed.
-- review — needs human or higher-level approval.
-- do_not_pay — blocked by policy.
+## `evaluate_hip3_trade` — Available now
+
+Evaluates a proposed HIP-3 / trade.xyz order against a local `TradePolicy` and returns a
+decision: `allow` | `review` | `do_not_trade`.
+
+- Package: `@paystage/trade-preflight` (0.1.2)
+- Also exposed via: `@paystage/mcp` (0.2.0)
+- Policy is passed as a tool argument; no extra environment variables are required.
+
+Standalone:
+
+```sh
+npx -y @paystage/trade-preflight
+```
+
+Example `TradePolicy` shape:
+
+```json
+{
+  "version": 1,
+  "max_notional": { "value": "100.00", "asset": "USDC", "decimals": 6 },
+  "allowed_markets": ["BTC-USD", "ETH-USD"],
+  "allowed_sides": ["buy", "sell"],
+  "max_leverage": 1,
+  "unknown_market": "review"
+}
+```
+
+Decisions:
+
+| Decision | Meaning |
+| --- | --- |
+| `allow` | Order satisfies all policy rules. |
+| `review` | Order needs a human or higher-level check. |
+| `do_not_trade` | Order violates a hard policy rule. |
+
+Not financial advice. A local policy gate only — it does not place orders or recommend trades.
 
 ## Packages
 
-- @paystage/mcp — umbrella MCP server (start here). https://www.npmjs.com/package/@paystage/mcp
-- @paystage/preflight — MCP payment preflight. https://www.npmjs.com/package/@paystage/preflight
-- @paystage/auth-watch — outstanding-auth watch. https://www.npmjs.com/package/@paystage/auth-watch
-- @paystage/policy — policy parsing and evaluation. https://www.npmjs.com/package/@paystage/policy
+| Package | Version | Purpose |
+| --- | --- | --- |
+| `@paystage/mcp` | 0.2.0 | Umbrella MCP server (4 tools) |
+| `@paystage/auth-watch` | 0.1.0 | Outstanding-auth tools |
+| `@paystage/trade-preflight` | 0.1.2 | HIP-3 / trade.xyz trade preflight |
 
 ## Links
 
 - Website: https://paystage.xyz
 - GitHub: https://github.com/base-buzz/paystage
-- npm: https://www.npmjs.com/org/paystage
+- HIP-3 context: https://docs.trade.xyz
+- npm: https://www.npmjs.com/package/@paystage/mcp
+- npm: https://www.npmjs.com/package/@paystage/trade-preflight
+- Listed on: https://registry.modelcontextprotocol.io

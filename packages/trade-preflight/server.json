@@ -1,12 +1,25 @@
 {
-  "mcpName": "xyz.paystage/trade-preflight",
-  "name": "paystage-trade-preflight",
-  "version": "0.0.0",
-  "description": "Evaluate a Hyperliquid HIP-3 (trade.xyz) order against a local TradePolicy before an agent trades.",
-  "tools": [
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "xyz.paystage/trade-preflight",
+  "title": "PayStage Trade Preflight",
+  "description": "MCP tool: evaluate HIP-3/trade.xyz orders against a local TradePolicy before trading",
+  "version": "0.1.2",
+  "websiteUrl": "https://paystage.xyz",
+  "repository": {
+    "url": "https://github.com/base-buzz/paystage",
+    "source": "github",
+    "subfolder": "packages/trade-preflight"
+  },
+  "packages": [
     {
-      "name": "evaluate_hip3_trade",
-      "description": "Evaluate a proposed HIP-3 order against a TradePolicy. Returns decision allow | review | do_not_trade with reasons."
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@paystage/trade-preflight",
+      "version": "0.1.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": []
     }
   ]
 }
