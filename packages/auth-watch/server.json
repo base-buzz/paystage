@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "xyz.paystage/auth-watch",
+  "title": "PayStage Auth Watch",
+  "description": "Read-only MCP tools to list and flag outstanding ERC-20, Permit2, and EIP-3009 auths",
+  "version": "0.1.0",
+  "websiteUrl": "https://paystage.xyz",
+  "repository": {
+    "url": "https://github.com/base-buzz/paystage",
+    "source": "github",
+    "subfolder": "packages/auth-watch"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@paystage/auth-watch",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PAYSTAGE_POLICY_PATH",
+          "description": "Path to policy.json spending rules",
+          "isRequired": false
+        },
+        {
+          "name": "PAYSTAGE_RPC_URL",
+          "description": "Base RPC URL override",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

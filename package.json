@@ -3,8 +3,8 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "build": "npm run build -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch",
-    "test": "npm run test -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch",
-    "typecheck": "npm run typecheck -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch"
+    "build": "npm run build -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/mcp",
+    "test": "npm run test -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/mcp",
+    "typecheck": "npm run typecheck -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/mcp"
   }
 }

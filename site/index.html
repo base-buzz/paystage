@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PayStage — Safety tools for AI agent payments</title>
-  <meta name="description" content="PayStage is a safety layer for AI agent payments. Preflight checks for x402 and MCP that decide pay, review, or do not pay." />
+  <meta name="description" content="PayStage is a safety layer for AI agent payments. Preflight checks for x402 and MCP that decide pay, review, or do not pay. Tools #1 and #2 are available now." />
   <link rel="canonical" href="https://paystage.xyz/" />
   <meta name="theme-color" content="#0a0b0e" />
   <meta name="robots" content="index,follow" />
@@ -12,7 +12,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PayStage" />
   <meta property="og:title" content="PayStage — Safety tools for AI agent payments" />
-  <meta property="og:description" content="Preflight checks for x402 and MCP payments. Decide pay, review, or do not pay before an agent moves money." />
+  <meta property="og:description" content="Preflight checks for x402 and MCP payments. Decide pay, review, or do not pay before an agent moves money. Tools #1 and #2 available now." />
   <meta property="og:url" content="https://paystage.xyz/" />
   <meta property="og:image" content="https://paystage.xyz/og.png" />
   <meta property="og:image:width" content="1200" />
@@ -21,7 +21,7 @@
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="PayStage — Safety tools for AI agent payments" />
-  <meta name="twitter:description" content="Preflight checks for x402 and MCP payments. Decide pay, review, or do not pay before an agent moves money." />
+  <meta name="twitter:description" content="Preflight checks for x402 and MCP payments. Decide pay, review, or do not pay before an agent moves money. Tools #1 and #2 available now." />
   <meta name="twitter:image" content="https://paystage.xyz/og.png" />
 
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -45,11 +45,11 @@
       },
       {
         "@type": "SoftwareApplication",
-        "name": "PayStage Preflight",
-        "alternateName": "@paystage/preflight",
+        "name": "PayStage MCP",
+        "alternateName": "@paystage/mcp",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "macOS, Linux, Windows",
-        "description": "MCP payment preflight server for AI agent payments. Evaluates x402 payments against a local policy and returns pay, review, or do_not_pay.",
+        "description": "Umbrella MCP server for AI agent payment safety. Exposes evaluate_mcp_payment, list_outstanding_auths, and evaluate_outstanding_auths, returning pay, review, or do_not_pay.",
         "url": "https://paystage.xyz/",
         "codeRepository": "https://github.com/base-buzz/paystage",
         "offers": {
@@ -94,10 +94,10 @@
         </p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="#tools">See the tools</a>
-          <a class="btn btn-ghost" href="https://www.npmjs.com/package/@paystage/preflight" rel="noopener">Get it on npm</a>
+          <a class="btn btn-ghost" href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">Get it on npm</a>
           <a class="btn btn-ghost" href="https://github.com/base-buzz/paystage" rel="noopener">View on GitHub</a>
         </div>
-        <p class="hero-note">Early stage. Tool #1 is <strong>Available now</strong> on npm; the rest are on the roadmap.</p>
+        <p class="hero-note">Early stage. Tools #1 and #2 are <strong>Available now</strong> on npm; the rest are on the roadmap.</p>
       </div>
     </section>
 
@@ -116,10 +116,10 @@
               An MCP server that evaluates a proposed x402 payment against a local policy file
               and returns a verdict before the agent signs anything.
             </p>
-            <pre class="code"><code>npx @paystage/preflight</code></pre>
-            <p class="card-note">Published on npm. Non-interactive variant: <code>npx -y @paystage/preflight</code>.</p>
+            <pre class="code"><code>npx -y @paystage/mcp</code></pre>
+            <p class="card-note">Install the umbrella server. Tool: <code>evaluate_mcp_payment</code>.</p>
             <p class="card-note">
-              <a href="https://www.npmjs.com/package/@paystage/preflight" rel="noopener">npm: @paystage/preflight</a>
+              <a href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">npm: @paystage/mcp</a>
               ·
               <a href="https://github.com/base-buzz/paystage" rel="noopener">GitHub: base-buzz/paystage</a>
             </p>
@@ -133,14 +133,21 @@
 }</code></pre>
           </article>
 
-          <article class="card">
+          <article class="card card-featured">
             <div class="card-head">
               <h3>Outstanding-auth watch</h3>
-              <span class="badge badge-soon">Available soon</span>
+              <span class="badge badge-now">Available now</span>
             </div>
             <p>
               Watches for payments that are authorized but never settled, so an agent doesn't
               double-pay or leave funds in limbo.
+            </p>
+            <pre class="code"><code>npx -y @paystage/mcp</code></pre>
+            <p class="card-note">Tools: <code>list_outstanding_auths</code>, <code>evaluate_outstanding_auths</code>.</p>
+            <p class="card-note">
+              <a href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">npm: @paystage/mcp</a>
+              ·
+              <a href="https://github.com/base-buzz/paystage" rel="noopener">GitHub: base-buzz/paystage</a>
             </p>
           </article>
 
@@ -203,7 +210,7 @@
       <div class="wrap">
         <h2>Roadmap</h2>
         <p class="section-lede">One tool a week.</p>
-        <p class="roadmap-note">Outstanding-auth watch is next.</p>
+        <p class="roadmap-note">Tools #1 and #2 are shipped. Farcaster approve mini-app is next.</p>
       </div>
     </section>
   </main>
@@ -215,14 +222,14 @@
         <p class="footer-tag">Safety tools for AI agent payments.</p>
       </div>
       <nav class="footer-nav" aria-label="Footer">
-        <a href="https://www.npmjs.com/package/@paystage/preflight" rel="noopener">npm</a>
+        <a href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">npm</a>
         <a href="https://github.com/base-buzz/paystage" rel="noopener">GitHub</a>
         <a href="/llms.txt">llms.txt</a>
         <a href="/llms-full.txt">llms-full.txt</a>
       </nav>
     </div>
     <div class="wrap footer-fine">
-      <p>Tool #1 (<code>@paystage/preflight</code>) is <strong>Available now</strong> on npm. Other tools are on the roadmap.</p>
+      <p>Tools #1 (<code>@paystage/preflight</code>) and #2 (<code>@paystage/auth-watch</code>) are <strong>Available now</strong> via <code>@paystage/mcp</code>. Other tools are on the roadmap.</p>
     </div>
   </footer>
 </body>

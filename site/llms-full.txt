@@ -1,70 +1,70 @@
-# PayStage — Safety tools for AI agent payments
+# PayStage
 
-PayStage is a safety layer for AI agent payments. It sits in front of an agent's wallet and
-answers one question before money moves: should this payment happen? Preflight checks return
-`pay`, `review`, or `do_not_pay`.
+> Safety tools for AI agent payments (x402 + MCP). PayStage sits in front of an agent's wallet and answers one question before money moves: should this payment happen? Tools return pay, review, or do_not_pay.
 
-Site: https://paystage.xyz/
-GitHub: https://github.com/base-buzz/paystage
-npm: https://www.npmjs.com/package/@paystage/preflight
-MCP server manifest: https://paystage.xyz/server.json
+PayStage is an early-stage project. Two tools are available now, shipped through the umbrella MCP server `@paystage/mcp`. Additional tools are on the roadmap.
 
 ## Status
 
-- Tool #1 — MCP payment preflight (`@paystage/preflight`): **Available now** — published on npm.
-- All other tools: **Roadmap** (outstanding-auth watch is next).
+Available now:
+- Tool #1 — MCP payment preflight
+- Tool #2 — Outstanding-auth watch
 
-## Tool #1 — MCP payment preflight (Available now)
+Available soon:
+- Farcaster approve mini-app
+- Dead-seller watch
+- MCP listing provenance receipt
 
-An MCP server that evaluates a proposed x402 payment against a local policy file and returns
-a verdict before the agent signs anything.
+Roadmap:
+- Micro-escrow
+- Publish-and-register one-shot
 
-### Install
+## Install
 
-    npx @paystage/preflight
+    npx -y @paystage/mcp
 
-Non-interactive variant:
+`@paystage/mcp` is the umbrella MCP server. It exposes the PayStage tools over stdio and reads a local policy file.
 
-    npx -y @paystage/preflight
+Environment variables:
+- PAYSTAGE_POLICY_PATH (required) — path to your local policy.json.
+- PAYSTAGE_RPC_URL (optional) — RPC endpoint used by on-chain checks. Defaults to a public Base RPC.
 
-Links:
-- npm: https://www.npmjs.com/package/@paystage/preflight
-- GitHub: https://github.com/base-buzz/paystage
+## Tools
 
-### Policy
+### evaluate_mcp_payment (Available now)
+Evaluates a proposed x402 payment against the local policy and returns pay, review, or do_not_pay before the agent signs anything.
 
-One `policy.json` per agent. Example:
+### list_outstanding_auths (Available now)
+Lists payments that are authorized but not yet settled, so an agent can see what is in flight.
+
+### evaluate_outstanding_auths (Available now)
+Evaluates outstanding authorizations and flags double-pay or limbo risk.
+
+## Policy example
 
     {
-      "maxPerCall": "0.05",
-      "maxPerDay": "1.00",
-      "asset": "USDC",
-      "network": "base",
-      "payees": {
-        "allow": ["0xabc...123"],
-        "review": ["*"]
-      }
+      "version": 1,
+      "max_amount": { "value": "1.00", "asset": "USDC", "decimals": 6 },
+      "allowed_pay_to": ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
+      "allowed_networks": ["eip155:8453", "eip155:84532"],
+      "unknown_payee": "review"
     }
 
-### Verdicts
+## Verdicts
 
-- `pay` — payment matches policy; safe to sign.
-- `review` — payment is ambiguous or unknown; escalate to a human or a higher-level check.
-- `do_not_pay` — payment violates policy; do not sign.
+- pay — within policy, safe to proceed.
+- review — needs human or higher-level approval.
+- do_not_pay — blocked by policy.
 
-## Roadmap
+## Packages
 
-- Outstanding-auth watch — **next**. Detect authorized-but-unsettled payments before an agent double-pays.
-- Farcaster approve mini-app — approve or reject pending agent payments from a phone.
-- Dead-seller watch — flag payees that stop settling and escalate new payments to review.
-- MCP listing provenance receipt — signed receipts tying MCP listings to their source.
-- Micro-escrow — small-value escrow for agent-to-agent payments.
-- Publish-and-register one-shot — publish an MCP server and register it with a provenance receipt in one command.
+- @paystage/mcp — umbrella MCP server (start here). https://www.npmjs.com/package/@paystage/mcp
+- @paystage/preflight — MCP payment preflight. https://www.npmjs.com/package/@paystage/preflight
+- @paystage/auth-watch — outstanding-auth watch. https://www.npmjs.com/package/@paystage/auth-watch
+- @paystage/policy — policy parsing and evaluation. https://www.npmjs.com/package/@paystage/policy
 
 ## Links
 
-- Site: https://paystage.xyz/
-- npm: https://www.npmjs.com/package/@paystage/preflight
+- Website: https://paystage.xyz
 - GitHub: https://github.com/base-buzz/paystage
-- MCP server manifest: https://paystage.xyz/server.json
-- llms.txt: https://paystage.xyz/llms.txt
+- npm: https://www.npmjs.com/org/paystage

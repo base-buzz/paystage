@@ -15,7 +15,7 @@
   "bin": {
     "paystage-auth-watch": "./dist/cli.js"
   },
-  "files": ["dist"],
+  "files": ["dist", "server.json"],
   "mcpName": "xyz.paystage/auth-watch",
   "engines": {
     "node": ">=20"

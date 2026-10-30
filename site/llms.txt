@@ -1,116 +1,40 @@
 # PayStage
 
-> PayStage is a safety layer for AI agent payments. It answers one question before money moves: should this payment happen? Preflight checks for x402 and MCP return a verdict of `pay`, `review`, or `do_not_pay`.
+> Safety tools for AI agent payments (x402 + MCP). PayStage sits in front of an agent's wallet and returns pay, review, or do_not_pay before money moves.
 
-Status: Tool #1 — MCP payment preflight — **Available now** on npm as `@paystage/preflight` version `0.1.0`.
+## Available now
 
-## Install
+- MCP payment preflight — evaluates a proposed x402 payment against a local policy.
+- Outstanding-auth watch — lists and evaluates payments that are authorized but not yet settled.
 
-```
-npx @paystage/preflight
-```
+Install the umbrella MCP server:
 
-Non-interactive:
+    npx -y @paystage/mcp
 
-```
-npx -y @paystage/preflight
-```
+## Tools
 
-## Links
+- evaluate_mcp_payment — evaluate a proposed x402 payment against the local policy. Returns pay, review, or do_not_pay.
+- list_outstanding_auths — list payments that are authorized but not yet settled.
+- evaluate_outstanding_auths — evaluate outstanding authorizations and flag double-pay or limbo risk.
 
-- npm: https://www.npmjs.com/package/@paystage/preflight
-- GitHub: https://github.com/base-buzz/paystage
-- Website: https://paystage.xyz
-- README: https://github.com/base-buzz/paystage#readme
-- server.json (raw): https://raw.githubusercontent.com/base-buzz/paystage/main/server.json
-- MCP Registry name: `xyz.paystage/preflight`
+## Policy example
 
-## What it does
-
-`@paystage/preflight` is a stdio MCP server. Given a proposed x402 payment (amount, asset, network, payee), it evaluates the payment against a local policy file and returns one of three verdicts:
-
-- `pay` — within policy; the agent may proceed.
-- `review` — outside auto-approve bounds; a human or higher-level check should decide.
-- `do_not_pay` — violates policy; the agent must not sign.
-
-The verdict is returned before the agent signs anything.
-
-## Policy
-
-The policy file is JSON. PayStage uses snake_case keys. Example:
-
-```
-{
-  "version": 1,
-  "max_amount": { "value": "1.00", "asset": "USDC", "decimals": 6 },
-  "allowed_pay_to": ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
-  "allowed_networks": ["eip155:8453", "eip155:84532"],
-  "unknown_payee": "review"
-}
-```
-
-Fields:
-
-- `version` — policy schema version (currently `1`).
-- `max_amount` — maximum single payment. `value` is a decimal string, `asset` is the asset symbol, `decimals` is the asset's decimal precision.
-- `allowed_pay_to` — explicit allowlist of payee addresses.
-- `allowed_networks` — CAIP-2 network identifiers. `eip155:8453` is Base mainnet; `eip155:84532` is Base Sepolia.
-- `unknown_payee` — verdict to return when the payee is not in `allowed_pay_to`. One of `pay`, `review`, `do_not_pay`.
+    {
+      "version": 1,
+      "max_amount": { "value": "1.00", "asset": "USDC", "decimals": 6 },
+      "allowed_pay_to": ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
+      "allowed_networks": ["eip155:8453", "eip155:84532"],
+      "unknown_payee": "review"
+    }
 
 ## Verdicts
 
-- `pay`
-- `review`
-- `do_not_pay`
+- pay — within policy, safe to proceed.
+- review — needs human or higher-level approval.
+- do_not_pay — blocked by policy.
 
-## Client configuration
+## Links
 
-Claude Desktop (`claude_desktop_config.json`):
-
-```
-{
-  "mcpServers": {
-    "paystage-preflight": {
-      "command": "npx",
-      "args": ["-y", "@paystage/preflight"],
-      "env": {
-        "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json"
-      }
-    }
-  }
-}
-```
-
-Cursor (`.cursor/mcp.json`):
-
-```
-{
-  "mcpServers": {
-    "paystage-preflight": {
-      "command": "npx",
-      "args": ["-y", "@paystage/preflight"],
-      "env": {
-        "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json"
-      }
-    }
-  }
-}
-```
-
-Set `PAYSTAGE_POLICY_PATH` to the absolute path of your policy file.
-
-## Roadmap
-
-Available soon:
-
-- Outstanding-auth watch (next)
-- Farcaster approve mini-app
-- Dead-seller watch
-- MCP listing provenance receipt
-- Micro-escrow
-- Publish-and-register one-shot
-
-## Notes
-
-- Early stage. Only the preflight tool is published today.
-- No accounts, no hosted service required for the preflight tool.
+- Website: https://paystage.xyz
+- GitHub: https://github.com/base-buzz/paystage
+- npm: https://www.npmjs.com/package/@paystage/mcp
