@@ -1,0 +1,9 @@
+{
+  "name": "xyz.paystage/preflight",
+  "description": "PayStage Preflight MCP server for evaluating x402 payment required against policy",
+  "command": "npx",
+  "args": ["paystage-preflight"],
+  "env": {
+    "PAYSTAGE_POLICY_PATH": ""
+  }
+}

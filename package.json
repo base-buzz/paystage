@@ -1,0 +1,12 @@
+{
+  "name": "paystage",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @paystage/policy -w @paystage/preflight",
+    "test": "npm run test -w @paystage/policy -w @paystage/preflight",
+    "typecheck": "npm run typecheck -w @paystage/policy -w @paystage/preflight"
+  }
+}
