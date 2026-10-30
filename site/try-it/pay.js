@@ -1,8 +1,8 @@
-// Shared x402 payment helpers for the PayStage "Try it" widget and the
-// Sepolia harness. Browser + Node compatible ESM. Never logs secrets.
+// Shared x402 payment helpers for the PayStage "Try it" widget and harnesses.
+// Browser + Node compatible ESM. Never logs secrets.
 //
-// Payment-logic review: wrapFetchWithPaymentFromConfig(fetch, config) takes
-// TWO args; ExactEvmScheme needs ClientEvmSigner { address, signTypedData }.
+// Browser BigInt fix: serializeTypedDataForWallet converts BigInts before
+// JSON.stringify for eth_signTypedData_v4 (keeps EIP712Domain for MetaMask).
 
 import { ExactEvmScheme } from "@x402/evm";
 import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
@@ -33,6 +33,23 @@ export const NETWORKS = {
     usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     mainnet: true,
     faucet: null,
+  },
+};
+
+export const CHAIN_PARAMS = {
+  84532: {
+    chainId: "0x14a34",
+    chainName: "Base Sepolia",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://sepolia.base.org"],
+    blockExplorerUrls: ["https://sepolia.basescan.org"],
+  },
+  8453: {
+    chainId: "0x2105",
+    chainName: "Base",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://mainnet.base.org"],
+    blockExplorerUrls: ["https://basescan.org"],
   },
 };
 
@@ -112,6 +129,138 @@ export const PRESETS = {
   },
 };
 
+export function chainIdHex(chainId) {
+  return "0x" + Number(chainId).toString(16);
+}
+
+export async function getWalletChainId(ethereum) {
+  const hex = await ethereum.request({ method: "eth_chainId" });
+  return Number.parseInt(hex, 16);
+}
+
+export async function ensureWalletChain(ethereum, targetChainId, chainParams) {
+  const target = Number(targetChainId);
+  const current = await getWalletChainId(ethereum);
+  if (current === target) return { switched: false, chainId: current };
+
+  const params = chainParams || CHAIN_PARAMS[target];
+  if (!params) throw new Error(`No chain params for chain ${target}`);
+
+  try {
+    await ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: chainIdHex(target) }],
+    });
+  } catch (err) {
+    const code = err && (err.code ?? (err.data && err.data.code));
+    const msg = String((err && err.message) || "");
+    const unrecognized =
+      code === 4902 ||
+      (code === -32603 && /unrecognized|unknown chain|not added/i.test(msg));
+    if (code === 4001) {
+      throw new Error("User rejected the chain switch request.");
+    }
+    if (unrecognized) {
+      try {
+        await ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [params],
+        });
+      } catch (addErr) {
+        const addCode =
+          addErr && (addErr.code ?? (addErr.data && addErr.data.code));
+        if (addCode === 4001) {
+          throw new Error("User rejected adding the network.");
+        }
+        throw new Error(
+          `Could not add network ${params.chainName}: ${
+            addErr && addErr.message ? addErr.message : addErr
+          }`,
+        );
+      }
+    } else {
+      throw new Error(
+        `Could not switch network: ${err && err.message ? err.message : err}`,
+      );
+    }
+  }
+
+  const after = await getWalletChainId(ethereum);
+  if (after !== target) {
+    throw new Error(
+      `Wallet is still on chain ${after}; expected ${target}. Please switch manually.`,
+    );
+  }
+  return { switched: true, chainId: after };
+}
+
+function deepBigIntToString(value) {
+  if (typeof value === "bigint") return value.toString();
+  if (Array.isArray(value)) return value.map(deepBigIntToString);
+  if (value && typeof value === "object") {
+    const out = {};
+    for (const k of Object.keys(value)) {
+      out[k] = deepBigIntToString(value[k]);
+    }
+    return out;
+  }
+  return value;
+}
+
+/**
+ * Prepare EIP-712 typed data for eth_signTypedData_v4 JSON transport.
+ * Converts BigInts → decimal strings; ensures domain.chainId is a number;
+ * keeps EIP712Domain in types (MetaMask expects it).
+ */
+const DEFAULT_EIP712_DOMAIN_TYPES = [
+  { name: "name", type: "string" },
+  { name: "version", type: "string" },
+  { name: "chainId", type: "uint256" },
+  { name: "verifyingContract", type: "address" },
+];
+
+/**
+ * MetaMask eth_signTypedData_v4 expects EIP712Domain in types.
+ * ExactEvmScheme often omits it — inject a standard definition from domain keys.
+ */
+function ensureEip712DomainTypes(types, domain) {
+  if (types.EIP712Domain && types.EIP712Domain.length) return types;
+  const fields = [];
+  for (const spec of DEFAULT_EIP712_DOMAIN_TYPES) {
+    if (domain[spec.name] !== undefined && domain[spec.name] !== null) {
+      fields.push(spec);
+    }
+  }
+  // Fallback if domain is empty/unusual: full standard set.
+  types.EIP712Domain = fields.length ? fields : DEFAULT_EIP712_DOMAIN_TYPES.slice();
+  return types;
+}
+
+export function serializeTypedDataForWallet(typedData) {
+  const src = typedData || {};
+  const domain = deepBigIntToString(src.domain || {});
+  const message = deepBigIntToString(src.message || {});
+  let types = deepBigIntToString(src.types || {});
+
+  if (domain.chainId !== undefined && domain.chainId !== null) {
+    const n = Number(domain.chainId);
+    if (Number.isFinite(n)) domain.chainId = n;
+  }
+
+  types = ensureEip712DomainTypes(types, domain);
+
+  return {
+    domain,
+    types,
+    primaryType: src.primaryType,
+    message,
+  };
+}
+
+function bigintReplacer(_key, value) {
+  return typeof value === "bigint" ? value.toString() : value;
+}
+
 /** EIP-1193 browser signer → ClientEvmSigner for ExactEvmScheme. */
 export function createBrowserSigner(ethereum, address) {
   if (!ethereum || typeof ethereum.request !== "function") {
@@ -121,15 +270,8 @@ export function createBrowserSigner(ethereum, address) {
   return {
     address,
     async signTypedData(typedData) {
-      const { domain, types, primaryType, message } = typedData;
-      const cleanTypes = { ...types };
-      delete cleanTypes.EIP712Domain;
-      const payload = JSON.stringify({
-        types: cleanTypes,
-        primaryType,
-        domain,
-        message,
-      });
+      const prepared = serializeTypedDataForWallet(typedData);
+      const payload = JSON.stringify(prepared, bigintReplacer);
       return ethereum.request({
         method: "eth_signTypedData_v4",
         params: [address, payload],
@@ -138,7 +280,7 @@ export function createBrowserSigner(ethereum, address) {
   };
 }
 
-/** Viem local account (or any {address, signTypedData}) → ClientEvmSigner. */
+/** Viem local account → ClientEvmSigner (BigInt-safe; no JSON). */
 export function createLocalSigner(account) {
   if (!account || typeof account.signTypedData !== "function" || !account.address) {
     throw new Error("createLocalSigner requires a viem account");
@@ -186,7 +328,7 @@ function explorerTxUrl(networkCaip, txHash) {
 
 /**
  * POST /v1/evaluate_mcp_payment with x402 payment wrapping.
- * Uses the same wrapFetchWithPaymentFromConfig + ExactEvmScheme path as e2e-paid.
+ * Same wrapFetchWithPaymentFromConfig + ExactEvmScheme path as e2e-paid.
  */
 export async function runPaidEvaluate({
   fetchImpl,
@@ -250,8 +392,7 @@ export async function runPaidEvaluate({
     (paymentResponse &&
       (paymentResponse.transaction || paymentResponse.txHash)) ||
     (raw &&
-      (raw.txHash ||
-        (raw.settlement && raw.settlement.transaction))) ||
+      (raw.txHash || (raw.settlement && raw.settlement.transaction))) ||
     null;
 
   return {

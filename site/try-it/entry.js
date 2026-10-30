@@ -2,26 +2,12 @@
 import {
   NETWORKS,
   PRESETS,
+  CHAIN_PARAMS,
   createBrowserSigner,
   runPaidEvaluate,
+  getWalletChainId,
+  ensureWalletChain,
 } from "./pay.js";
-
-const CHAIN_PARAMS = {
-  [NETWORKS.sepolia.chainId]: {
-    chainId: "0x" + NETWORKS.sepolia.chainId.toString(16),
-    chainName: "Base Sepolia",
-    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-    rpcUrls: ["https://sepolia.base.org"],
-    blockExplorerUrls: [NETWORKS.sepolia.explorer],
-  },
-  [NETWORKS.mainnet.chainId]: {
-    chainId: "0x" + NETWORKS.mainnet.chainId.toString(16),
-    chainName: "Base",
-    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-    rpcUrls: ["https://mainnet.base.org"],
-    blockExplorerUrls: [NETWORKS.mainnet.explorer],
-  },
-};
 
 function el(tag, attrs = {}, children = []) {
   const node = document.createElement(tag);
@@ -33,46 +19,32 @@ function el(tag, attrs = {}, children = []) {
   }
   for (const child of children) {
     if (child == null) continue;
-    node.append(typeof child === "string" ? document.createTextNode(child) : child);
+    node.append(
+      typeof child === "string" ? document.createTextNode(child) : child,
+    );
   }
   return node;
-}
-
-async function ensureChain(ethereum, chainId) {
-  const hex = "0x" + chainId.toString(16);
-  try {
-    await ethereum.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: hex }],
-    });
-  } catch (err) {
-    if (err && (err.code === 4902 || err.code === -32603)) {
-      await ethereum.request({
-        method: "wallet_addEthereumChain",
-        params: [CHAIN_PARAMS[chainId]],
-      });
-    } else {
-      throw err;
-    }
-  }
 }
 
 function friendlyError(err, net) {
   if (!err) return "Unknown error";
   const code = err.code ?? err?.cause?.code;
   const msg = String(err.message || err);
-  if (code === 4001 || /user rejected/i.test(msg)) {
-    return "Signature rejected in wallet.";
+  if (code === 4001 || /user rejected|user denied/i.test(msg)) {
+    return "Request rejected in wallet.";
   }
   if (/no (eip-1193 )?wallet|provider|ethereum/i.test(msg)) {
     return "No wallet detected. Install MetaMask or Coinbase Wallet to continue.";
   }
-  if (/chain|network/i.test(msg)) {
-    return `Wrong chain. Switch to ${net.label} and retry.`;
+  if (/still on chain|switch|network/i.test(msg)) {
+    return msg;
   }
   if (/insufficient|funds|balance/i.test(msg)) {
-    const hint = net.faucet ? ` Get test USDC: ${net.faucet}` : "";
+    const hint = net?.faucet ? ` Get test USDC: ${net.faucet}` : "";
     return `Insufficient USDC.${hint}`;
+  }
+  if (/bigint|serialize/i.test(msg)) {
+    return `Wallet typed-data error: ${msg}`;
   }
   return msg;
 }
@@ -80,14 +52,25 @@ function friendlyError(err, net) {
 function mount(root) {
   root.innerHTML = "";
 
-  const presetSelect = el("select", { id: "try-it-preset", class: "try-it-select" });
+  let walletChainId = null;
+
+  const presetSelect = el("select", {
+    id: "try-it-preset",
+    class: "try-it-select",
+  });
   for (const [key, preset] of Object.entries(PRESETS)) {
     presetSelect.append(
-      el("option", { value: key, text: `${preset.label} — expect: ${preset.expect}` }),
+      el("option", {
+        value: key,
+        text: `${preset.label} — expect: ${preset.expect}`,
+      }),
     );
   }
 
-  const networkSelect = el("select", { id: "try-it-network", class: "try-it-select" });
+  const networkSelect = el("select", {
+    id: "try-it-network",
+    class: "try-it-select",
+  });
   networkSelect.append(
     el("option", { value: "sepolia", text: "Base Sepolia (test USDC)" }),
     el("option", { value: "mainnet", text: "Base mainnet — real USDC" }),
@@ -98,6 +81,12 @@ function mount(root) {
     role: "status",
     text: "Mainnet costs $0.002 real USDC per call.",
     hidden: true,
+  });
+
+  const chainHint = el("p", {
+    class: "try-it-chain-hint",
+    role: "status",
+    text: "Wallet chain: unknown",
   });
 
   const bodyArea = el("textarea", {
@@ -113,7 +102,11 @@ function mount(root) {
     text: "Connect wallet & run",
   });
 
-  const status = el("p", { class: "try-it-status", role: "status", "data-state": "idle" });
+  const status = el("p", {
+    class: "try-it-status",
+    role: "status",
+    "data-state": "idle",
+  });
   const output = el("pre", { class: "try-it-output" });
   const txWrap = el("p", { class: "try-it-tx" });
 
@@ -123,17 +116,47 @@ function mount(root) {
     bodyArea.value = JSON.stringify(preset.body, null, 2);
   }
 
+  function updateChainHint() {
+    const net = NETWORKS[networkSelect.value];
+    if (walletChainId == null) {
+      chainHint.textContent = `Selected: ${net.label} (${net.chainId}). Wallet chain unknown.`;
+      return;
+    }
+    if (walletChainId === net.chainId) {
+      chainHint.textContent = `Wallet on ${net.label} (chain ${walletChainId}).`;
+    } else {
+      chainHint.textContent = `Wallet on chain ${walletChainId}; selected ${net.label} (${net.chainId}).`;
+    }
+  }
+
   presetSelect.addEventListener("change", () => fillPreset(presetSelect.value));
   networkSelect.addEventListener("change", () => {
     warning.hidden = networkSelect.value !== "mainnet";
+    updateChainHint();
   });
   fillPreset("small_pay");
+  updateChainHint();
+
+  const ethereum = typeof window !== "undefined" ? window.ethereum : null;
+  if (ethereum && typeof ethereum.on === "function") {
+    ethereum.on("chainChanged", (hex) => {
+      walletChainId = Number.parseInt(hex, 16);
+      updateChainHint();
+      status.dataset.state = "idle";
+      status.textContent = `Wallet switched to chain ${walletChainId}.`;
+    });
+    getWalletChainId(ethereum)
+      .then((id) => {
+        walletChainId = id;
+        updateChainHint();
+      })
+      .catch(() => {});
+  }
 
   runBtn.addEventListener("click", async () => {
     output.textContent = "";
     txWrap.textContent = "";
-    const ethereum = window.ethereum;
-    if (!ethereum) {
+    if (!window.ethereum) {
       status.dataset.state = "error";
       status.textContent = friendlyError(new Error("no wallet"), NETWORKS.sepolia);
       return;
@@ -153,14 +176,39 @@ function mount(root) {
     try {
       status.dataset.state = "pending";
       status.textContent = "Requesting account…";
-      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
       const address = accounts && accounts[0];
       if (!address) throw new Error("No account returned by wallet");
 
-      status.textContent = `Switching to ${net.label}…`;
-      await ensureChain(ethereum, net.chainId);
+      // Chain check BEFORE any signing.
+      try {
+        walletChainId = await getWalletChainId(window.ethereum);
+      } catch {
+        walletChainId = null;
+      }
+      updateChainHint();
 
-      const signer = createBrowserSigner(ethereum, address);
+      if (walletChainId !== net.chainId) {
+        status.textContent = `Your wallet is on chain ${
+          walletChainId ?? "unknown"
+        }. Switch to ${net.label}?`;
+        await ensureWalletChain(
+          window.ethereum,
+          net.chainId,
+          CHAIN_PARAMS[net.chainId],
+        );
+        walletChainId = await getWalletChainId(window.ethereum);
+        updateChainHint();
+        if (walletChainId !== net.chainId) {
+          throw new Error(
+            `Wallet is still on chain ${walletChainId}; expected ${net.chainId}.`,
+          );
+        }
+      }
+
+      const signer = createBrowserSigner(window.ethereum, address);
       status.textContent = "Requesting payment signature…";
 
       const result = await runPaidEvaluate({
@@ -178,14 +226,15 @@ function mount(root) {
       output.textContent = JSON.stringify(result.raw, null, 2);
 
       if (result.txUrl) {
-        const link = el("a", {
-          href: result.txUrl,
-          target: "_blank",
-          rel: "noopener noreferrer",
-          class: "try-it-tx-link",
-          text: "View settlement on explorer",
-        });
-        txWrap.append(link);
+        txWrap.append(
+          el("a", {
+            href: result.txUrl,
+            target: "_blank",
+            rel: "noopener noreferrer",
+            class: "try-it-tx-link",
+            text: "View settlement on explorer",
+          }),
+        );
       }
     } catch (err) {
       status.dataset.state = "error";
@@ -208,6 +257,7 @@ function mount(root) {
         ]),
       ]),
       warning,
+      chainHint,
       el("label", { class: "try-it-field try-it-field-wide" }, [
         el("span", { text: "Request body (evaluate_mcp_payment)" }),
         bodyArea,
