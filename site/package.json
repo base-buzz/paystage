@@ -1,0 +1,6 @@
+{
+  "name": "@paystage/site",
+  "private": true,
+  "type": "module",
+  "description": "Static lander for paystage.xyz (Cloudflare Pages)."
+}

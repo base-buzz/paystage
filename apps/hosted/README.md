@@ -48,3 +48,23 @@ pnpm typecheck
 
 Paid e2e (Sepolia only) — see `scripts/e2e-instructions.md`. Do **not** run mainnet paid e2e from a throwaway testnet key.
 ```
+
+## Try it
+
+Live demo: <https://paystage.xyz/#try-it>
+
+Build the Try-it bundle:
+
+```sh
+npm run build:try-it
+```
+
+Run the Sepolia harness (uses the same browser module as the widget):
+
+```sh
+PAYSTAGE_E2E_KEY_FILE=/path/to/sepolia-throwaway.key \
+  node scripts/try-it-sepolia-harness.mjs
+```
+
+The harness only touches Base Sepolia (`eip155:84532`) and never prints the
+private key — only the derived address.

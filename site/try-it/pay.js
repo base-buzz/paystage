@@ -1,0 +1,266 @@
+// Shared x402 payment helpers for the PayStage "Try it" widget and the
+// Sepolia harness. Browser + Node compatible ESM. Never logs secrets.
+//
+// Payment-logic review: wrapFetchWithPaymentFromConfig(fetch, config) takes
+// TWO args; ExactEvmScheme needs ClientEvmSigner { address, signTypedData }.
+
+import { ExactEvmScheme } from "@x402/evm";
+import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+import {
+  decodePaymentRequiredHeader as x402DecodeRequired,
+  decodePaymentResponseHeader as x402DecodeResponse,
+} from "@x402/core/http";
+
+export const NETWORKS = {
+  sepolia: {
+    key: "sepolia",
+    id: "eip155:84532",
+    chainId: 84532,
+    api: "https://sepolia.api.paystage.xyz",
+    explorer: "https://sepolia.basescan.org",
+    label: "Base Sepolia",
+    usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    mainnet: false,
+    faucet: "https://faucet.circle.com",
+  },
+  mainnet: {
+    key: "mainnet",
+    id: "eip155:8453",
+    chainId: 8453,
+    api: "https://api.paystage.xyz",
+    explorer: "https://basescan.org",
+    label: "Base",
+    usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    mainnet: true,
+    faucet: null,
+  },
+};
+
+const ALLOWED_PAY_TO = "0x209693Bc6afc0C5328bA36FaF03C514EF312287C";
+const SEPOLIA_USDC = NETWORKS.sepolia.usdc;
+
+function basePolicy(overrides = {}) {
+  return {
+    version: 1,
+    max_amount: { value: "1.00", asset: "USDC", decimals: 6 },
+    allowed_pay_to: [ALLOWED_PAY_TO],
+    allowed_assets: [
+      {
+        symbol: "USDC",
+        decimals: 6,
+        address: SEPOLIA_USDC,
+        network: "eip155:84532",
+      },
+    ],
+    allowed_networks: ["eip155:84532", "eip155:8453"],
+    max_timeout_seconds: 300,
+    unknown_payee: "review",
+    ...overrides,
+  };
+}
+
+function basePaymentRequired({ amount, payTo, network = "eip155:84532", asset = SEPOLIA_USDC }) {
+  return {
+    x402Version: 2,
+    accepts: [
+      {
+        scheme: "exact",
+        network,
+        amount: String(amount),
+        asset,
+        payTo,
+        maxTimeoutSeconds: 300,
+        extra: { name: "USDC", version: "2" },
+      },
+    ],
+  };
+}
+
+export const PRESETS = {
+  small_pay: {
+    label: "Small payment (0.002 USDC, allowed payee)",
+    expect: "pay",
+    body: {
+      payment_required: basePaymentRequired({
+        amount: "2000",
+        payTo: ALLOWED_PAY_TO,
+      }),
+      policy: basePolicy(),
+    },
+  },
+  over_limit: {
+    label: "Over limit (5 USDC vs 1.00 max)",
+    expect: "review or do_not_pay",
+    body: {
+      payment_required: basePaymentRequired({
+        amount: "5000000",
+        payTo: ALLOWED_PAY_TO,
+      }),
+      policy: basePolicy(),
+    },
+  },
+  unknown_payee: {
+    label: "Unknown payee (0x…dEaD)",
+    expect: "review or do_not_pay",
+    body: {
+      payment_required: basePaymentRequired({
+        amount: "2000",
+        payTo: "0x000000000000000000000000000000000000dEaD",
+      }),
+      policy: basePolicy(),
+    },
+  },
+};
+
+/** EIP-1193 browser signer → ClientEvmSigner for ExactEvmScheme. */
+export function createBrowserSigner(ethereum, address) {
+  if (!ethereum || typeof ethereum.request !== "function") {
+    throw new Error("No EIP-1193 wallet available");
+  }
+  if (!address) throw new Error("createBrowserSigner requires an address");
+  return {
+    address,
+    async signTypedData(typedData) {
+      const { domain, types, primaryType, message } = typedData;
+      const cleanTypes = { ...types };
+      delete cleanTypes.EIP712Domain;
+      const payload = JSON.stringify({
+        types: cleanTypes,
+        primaryType,
+        domain,
+        message,
+      });
+      return ethereum.request({
+        method: "eth_signTypedData_v4",
+        params: [address, payload],
+      });
+    },
+  };
+}
+
+/** Viem local account (or any {address, signTypedData}) → ClientEvmSigner. */
+export function createLocalSigner(account) {
+  if (!account || typeof account.signTypedData !== "function" || !account.address) {
+    throw new Error("createLocalSigner requires a viem account");
+  }
+  return {
+    address: account.address,
+    async signTypedData(typedData) {
+      return account.signTypedData(typedData);
+    },
+  };
+}
+
+export function decodePaymentRequired(headerValue) {
+  if (!headerValue) return null;
+  try {
+    return x402DecodeRequired(headerValue);
+  } catch {
+    try {
+      return JSON.parse(atob(headerValue));
+    } catch {
+      return null;
+    }
+  }
+}
+
+export function decodePaymentResponse(headerValue) {
+  if (!headerValue) return null;
+  try {
+    return x402DecodeResponse(headerValue);
+  } catch {
+    try {
+      return JSON.parse(atob(headerValue));
+    } catch {
+      return null;
+    }
+  }
+}
+
+function explorerTxUrl(networkCaip, txHash) {
+  const net =
+    networkCaip === NETWORKS.mainnet.id ? NETWORKS.mainnet : NETWORKS.sepolia;
+  if (!txHash) return null;
+  return `${net.explorer}/tx/${txHash}`;
+}
+
+/**
+ * POST /v1/evaluate_mcp_payment with x402 payment wrapping.
+ * Uses the same wrapFetchWithPaymentFromConfig + ExactEvmScheme path as e2e-paid.
+ */
+export async function runPaidEvaluate({
+  fetchImpl,
+  signer,
+  baseUrl,
+  networkCaip,
+  body,
+  signal,
+} = {}) {
+  if (!signer || !signer.address || typeof signer.signTypedData !== "function") {
+    throw new Error("runPaidEvaluate requires a ClientEvmSigner");
+  }
+  const doFetch = fetchImpl ?? globalThis.fetch;
+  if (typeof doFetch !== "function") {
+    throw new Error("No fetch implementation available");
+  }
+  if (!baseUrl) throw new Error("baseUrl is required");
+  if (!body) throw new Error("body is required");
+  if (!networkCaip) throw new Error("networkCaip is required");
+
+  const url = `${baseUrl.replace(/\/+$/, "")}/v1/evaluate_mcp_payment`;
+  const scheme = new ExactEvmScheme(signer);
+  const paidFetch = wrapFetchWithPaymentFromConfig(doFetch, {
+    schemes: [{ network: networkCaip, client: scheme }],
+  });
+
+  const res = await paidFetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  const paymentRequiredHeader =
+    res.headers.get("PAYMENT-REQUIRED") ??
+    res.headers.get("payment-required") ??
+    res.headers.get("Payment-Required");
+  const paymentResponseHeader =
+    res.headers.get("PAYMENT-RESPONSE") ??
+    res.headers.get("payment-response") ??
+    res.headers.get("X-PAYMENT-RESPONSE") ??
+    res.headers.get("Payment-Response");
+
+  const paymentRequired = decodePaymentRequired(paymentRequiredHeader);
+  const paymentResponse = decodePaymentResponse(paymentResponseHeader);
+
+  let raw = null;
+  const text = await res.text();
+  if (text) {
+    try {
+      raw = JSON.parse(text);
+    } catch {
+      raw = { raw: text };
+    }
+  }
+
+  const decision =
+    (raw && (raw.decision || (raw.result && raw.result.decision))) || null;
+
+  const txHash =
+    (paymentResponse &&
+      (paymentResponse.transaction || paymentResponse.txHash)) ||
+    (raw &&
+      (raw.txHash ||
+        (raw.settlement && raw.settlement.transaction))) ||
+    null;
+
+  return {
+    status: res.status,
+    decision,
+    txHash,
+    txUrl: explorerTxUrl(networkCaip, txHash),
+    paymentRequired,
+    paymentResponse,
+    raw,
+  };
+}
