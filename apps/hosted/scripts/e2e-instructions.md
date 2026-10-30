@@ -1,46 +1,56 @@
-# E2E instructions (Base Sepolia)
+# Hosted E2E — Base Sepolia (live Worker)
 
-No private keys belong in this file or anywhere in the repo.
+Short end-to-end check against the live hosted Worker. Dave holds the keys;
+never ask for, paste, or commit any private key or secret.
 
-## 1. Fund the dev payer
+## 1. Fund the payer
 
-Payer (Dave): `0x552163d84229865Ca11f2860369239eCf0Eb9Dcb`
+Payer: `0x552163d84229865Ca11f2860369239eCf0Eb9Dcb`
 
-- Base Sepolia ETH: https://www.alchemy.com/faucets/base-sepolia
-- Base Sepolia USDC: https://faucet.circle.com (select Base Sepolia)
+- ETH (gas): https://www.alchemy.com/faucets/base-sepolia
+- USDC: https://faucet.circle.com (select **Base Sepolia**)
 
-## 2. Configure the worker
+## 2. Live URLs (Base Sepolia only)
 
-Set the treasury payee as a secret (not `[vars]`):
+- https://api.paystage.xyz
+- https://paystage-hosted.basebuzz69.workers.dev
 
-```
-wrangler secret put PAYSTAGE_PAYTO
-# value: 0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE
-```
-
-`PAYSTAGE_PRICE`, `PAYSTAGE_NETWORK`, and `FACILITATOR_URL` come from
-`wrangler.toml` `[vars]`.
-
-## 3. Run locally
+## 3. Health check
 
 ```
-wrangler dev
+curl https://api.paystage.xyz/health
 ```
 
-## 4. Confirm the paywall
+Expect: `{"ok":true}`
 
-Unpaid request should return HTTP 402 with an `accepts` array:
+## 4. Unpaid request → 402
 
 ```
-curl -i -X POST http://localhost:8787/v1/evaluate_mcp_payment \
+curl -i -X POST https://api.paystage.xyz/v1/evaluate_mcp_payment \
   -H 'content-type: application/json' \
   -d '{"payment_required":{},"policy":{}}'
 ```
 
-## 5. Pay and evaluate
+Expect:
 
-Dave signs the x402 payment payload with his own key using any x402 client
-(e.g. `@x402/fetch`), then retries the request with the `X-PAYMENT` header.
-The worker verifies via the facilitator and returns the evaluation decision.
+- HTTP `402`
+- A `payment-required` header containing base64-encoded JSON with:
+  - `payTo` = `0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE`
+  - `network` = `eip155:84532`
+  - `amount` = `2000` (i.e. `$0.002` USDC)
 
-Do not commit Dave's key. Do not deploy to mainnet.
+## 5. Paid retry (on Dave's machine only)
+
+On Dave's own machine, using his own key:
+
+1. Decode the `payment-required` challenge from step 4.
+2. Sign the x402 payment payload with his key using any x402 client
+   (e.g. `@x402/fetch`).
+3. Retry the request with the `payment-signature` / `X-PAYMENT` header.
+
+The Worker never sees Dave's key — it only verifies the signed payload.
+
+## Notes
+
+- Base Sepolia only. No mainnet.
+- No secrets in this file or anywhere in the repo.

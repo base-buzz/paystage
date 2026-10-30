@@ -1,12 +1,18 @@
 name = "paystage-hosted"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"] # required: @x402 uses node:url; policy may touch node:fs
+workers_dev = true
 
 [vars]
 PAYSTAGE_PRICE = "$0.002"
 PAYSTAGE_NETWORK = "eip155:84532"
 FACILITATOR_URL = "https://x402.org/facilitator"
 
-# PAYSTAGE_PAYTO is a SECRET, not a [vars] entry.
-# Intended treasury value: 0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE
-# Set with: wrangler secret put PAYSTAGE_PAYTO
+# PAYSTAGE_PAYTO is a secret and MUST NOT be set here.
+# Intended treasury: 0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE
+# Set via: wrangler secret put PAYSTAGE_PAYTO
+
+[[routes]]
+pattern = "api.paystage.xyz"
+custom_domain = true

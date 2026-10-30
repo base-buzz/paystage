@@ -13,6 +13,16 @@ outstanding EIP-3009 authorization checks.
   `{ wallet, network?, tokens?, spenders?, policy, eip3009_nonces?, rpc_url? }`.
   Returns `{ listed, evaluated }`.
 
+## Live (Base Sepolia)
+
+Deployed Worker is live on Base Sepolia:
+
+- https://api.paystage.xyz
+- https://paystage-hosted.basebuzz69.workers.dev
+
+`PAYSTAGE_PAYTO` is already set as a Wrangler secret (treasury). Never commit
+the secret value into `[vars]` or source — it is read from env only.
+
 ## Configuration
 
 Environment variables (all `PAYSTAGE_*`):
@@ -47,6 +57,11 @@ The dev payer is Dave at `0x552163d84229865Ca11f2860369239eCf0Eb9Dcb`. E2E
 requires Dave's private key to sign the x402 payment payload — it is never
 committed and never placed in this repo. See
 `scripts/e2e-instructions.md`.
+
+## Local development
+
+- `wrangler dev` — run the Worker locally.
+- `wrangler deploy` — deploy to Cloudflare Workers.
 
 ## Deployment
 
