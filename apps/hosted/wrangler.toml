@@ -1,0 +1,12 @@
+name = "paystage-hosted"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+[vars]
+PAYSTAGE_PRICE = "$0.002"
+PAYSTAGE_NETWORK = "eip155:84532"
+FACILITATOR_URL = "https://x402.org/facilitator"
+
+# PAYSTAGE_PAYTO is a SECRET, not a [vars] entry.
+# Intended treasury value: 0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE
+# Set with: wrangler secret put PAYSTAGE_PAYTO

@@ -1,0 +1,28 @@
+{
+  "name": "@paystage/hosted",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paystage/auth-watch": "file:../../packages/auth-watch",
+    "@paystage/policy": "file:../../packages/policy",
+    "@paystage/preflight": "file:../../packages/preflight",
+    "@x402/core": "^2.29.0",
+    "@x402/evm": "^2.29.0",
+    "@x402/hono": "^2.29.0",
+    "hono": "^4.7.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5",
+    "wrangler": "^4.0.0"
+  }
+}
