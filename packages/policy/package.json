@@ -1,6 +1,8 @@
 {
   "name": "@paystage/policy",
   "version": "0.1.0",
+  "description": "Shared spending policy schema and loader for PayStage agent payment tools",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -10,20 +12,44 @@
       "import": "./dist/index.js"
     }
   },
-  "scripts": {
-    "build": "tsc",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
-  },
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "mcp",
+    "x402",
+    "agent-payments",
+    "usdc",
+    "base",
+    "policy"
+  ],
+  "homepage": "https://paystage.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/base-buzz/paystage.git",
+    "directory": "packages/policy"
+  },
+  "bugs": {
+    "url": "https://github.com/base-buzz/paystage/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm run build"
+  },
   "dependencies": {
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^20.12.12",
-    "typescript": "^5.4.5",
-    "vitest": "^1.6.0"
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
   }
 }

@@ -1,48 +1,26 @@
 # @paystage/preflight
 
-MCP server and library for evaluating x402 payment required objects against a PayStage policy.
+Evaluate an [x402](https://x402.org) `PaymentRequired` against a local spending
+policy **before** your agent pays. Returns one of three verdicts: `pay`,
+`review`, or `do_not_pay`.
 
-## Features
+- **Local-first** — policy lives in a JSON file on your machine. No secrets, no
+  network calls to decide.
+- **MCP-native** — runs as a stdio MCP server so Claude Desktop, Cursor, and any
+  MCP client can call it as a tool.
+- **Deterministic** — same input + same policy ⇒ same verdict.
 
-- `evaluatePayment(paymentRequired, policy)` -> `EvaluateResult`
-- `normalizePaymentRequired(input)` for parsing direct, structured content, or MCP tool result shapes
-- MCP stdio server exposing tool `evaluate_mcp_payment`
-- BigInt-based atomic amount comparisons
-- Case-insensitive asset and payee matching
-- Daily cap note only (never auto-fails)
-- Three-way decision: `pay` | `review` | `do_not_pay`
+## Install
 
-## Installation
+Run directly with `npx` (no global install):
 
 ```bash
-npm install @paystage/preflight
+npx -y @paystage/preflight
 ```
 
-## Library Usage
+Or add it to your MCP client config.
 
-```ts
-import { evaluatePayment, normalizePaymentRequired } from '@paystage/preflight';
-
-const pr = normalizePaymentRequired({
-  x402Version: 2,
-  resource: { url: 'https://example.com/resource' },
-  accepts: [{
-    scheme: 'exact',
-    network: 'eip155:84532',
-    asset: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
-    amount: '10000',
-    maxTimeoutSeconds: 60,
-    payTo: '0x209693Bc6afc0C5328bA36FaF03C514EF312287C'
-  }]
-});
-
-const result = evaluatePayment(pr, policy);
-console.log(result.decision); // 'pay' | 'review' | 'do_not_pay'
-```
-
-## MCP Server
-
-### Claude Desktop
+## Claude Desktop
 
 Add to `claude_desktop_config.json`:
 
@@ -51,7 +29,7 @@ Add to `claude_desktop_config.json`:
   "mcpServers": {
     "paystage-preflight": {
       "command": "npx",
-      "args": ["paystage-preflight"],
+      "args": ["-y", "@paystage/preflight"],
       "env": {
         "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json"
       }
@@ -60,16 +38,16 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
-### Cursor
+## Cursor
 
-Add to Cursor MCP config:
+Add to `.cursor/mcp.json`:
 
 ```json
 {
   "mcpServers": {
-    "xyz.paystage/preflight": {
+    "paystage-preflight": {
       "command": "npx",
-      "args": ["paystage-preflight"],
+      "args": ["-y", "@paystage/preflight"],
       "env": {
         "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json"
       }
@@ -78,23 +56,39 @@ Add to Cursor MCP config:
 }
 ```
 
-## Policy Resolution
+## Example `policy.json`
 
-In MCP tool `evaluate_mcp_payment`, the policy is resolved in this order:
-
-1. `policy` argument (object)
-2. `policy_path` argument (string path)
-3. `PAYSTAGE_POLICY_PATH` environment variable
-4. `./policy.json`
-
-## Development
-
-```bash
-npm test
-npm run typecheck
-npm run build
+```json
+{
+  "version": 1,
+  "name": "standard",
+  "allowed_networks": ["eip155:8453", "eip155:84532"],
+  "allowed_assets": [
+    "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+  ],
+  "allowed_pay_to": ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
+  "max_amount_per_call": "1.00",
+  "max_amount_per_session": "10.00",
+  "require_human_above": "0.50",
+  "max_timeout_seconds": 300,
+  "default_verdict": "review"
+}
 ```
 
-## License
+Amounts are human-readable USDC (e.g. `"0.50"` = 0.50 USDC). Networks use
+CAIP-2 identifiers.
 
-Default-deny. No secrets.
+## Verdicts
+
+| Verdict       | Meaning                                                                 |
+| ------------- | ----------------------------------------------------------------------- |
+| `pay`         | Within policy — safe to proceed automatically.                          |
+| `review`      | Allowed but above a human threshold — ask a human before paying.        |
+| `do_not_pay`  | Violates policy (network, asset, payTo, amount, timeout, or malformed). |
+
+## Links
+
+- Website: <https://paystage.xyz>
+- Source: <https://github.com/base-buzz/paystage>
+- License: MIT

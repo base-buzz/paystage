@@ -1,9 +1,31 @@
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "xyz.paystage/preflight",
-  "description": "PayStage Preflight MCP server for evaluating x402 payment required against policy",
-  "command": "npx",
-  "args": ["paystage-preflight"],
-  "env": {
-    "PAYSTAGE_POLICY_PATH": ""
-  }
+  "title": "PayStage Preflight",
+  "description": "Evaluate x402 PaymentRequired against a local spending policy before an agent pays",
+  "version": "0.1.0",
+  "websiteUrl": "https://paystage.xyz",
+  "repository": {
+    "url": "https://github.com/base-buzz/paystage",
+    "source": "github",
+    "subfolder": "packages/preflight"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@paystage/preflight",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PAYSTAGE_POLICY_PATH",
+          "description": "Path to policy.json spending rules",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
 }

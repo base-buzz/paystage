@@ -1,38 +1,47 @@
 # @paystage/policy
 
-Zod schema and BigInt amount utilities for PayStage policy documents.
+Shared spending-policy schema and loader for PayStage agent payment tools.
+
+## Install
+
+```bash
+npm install @paystage/policy
+```
 
 ## Usage
 
-Load a policy from disk:
-
 ```ts
-import { loadPolicy } from "@paystage/policy";
+import { parsePolicy, loadPolicy, humanToAtomic } from "@paystage/policy";
 
-const policy = await loadPolicy("./policy.json");
-```
-
-Or parse an already-parsed JSON value:
-
-```ts
-import { parsePolicy } from "@paystage/policy";
-
+// Parse an in-memory object (validates against the schema).
 const policy = parsePolicy({
   version: 1,
-  max_amount: { value: "1.00", asset: "USDC", decimals: 6 },
-  allowed_pay_to: ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
-  allowed_assets: [],
+  name: "standard",
   allowed_networks: ["eip155:8453"],
+  allowed_assets: ["0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"],
+  allowed_pay_to: ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
+  max_amount_per_call: "1.00",
+  max_amount_per_session: "10.00",
+  require_human_above: "0.50",
   max_timeout_seconds: 300,
-  unknown_payee: "review"
+  default_verdict: "review",
 });
+
+// Load and validate from disk.
+const fromDisk = await loadPolicy("./policy.json");
+
+// Convert human-readable USDC to atomic units (6 decimals).
+humanToAtomic("0.50"); // "500000"
 ```
 
-Amount utilities never use JavaScript `Number` for money math:
+## API
 
-```ts
-import { atomicToHuman, humanToAtomic } from "@paystage/policy";
+- `parsePolicy(input)` — validate an object, returns a typed `Policy`.
+- `loadPolicy(path)` — read + parse a JSON policy file.
+- `humanToAtomic(amount)` — convert `"0.50"` → `"500000"` (USDC, 6 decimals).
 
-humanToAtomic("1.00", 6); // 1000000n
-atomicToHuman(10000n, 6); // "0.01"
-```
+## Links
+
+- Website: <https://paystage.xyz>
+- Source: <https://github.com/base-buzz/paystage>
+- License: MIT
