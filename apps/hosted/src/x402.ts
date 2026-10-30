@@ -2,13 +2,20 @@ import { paymentMiddleware } from "@x402/hono";
 import { x402ResourceServer } from "@x402/hono";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { createFacilitatorConfig } from "@coinbase/x402";
 import type { MiddlewareHandler } from "hono";
+
+export interface FacilitatorAuth {
+  apiKeyId: string;
+  apiKeySecret: string;
+}
 
 export interface X402Config {
   payTo: string;
   price: string;
   network: string;
   facilitatorUrl: string;
+  facilitatorAuth?: FacilitatorAuth;
 }
 
 export interface FacilitatorClient {
@@ -25,9 +32,22 @@ export function buildResourceServer(
   cfg: X402Config,
   facilitatorClient?: FacilitatorClient,
 ): x402ResourceServer {
-  const client =
-    facilitatorClient ??
-    new HTTPFacilitatorClient({ url: cfg.facilitatorUrl });
+  let client: FacilitatorClient;
+  if (facilitatorClient) {
+    // Injected (tests).
+    client = facilitatorClient;
+  } else if (cfg.facilitatorAuth) {
+    // Mainnet: Coinbase CDP facilitator with auth headers.
+    const config = createFacilitatorConfig(
+      cfg.facilitatorAuth.apiKeyId,
+      cfg.facilitatorAuth.apiKeySecret,
+    );
+    client = new HTTPFacilitatorClient(config as never);
+  } else {
+    // Testnet: x402.org facilitator (no auth).
+    client = new HTTPFacilitatorClient({ url: cfg.facilitatorUrl });
+  }
+
   const server = new x402ResourceServer(client as never);
   server.register(cfg.network, new ExactEvmScheme());
   return server;

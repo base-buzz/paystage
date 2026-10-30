@@ -4,15 +4,43 @@ compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"] # required: @x402 uses node:url; policy may touch node:fs
 workers_dev = true
 
+# Top-level worker = MAINNET-ready (Base mainnet, eip155:8453).
+# Facilitator is Coinbase CDP (https://api.cdp.coinbase.com/platform/v2/x402),
+# configured at runtime from CDP_API_KEY_ID / CDP_API_KEY_SECRET secrets.
+# Do NOT set FACILITATOR_URL for mainnet — the CDP facilitator is used instead.
+#
+# Required secrets (set via `wrangler secret put <NAME>`):
+#   PAYSTAGE_PAYTO       (treasury payTo address)
+#   CDP_API_KEY_ID       (mainnet only)
+#   CDP_API_KEY_SECRET   (mainnet only)
+# Mainnet deploy is blocked until CDP_API_KEY_ID / CDP_API_KEY_SECRET are set.
+
 [vars]
+PAYSTAGE_PRICE = "$0.002"
+PAYSTAGE_NETWORK = "eip155:8453"
+
+[[routes]]
+pattern = "api.paystage.xyz"
+custom_domain = true
+
+# ---------------------------------------------------------------------------
+# Sepolia (Base testnet, eip155:84532) — uses the x402.org facilitator.
+# ---------------------------------------------------------------------------
+[env.sepolia]
+name = "paystage-hosted-sepolia"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+# Only PAYSTAGE_PAYTO secret is needed for Sepolia.
+# Set via: wrangler secret put PAYSTAGE_PAYTO --env sepolia
+
+[env.sepolia.vars]
 PAYSTAGE_PRICE = "$0.002"
 PAYSTAGE_NETWORK = "eip155:84532"
 FACILITATOR_URL = "https://x402.org/facilitator"
 
-# PAYSTAGE_PAYTO is a secret and MUST NOT be set here.
-# Intended treasury: 0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE
-# Set via: wrangler secret put PAYSTAGE_PAYTO
-
-[[routes]]
-pattern = "api.paystage.xyz"
+[[env.sepolia.routes]]
+pattern = "sepolia.api.paystage.xyz"
 custom_domain = true

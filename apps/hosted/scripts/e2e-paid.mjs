@@ -16,8 +16,8 @@ const KEY_FILE =
   process.env.PAYSTAGE_E2E_KEY_FILE ||
   "/home/box/.secrets/paystage-sepolia-throwaway.key";
 
-const BASE_URL = process.env.BASE_URL || "https://api.paystage.xyz";
-const NETWORK = "eip155:84532"; // Base Sepolia (testnet only)
+const BASE_URL = process.env.BASE_URL || process.env.PAYSTAGE_E2E_BASE_URL || "https://sepolia.api.paystage.xyz";
+const NETWORK = "eip155:84532"; // Base Sepolia (testnet only — mainnet paid e2e intentionally unsupported)
 
 function loadAccount() {
   let raw;

@@ -1,36 +1,18 @@
-# PayStage — full reference
+# PayStage
 
-PayStage is a payment safety layer for agents: small, focused MCP tools that compose into a
-payment safety layer. Three tools are available now: payment preflight, auth watch, and
-HIP-3 trade preflight.
+> Payment safety layer for agents. Small, focused MCP tools that compose into a payment
+> safety layer. Three tools available now: payment preflight, auth watch, and HIP-3 trade
+> preflight. A hosted pay-per-call HTTP API is live on Base Sepolia.
 
 Not financial advice. The trade preflight tool is a local policy gate only — it does not
 place orders or recommend trades.
 
-## Umbrella server
+## Tools (available now)
 
-`@paystage/mcp` version **0.2.0** exposes four tools over stdio:
+### `evaluate_mcp_payment`
 
-- `evaluate_mcp_payment` — Available now
-- `list_outstanding_auths` — Available now
-- `evaluate_outstanding_auths` — Available now
-- `evaluate_hip3_trade` — Available now
-
-Install / run:
-
-```sh
-npx -y @paystage/mcp
-```
-
-Optional environment variables:
-
-- `PAYSTAGE_POLICY_PATH` — path to `policy.json` spending rules
-- `PAYSTAGE_RPC_URL` — Base RPC URL override
-
-## `evaluate_mcp_payment` — Available now
-
-Evaluates a proposed x402 payment against a local policy file and returns a verdict before
-the agent signs anything. Package: `@paystage/mcp` (0.2.0).
+Evaluate a proposed x402 payment against a local policy file before signing. Returns
+`pay` | `review` | `do_not_pay`. Package: `@paystage/mcp` (0.2.0).
 
 Example `policy.json`:
 
@@ -44,61 +26,39 @@ Example `policy.json`:
 }
 ```
 
-## `list_outstanding_auths` — Available now
+### `list_outstanding_auths`
 
-Lists outstanding ERC-20, Permit2, and EIP-3009 authorizations. Package:
+List outstanding ERC-20, Permit2, and EIP-3009 authorizations. Package:
 `@paystage/auth-watch` (0.1.0).
 
-## `evaluate_outstanding_auths` — Available now
+### `evaluate_outstanding_auths`
 
-Flags outstanding authorizations that need attention (e.g. authorized but never settled).
-Package: `@paystage/auth-watch` (0.1.0).
+Flag outstanding authorizations that need attention. Package: `@paystage/auth-watch`
+(0.1.0).
 
-## `evaluate_hip3_trade` — Available now
+### `evaluate_hip3_trade`
 
-Evaluates a proposed HIP-3 / trade.xyz order against a local `TradePolicy` and returns a
-decision: `allow` | `review` | `do_not_trade`.
+Evaluate a proposed HIP-3 / trade.xyz order against a local `TradePolicy`; returns
+`allow` | `review` | `do_not_trade`. Package: `@paystage/trade-preflight` (0.1.2), also
+exposed via `@paystage/mcp` (0.2.0). This is a local policy gate only — it does not place
+orders or recommend trades. Not financial advice.
 
-- Package: `@paystage/trade-preflight` (0.1.2)
-- Also exposed via: `@paystage/mcp` (0.2.0)
-- Policy is passed as a tool argument; no extra environment variables are required.
+## Hosted pay-per-call HTTP API
 
-Standalone:
+A hosted pay-per-call HTTP API is live on Base Sepolia.
 
-```sh
-npx -y @paystage/trade-preflight
-```
-
-Example `TradePolicy` shape:
-
-```json
-{
-  "version": 1,
-  "max_notional": { "value": "100.00", "asset": "USDC", "decimals": 6 },
-  "allowed_markets": ["BTC-USD", "ETH-USD"],
-  "allowed_sides": ["buy", "sell"],
-  "max_leverage": 1,
-  "unknown_market": "review"
-}
-```
-
-Decisions:
-
-| Decision | Meaning |
-| --- | --- |
-| `allow` | Order satisfies all policy rules. |
-| `review` | Order needs a human or higher-level check. |
-| `do_not_trade` | Order violates a hard policy rule. |
-
-Not financial advice. A local policy gate only — it does not place orders or recommend trades.
+- Base Sepolia endpoint: https://sepolia.api.paystage.xyz
+- https://api.paystage.xyz is currently still Sepolia (same testnet behavior).
+- Price: $0.002 USDC per call.
+- Mainnet (`eip155:8453`) on `api.paystage.xyz` is pending Coinbase CDP facilitator
+  credentials. Mainnet is not yet live.
 
 ## Packages
 
-| Package | Version | Purpose |
-| --- | --- | --- |
-| `@paystage/mcp` | 0.2.0 | Umbrella MCP server (4 tools) |
-| `@paystage/auth-watch` | 0.1.0 | Outstanding-auth tools |
-| `@paystage/trade-preflight` | 0.1.2 | HIP-3 / trade.xyz trade preflight |
+- `@paystage/mcp` (0.2.0) — umbrella MCP server, 4 tools. `npx -y @paystage/mcp`
+- `@paystage/auth-watch` (0.1.0) — outstanding-auth tools
+- `@paystage/trade-preflight` (0.1.2) — HIP-3 / trade.xyz trade preflight.
+  `npx -y @paystage/trade-preflight`
 
 ## Links
 
@@ -107,4 +67,6 @@ Not financial advice. A local policy gate only — it does not place orders or r
 - HIP-3 context: https://docs.trade.xyz
 - npm: https://www.npmjs.com/package/@paystage/mcp
 - npm: https://www.npmjs.com/package/@paystage/trade-preflight
+- Hosted API (Base Sepolia): https://sepolia.api.paystage.xyz
+- Hosted API (currently Sepolia): https://api.paystage.xyz
 - Listed on: https://registry.modelcontextprotocol.io

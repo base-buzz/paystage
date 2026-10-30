@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PayStage — Safety tools for AI agent payments</title>
-  <meta name="description" content="PayStage is a safety layer for AI agent payments. Preflight checks for x402, MCP, and HIP-3 trades that decide pay, review, or do not pay. Tools #1, #2, and #3 are available now." />
+  <meta name="description" content="PayStage is a safety layer for AI agent payments. Preflight checks for x402, MCP, and HIP-3 trades that decide pay, review, or do not pay. Tools #1, #2, and #3 are available now, plus a hosted pay-per-call HTTP API on Base Sepolia." />
   <link rel="canonical" href="https://paystage.xyz/" />
   <meta name="theme-color" content="#0a0b0e" />
   <meta name="robots" content="index,follow" />
@@ -12,7 +12,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PayStage" />
   <meta property="og:title" content="PayStage — Safety tools for AI agent payments" />
-  <meta property="og:description" content="Preflight checks for x402, MCP, and HIP-3 trades. Decide pay, review, or do not pay before an agent moves money. Tools #1, #2, and #3 available now." />
+  <meta property="og:description" content="Preflight checks for x402, MCP, and HIP-3 trades. Decide pay, review, or do not pay before an agent moves money. Tools #1, #2, and #3 available now, plus a hosted pay-per-call API on Base Sepolia." />
   <meta property="og:url" content="https://paystage.xyz/" />
   <meta property="og:image" content="https://paystage.xyz/og.png" />
   <meta property="og:image:width" content="1200" />
@@ -21,7 +21,7 @@
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="PayStage — Safety tools for AI agent payments" />
-  <meta name="twitter:description" content="Preflight checks for x402, MCP, and HIP-3 trades. Decide pay, review, or do not pay before an agent moves money. Tools #1, #2, and #3 available now." />
+  <meta name="twitter:description" content="Preflight checks for x402, MCP, and HIP-3 trades. Decide pay, review, or do not pay before an agent moves money. Tools #1, #2, and #3 available now, plus a hosted pay-per-call API on Base Sepolia." />
   <meta name="twitter:image" content="https://paystage.xyz/og.png" />
 
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -133,6 +133,13 @@
               ·
               <a href="https://github.com/base-buzz/paystage" rel="noopener">GitHub: base-buzz/paystage</a>
             </p>
+            <p class="card-note">
+              Hosted pay-per-call HTTP API is live on Base Sepolia at
+              <a href="https://sepolia.api.paystage.xyz" rel="noopener">https://sepolia.api.paystage.xyz</a>
+              (and <a href="https://api.paystage.xyz" rel="noopener">https://api.paystage.xyz</a> currently still Sepolia).
+              Price $0.002 USDC per call. Mainnet (<code>eip155:8453</code>) on <code>api.paystage.xyz</code> is pending
+              Coinbase CDP facilitator credentials.
+            </p>
             <p class="card-note">Example <code>policy.json</code>:</p>
             <pre class="code"><code>{
   "version": 1,
@@ -232,6 +239,14 @@
             </p>
           </article>
         </div>
+
+        <p class="card-note">
+          Hosted pay-per-call HTTP API: live on Base Sepolia at
+          <a href="https://sepolia.api.paystage.xyz" rel="noopener">https://sepolia.api.paystage.xyz</a>
+          (and <a href="https://api.paystage.xyz" rel="noopener">https://api.paystage.xyz</a> currently still Sepolia).
+          Price $0.002 USDC per call. Mainnet (<code>eip155:8453</code>) on <code>api.paystage.xyz</code> is pending
+          Coinbase CDP facilitator credentials. Not financial advice.
+        </p>
       </div>
     </section>
 
@@ -259,6 +274,7 @@
     </div>
     <div class="wrap footer-fine">
       <p>Tools #1 (<code>@paystage/preflight</code>), #2 (<code>@paystage/auth-watch</code>), and #3 (<code>@paystage/trade-preflight</code>, HIP-3 / trade.xyz trade preflight) are <strong>Available now</strong> via <code>@paystage/mcp</code>. Other tools are on the roadmap.</p>
+      <p>Hosted pay-per-call HTTP API is live on Base Sepolia at <code>https://sepolia.api.paystage.xyz</code> (and <code>https://api.paystage.xyz</code> currently still Sepolia). Price $0.002 USDC per call. Mainnet (<code>eip155:8453</code>) on <code>api.paystage.xyz</code> is pending Coinbase CDP facilitator credentials. Not financial advice.</p>
     </div>
   </footer>
 </body>

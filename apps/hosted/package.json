@@ -11,6 +11,7 @@
     "e2e:paid": "node scripts/e2e-paid.mjs"
   },
   "dependencies": {
+    "@coinbase/x402": "^2.1.0",
     "@paystage/auth-watch": "file:../../packages/auth-watch",
     "@paystage/policy": "file:../../packages/policy",
     "@paystage/preflight": "file:../../packages/preflight",
