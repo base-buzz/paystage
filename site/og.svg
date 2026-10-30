@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6ee7b7" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6ee7b7"/>
+      <stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0a0b0e"/>
+  <rect x="0" y="0" width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- subtle grid -->
+  <g stroke="#232733" stroke-width="1" opacity="0.5">
+    <line x1="60" y1="120" x2="1140" y2="120"/>
+    <line x1="60" y1="510" x2="1140" y2="510"/>
+  </g>
+
+  <!-- mark -->
+  <g transform="translate(60,60)">
+    <rect x="0" y="0" width="72" height="72" rx="16" fill="#12141a" stroke="#232733" stroke-width="2"/>
+    <path d="M24 18h14c7 0 12 4.5 12 11.5S45 41 38 41H31v13H24V18zm7 6v11h6.5c3.4 0 5.5-2 5.5-5.5S41.5 24 38.5 24H31z" fill="#6ee7b7"/>
+    <circle cx="54" cy="54" r="6" fill="#34d399"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="152" y="112" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="56" fill="#e8eaf0" letter-spacing="-1">PayStage</text>
+
+  <!-- tagline -->
+  <text x="60" y="300" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="64" fill="#e8eaf0" letter-spacing="-1">Safety tools for</text>
+  <text x="60" y="376" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="64" fill="url(#accent)" letter-spacing="-1">AI agent payments</text>
+
+  <!-- pills -->
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="22" fill="#a2a9b8">
+    <rect x="60" y="440" width="150" height="48" rx="24" fill="#12141a" stroke="#232733" stroke-width="2"/>
+    <text x="135" y="471" text-anchor="middle" fill="#6ee7b7">x402</text>
+
+    <rect x="226" y="440" width="150" height="48" rx="24" fill="#12141a" stroke="#232733" stroke-width="2"/>
+    <text x="301" y="471" text-anchor="middle" fill="#6ee7b7">MCP</text>
+
+    <rect x="392" y="440" width="290" height="48" rx="24" fill="#12141a" stroke="#232733" stroke-width="2"/>
+    <text x="537" y="471" text-anchor="middle" fill="#6ee7b7">USDC on Base</text>
+  </g>
+
+  <!-- footer line -->
+  <text x="60" y="560" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#a2a9b8">paystage.xyz</text>
+  <text x="1140" y="560" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#a2a9b8">Available soon</text>
+</svg>

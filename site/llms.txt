@@ -1,0 +1,60 @@
+# PayStage
+
+> Safety tools for AI agent payments (x402 + MCP). Preflight checks that decide whether an agent should pay, pause for review, or refuse.
+
+## Tools
+
+- MCP payment preflight (`@paystage/preflight`) — Available soon (not yet published to npm)
+- Policy engine for x402 payments — Roadmap
+- Payee allowlist / reputation checks — Roadmap
+- Spend limits and budget guardrails — Roadmap
+- Audit log for agent payments — Roadmap
+
+## Install (coming soon)
+
+Not yet published to npm. Once released:
+
+```
+npx -y @paystage/preflight
+```
+
+## Claude Desktop / Cursor config
+
+```json
+{
+  "mcpServers": {
+    "paystage-preflight": {
+      "command": "npx",
+      "args": ["-y", "@paystage/preflight"],
+      "env": {
+        "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json"
+      }
+    }
+  }
+}
+```
+
+## Example policy.json
+
+```json
+{
+  "max_amount": { "value": "5.00", "asset": "USDC", "decimals": 6 },
+  "allowed_pay_to": ["0x0000000000000000000000000000000000000000"],
+  "allowed_networks": ["eip155:8453", "eip155:84532"],
+  "unknown_payee": "review"
+}
+```
+
+## Verdicts
+
+- `pay` — within policy, safe to proceed
+- `review` — needs human or higher-level approval
+- `do_not_pay` — blocked by policy
+
+## Links
+
+- Website: https://paystage.xyz/
+- Repo: https://github.com/base-buzz/paystage
+- Preflight README: https://github.com/base-buzz/paystage/blob/main/packages/preflight/README.md
+- Preflight server.json: https://github.com/base-buzz/paystage/blob/main/packages/preflight/server.json
+- Full agent doc: https://paystage.xyz/llms-full.txt

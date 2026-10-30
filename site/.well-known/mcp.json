@@ -1,0 +1,31 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "xyz.paystage/preflight",
+  "title": "PayStage Preflight",
+  "description": "MCP payment preflight server for AI agent payments. Evaluates x402 payments against a local policy and returns pay, review, or do_not_pay.",
+  "version": "0.1.0",
+  "websiteUrl": "https://paystage.xyz",
+  "repository": {
+    "url": "https://github.com/base-buzz/paystage",
+    "source": "github",
+    "subfolder": "packages/preflight"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@paystage/preflight",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PAYSTAGE_POLICY_PATH",
+          "description": "Absolute path to the policy.json file used to evaluate payments.",
+          "isRequired": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,173 +1,219 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PayStage — Safety tools for AI agent payments</title>
-  <meta name="description" content="PayStage is the safety layer for AI agent payments. Preflight checks, watches, and receipts for x402 and MCP.">
-  <link rel="stylesheet" href="styles.css">
+  <meta name="description" content="PayStage is a safety layer for AI agent payments. Preflight checks for x402 and MCP that decide pay, review, or do not pay." />
+  <link rel="canonical" href="https://paystage.xyz/" />
+  <meta name="theme-color" content="#0a0b0e" />
+  <meta name="robots" content="index,follow" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="PayStage" />
+  <meta property="og:title" content="PayStage — Safety tools for AI agent payments" />
+  <meta property="og:description" content="Preflight checks for x402 and MCP payments. Decide pay, review, or do not pay before an agent moves money." />
+  <meta property="og:url" content="https://paystage.xyz/" />
+  <meta property="og:image" content="https://paystage.xyz/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="PayStage — Safety tools for AI agent payments" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PayStage — Safety tools for AI agent payments" />
+  <meta name="twitter:description" content="Preflight checks for x402 and MCP payments. Decide pay, review, or do not pay before an agent moves money." />
+  <meta name="twitter:image" content="https://paystage.xyz/og.png" />
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <link rel="stylesheet" href="/styles.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "name": "PayStage",
+        "url": "https://paystage.xyz/",
+        "logo": "https://paystage.xyz/icon-512.png",
+        "sameAs": ["https://github.com/base-buzz/paystage"]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "PayStage Preflight",
+        "alternateName": "@paystage/preflight",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "macOS, Linux, Windows",
+        "description": "MCP payment preflight server for AI agent payments. Evaluates x402 payments against a local policy and returns pay, review, or do_not_pay.",
+        "url": "https://paystage.xyz/",
+        "codeRepository": "https://github.com/base-buzz/paystage",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/ComingSoon"
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
-  <a class="skip" href="#main">Skip to content</a>
-
   <header class="site-header">
     <div class="wrap header-inner">
-      <a class="brand" href="#top" aria-label="PayStage home">
-        <span class="brand-mark" aria-hidden="true"></span>
+      <a class="brand" href="/" aria-label="PayStage home">
+        <svg class="brand-mark" width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="7" fill="#0a0b0e"/>
+          <rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#232733" stroke-width="1"/>
+          <path d="M11 8h6.2c3.1 0 5.3 2 5.3 5s-2.2 5-5.3 5H14v6h-3V8zm3 2.6v4.8h3c1.5 0 2.4-.9 2.4-2.4s-.9-2.4-2.4-2.4h-3z" fill="#6ee7b7"/>
+          <circle cx="23.5" cy="23.5" r="2.5" fill="#34d399"/>
+        </svg>
         <span class="brand-name">PayStage</span>
       </a>
-      <nav class="nav" aria-label="Primary">
+      <nav class="site-nav" aria-label="Primary">
         <a href="#tools">Tools</a>
         <a href="#roadmap">Roadmap</a>
-        <a class="nav-gh" href="https://github.com/base-buzz/paystage" rel="noopener noreferrer" target="_blank">GitHub</a>
+        <a href="https://github.com/base-buzz/paystage" rel="noopener">GitHub</a>
       </nav>
     </div>
   </header>
 
-  <main id="main">
-    <section class="hero" id="top">
+  <main>
+    <section class="hero">
       <div class="wrap">
-        <p class="eyebrow">Safety layer for agent payments</p>
-        <h1>Safety tools for AI agent payments.</h1>
+        <p class="eyebrow">x402 · MCP · USDC on Base</p>
+        <h1>Safety tools for AI agent payments</h1>
         <p class="lede">
-          Every agent that pays needs a safety layer. PayStage covers
-          <strong>x402</strong> and <strong>MCP</strong> — preflight checks before
-          money moves, watches for what goes wrong, and receipts you can trust.
+          PayStage sits in front of an agent's wallet and answers one question before money moves:
+          should this payment happen? Preflight checks return <code>pay</code>, <code>review</code>, or <code>do_not_pay</code>.
         </p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#tools">Explore tools</a>
-          <a class="btn btn-ghost" href="https://github.com/base-buzz/paystage" rel="noopener noreferrer" target="_blank">View on GitHub</a>
+          <a class="btn btn-primary" href="#tools">See the tools</a>
+          <a class="btn btn-ghost" href="https://github.com/base-buzz/paystage" rel="noopener">View on GitHub</a>
         </div>
-        <p class="badge-line">
-          <img
-            src="https://img.shields.io/npm/dm/@paystage/preflight"
-            alt="npm downloads for @paystage/preflight"
-            height="20"
-            loading="lazy"
-            decoding="async">
-        </p>
+        <p class="hero-note">Early stage. Packages are <strong>Available soon</strong> — not yet on npm.</p>
       </div>
     </section>
 
-    <section class="tools" id="tools" aria-labelledby="tools-heading">
+    <section id="tools" class="section">
       <div class="wrap">
-        <div class="section-head">
-          <h2 id="tools-heading">Tools</h2>
-          <p class="section-sub">Small, focused utilities. One ships each week.</p>
-        </div>
+        <h2>Tools</h2>
+        <p class="section-lede">Small, focused pieces that compose into a payment safety layer.</p>
 
-        <div class="grid">
+        <div class="cards">
           <article class="card card-featured">
-            <div class="card-top">
+            <div class="card-head">
               <h3>MCP payment preflight</h3>
               <span class="badge badge-soon">Available soon</span>
             </div>
-            <p class="card-desc">
-              Validate an agent's payment intent against your policy before it
-              signs. Blocks unknown payees, caps amounts, and pins allowed networks.
+            <p>
+              An MCP server that evaluates a proposed x402 payment against a local policy file
+              and returns a verdict before the agent signs anything.
             </p>
-
-            <p class="label">Install</p>
-            <pre class="code"><code>npx @paystage/preflight</code></pre>
-
-            <p class="label">policy.json</p>
-            <pre class="code"><code>{
-  "version": 1,
-  "max_amount": "0.05",
-  "allowed_pay_to": ["0xabc...123"],
-  "allowed_networks": ["eip155:8453", "eip155:84532"],
-  "unknown_payee": "review"
-}</code></pre>
+            <pre class="code"><code>npx -y @paystage/preflight</code></pre>
+            <p class="card-note">Not yet published to npm. Command shown for reference.</p>
           </article>
 
           <article class="card">
-            <div class="card-top">
-              <h3>Outstanding-auth watch</h3>
+            <div class="card-head">
+              <h3>Policy engine</h3>
               <span class="badge badge-roadmap">Roadmap</span>
             </div>
-            <p class="card-desc">
-              Tracks pending authorizations an agent has requested but not
-              settled, so nothing lingers unnoticed.
+            <p>
+              Declarative rules for spend limits, allowed payees, and allowed networks.
+              One <code>policy.json</code> per agent.
             </p>
           </article>
 
           <article class="card">
-            <div class="card-top">
-              <h3>Farcaster approve mini-app</h3>
+            <div class="card-head">
+              <h3>Payee allowlist</h3>
               <span class="badge badge-roadmap">Roadmap</span>
             </div>
-            <p class="card-desc">
-              Approve or reject agent payment requests from a Farcaster
-              mini-app, right where you already are.
+            <p>
+              Known-good payees pass. Unknown payees route to review instead of silently paying.
             </p>
           </article>
 
           <article class="card">
-            <div class="card-top">
-              <h3>Dead-seller watch</h3>
+            <div class="card-head">
+              <h3>Spend guardrails</h3>
               <span class="badge badge-roadmap">Roadmap</span>
             </div>
-            <p class="card-desc">
-              Flags sellers and endpoints that stop responding, so agents don't
-              keep paying into the void.
+            <p>
+              Per-call and rolling budget limits so a runaway agent can't drain a wallet.
             </p>
           </article>
 
           <article class="card">
-            <div class="card-top">
-              <h3>MCP listing provenance receipt</h3>
+            <div class="card-head">
+              <h3>Audit log</h3>
               <span class="badge badge-roadmap">Roadmap</span>
             </div>
-            <p class="card-desc">
-              Verifiable receipts for where an MCP listing came from and who
-              published it.
-            </p>
-          </article>
-
-          <article class="card">
-            <div class="card-top">
-              <h3>Micro-escrow ($1 or less)</h3>
-              <span class="badge badge-roadmap">Roadmap</span>
-            </div>
-            <p class="card-desc">
-              Tiny escrow for tiny payments — hold a dollar until the job is
-              actually done.
-            </p>
-          </article>
-
-          <article class="card">
-            <div class="card-top">
-              <h3>Publish-and-register one-shot</h3>
-              <span class="badge badge-roadmap">Roadmap</span>
-            </div>
-            <p class="card-desc">
-              Publish an MCP server and register it for payments in a single
-              command.
+            <p>
+              Every verdict recorded with the inputs that produced it, for later review.
             </p>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="roadmap" id="roadmap" aria-labelledby="roadmap-heading">
-      <div class="wrap roadmap-inner">
-        <h2 id="roadmap-heading">Roadmap</h2>
-        <p class="roadmap-line">
-          <span class="pulse" aria-hidden="true"></span>
-          One tool a week.
-        </p>
+    <section id="roadmap" class="section section-alt">
+      <div class="wrap">
+        <h2>Roadmap</h2>
+        <ol class="roadmap">
+          <li>
+            <span class="badge badge-soon">Available soon</span>
+            <div>
+              <h3>Preflight MCP server</h3>
+              <p>Policy-driven verdicts for x402 payments over MCP. Not yet on npm.</p>
+            </div>
+          </li>
+          <li>
+            <span class="badge badge-roadmap">Roadmap</span>
+            <div>
+              <h3>Policy engine</h3>
+              <p>Richer rules: per-asset limits, time windows, per-tool budgets.</p>
+            </div>
+          </li>
+          <li>
+            <span class="badge badge-roadmap">Roadmap</span>
+            <div>
+              <h3>Payee reputation</h3>
+              <p>Signals beyond the allowlist for deciding when to escalate to review.</p>
+            </div>
+          </li>
+          <li>
+            <span class="badge badge-roadmap">Roadmap</span>
+            <div>
+              <h3>Audit and reporting</h3>
+              <p>Structured logs and summaries of what an agent paid and why.</p>
+            </div>
+          </li>
+        </ol>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="wrap footer-inner">
-      <p class="footer-brand">PayStage</p>
-      <p class="footer-links">
-        <a href="https://github.com/base-buzz/paystage" rel="noopener noreferrer" target="_blank">GitHub</a>
-        <span aria-hidden="true">·</span>
-        <a href="https://paystage.xyz" rel="noopener noreferrer">paystage.xyz</a>
-      </p>
+      <div class="footer-brand">
+        <span class="brand-name">PayStage</span>
+        <p class="footer-tag">Safety tools for AI agent payments.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer">
+        <a href="https://github.com/base-buzz/paystage" rel="noopener">GitHub</a>
+        <a href="/llms.txt">llms.txt</a>
+        <a href="/llms-full.txt">llms-full.txt</a>
+      </nav>
+    </div>
+    <div class="wrap footer-fine">
+      <p>Packages are <strong>Available soon</strong>. Not yet published to npm.</p>
     </div>
   </footer>
 </body>

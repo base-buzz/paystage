@@ -1,0 +1,105 @@
+# PayStage
+
+> Safety tools for AI agent payments (x402 + MCP). Preflight checks that decide whether an agent should pay, pause for review, or refuse.
+
+Status: early. The MCP payment preflight server is **Available soon** and is **not yet published to npm**. Do not assume `npx` install works today.
+
+## What PayStage does
+
+AI agents increasingly move money — paying for API calls over x402, settling in USDC on Base, and calling tools over MCP. PayStage sits in front of those payments and answers one question: should this payment happen?
+
+The preflight server evaluates a proposed payment against a local policy file and returns a verdict:
+
+- `pay` — within policy, safe to proceed
+- `review` — needs human or higher-level approval
+- `do_not_pay` — blocked by policy
+
+## Tools
+
+- MCP payment preflight (`@paystage/preflight`) — Available soon (not yet published to npm)
+- Policy engine for x402 payments — Roadmap
+- Payee allowlist / reputation checks — Roadmap
+- Spend limits and budget guardrails — Roadmap
+- Audit log for agent payments — Roadmap
+
+## Install (coming soon)
+
+Not yet published to npm. Once released:
+
+```
+npx -y @paystage/preflight
+```
+
+## Claude Desktop config
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "paystage-preflight": {
+      "command": "npx",
+      "args": ["-y", "@paystage/preflight"],
+      "env": {
+        "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json"
+      }
+    }
+  }
+}
+```
+
+## Cursor config
+
+Add to `.cursor/mcp.json` (or Cursor settings → MCP):
+
+```json
+{
+  "mcpServers": {
+    "paystage-preflight": {
+      "command": "npx",
+      "args": ["-y", "@paystage/preflight"],
+      "env": {
+        "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json"
+      }
+    }
+  }
+}
+```
+
+## Example policy.json
+
+```json
+{
+  "max_amount": { "value": "5.00", "asset": "USDC", "decimals": 6 },
+  "allowed_pay_to": ["0x0000000000000000000000000000000000000000"],
+  "allowed_networks": ["eip155:8453", "eip155:84532"],
+  "unknown_payee": "review"
+}
+```
+
+Fields:
+
+- `max_amount` — object with `value` (decimal string), `asset` (e.g. `USDC`), `decimals` (integer)
+- `allowed_pay_to` — list of payee addresses permitted without review
+- `allowed_networks` — CAIP-2 network IDs; `eip155:8453` is Base mainnet, `eip155:84532` is Base Sepolia
+- `unknown_payee` — verdict to return for payees not in `allowed_pay_to` (`review` recommended)
+
+## Verdict table
+
+| Verdict | Meaning | Typical cause |
+| --- | --- | --- |
+| `pay` | Proceed | Amount within limit, payee allowed, network allowed |
+| `review` | Pause for approval | Unknown payee, near-limit amount, unusual network |
+| `do_not_pay` | Block | Over limit, disallowed network, explicit deny |
+
+## Environment
+
+- `PAYSTAGE_POLICY_PATH` — absolute path to `policy.json`. Required.
+
+## Links
+
+- Website: https://paystage.xyz/
+- Repo: https://github.com/base-buzz/paystage
+- Preflight README: https://github.com/base-buzz/paystage/blob/main/packages/preflight/README.md
+- Preflight server.json: https://github.com/base-buzz/paystage/blob/main/packages/preflight/server.json
+- Compact doc: https://paystage.xyz/llms.txt
