@@ -1,6 +1,6 @@
 {
   "name": "@paystage/velocity",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Rolling-window rate and spend-pattern checks for agent payments.",
   "type": "module",
   "main": "./dist/index.js",
@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "paystage-velocity": "./dist/server.js"
+    "paystage-velocity": "dist/server.js"
   },
   "files": [
     "dist",

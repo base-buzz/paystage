@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PayStage — Safety tools for AI agent payments</title>
-  <meta name="description" content="PayStage is a safety layer for AI agent payments. Preflight checks for x402, MCP, and HIP-3 trades that decide pay, review, or do not pay. Tools #1, #2, and #3 are available now, plus a hosted pay-per-call HTTP API on Base mainnet and Base Sepolia." />
+  <meta name="description" content="PayStage is a safety layer for AI agent payments. Preflight checks for x402, MCP, and HIP-3 trades that decide pay, review, or do not pay. Tools #1, #2, #3, and Velocity are available now, plus a hosted pay-per-call HTTP API on Base mainnet and Base Sepolia." />
   <link rel="canonical" href="https://paystage.xyz/" />
   <meta name="theme-color" content="#0a0b0e" />
   <meta name="robots" content="index,follow" />
@@ -12,7 +12,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PayStage" />
   <meta property="og:title" content="PayStage — Safety tools for AI agent payments" />
-  <meta property="og:description" content="Preflight checks for x402, MCP, and HIP-3 trades. Decide pay, review, or do not pay before an agent moves money. Tools #1, #2, and #3 available now, plus a hosted pay-per-call API on Base mainnet and Base Sepolia." />
+  <meta property="og:description" content="Preflight checks for x402, MCP, and HIP-3 trades. Decide pay, review, or do not pay before an agent moves money. Tools #1, #2, #3, and Velocity available now, plus a hosted pay-per-call API on Base mainnet and Base Sepolia." />
   <meta property="og:url" content="https://paystage.xyz/" />
   <meta property="og:image" content="https://paystage.xyz/og.png" />
   <meta property="og:image:width" content="1200" />
@@ -21,7 +21,7 @@
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="PayStage — Safety tools for AI agent payments" />
-  <meta name="twitter:description" content="Preflight checks for x402, MCP, and HIP-3 trades. Decide pay, review, or do not pay before an agent moves money. Tools #1, #2, and #3 available now, plus a hosted pay-per-call API on Base mainnet and Base Sepolia." />
+  <meta name="twitter:description" content="Preflight checks for x402, MCP, and HIP-3 trades. Decide pay, review, or do not pay before an agent moves money. Tools #1, #2, #3, and Velocity available now, plus a hosted pay-per-call API on Base mainnet and Base Sepolia." />
   <meta name="twitter:image" content="https://paystage.xyz/og.png" />
 
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -49,7 +49,7 @@
         "alternateName": "@paystage/mcp",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "macOS, Linux, Windows",
-        "description": "Umbrella MCP server for AI agent payment safety. Exposes evaluate_mcp_payment, list_outstanding_auths, evaluate_outstanding_auths, and evaluate_hip3_trade, returning pay, review, or do_not_pay (allow, review, or do_not_trade for trades).",
+        "description": "Umbrella MCP server for AI agent payment safety. Exposes evaluate_mcp_payment, list_outstanding_auths, evaluate_outstanding_auths, evaluate_hip3_trade, and evaluate_velocity, returning pay, review, or do_not_pay (allow, review, or do_not_trade for trades).",
         "url": "https://paystage.xyz/",
         "codeRepository": "https://github.com/base-buzz/paystage",
         "offers": {
@@ -101,7 +101,7 @@
             <a class="btn btn-ghost" href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">Get it on npm</a>
             <a class="btn btn-ghost" href="https://github.com/base-buzz/paystage" rel="noopener">View on GitHub</a>
           </div>
-          <p class="hero-note">Early stage. Tools #1, #2, and #3 are <strong>Available now</strong> on npm; the rest are on the roadmap.</p>
+          <p class="hero-note">Early stage. Tools #1, #2, #3, and Velocity are <strong>Available now</strong> on npm; the rest are on the roadmap.</p>
         </div>
 
         <aside class="hero-side" aria-label="At a glance">
@@ -146,7 +146,7 @@
               and returns a verdict before the agent signs anything.
             </p>
             <pre class="code"><code>npx -y @paystage/mcp</code></pre>
-            <p class="card-note">Install the umbrella server. Tool: <code>evaluate_mcp_payment</code>.</p>
+            <p class="card-note">Install the umbrella server. Tools: <code>evaluate_mcp_payment</code>, <code>evaluate_velocity</code>.</p>
             <p class="card-note">
               <a href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">npm: @paystage/mcp</a>
               ·
@@ -204,6 +204,34 @@
               <a href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">npm: @paystage/mcp</a>
             </p>
             <p class="card-note card-note-warn">Not financial advice. A local policy gate only — it does not place orders or recommend trades.</p>
+          </article>
+
+          <article class="card card-featured">
+            <div class="card-head">
+              <h3>Velocity</h3>
+              <span class="badge badge-now">Available now</span>
+            </div>
+            <p>
+              Rate and spend-pattern checks for agent payments. Flags bursts, unusual cadence,
+              and spend spikes before they turn into a runaway wallet.
+            </p>
+            <div class="chip-row chip-row-tight">
+              <span class="chip">MCP</span>
+              <span class="chip">npm</span>
+              <span class="chip">Base</span>
+            </div>
+            <pre class="code"><code>npm i @paystage/velocity</code></pre>
+            <p class="card-note">
+              Also bundled in the umbrella: <code>npx -y @paystage/mcp</code> exposes
+              <code>evaluate_velocity</code> alongside the other tools.
+            </p>
+            <p class="card-note">
+              <a href="https://www.npmjs.com/package/@paystage/velocity" rel="noopener">npm: @paystage/velocity</a>
+              ·
+              <a href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">npm: @paystage/mcp</a>
+              ·
+              <a href="https://github.com/base-buzz/paystage" rel="noopener">GitHub: base-buzz/paystage</a>
+            </p>
           </article>
 
           <article class="card">
@@ -293,7 +321,7 @@
           <h2>Roadmap</h2>
           <p class="section-lede">One tool a week.</p>
         </header>
-        <p class="roadmap-note">Tools #1, #2, and #3 are shipped (including the HIP-3 / trade.xyz trade preflight). Farcaster approve mini-app is next.</p>
+        <p class="roadmap-note">Tools #1, #2, #3, and Velocity are shipped (including the HIP-3 / trade.xyz trade preflight). Farcaster approve mini-app is next.</p>
       </div>
     </section>
   </main>
@@ -312,7 +340,7 @@
       </nav>
     </div>
     <div class="wrap footer-fine">
-      <p>Tools #1 (<code>@paystage/preflight</code>), #2 (<code>@paystage/auth-watch</code>), and #3 (<code>@paystage/trade-preflight</code>, HIP-3 / trade.xyz trade preflight) are <strong>Available now</strong> via <code>@paystage/mcp</code>. Other tools are on the roadmap.</p>
+      <p>Tools #1 (<code>@paystage/preflight</code>), #2 (<code>@paystage/auth-watch</code>), #3 (<code>@paystage/trade-preflight</code>, HIP-3 / trade.xyz trade preflight), and Velocity (<code>@paystage/velocity</code>) are <strong>Available now</strong> via <code>@paystage/mcp</code>. Other tools are on the roadmap.</p>
       <p>Hosted pay-per-call HTTP API is live on Base mainnet at <code>https://api.paystage.xyz</code> (<code>eip155:8453</code>, USDC, payTo treasury) and on Base Sepolia at <code>https://sepolia.api.paystage.xyz</code>. Price $0.002 USDC per call. Not financial advice.</p>
     </div>
   </footer>
