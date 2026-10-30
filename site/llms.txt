@@ -1,8 +1,9 @@
+```
 # PayStage
 
 > Payment safety layer for agents. Small, focused MCP tools that compose into a payment
 > safety layer. Three tools available now: payment preflight, auth watch, and HIP-3 trade
-> preflight. A hosted pay-per-call HTTP API is live on Base Sepolia.
+> preflight. A hosted pay-per-call HTTP API is live on Base mainnet and Base Sepolia.
 
 Not financial advice. The trade preflight tool is a local policy gate only — it does not
 place orders or recommend trades.
@@ -21,11 +22,9 @@ place orders or recommend trades.
 
 ## Hosted pay-per-call HTTP API
 
-- Live on Base Sepolia: https://sepolia.api.paystage.xyz
-- https://api.paystage.xyz is currently still Sepolia (same testnet behavior).
-- Price: $0.002 USDC per call.
-- Mainnet (`eip155:8453`) on `api.paystage.xyz` is pending Coinbase CDP facilitator
-  credentials. Not yet live on mainnet.
+- Base mainnet (live): https://api.paystage.xyz — `eip155:8453`, USDC, payTo treasury.
+- Base Sepolia (live): https://sepolia.api.paystage.xyz — `eip155:84532`.
+- Price: $0.002 USDC per call on both networks.
 
 ## Packages
 
@@ -41,6 +40,7 @@ place orders or recommend trades.
 - HIP-3 context: https://docs.trade.xyz
 - npm: https://www.npmjs.com/package/@paystage/mcp
 - npm: https://www.npmjs.com/package/@paystage/trade-preflight
+- Hosted API (Base mainnet): https://api.paystage.xyz
 - Hosted API (Base Sepolia): https://sepolia.api.paystage.xyz
-- Hosted API (currently Sepolia): https://api.paystage.xyz
 - Listed on: https://registry.modelcontextprotocol.io
+```

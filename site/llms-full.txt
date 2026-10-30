@@ -1,57 +1,30 @@
+```
 # PayStage
 
 > Payment safety layer for agents. Small, focused MCP tools that compose into a payment
 > safety layer. Three tools available now: payment preflight, auth watch, and HIP-3 trade
-> preflight. A hosted pay-per-call HTTP API is live on Base Sepolia.
+> preflight. A hosted pay-per-call HTTP API is live on Base mainnet and Base Sepolia.
 
 Not financial advice. The trade preflight tool is a local policy gate only — it does not
 place orders or recommend trades.
 
 ## Tools (available now)
 
-### `evaluate_mcp_payment`
-
-Evaluate a proposed x402 payment against a local policy file before signing. Returns
-`pay` | `review` | `do_not_pay`. Package: `@paystage/mcp` (0.2.0).
-
-Example `policy.json`:
-
-```json
-{
-  "version": 1,
-  "max_amount": { "value": "1.00", "asset": "USDC", "decimals": 6 },
-  "allowed_pay_to": ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
-  "allowed_networks": ["eip155:8453", "eip155:84532"],
-  "unknown_payee": "review"
-}
-```
-
-### `list_outstanding_auths`
-
-List outstanding ERC-20, Permit2, and EIP-3009 authorizations. Package:
-`@paystage/auth-watch` (0.1.0).
-
-### `evaluate_outstanding_auths`
-
-Flag outstanding authorizations that need attention. Package: `@paystage/auth-watch`
-(0.1.0).
-
-### `evaluate_hip3_trade`
-
-Evaluate a proposed HIP-3 / trade.xyz order against a local `TradePolicy`; returns
-`allow` | `review` | `do_not_trade`. Package: `@paystage/trade-preflight` (0.1.2), also
-exposed via `@paystage/mcp` (0.2.0). This is a local policy gate only — it does not place
-orders or recommend trades. Not financial advice.
+- `evaluate_mcp_payment` — evaluate a proposed x402 payment against a local policy file
+  before signing. Package: `@paystage/mcp` (0.2.0).
+- `list_outstanding_auths` — list outstanding ERC-20, Permit2, and EIP-3009 authorizations.
+  Package: `@paystage/auth-watch` (0.1.0).
+- `evaluate_outstanding_auths` — flag outstanding authorizations that need attention.
+  Package: `@paystage/auth-watch` (0.1.0).
+- `evaluate_hip3_trade` — evaluate a proposed HIP-3 / trade.xyz order against a local
+  `TradePolicy`; returns `allow` | `review` | `do_not_trade`. Package:
+  `@paystage/trade-preflight` (0.1.2), also exposed via `@paystage/mcp` (0.2.0).
 
 ## Hosted pay-per-call HTTP API
 
-A hosted pay-per-call HTTP API is live on Base Sepolia.
-
-- Base Sepolia endpoint: https://sepolia.api.paystage.xyz
-- https://api.paystage.xyz is currently still Sepolia (same testnet behavior).
-- Price: $0.002 USDC per call.
-- Mainnet (`eip155:8453`) on `api.paystage.xyz` is pending Coinbase CDP facilitator
-  credentials. Mainnet is not yet live.
+- Base mainnet (live): https://api.paystage.xyz — `eip155:8453`, USDC, payTo treasury.
+- Base Sepolia (live): https://sepolia.api.paystage.xyz — `eip155:84532`.
+- Price: $0.002 USDC per call on both networks.
 
 ## Packages
 
@@ -67,6 +40,7 @@ A hosted pay-per-call HTTP API is live on Base Sepolia.
 - HIP-3 context: https://docs.trade.xyz
 - npm: https://www.npmjs.com/package/@paystage/mcp
 - npm: https://www.npmjs.com/package/@paystage/trade-preflight
+- Hosted API (Base mainnet): https://api.paystage.xyz
 - Hosted API (Base Sepolia): https://sepolia.api.paystage.xyz
-- Hosted API (currently Sepolia): https://api.paystage.xyz
 - Listed on: https://registry.modelcontextprotocol.io
+```

@@ -13,7 +13,7 @@ workers_dev = true
 #   PAYSTAGE_PAYTO       (treasury payTo address)
 #   CDP_API_KEY_ID       (mainnet only)
 #   CDP_API_KEY_SECRET   (mainnet only)
-# Mainnet deploy is blocked until CDP_API_KEY_ID / CDP_API_KEY_SECRET are set.
+# Mainnet live: set CDP_API_KEY_ID / CDP_API_KEY_SECRET + PAYSTAGE_PAYTO via wrangler secret put.
 
 [vars]
 PAYSTAGE_PRICE = "$0.002"
