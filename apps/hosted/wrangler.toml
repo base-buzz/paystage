@@ -15,6 +15,11 @@ workers_dev = true
 #   CDP_API_KEY_SECRET   (mainnet only)
 # Mainnet live: set CDP_API_KEY_ID / CDP_API_KEY_SECRET + PAYSTAGE_PAYTO via wrangler secret put.
 
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 [vars]
 PAYSTAGE_PRICE = "$0.002"
 PAYSTAGE_NETWORK = "eip155:8453"
@@ -35,6 +40,11 @@ workers_dev = true
 
 # Only PAYSTAGE_PAYTO secret is needed for Sepolia.
 # Set via: wrangler secret put PAYSTAGE_PAYTO --env sepolia
+
+
+[env.sepolia.observability]
+enabled = true
+head_sampling_rate = 1
 
 [env.sepolia.vars]
 PAYSTAGE_PRICE = "$0.002"

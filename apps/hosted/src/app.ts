@@ -27,7 +27,6 @@ function nonEmpty(v: string | undefined): v is string {
   return typeof v === "string" && v.length > 0;
 }
 
-
 const CORS_ORIGINS = [
   "https://paystage.xyz",
   "https://www.paystage.xyz",
@@ -35,12 +34,20 @@ const CORS_ORIGINS = [
   "http://127.0.0.1:4173",
 ];
 
+// Include access-control-expose-headers because @x402/fetch wrongly sets it
+// as a REQUEST header on the paid retry, which triggers a CORS preflight.
 const CORS_ALLOW_HEADERS = [
   "Content-Type",
-  "Payment-Signature",
-  "X-PAYMENT",
-  "PAYMENT-SIGNATURE",
   "Accept",
+  "Payment-Signature",
+  "PAYMENT-SIGNATURE",
+  "payment-signature",
+  "X-PAYMENT",
+  "x-payment",
+  "Access-Control-Expose-Headers",
+  "access-control-expose-headers",
+  "X-Paystage-Request-Id",
+  "x-paystage-request-id",
 ];
 
 const CORS_EXPOSE_HEADERS = [
@@ -51,6 +58,8 @@ const CORS_EXPOSE_HEADERS = [
   "X-PAYMENT-RESPONSE",
   "payment-required",
   "payment-response",
+  "X-Paystage-Request-Id",
+  "x-paystage-request-id",
 ];
 
 export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
@@ -82,6 +91,64 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
       maxAge: 86400,
     }),
   );
+
+  // Echo correlating request id on every response (incl. 4xx/5xx).
+  app.use("*", async (c, next) => {
+    const rid = c.req.header("x-paystage-request-id");
+    if (rid) c.header("x-paystage-request-id", rid);
+    await next();
+  });
+
+  // Structured request/response logs (no bodies, no secrets).
+  app.use("*", async (c, next) => {
+    const requestId = c.req.header("x-paystage-request-id") || null;
+    const start = Date.now();
+    console.log(
+      JSON.stringify({
+        level: "info",
+        msg: "request",
+        requestId,
+        method: c.req.method,
+        path: c.req.path,
+        origin: c.req.header("origin") || null,
+        hasPaymentSignature: !!(
+          c.req.header("payment-signature") ||
+          c.req.header("PAYMENT-SIGNATURE") ||
+          c.req.header("x-payment") ||
+          c.req.header("X-PAYMENT")
+        ),
+        network: env.PAYSTAGE_NETWORK ?? null,
+      }),
+    );
+    try {
+      await next();
+    } catch (err) {
+      console.log(
+        JSON.stringify({
+          level: "error",
+          msg: "request_throw",
+          requestId,
+          method: c.req.method,
+          path: c.req.path,
+          error: err instanceof Error ? err.message : String(err),
+          network: env.PAYSTAGE_NETWORK ?? null,
+        }),
+      );
+      throw err;
+    }
+    console.log(
+      JSON.stringify({
+        level: "info",
+        msg: "response",
+        requestId,
+        method: c.req.method,
+        path: c.req.path,
+        status: c.res.status,
+        durationMs: Date.now() - start,
+        network: env.PAYSTAGE_NETWORK ?? null,
+      }),
+    );
+  });
 
   // Short-circuit OPTIONS in case payment middleware would otherwise run.
   app.options("*", (c) => c.body(null, 204));

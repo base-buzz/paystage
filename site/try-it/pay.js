@@ -326,6 +326,79 @@ function explorerTxUrl(networkCaip, txHash) {
   return `${net.explorer}/tx/${txHash}`;
 }
 
+
+const STRIP_REQUEST_HEADERS = [
+  "access-control-expose-headers",
+  "Access-Control-Expose-Headers",
+];
+
+function headerNames(headers) {
+  try {
+    return [...new Headers(headers).keys()];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Strip the @x402/fetch mistaken Access-Control-Expose-Headers request header
+ * and attach x-paystage-request-id for correlating browser ↔ Worker logs.
+ */
+export function wrapFetchForTryIt(fetchImpl, { requestId, debug } = {}) {
+  const base = fetchImpl ?? globalThis.fetch;
+  return async (input, init) => {
+    let req;
+    if (input instanceof Request && init === undefined) {
+      req = input.clone();
+    } else {
+      req = new Request(input, init);
+    }
+    const headers = new Headers(req.headers);
+    for (const h of STRIP_REQUEST_HEADERS) headers.delete(h);
+    if (requestId) headers.set("x-paystage-request-id", requestId);
+
+    const method = req.method;
+    const url = req.url;
+    debug?.log("fetch:request", {
+      url,
+      method,
+      headerNames: [...headers.keys()],
+    });
+
+    const next = new Request(req, { headers });
+    let res;
+    try {
+      res = await base(next);
+    } catch (err) {
+      debug?.log("fetch:network_error", {
+        url,
+        method,
+        name: err?.name,
+        message: err?.message,
+        stack: err?.stack ? String(err.stack).slice(0, 500) : undefined,
+      });
+      throw err;
+    }
+
+    debug?.log("fetch:response", {
+      url,
+      status: res.status,
+      hasPaymentRequired: !!(
+        res.headers.get("payment-required") ||
+        res.headers.get("PAYMENT-REQUIRED")
+      ),
+      hasPaymentResponse: !!(
+        res.headers.get("payment-response") ||
+        res.headers.get("PAYMENT-RESPONSE") ||
+        res.headers.get("X-PAYMENT-RESPONSE")
+      ),
+      responseHeaderNames: [...res.headers.keys()],
+      requestIdEcho: res.headers.get("x-paystage-request-id"),
+    });
+    return res;
+  };
+}
+
 /**
  * POST /v1/evaluate_mcp_payment with x402 payment wrapping.
  * Same wrapFetchWithPaymentFromConfig + ExactEvmScheme path as e2e-paid.
@@ -337,6 +410,8 @@ export async function runPaidEvaluate({
   networkCaip,
   body,
   signal,
+  debug,
+  requestId,
 } = {}) {
   if (!signer || !signer.address || typeof signer.signTypedData !== "function") {
     throw new Error("runPaidEvaluate requires a ClientEvmSigner");
@@ -349,18 +424,42 @@ export async function runPaidEvaluate({
   if (!body) throw new Error("body is required");
   if (!networkCaip) throw new Error("networkCaip is required");
 
+  const rid =
+    requestId ||
+    (typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `rid-${Date.now()}`);
+  debug?.log("evaluate:start", { baseUrl, networkCaip, requestId: rid });
+
   const url = `${baseUrl.replace(/\/+$/, "")}/v1/evaluate_mcp_payment`;
+  const instrumented = wrapFetchForTryIt(doFetch, { requestId: rid, debug });
   const scheme = new ExactEvmScheme(signer);
-  const paidFetch = wrapFetchWithPaymentFromConfig(doFetch, {
+  const paidFetch = wrapFetchWithPaymentFromConfig(instrumented, {
     schemes: [{ network: networkCaip, client: scheme }],
   });
 
-  const res = await paidFetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json", Accept: "application/json" },
-    body: JSON.stringify(body),
-    signal,
-  });
+  debug?.log("evaluate:payload_build", { url, method: "POST" });
+  let res;
+  try {
+    res = await paidFetch(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Accept: "application/json",
+        "x-paystage-request-id": rid,
+      },
+      body: JSON.stringify(body),
+      signal,
+    });
+  } catch (err) {
+    debug?.log("evaluate:error", {
+      name: err?.name,
+      message: err?.message,
+      stack: err?.stack ? String(err.stack).slice(0, 800) : undefined,
+    });
+    throw err;
+  }
+  debug?.log("evaluate:done", { status: res.status, requestId: rid });
 
   const paymentRequiredHeader =
     res.headers.get("PAYMENT-REQUIRED") ??
@@ -395,6 +494,12 @@ export async function runPaidEvaluate({
       (raw.txHash || (raw.settlement && raw.settlement.transaction))) ||
     null;
 
+  debug?.log("evaluate:result", {
+    status: res.status,
+    decision,
+    txHash: txHash ? `${String(txHash).slice(0, 10)}…` : null,
+  });
+
   return {
     status: res.status,
     decision,
@@ -403,5 +508,6 @@ export async function runPaidEvaluate({
     paymentRequired,
     paymentResponse,
     raw,
+    requestId: rid,
   };
 }

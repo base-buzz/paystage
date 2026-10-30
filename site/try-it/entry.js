@@ -8,6 +8,7 @@ import {
   getWalletChainId,
   ensureWalletChain,
 } from "./pay.js";
+import { createDebugLog, attachDebugPanel } from "./debug.js";
 
 function el(tag, attrs = {}, children = []) {
   const node = document.createElement(tag);
@@ -109,6 +110,7 @@ function mount(root) {
   });
   const output = el("pre", { class: "try-it-output" });
   const txWrap = el("p", { class: "try-it-tx" });
+  const debugRoot = el("div", { class: "try-it-debug-root" });
 
   function fillPreset(key) {
     const preset = PRESETS[key];
@@ -156,30 +158,48 @@ function mount(root) {
   runBtn.addEventListener("click", async () => {
     output.textContent = "";
     txWrap.textContent = "";
+    debugRoot.innerHTML = "";
+    const debug = createDebugLog();
+    attachDebugPanel(debugRoot, debug);
+    status.textContent = `Request id: ${debug.requestId}`;
+
     if (!window.ethereum) {
       status.dataset.state = "error";
       status.textContent = friendlyError(new Error("no wallet"), NETWORKS.sepolia);
+      debug.log("error", { message: "no wallet" });
       return;
     }
 
     let body;
     try {
       body = JSON.parse(bodyArea.value);
-    } catch {
+    } catch (e) {
       status.dataset.state = "error";
       status.textContent = "Body is not valid JSON.";
+      debug.log("error", { message: "invalid JSON", detail: e?.message });
       return;
     }
 
     const net = NETWORKS[networkSelect.value];
     runBtn.disabled = true;
     try {
+      const eth = window.ethereum;
+      debug.log("wallet:detected", {
+        isMetaMask: !!eth.isMetaMask,
+        isCoinbaseWallet: !!eth.isCoinbaseWallet,
+        providers: Array.isArray(eth.providers) ? eth.providers.length : undefined,
+      });
+
       status.dataset.state = "pending";
-      status.textContent = "Requesting account…";
-      const accounts = await window.ethereum.request({
+      status.textContent = `Requesting account… (${debug.requestId})`;
+      const accounts = await eth.request({
         method: "eth_requestAccounts",
       });
       const address = accounts && accounts[0];
+      debug.log("wallet:accounts", {
+        count: accounts ? accounts.length : 0,
+        address: address ? address.slice(0, 8) + "…" : null,
+      });
       if (!address) throw new Error("No account returned by wallet");
 
       // Chain check BEFORE any signing.
@@ -190,15 +210,28 @@ function mount(root) {
       }
       updateChainHint();
 
+      debug.log("wallet:chainId", { chainId: walletChainId });
+      debug.log("network:selected", {
+        key: networkSelect.value,
+        label: net.label,
+        api: net.api,
+        caip: net.id,
+      });
+
       if (walletChainId !== net.chainId) {
         status.textContent = `Your wallet is on chain ${
           walletChainId ?? "unknown"
         }. Switch to ${net.label}?`;
-        await ensureWalletChain(
+        debug.log("wallet:switch_prompt", {
+          from: walletChainId,
+          to: net.chainId,
+        });
+        const sw = await ensureWalletChain(
           window.ethereum,
           net.chainId,
           CHAIN_PARAMS[net.chainId],
         );
+        debug.log("wallet:switch_result", sw);
         walletChainId = await getWalletChainId(window.ethereum);
         updateChainHint();
         if (walletChainId !== net.chainId) {
@@ -209,7 +242,8 @@ function mount(root) {
       }
 
       const signer = createBrowserSigner(window.ethereum, address);
-      status.textContent = "Requesting payment signature…";
+      status.textContent = `Requesting payment signature… (${debug.requestId})`;
+      debug.log("sign:requested", { address: address.slice(0, 8) + "…" });
 
       const result = await runPaidEvaluate({
         fetchImpl: window.fetch.bind(window),
@@ -217,6 +251,8 @@ function mount(root) {
         baseUrl: net.api,
         networkCaip: net.id,
         body,
+        debug,
+        requestId: debug.requestId,
       });
 
       status.dataset.state = result.status === 200 ? "ok" : "error";
@@ -239,6 +275,12 @@ function mount(root) {
     } catch (err) {
       status.dataset.state = "error";
       status.textContent = friendlyError(err, net);
+      debug.log("error", {
+        name: err?.name,
+        message: err?.message,
+        code: err?.code,
+        stack: err?.stack ? String(err.stack).slice(0, 800) : undefined,
+      });
     } finally {
       runBtn.disabled = false;
     }
@@ -266,6 +308,7 @@ function mount(root) {
       status,
       txWrap,
       output,
+      debugRoot,
     ]),
   );
 }

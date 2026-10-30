@@ -25,8 +25,11 @@ function mockFacilitatorClient() {
 const ALLOWED_ORIGIN = "https://paystage.xyz";
 const DISALLOWED_ORIGIN = "https://evil.example";
 
+const RETRY_REQUEST_HEADERS =
+  "content-type,payment-signature,access-control-expose-headers,x-paystage-request-id,accept,x-payment";
+
 describe("CORS — /v1/evaluate_mcp_payment", () => {
-  it("OPTIONS preflight from paystage.xyz returns allow-origin + expose payment-required", async () => {
+  it("OPTIONS preflight allows x402 retry headers + request id", async () => {
     const app = createApp(baseEnv, {
       facilitatorClient: mockFacilitatorClient(),
     });
@@ -35,13 +38,24 @@ describe("CORS — /v1/evaluate_mcp_payment", () => {
       headers: {
         Origin: ALLOWED_ORIGIN,
         "Access-Control-Request-Method": "POST",
-        "Access-Control-Request-Headers": "content-type,x-payment",
+        "Access-Control-Request-Headers": RETRY_REQUEST_HEADERS,
       },
     });
     expect([200, 204]).toContain(res.status);
     expect(res.headers.get("access-control-allow-origin")).toBe(ALLOWED_ORIGIN);
+    const allow = (res.headers.get("access-control-allow-headers") || "").toLowerCase();
+    for (const h of [
+      "content-type",
+      "payment-signature",
+      "access-control-expose-headers",
+      "x-paystage-request-id",
+      "x-payment",
+    ]) {
+      expect(allow).toContain(h);
+    }
     const expose = (res.headers.get("access-control-expose-headers") || "").toLowerCase();
     expect(expose).toContain("payment-required");
+    expect(expose).toContain("x-paystage-request-id");
   });
 
   it("OPTIONS preflight from disallowed origin omits allow-origin", async () => {
@@ -58,21 +72,22 @@ describe("CORS — /v1/evaluate_mcp_payment", () => {
     expect(res.headers.get("access-control-allow-origin")).toBeNull();
   });
 
-  it("POST without payment returns 402 and includes allow-origin for paystage.xyz", async () => {
+  it("POST without payment returns 402 with CORS + echoes request id", async () => {
     const app = createApp(baseEnv, {
       facilitatorClient: mockFacilitatorClient(),
     });
+    const rid = "test-rid-123";
     const res = await app.request("/v1/evaluate_mcp_payment", {
       method: "POST",
       headers: {
         Origin: ALLOWED_ORIGIN,
         "content-type": "application/json",
+        "x-paystage-request-id": rid,
       },
       body: JSON.stringify({}),
     });
     expect(res.status).toBe(402);
     expect(res.headers.get("access-control-allow-origin")).toBe(ALLOWED_ORIGIN);
-    const expose = (res.headers.get("access-control-expose-headers") || "").toLowerCase();
-    expect(expose).toContain("payment-required");
+    expect(res.headers.get("x-paystage-request-id")).toBe(rid);
   });
 });
