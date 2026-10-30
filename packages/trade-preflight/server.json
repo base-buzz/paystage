@@ -1,0 +1,12 @@
+{
+  "mcpName": "xyz.paystage/trade-preflight",
+  "name": "paystage-trade-preflight",
+  "version": "0.0.0",
+  "description": "Evaluate a Hyperliquid HIP-3 (trade.xyz) order against a local TradePolicy before an agent trades.",
+  "tools": [
+    {
+      "name": "evaluate_hip3_trade",
+      "description": "Evaluate a proposed HIP-3 order against a TradePolicy. Returns decision allow | review | do_not_trade with reasons."
+    }
+  ]
+}

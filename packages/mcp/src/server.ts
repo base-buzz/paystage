@@ -14,11 +14,22 @@ import {
   createRpcClient,
   resolveRpcUrl,
 } from "@paystage/auth-watch";
+import {
+  evaluateTrade,
+  parseTradePolicy,
+  fetchMetaAndAssetCtxs,
+} from "@paystage/trade-preflight";
+import type {
+  EvaluateTradeResult,
+  Snapshot,
+  TradeProposal,
+} from "@paystage/trade-preflight";
 
 export const TOOL_NAMES = [
   "evaluate_mcp_payment",
   "list_outstanding_auths",
   "evaluate_outstanding_auths",
+  "evaluate_hip3_trade",
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];
@@ -67,6 +78,23 @@ type AuthWatchArgs = {
   policy?: unknown;
   eip3009_nonces?: string[];
   rpc_url?: string;
+};
+
+const tradeProposalShape = z.object({
+  dex: z.string(),
+  asset: z.string(),
+  side: z.enum(["buy", "sell"]),
+  size: z.string(),
+  leverage: z.number().optional(),
+  order_type: z.enum(["limit", "market"]).optional(),
+  limit_px: z.string().optional(),
+});
+
+type TradeToolArgs = {
+  proposal: TradeProposal;
+  policy?: unknown;
+  policy_path?: string;
+  snapshot?: unknown;
 };
 
 function registerAllTools(server: McpServer): void {
@@ -173,6 +201,46 @@ function registerAllTools(server: McpServer): void {
           },
         ],
       };
+    },
+  );
+
+  server.registerTool(
+    "evaluate_hip3_trade",
+    {
+      description:
+        "Evaluate a Hyperliquid HIP-3 (trade.xyz) order against a TradePolicy before an agent trades. Returns decision allow | review | do_not_trade.",
+      inputSchema: {
+        proposal: tradeProposalShape,
+        policy: z.unknown().optional(),
+        policy_path: z.string().optional(),
+        snapshot: z.unknown().optional(),
+      },
+    },
+    async (args: TradeToolArgs): Promise<{
+      content: Array<{ type: "text"; text: string }>;
+      isError?: boolean;
+    }> => {
+      try {
+        const policy = parseTradePolicy(args.policy);
+        const snapshot: Snapshot =
+          args.snapshot !== undefined
+            ? (args.snapshot as Snapshot)
+            : await fetchMetaAndAssetCtxs(args.proposal.dex || "xyz");
+        const result: EvaluateTradeResult = evaluateTrade(
+          args.proposal,
+          snapshot,
+          policy,
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          isError: true,
+          content: [{ type: "text", text: `Error: ${message}` }],
+        };
+      }
     },
   );
 }
