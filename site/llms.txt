@@ -33,6 +33,13 @@ Install the umbrella MCP server:
 - review — needs human or higher-level approval.
 - do_not_pay — blocked by policy.
 
+## Listed on
+
+- mcp.so: https://mcp.so/server/paystage
+- MCP Registry: https://registry.modelcontextprotocol.io/v0/servers?search=xyz.paystage
+- npm: https://www.npmjs.com/package/@paystage/mcp
+- GitHub: https://github.com/base-buzz/paystage
+
 ## Links
 
 - Website: https://paystage.xyz

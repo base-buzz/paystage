@@ -12,6 +12,13 @@ npx -y @paystage/mcp
 
 `@paystage/mcp` is the umbrella MCP server. It exposes the PayStage tools over stdio and reads a local policy file.
 
+## Listed on
+
+- [mcp.so](https://mcp.so/server/paystage)
+- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=xyz.paystage)
+- [npm](https://www.npmjs.com/package/@paystage/mcp)
+- [GitHub](https://github.com/base-buzz/paystage)
+
 ## Configure
 
 Claude Desktop (`claude_desktop_config.json`):
