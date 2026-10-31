@@ -8,6 +8,7 @@ import {
   PERMIT2,
 } from "@paystage/auth-watch";
 import type { Policy } from "@paystage/policy";
+import { SIWE_SESSION_COOKIE, open } from "@/lib/siwe/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,29 +50,55 @@ function serialize(value: unknown): unknown {
   return value;
 }
 
-export async function POST(req: Request) {
-  let body: { address?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "invalid_json" }, { status: 400 });
+function readCookie(req: Request, name: string): string | undefined {
+  const header = req.headers.get("cookie");
+  if (!header) return undefined;
+  for (const part of header.split(";")) {
+    const idx = part.indexOf("=");
+    if (idx === -1) continue;
+    const k = part.slice(0, idx).trim();
+    if (k === name) return decodeURIComponent(part.slice(idx + 1).trim());
   }
-  const address = body?.address;
-  if (!address || !/^0x[0-9a-fA-F]{40}$/.test(address)) {
-    return NextResponse.json({ error: "invalid_address" }, { status: 400 });
+  return undefined;
+}
+
+function alchemyBaseUrlFromEnv(): string | undefined {
+  const direct = process.env.ALCHEMY_BASE_URL?.trim();
+  if (direct) return direct;
+  const key =
+    process.env.ALCHEMY_API_KEY?.trim() ||
+    process.env.ALCHEMY_KEY?.trim();
+  if (key) return `https://base-mainnet.g.alchemy.com/v2/${key}`;
+  return undefined;
+}
+
+export async function POST(req: Request) {
+  // Address comes only from the SIWE session cookie — never from the client body.
+  const sessionToken = readCookie(req, SIWE_SESSION_COOKIE);
+  if (!sessionToken) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  const session = await open(sessionToken);
+  if (!session) {
+    return NextResponse.json({ error: "session_expired" }, { status: 401 });
+  }
+  const address = session.payload;
+  if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
+    return NextResponse.json({ error: "invalid_session" }, { status: 401 });
   }
 
   try {
     const network = "eip155:8453";
     const candidates = [
-      process.env.ALCHEMY_BASE_URL?.trim(),
+      alchemyBaseUrlFromEnv(),
+      process.env.BASE_RPC_URL?.trim(),
       process.env.NEXT_PUBLIC_BASE_RPC?.trim(),
       "https://1rpc.io/base",
       resolveRpcUrl(network),
     ].filter((u): u is string => !!u && u.length > 0);
 
     let items: Awaited<ReturnType<typeof listOutstandingAuths>> | null = null;
-    let rpcUrl = candidates[0];
+    let rpcUrl = candidates[0]!;
     let lastErr: unknown;
     for (const url of candidates) {
       try {
@@ -95,11 +122,12 @@ export async function POST(req: Request) {
       throw lastErr instanceof Error ? lastErr : new Error("scan_failed");
     }
     const evaluated = evaluateOutstandingAuths(items, POLICY);
+    const usedAlchemy = /alchemy\.com/i.test(rpcUrl);
     return NextResponse.json({
       address,
       chainId: 8453,
       network,
-      rpc: rpcUrl.includes("alchemy") ? "alchemy" : "public",
+      rpc: usedAlchemy ? "alchemy" : "public",
       items: serialize(evaluated),
       note:
         items.length === 0

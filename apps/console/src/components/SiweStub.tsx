@@ -27,12 +27,6 @@ function buildSiweMessage(params: {
   ].join("\n");
 }
 
-function randomNonce(): string {
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 type EvalItem = {
   item?: {
     token?: string;
@@ -75,7 +69,16 @@ export function SiweStub() {
     setItems(null);
     setNote(null);
     try {
-      const eth = (window as unknown as { ethereum?: { request: (a: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum;
+      const eth = (
+        window as unknown as {
+          ethereum?: {
+            request: (a: {
+              method: string;
+              params?: unknown[];
+            }) => Promise<unknown>;
+          };
+        }
+      ).ethereum;
       if (!eth) throw new Error("No wallet detected.");
 
       const accounts = (await eth.request({
@@ -84,21 +87,31 @@ export function SiweStub() {
       const addr = accounts?.[0];
       if (!addr) throw new Error("No account returned.");
 
-      // Prefer Base mainnet for approval scan (read-only).
       try {
         await eth.request({
           method: "wallet_switchEthereumChain",
           params: [{ chainId: "0x2105" }],
         });
       } catch {
-        // user may already be on Base or reject — scan still uses public RPC
+        // user may already be on Base or reject — scan still uses server RPC
       }
 
+      const nonceRes = await fetch("/api/siwe/nonce", {
+        method: "GET",
+        credentials: "include",
+      });
+      const nonceData = await nonceRes.json();
+      if (!nonceRes.ok) {
+        throw new Error(nonceData?.error || `nonce HTTP ${nonceRes.status}`);
+      }
+      const serverNonce = nonceData.nonce as string;
+      const domain = (nonceData.domain as string) || window.location.host;
+
       const msg = buildSiweMessage({
-        domain: window.location.host,
+        domain,
         address: addr,
         uri: window.location.origin,
-        nonce: randomNonce(),
+        nonce: serverNonce,
         issuedAt: new Date().toISOString(),
       });
       const sig = (await eth.request({
@@ -106,14 +119,27 @@ export function SiweStub() {
         params: [msg, addr],
       })) as string;
 
-      setAddress(addr);
+      const verifyRes = await fetch("/api/siwe/verify", {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ message: msg, signature: sig }),
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok) {
+        throw new Error(verifyData?.error || `verify HTTP ${verifyRes.status}`);
+      }
+
+      const sessionAddress = (verifyData.address as string) || addr;
+      setAddress(sessionAddress);
       setMessage(msg);
       setSignature(sig);
 
       const res = await fetch("/api/auth-scan", {
         method: "POST",
+        credentials: "include",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ address: addr }),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || `scan HTTP ${res.status}`);
@@ -136,8 +162,9 @@ export function SiweStub() {
         SIWE
       </h2>
       <p className="panel-sub">
-        EIP-4361 sign-in, then a read-only Base USDC approval scan via auth-watch.
-        Nothing is sent on-chain except the signature request.
+        EIP-4361 sign-in (server nonce + verified session), then a read-only
+        Base USDC approval scan via auth-watch. Nothing is sent on-chain except
+        the signature request.
       </p>
       <button
         type="button"
@@ -161,11 +188,20 @@ export function SiweStub() {
       {message ? (
         <details className="detail-block" style={{ marginTop: 8 }}>
           <summary className="muted">Signed SIWE message</summary>
-          <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0 }}>
+          <pre
+            style={{
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              margin: 0,
+            }}
+          >
             {message}
           </pre>
           {signature ? (
-            <p className="muted" style={{ wordBreak: "break-all", fontSize: 11 }}>
+            <p
+              className="muted"
+              style={{ wordBreak: "break-all", fontSize: 11 }}
+            >
               sig {signature.slice(0, 20)}…
             </p>
           ) : null}
