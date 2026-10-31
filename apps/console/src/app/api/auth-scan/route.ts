@@ -63,19 +63,37 @@ export async function POST(req: Request) {
 
   try {
     const network = "eip155:8453";
-    const rpcUrl =
-      process.env.NEXT_PUBLIC_BASE_RPC?.trim() ||
-      process.env.ALCHEMY_BASE_URL?.trim() ||
-      resolveRpcUrl(network);
-    const rpc = createRpcClient(rpcUrl);
-    const items = await listOutstandingAuths({
-      wallet: address,
-      network,
-      tokens: [USDC_BASE],
-      spenders: SAMPLE_SPENDERS,
-      rpc,
-      includePermit2: true,
-    });
+    const candidates = [
+      process.env.ALCHEMY_BASE_URL?.trim(),
+      process.env.NEXT_PUBLIC_BASE_RPC?.trim(),
+      "https://1rpc.io/base",
+      resolveRpcUrl(network),
+    ].filter((u): u is string => !!u && u.length > 0);
+
+    let items: Awaited<ReturnType<typeof listOutstandingAuths>> | null = null;
+    let rpcUrl = candidates[0];
+    let lastErr: unknown;
+    for (const url of candidates) {
+      try {
+        const rpc = createRpcClient(url);
+        items = await listOutstandingAuths({
+          wallet: address,
+          network,
+          tokens: [USDC_BASE],
+          spenders: SAMPLE_SPENDERS,
+          rpc,
+          includePermit2: true,
+        });
+        rpcUrl = url;
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    if (!items) {
+      throw lastErr instanceof Error ? lastErr : new Error("scan_failed");
+    }
     const evaluated = evaluateOutstandingAuths(items, POLICY);
     return NextResponse.json({
       address,

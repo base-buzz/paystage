@@ -1,3 +1,4 @@
+import bakedCommits from "@/lib/recent-commits.json";
 const PACKAGES = [
   { name: "@paystage/mcp", version: "0.2.1" },
   { name: "@paystage/preflight", version: "0.1.0" },
@@ -39,7 +40,10 @@ async function fetchStars(): Promise<number | null> {
   try {
     const res = await fetch(`https://api.github.com/repos/${REPO}`, {
       next: { revalidate: 3600 },
-      headers: { Accept: "application/vnd.github+json" },
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "PayStageConsole/0.1",
+      },
     });
     if (!res.ok) return null;
     const data = (await res.json()) as { stargazers_count?: number };
@@ -57,10 +61,13 @@ async function fetchCommits(): Promise<CommitRow[]> {
       `https://api.github.com/repos/${REPO}/commits?per_page=5`,
       {
         next: { revalidate: 3600 },
-        headers: { Accept: "application/vnd.github+json" },
+        headers: {
+          Accept: "application/vnd.github+json",
+          "User-Agent": "PayStageConsole/0.1",
+        },
       },
     );
-    if (!res.ok) return [];
+    if (!res.ok) return bakedCommits as CommitRow[];
     const data = (await res.json()) as Array<{
       sha: string;
       commit?: { message?: string; author?: { date?: string } };
@@ -71,7 +78,7 @@ async function fetchCommits(): Promise<CommitRow[]> {
       date: c.commit?.author?.date ?? null,
     }));
   } catch {
-    return [];
+    return bakedCommits as CommitRow[];
   }
 }
 
@@ -81,7 +88,10 @@ async function fetchLatestRelease(): Promise<string | null> {
       `https://api.github.com/repos/${REPO}/releases/latest`,
       {
         next: { revalidate: 3600 },
-        headers: { Accept: "application/vnd.github+json" },
+        headers: {
+          Accept: "application/vnd.github+json",
+          "User-Agent": "PayStageConsole/0.1",
+        },
       },
     );
     if (!res.ok) return null;
