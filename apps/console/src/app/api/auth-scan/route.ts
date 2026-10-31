@@ -13,10 +13,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Common Base spenders to sample (Permit2 + a few routers). Read-only eth_call.
+// Keep eth_call count low — public RPCs rate-limit CF egress.
 const SAMPLE_SPENDERS = [
   PERMIT2,
   "0x2626664c2603336E57B271c5C0b26F421741e481", // SwapRouter02 Base
-  "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD", // Universal Router
 ];
 
 const POLICY: Policy = {
@@ -82,7 +82,7 @@ export async function POST(req: Request) {
           tokens: [USDC_BASE],
           spenders: SAMPLE_SPENDERS,
           rpc,
-          includePermit2: true,
+          includePermit2: false,
         });
         rpcUrl = url;
         lastErr = null;
