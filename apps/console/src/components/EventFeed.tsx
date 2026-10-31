@@ -1,5 +1,13 @@
 import type { TelemetryEvent } from "@/lib/types";
 
+function basescanUrl(network: string | null, tx: string): string {
+  const n = (network ?? "").toLowerCase();
+  const host = n.includes("84532") || n.includes("sepolia")
+    ? "https://sepolia.basescan.org"
+    : "https://basescan.org";
+  return `${host}/tx/${tx}`;
+}
+
 function sourceBadge(source: TelemetryEvent["source"]) {
   if (source === "real") return <span className="badge badge-real">real</span>;
   if (source === "synthetic")
@@ -84,6 +92,17 @@ export function EventFeed({ events }: { events: TelemetryEvent[] }) {
                   {e.status}
                 </span>
                 <span>{e.latency_ms != null ? `${e.latency_ms}ms` : "—"}</span>
+                {e.tx_hash ? (
+                  <a
+                    className="link"
+                    href={basescanUrl(e.route, e.tx_hash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ minHeight: "auto", fontSize: 12 }}
+                  >
+                    tx
+                  </a>
+                ) : null}
                 <span>{new Date(e.created_at).toISOString().slice(11, 19)}</span>
               </div>
             </li>

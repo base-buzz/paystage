@@ -66,6 +66,7 @@ function mapEvent(row: EventRow): TelemetryEvent {
     message: row.error_class ?? row.facilitator_status ?? null,
     created_at: row.ts,
     latency_ms: typeof row.latency_ms === "number" ? row.latency_ms : null,
+    tx_hash: row.tx_hash ?? null,
   };
 }
 
