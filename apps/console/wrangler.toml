@@ -1,11 +1,19 @@
-name = "paystage-console-preview"
+name = "paystage-console"
 main = ".open-next/worker.js"
 compatibility_date = "2024-12-30"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
-# Preview only. Never bind to paystage.xyz.
+# Production console at apex. Old static lander tagged site-static-pre-console-20261101.
 
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
+
+[[routes]]
+pattern = "paystage.xyz"
+custom_domain = true
+
+[[routes]]
+pattern = "www.paystage.xyz"
+custom_domain = true

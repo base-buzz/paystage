@@ -7,6 +7,7 @@ import { IncidentFeed } from "@/components/IncidentFeed";
 import { ScenarioRunner } from "@/components/ScenarioRunner";
 import { ProgressStrip } from "@/components/ProgressStrip";
 import { SiweStub } from "@/components/SiweStub";
+import { SyntheticWallets } from "@/components/SyntheticWallets";
 import { ConfidenceChecklist } from "@/components/ConfidenceChecklist";
 
 export const dynamic = "force-dynamic";
@@ -54,7 +55,9 @@ export default async function Page() {
         </nav>
       </header>
       <main id="main" className="site-main">
-        <ScenarioRunner />
+        <section id="try-it" aria-label="Try it">
+          <ScenarioRunner />
+        </section>
 
         <StatusStrip status={status} />
         <IssueFlags flags={m.flags} />
@@ -92,6 +95,7 @@ export default async function Page() {
         <VolumeChart data={m.volume} />
         <IncidentFeed incidents={m.incidents} />
         <ConfidenceChecklist />
+        <SyntheticWallets />
         <SiweStub />
       </main>
     </>

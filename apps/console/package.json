@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "preview:cf": "npx opennextjs-cloudflare build && npx wrangler deploy",
+    "preview:cf": "npx opennextjs-cloudflare build && npx wrangler deploy -c wrangler.preview.toml",
     "pages:dev": "npx wrangler pages dev",
-    "test": "vitest run"
+    "test": "vitest run",
+    "deploy:prod": "npx opennextjs-cloudflare build && npx wrangler deploy"
   },
   "dependencies": {
     "@paystage/auth-watch": "file:../../packages/auth-watch",
