@@ -2,6 +2,9 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { healthRoutes } from "./routes/health.js";
 import { evaluateRoutes } from "./routes/evaluate.js";
+import { publicStatusRoutes } from "./routes/public-status.js";
+import { recordEvent, sourceFromHeaders } from "./telemetry.js";
+import { CORS_ORIGINS } from "./cors-origins.js";
 import {
   buildPaymentMiddleware,
   type FacilitatorAuth,
@@ -16,6 +19,8 @@ export interface AppEnv {
   FACILITATOR_URL?: string;
   CDP_API_KEY_ID?: string;
   CDP_API_KEY_SECRET?: string;
+  SUPABASE_URL?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
 }
 
 export interface CreateAppOptions {
@@ -26,13 +31,6 @@ export interface CreateAppOptions {
 function nonEmpty(v: string | undefined): v is string {
   return typeof v === "string" && v.length > 0;
 }
-
-const CORS_ORIGINS = [
-  "https://paystage.xyz",
-  "https://www.paystage.xyz",
-  "http://localhost:4173",
-  "http://127.0.0.1:4173",
-];
 
 // Include access-control-expose-headers because @x402/fetch wrongly sets it
 // as a REQUEST header on the paid retry, which triggers a CORS preflight.
@@ -48,6 +46,8 @@ const CORS_ALLOW_HEADERS = [
   "access-control-expose-headers",
   "X-Paystage-Request-Id",
   "x-paystage-request-id",
+  "X-Paystage-Source",
+  "x-paystage-source",
 ];
 
 const CORS_EXPOSE_HEADERS = [
@@ -61,6 +61,69 @@ const CORS_EXPOSE_HEADERS = [
   "X-Paystage-Request-Id",
   "x-paystage-request-id",
 ];
+
+// Map request path -> telemetry tool name. Returns null to skip telemetry.
+// Strict allowlist only — never record robots/sitemap/favicon/static as tools.
+export function toolFromPath(path: string): string | null {
+  switch (path) {
+    case "/v1/evaluate_mcp_payment":
+      return "evaluate_mcp_payment";
+    case "/v1/evaluate_outstanding_auths":
+      return "evaluate_outstanding_auths";
+    default:
+      return null;
+  }
+}
+
+interface ParsedDecision {
+  decision: string;
+  reason_codes: string[];
+}
+
+// Best-effort parse of a JSON response body for decision + reason_codes.
+async function parseDecisionFromResponse(
+  res: Response,
+): Promise<ParsedDecision | null> {
+  const ct = res.headers.get("content-type") || "";
+  if (!ct.toLowerCase().includes("application/json")) return null;
+  try {
+    const clone = res.clone();
+    const data = (await clone.json()) as unknown;
+    if (!data || typeof data !== "object") return null;
+    const obj = data as Record<string, unknown>;
+    const decision =
+      typeof obj.decision === "string"
+        ? obj.decision
+        : typeof obj.verdict === "string"
+          ? obj.verdict
+          : null;
+    if (!decision) return null;
+    const reason_codes = Array.isArray(obj.reason_codes)
+      ? (obj.reason_codes as unknown[]).filter(
+          (x): x is string => typeof x === "string",
+        )
+      : [];
+    return { decision, reason_codes };
+  } catch {
+    return null;
+  }
+}
+
+function classifyStatus(status: number): {
+  facilitator_status: string | null;
+  error_class: string | null;
+} {
+  if (status >= 500) {
+    return { facilitator_status: null, error_class: "internal_error" };
+  }
+  if (status === 402) {
+    return { facilitator_status: "payment_required", error_class: null };
+  }
+  if (status >= 400) {
+    return { facilitator_status: null, error_class: "client_error" };
+  }
+  return { facilitator_status: null, error_class: null };
+}
 
 export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
   const facilitatorAuth: FacilitatorAuth | undefined =
@@ -99,17 +162,23 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
     await next();
   });
 
-  // Structured request/response logs (no bodies, no secrets).
+  // Structured request/response logs + telemetry (no bodies, no secrets).
   app.use("*", async (c, next) => {
     const requestId = c.req.header("x-paystage-request-id") || null;
     const start = Date.now();
+    const method = c.req.method;
+    const path = c.req.path;
+    const tool = toolFromPath(path);
+    const source = sourceFromHeaders(c.req);
+    const network = env.PAYSTAGE_NETWORK ?? "eip155:8453";
+
     console.log(
       JSON.stringify({
         level: "info",
         msg: "request",
         requestId,
-        method: c.req.method,
-        path: c.req.path,
+        method,
+        path,
         origin: c.req.header("origin") || null,
         hasPaymentSignature: !!(
           c.req.header("payment-signature") ||
@@ -120,40 +189,88 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
         network: env.PAYSTAGE_NETWORK ?? null,
       }),
     );
+
+    let threw = false;
     try {
       await next();
     } catch (err) {
+      threw = true;
       console.log(
         JSON.stringify({
           level: "error",
           msg: "request_throw",
           requestId,
-          method: c.req.method,
-          path: c.req.path,
+          method,
+          path,
           error: err instanceof Error ? err.message : String(err),
           network: env.PAYSTAGE_NETWORK ?? null,
         }),
       );
       throw err;
+    } finally {
+      const durationMs = Date.now() - start;
+      const status = threw ? 500 : c.res.status;
+
+      console.log(
+        JSON.stringify({
+          level: "info",
+          msg: "response",
+          requestId,
+          method,
+          path,
+          status,
+          durationMs,
+          network: env.PAYSTAGE_NETWORK ?? null,
+        }),
+      );
+
+      // Telemetry: skip OPTIONS, health, and non-tool paths.
+      if (method !== "OPTIONS" && tool !== null) {
+        const parsed = threw ? null : await parseDecisionFromResponse(c.res);
+        const decision = parsed ? parsed.decision : String(status);
+        const reason_codes = parsed ? parsed.reason_codes : [];
+        const { facilitator_status, error_class } = classifyStatus(status);
+
+        let waitUntil: ((p: Promise<unknown>) => void) | undefined;
+        try {
+          const ctx = c.executionCtx;
+          if (ctx && typeof ctx.waitUntil === "function") {
+            waitUntil = (p) => ctx.waitUntil(p);
+          }
+        } catch {
+          // executionCtx may throw when not running on CF; ignore.
+          waitUntil = undefined;
+        }
+
+        recordEvent(
+          {
+            SUPABASE_URL: env.SUPABASE_URL,
+            SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY,
+          },
+          {
+            source,
+            tool,
+            decision,
+            reason_codes,
+            network,
+            latency_ms: durationMs,
+            request_id: requestId,
+            facilitator_status,
+            error_class,
+          },
+          waitUntil,
+        );
+      }
     }
-    console.log(
-      JSON.stringify({
-        level: "info",
-        msg: "response",
-        requestId,
-        method: c.req.method,
-        path: c.req.path,
-        status: c.res.status,
-        durationMs: Date.now() - start,
-        network: env.PAYSTAGE_NETWORK ?? null,
-      }),
-    );
   });
 
   // Short-circuit OPTIONS in case payment middleware would otherwise run.
   app.options("*", (c) => c.body(null, 204));
 
   app.route("/", healthRoutes);
+
+  // Public status feed — must be mounted BEFORE payment middleware.
+  app.route("/", publicStatusRoutes);
 
   const protect = opts.protect ?? true;
   if (protect) {

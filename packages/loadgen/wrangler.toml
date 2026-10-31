@@ -1,0 +1,22 @@
+name = "paystage-loadgen"
+main = "src/index.ts"
+compatibility_date = "2024-12-30"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+# DISABLED by default. Do not enable until Dave confirms funding.
+
+[[kv_namespaces]]
+binding = "LOADGEN_STATE"
+id = "17f81ee7cb354de7a1c98388d122e150"
+preview_id = "17f81ee7cb354de7a1c98388d122e150"
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+LOADGEN_ENABLED = "0"
+LOADGEN_PAY = "0"
+LOADGEN_KILL = "0"
+LOADGEN_START_DATE = ""
+API_BASE = "https://api.paystage.xyz"

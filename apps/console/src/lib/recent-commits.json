@@ -1,0 +1,27 @@
+[
+  {
+    "sha": "004721d76d0cd2884974cdd51c5e11cab6a937f4",
+    "message": "feat(console): changelog commits strip + SIWE read-only Base scan",
+    "date": "2026-11-01T09:23:27+13:00"
+  },
+  {
+    "sha": "a11c299afa000842692d6253cebef5bcb39be577",
+    "message": "feat(preflight): curated known-drainer hard deny before unknown_payee",
+    "date": "2026-11-01T09:19:32+13:00"
+  },
+  {
+    "sha": "7f9da634ed5d81273bf52c978eabc4500a84006a",
+    "message": "feat(console): port full x402 Sign & pay Try-it into Sepolia scenario",
+    "date": "2026-11-01T09:17:47+13:00"
+  },
+  {
+    "sha": "799a2d3913c4439fe58fcbf7b7117a22563051c0",
+    "message": "feat(console): add earnable confidence checklist to preview lander",
+    "date": "2026-11-01T09:14:17+13:00"
+  },
+  {
+    "sha": "a6f6c1f4341ba7dfd7cd46e71bb680b2e15acb7a",
+    "message": "feat(console): Phase 2 live console lander on preview",
+    "date": "2026-11-01T09:12:35+13:00"
+  }
+]

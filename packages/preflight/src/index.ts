@@ -17,3 +17,4 @@ export type {
   EvaluationDecision,
   AcceptEvaluation,
 } from "./types.js";
+export { isKnownDrainer, KNOWN_DRAINERS, SOURCES } from "./known-drainers.js";
