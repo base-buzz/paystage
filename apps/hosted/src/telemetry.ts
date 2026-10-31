@@ -135,3 +135,54 @@ export function recordEvent(
     void p;
   }
 }
+
+/**
+ * Daily free-tier keep-alive: trivial SELECT against issue_flags.
+ * Never throws; never logs secrets. Cron-only — no paid calls.
+ */
+export async function heartbeatSupabase(
+  env: TelemetryEnv,
+): Promise<{ ok: boolean }> {
+  const url = env.SUPABASE_URL;
+  const key = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!nonEmpty(url) || !nonEmpty(key)) {
+    console.log(
+      JSON.stringify({
+        level: "warn",
+        msg: "heartbeat_skipped",
+        reason: "missing_config",
+      }),
+    );
+    return { ok: false };
+  }
+  try {
+    const endpoint = `${url.replace(/\/+$/, "")}/rest/v1/issue_flags?select=flag&limit=1`;
+    const res = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        apikey: key,
+        Prefer: "count=exact",
+        Accept: "application/json",
+      },
+    });
+    console.log(
+      JSON.stringify({
+        level: "info",
+        msg: "heartbeat",
+        ok: res.ok,
+        status: res.status,
+      }),
+    );
+    return { ok: res.ok };
+  } catch (err) {
+    console.log(
+      JSON.stringify({
+        level: "warn",
+        msg: "heartbeat_failed",
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+    return { ok: false };
+  }
+}

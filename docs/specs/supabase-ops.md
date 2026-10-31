@@ -51,12 +51,9 @@ Inactive projects pause after ~7 days. If the project pauses, the public status 
 
 ## Heartbeat
 
-Until `@paystage/loadgen` ships, run a daily Cloudflare cron or GitHub Action that either:
+Workers `paystage-hosted` and `paystage-hosted-sepolia` run a daily cron (`0 12 * * *` UTC) that `SELECT`s `issue_flags` via the service role (`heartbeatSupabase` in `apps/hosted`). No paid calls.
 
-- `SELECT`s from `issue_flags`, or
-- inserts one `source=test` heartbeat event via the service role.
-
-Document that loadgen mainnet traffic will also keep the project warm.
+Until organic/loadgen traffic is steady, keep that cron enabled so the free project does not pause after ~7 idle days. Loadgen mainnet traffic (when approved) will also keep the project warm.
 
 ## RLS
 

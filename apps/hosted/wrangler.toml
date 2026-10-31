@@ -19,6 +19,10 @@ workers_dev = true
 # Telemetry: set SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY via wrangler secret put.
 
 
+# Daily Supabase free-tier keep-alive (trivial SELECT via scheduled handler).
+[triggers]
+crons = ["0 12 * * *"]
+
 [observability]
 enabled = true
 head_sampling_rate = 1
@@ -49,6 +53,9 @@ workers_dev = true
 #   SUPABASE_URL               (set via: wrangler secret put SUPABASE_URL --env sepolia)
 #   SUPABASE_SERVICE_ROLE_KEY  (set via: wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env sepolia)
 
+
+[env.sepolia.triggers]
+crons = ["0 12 * * *"]
 
 [env.sepolia.observability]
 enabled = true

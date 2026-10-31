@@ -63,15 +63,16 @@ const CORS_EXPOSE_HEADERS = [
 ];
 
 // Map request path -> telemetry tool name. Returns null to skip telemetry.
-function toolFromPath(path: string): string | null {
-  if (path === "/" || path.startsWith("/health")) return null;
-  if (path === "/v1/evaluate_mcp_payment") return "evaluate_mcp_payment";
-  if (path === "/v1/evaluate_outstanding_auths")
-    return "evaluate_outstanding_auths";
-  if (path === "/v1/public/status") return null;
-  // Fallback: strip leading slash and slashes -> underscores.
-  const trimmed = path.replace(/^\/+/, "").replace(/\/+/g, "_");
-  return trimmed.length > 0 ? trimmed : null;
+// Strict allowlist only — never record robots/sitemap/favicon/static as tools.
+export function toolFromPath(path: string): string | null {
+  switch (path) {
+    case "/v1/evaluate_mcp_payment":
+      return "evaluate_mcp_payment";
+    case "/v1/evaluate_outstanding_auths":
+      return "evaluate_outstanding_auths";
+    default:
+      return null;
+  }
 }
 
 interface ParsedDecision {
