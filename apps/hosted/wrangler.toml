@@ -10,10 +10,13 @@ workers_dev = true
 # Do NOT set FACILITATOR_URL for mainnet — the CDP facilitator is used instead.
 #
 # Required secrets (set via `wrangler secret put <NAME>`):
-#   PAYSTAGE_PAYTO       (treasury payTo address)
-#   CDP_API_KEY_ID       (mainnet only)
-#   CDP_API_KEY_SECRET   (mainnet only)
+#   PAYSTAGE_PAYTO             (treasury payTo address)
+#   CDP_API_KEY_ID             (mainnet only)
+#   CDP_API_KEY_SECRET         (mainnet only)
+#   SUPABASE_URL               (telemetry: Supabase project URL, e.g. https://<ref>.supabase.co)
+#   SUPABASE_SERVICE_ROLE_KEY  (telemetry: service role key — server-side only, never expose)
 # Mainnet live: set CDP_API_KEY_ID / CDP_API_KEY_SECRET + PAYSTAGE_PAYTO via wrangler secret put.
+# Telemetry: set SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY via wrangler secret put.
 
 
 [observability]
@@ -40,6 +43,11 @@ workers_dev = true
 
 # Only PAYSTAGE_PAYTO secret is needed for Sepolia.
 # Set via: wrangler secret put PAYSTAGE_PAYTO --env sepolia
+#
+# Optional telemetry secrets for Sepolia (recommended: use a separate
+# Supabase project or the same project with source='test'/'synthetic'):
+#   SUPABASE_URL               (set via: wrangler secret put SUPABASE_URL --env sepolia)
+#   SUPABASE_SERVICE_ROLE_KEY  (set via: wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env sepolia)
 
 
 [env.sepolia.observability]

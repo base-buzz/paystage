@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.open-next/
+.wrangler/
+out/
+.env*
+!.env.example
+node_modules/
+.next/
+.open-next/
+.wrangler/
+out/
+.env*
+!.env.example
