@@ -4,6 +4,7 @@ import {
   type Policy,
   type Asset,
 } from "@paystage/policy";
+import { isKnownDrainer } from "./known-drainers.js";
 
 export interface AcceptOption {
   scheme: string;
@@ -109,6 +110,12 @@ function evaluateAccept(accept: AcceptOption, policy: Policy): AcceptResult {
     reasons.push(
       `maxTimeoutSeconds ${accept.maxTimeoutSeconds} exceeds policy max_timeout_seconds ${policy.max_timeout_seconds}`,
     );
+    return { accept, status: "do_not_pay", reasons };
+  }
+
+  // Rule 7a: known drainers — hard deny before unknown_payee review
+  if (isKnownDrainer(accept.payTo)) {
+    reasons.push("known drainer");
     return { accept, status: "do_not_pay", reasons };
   }
 
