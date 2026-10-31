@@ -1,139 +1,250 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  NETWORKS,
+  PRESETS,
+  createBrowserSigner,
+  runPaidEvaluate,
+  ensureWalletChain,
+  getWalletChainId,
+} from "@/lib/try-it/pay";
+import { createDebugLog } from "@/lib/try-it/debug";
+import { DebugPanel } from "./DebugPanel";
 
-const BASE_SEPOLIA_CHAIN_ID = "0x14a34"; // 84532
-const SEPOLIA_USDC = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
-const ENDPOINT = "https://sepolia.api.paystage.xyz/v1/evaluate_mcp_payment";
+type Eth = {
+  request: (args: {
+    method: string;
+    params?: unknown[];
+  }) => Promise<unknown>;
+  on?: (event: string, handler: (...args: unknown[]) => void) => void;
+};
 
-interface EthProvider {
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-}
-
-function getProvider(): EthProvider | null {
+function getEthereum(): Eth | null {
   if (typeof window === "undefined") return null;
-  const w = window as unknown as { ethereum?: EthProvider };
+  const w = window as unknown as { ethereum?: Eth };
   return w.ethereum ?? null;
 }
 
-async function ensureChain(provider: EthProvider): Promise<boolean> {
-  try {
-    await provider.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }],
-    });
-    return true;
-  } catch (err) {
-    const code = (err as { code?: number })?.code;
-    if (code === 4902) {
-      try {
-        await provider.request({
-          method: "wallet_addEthereumChain",
-          params: [
-            {
-              chainId: BASE_SEPOLIA_CHAIN_ID,
-              chainName: "Base Sepolia",
-              nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-              rpcUrls: ["https://sepolia.base.org"],
-              blockExplorerUrls: ["https://sepolia.basescan.org"],
-            },
-          ],
-        });
-        return true;
-      } catch {
-        return false;
-      }
-    }
-    return false;
+function friendlyError(err: unknown): string {
+  const anyErr = err as { code?: number; message?: string; cause?: { code?: number } };
+  const code = anyErr?.code ?? anyErr?.cause?.code;
+  const msg = String(anyErr?.message || err || "Unknown error");
+  if (code === 4001 || /user rejected|user denied/i.test(msg)) {
+    return "Request rejected in wallet.";
   }
+  if (/no (eip-1193 )?wallet|provider|ethereum/i.test(msg)) {
+    return "No wallet detected. Install MetaMask or Coinbase Wallet.";
+  }
+  if (/still on chain|switch|network|add network/i.test(msg)) {
+    return msg;
+  }
+  if (/insufficient|funds|balance/i.test(msg)) {
+    return `Insufficient USDC. Get test USDC: ${NETWORKS.sepolia.faucet}`;
+  }
+  if (/bigint|serialize/i.test(msg)) {
+    return `Wallet typed-data error: ${msg}`;
+  }
+  return msg;
 }
 
-export function PaidSepolia() {
-  const [status, setStatus] = useState<string | null>(null);
-  const [body, setBody] = useState<string | null>(null);
-  const [chainOk, setChainOk] = useState<boolean | null>(null);
-  const [busy, setBusy] = useState(false);
+const PRESET_KEYS = Object.keys(PRESETS);
 
-  async function run() {
-    setBusy(true);
-    setStatus(null);
-    setBody(null);
-    const provider = getProvider();
-    if (!provider) {
-      setStatus("No wallet detected. Install MetaMask or Coinbase Wallet.");
-      setBusy(false);
-      return;
-    }
-    const ok = await ensureChain(provider);
-    setChainOk(ok);
-    if (!ok) {
-      setStatus("Switch to Base Sepolia (84532) to continue.");
-      setBusy(false);
-      return;
-    }
+export function PaidSepolia() {
+  const [presetKey, setPresetKey] = useState(
+    PRESETS.small_pay ? "small_pay" : PRESET_KEYS[0],
+  );
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<string>("idle");
+  const [error, setError] = useState<string | null>(null);
+  const [decision, setDecision] = useState<string | null>(null);
+  const [httpStatus, setHttpStatus] = useState<number | null>(null);
+  const [txUrl, setTxUrl] = useState<string | null>(null);
+  const [raw, setRaw] = useState<unknown>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [debugText, setDebugText] = useState("");
+  const [lineCount, setLineCount] = useState(0);
+  const [walletChain, setWalletChain] = useState<number | null>(null);
+
+  const preset = PRESETS[presetKey];
+  const bodyPreview = useMemo(
+    () => JSON.stringify(preset?.body ?? {}, null, 2),
+    [preset],
+  );
+
+  async function refreshChain(eth: Eth) {
     try {
-      const requestId =
-        typeof crypto !== "undefined" && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `demo-${Date.now()}`;
-      const res = await fetch(ENDPOINT, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-paystage-source": "test",
-          "x-paystage-request-id": requestId,
-        },
-        body: JSON.stringify({
-          // Hosted evaluate expects a payment body; 402 is success for demo probe.
-          resource: "paystage-console-demo",
-        }),
+      const id = await getWalletChainId(eth);
+      setWalletChain(id);
+      return id;
+    } catch {
+      setWalletChain(null);
+      return null;
+    }
+  }
+
+  async function handlePay() {
+    setBusy(true);
+    setError(null);
+    setDecision(null);
+    setHttpStatus(null);
+    setTxUrl(null);
+    setRaw(null);
+    setDebugText("");
+    setLineCount(0);
+
+    const debug = createDebugLog();
+    setRequestId(debug.requestId);
+
+    try {
+      const eth = getEthereum();
+      if (!eth) throw new Error("No EIP-1193 wallet available");
+
+      setStatus("connecting");
+      debug.log("wallet:requestAccounts");
+      const accounts = (await eth.request({
+        method: "eth_requestAccounts",
+      })) as string[];
+      const address = accounts?.[0];
+      if (!address) throw new Error("No account returned from wallet");
+
+      setStatus("switching_chain");
+      debug.log("wallet:ensureChain", { target: NETWORKS.sepolia.chainId });
+      await ensureWalletChain(eth, NETWORKS.sepolia.chainId);
+      await refreshChain(eth);
+
+      setStatus("paying");
+      const signer = createBrowserSigner(eth, address);
+      const result = await runPaidEvaluate({
+        signer,
+        baseUrl: NETWORKS.sepolia.api,
+        networkCaip: NETWORKS.sepolia.id,
+        body: preset.body,
+        debug,
+        requestId: debug.requestId,
+        source: "test",
       });
-      const text = await res.text();
-      setStatus(`HTTP ${res.status}`);
-      setBody(text.slice(0, 4000));
-    } catch (e) {
-      setStatus(e instanceof Error ? e.message : "request_failed");
+
+      setHttpStatus(result.status);
+      setDecision(result.decision);
+      setTxUrl(result.txUrl);
+      setRaw(result.raw);
+      setStatus(result.status >= 200 && result.status < 300 ? "done" : `http_${result.status}`);
+    } catch (err) {
+      setError(friendlyError(err));
+      setStatus("error");
+      debug.log("ui:error", {
+        message: err instanceof Error ? err.message : String(err),
+      });
     } finally {
+      setDebugText(debug.toText());
+      setLineCount(debug.lines.length);
       setBusy(false);
     }
   }
 
   return (
-    <div className="paid-sepolia">
-      <p className="muted" style={{ marginTop: 12 }}>
-        Base Sepolia only · USDC {SEPOLIA_USDC.slice(0, 8)}… · source=test. No
-        mainnet.
+    <div className="paid-sepolia" style={{ marginTop: 12 }}>
+      <p className="panel-sub" style={{ marginBottom: 8 }}>
+        Full x402 Sign &amp; pay · Base Sepolia only ·{" "}
+        <code>x-paystage-source: test</code>. No mainnet from this control.
       </p>
-      <button
-        type="button"
-        className="scenario-btn"
-        onClick={run}
-        disabled={busy}
-        style={{ marginTop: 8, maxWidth: 320 }}
+
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
       >
-        {busy ? "Checking…" : "Chain-check + probe Sepolia API"}
-      </button>
-      {chainOk === false ? (
-        <p className="decision decision-review" role="alert">
-          Chain check failed. Switch wallet to Base Sepolia.
+        <label className="muted" htmlFor="paid-preset">
+          Preset
+        </label>
+        <select
+          id="paid-preset"
+          value={presetKey}
+          disabled={busy}
+          onChange={(e) => setPresetKey(e.target.value)}
+          style={{
+            minHeight: 44,
+            background: "var(--panel-2)",
+            color: "var(--text)",
+            border: "1px solid var(--border)",
+            borderRadius: 6,
+            padding: "8px 10px",
+            maxWidth: "100%",
+          }}
+        >
+          {PRESET_KEYS.map((k) => (
+            <option key={k} value={k}>
+              {PRESETS[k].label} — expect {PRESETS[k].expect}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="scenario-btn"
+          onClick={handlePay}
+          disabled={busy}
+          style={{ maxWidth: 320 }}
+        >
+          {busy ? "Working…" : "Connect wallet & pay (Sepolia)"}
+        </button>
+      </div>
+
+      <p className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+        API {NETWORKS.sepolia.api} · chain {NETWORKS.sepolia.chainId}
+        {walletChain != null ? ` · wallet ${walletChain}` : ""}
+      </p>
+
+      <details className="detail-block" style={{ marginTop: 8 }}>
+        <summary className="muted">Request body</summary>
+        <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+          {bodyPreview}
+        </pre>
+      </details>
+
+      <p className="muted" role="status" style={{ marginTop: 8 }}>
+        Status: {status}
+        {httpStatus != null ? ` · HTTP ${httpStatus}` : ""}
+        {requestId ? ` · ${requestId}` : ""}
+      </p>
+
+      {error ? (
+        <p className="decision decision-error" role="alert">
+          {error}
         </p>
       ) : null}
-      {status ? (
-        <p className="muted" role="status">
-          {status}
+
+      {decision ? (
+        <p className="decision decision-allow">
+          decision: <strong>{decision}</strong>
         </p>
       ) : null}
-      {body ? (
-        <>
-          <pre className="detail-block">{body}</pre>
-          {status?.startsWith("HTTP 402") ? (
-            <p className="muted">
-              Payment required — sign the x402 payment in your wallet (Sepolia
-              test USDC) via the hosted Try-it flow. Preview does not auto-broadcast.
-            </p>
-          ) : null}
-        </>
+
+      {txUrl ? (
+        <p style={{ fontSize: 13 }}>
+          <a className="link" href={txUrl} target="_blank" rel="noopener noreferrer">
+            View tx on Basescan
+          </a>
+        </p>
       ) : null}
+
+      {raw != null ? (
+        <div className="detail-block">
+          <div className="muted">Response</div>
+          <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+            {JSON.stringify(
+              raw,
+              (_k, v) => (typeof v === "bigint" ? v.toString() : v),
+              2,
+            )}
+          </pre>
+        </div>
+      ) : null}
+
+      <DebugPanel text={debugText} requestId={requestId} lineCount={lineCount} />
     </div>
   );
 }
