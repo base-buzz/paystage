@@ -7,6 +7,7 @@ import { IncidentFeed } from "@/components/IncidentFeed";
 import { ScenarioRunner } from "@/components/ScenarioRunner";
 import { ProgressStrip } from "@/components/ProgressStrip";
 import { SiweStub } from "@/components/SiweStub";
+import { ConfidenceChecklist } from "@/components/ConfidenceChecklist";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +91,7 @@ export default async function Page() {
         <ProgressStrip />
         <VolumeChart data={m.volume} />
         <IncidentFeed incidents={m.incidents} />
+        <ConfidenceChecklist />
         <SiweStub />
       </main>
     </>
