@@ -1,4 +1,5 @@
 import "server-only";
+
 import type {
   EventSource,
   Incident,
@@ -18,7 +19,7 @@ type EventRow = {
   reason_codes: string[] | null;
   network: string | null;
   latency_ms: number | null;
-  amount_usdc: number | null;
+  amount_usdc: number | string | null;
   tx_hash: string | null;
   request_id: string | null;
   facilitator_status: string | null;
@@ -37,11 +38,21 @@ type IncidentRow = {
 };
 
 const DEFAULT_STATUS_URL = "https://sepolia.api.paystage.xyz/v1/public/status";
+const EVENT_LIMIT = 500;
+const INCIDENT_LIMIT = 20;
+const LATENCY_THRESHOLD_MS = 5000;
+const HOUR_MS = 60 * 60 * 1000;
+const WINDOW_HOURS = 24;
 
-function normalizeSource(value: string | null | undefined): EventSource {
-  const v = (value ?? "").toLowerCase();
-  if (v === "synthetic") return "synthetic";
-  if (v === "real") return "real";
+/**
+ * Normalize a raw source value into a known EventSource.
+ * Anything unrecognized is treated as real traffic.
+ */
+function normalizeSource(raw: string | null | undefined): EventSource {
+  const value = (raw ?? "").trim().toLowerCase();
+  if (value === "synthetic") return "synthetic";
+  if (value === "test") return "test";
+  if (value === "real") return "real";
   return "real";
 }
 
@@ -49,46 +60,69 @@ function mapEvent(row: EventRow): TelemetryEvent {
   return {
     id: row.id,
     source: normalizeSource(row.source),
-    kind: String(row.tool ?? ""),
-    status: String(row.decision ?? ""),
-    route: row.network ?? null,
+    kind: row.tool ?? "unknown",
+    status: row.decision ?? "unknown",
+    route: row.network ?? "unknown",
     message: row.error_class ?? row.facilitator_status ?? null,
     created_at: row.ts,
-    latency_ms: row.latency_ms ?? null,
-  } as TelemetryEvent;
+    latency_ms: typeof row.latency_ms === "number" ? row.latency_ms : null,
+  };
 }
 
-function hourBucket(date: Date): string {
-  const d = new Date(date.getTime());
-  d.setUTCMinutes(0, 0, 0);
-  return d.toISOString();
+function mapIncident(row: IncidentRow): Incident {
+  const rawSeverity = (row.severity ?? "").trim().toLowerCase();
+  const severity: Incident["severity"] =
+    rawSeverity === "warning" ? "major" : (rawSeverity as Incident["severity"]) || "major";
+
+  const rawStatus = (row.status ?? "").trim().toLowerCase();
+  const status: Incident["status"] =
+    rawStatus === "open" || rawStatus === "resolved" || rawStatus === "monitoring"
+      ? rawStatus
+      : "open";
+
+  return {
+    id: row.id,
+    created_at: row.opened_at,
+    title: row.title ?? "",
+    severity,
+    status,
+    summary: row.summary ?? null,
+  };
 }
 
+/**
+ * Build 24 hourly volume buckets ending at `now`.
+ * Only `real` and `synthetic` events are counted; `test` events are ignored.
+ */
 function buildVolume(events: TelemetryEvent[], now: Date): VolumePoint[] {
+  const endMs = now.getTime();
+  const startMs = endMs - WINDOW_HOURS * HOUR_MS;
+
   const buckets: VolumePoint[] = [];
-  const index = new Map<string, VolumePoint>();
-
-  const end = new Date(now.getTime());
-  end.setUTCMinutes(0, 0, 0);
-
-  for (let i = 23; i >= 0; i -= 1) {
-    const bucketDate = new Date(end.getTime() - i * 60 * 60 * 1000);
-    const bucket = hourBucket(bucketDate);
-    const point: VolumePoint = { bucket, real: 0, synthetic: 0 };
-    buckets.push(point);
-    index.set(bucket, point);
+  for (let i = 0; i < WINDOW_HOURS; i += 1) {
+    const bucketStart = startMs + i * HOUR_MS;
+    buckets.push({
+      bucket: new Date(bucketStart).toISOString(),
+      real: 0,
+      synthetic: 0,
+    });
   }
 
   for (const event of events) {
-    const ts = new Date(event.created_at);
-    if (Number.isNaN(ts.getTime())) continue;
-    const bucket = hourBucket(ts);
-    const point = index.get(bucket);
-    if (!point) continue;
-    if (event.source === "synthetic") {
-      point.synthetic += 1;
+    if (event.source !== "real" && event.source !== "synthetic") continue;
+
+    const ts = Date.parse(event.created_at);
+    if (Number.isNaN(ts)) continue;
+    if (ts < startMs || ts >= endMs) continue;
+
+    const index = Math.floor((ts - startMs) / HOUR_MS);
+    const bucket = buckets[index];
+    if (!bucket) continue;
+
+    if (event.source === "real") {
+      bucket.real += 1;
     } else {
-      point.real += 1;
+      bucket.synthetic += 1;
     }
   }
 
@@ -97,9 +131,10 @@ function buildVolume(events: TelemetryEvent[], now: Date): VolumePoint[] {
 
 function deriveFlags(events: TelemetryEvent[]): StatusFlag[] {
   const flags: StatusFlag[] = [];
+  const real = events.filter((e) => e.source === "real");
 
-  const facilitatorErrors = events.filter(
-    (e) => e.message === "facilitator_error",
+  const facilitatorErrors = real.filter((e) =>
+    (e.message ?? "").toLowerCase().includes("facilitator"),
   );
   if (facilitatorErrors.length > 0) {
     flags.push({
@@ -107,27 +142,26 @@ function deriveFlags(events: TelemetryEvent[]): StatusFlag[] {
       label: "Facilitator errors",
       severity: facilitatorErrors.length > 5 ? "major" : "minor",
       active: true,
-      detail: `${facilitatorErrors.length} facilitator error event(s) observed`,
+      detail: `${facilitatorErrors.length} facilitator error event(s)`,
     });
   }
 
-  const settlementErrors = events.filter(
-    (e) =>
-      e.message === "settlement" ||
-      e.message === "settlement_error" ||
-      (e.message ?? "").includes("settlement"),
-  );
+  const settlementErrors = real.filter((e) => {
+    const msg = (e.message ?? "").toLowerCase();
+    const status = (e.status ?? "").toLowerCase();
+    return msg.includes("settlement") || status.includes("settle");
+  });
   if (settlementErrors.length > 0) {
     flags.push({
       id: "settlement",
       label: "Settlement issues",
       severity: settlementErrors.length > 5 ? "major" : "minor",
       active: true,
-      detail: `${settlementErrors.length} settlement-related event(s) observed`,
+      detail: `${settlementErrors.length} settlement-related event(s)`,
     });
   }
 
-  const slow = events.filter(
+  const slow = real.filter(
     (e) => typeof e.latency_ms === "number" && e.latency_ms > 5000,
   );
   if (slow.length > 0) {
@@ -136,87 +170,69 @@ function deriveFlags(events: TelemetryEvent[]): StatusFlag[] {
       label: "High latency",
       severity: slow.length > 10 ? "major" : "minor",
       active: true,
-      detail: `${slow.length} event(s) exceeded 5000ms latency`,
+      detail: `${slow.length} event(s) exceeded 5000ms`,
     });
   }
 
   return flags;
 }
 
-function mapSeverity(value: string | null | undefined): StatusFlag["severity"] {
-  const v = (value ?? "").toLowerCase();
-  if (v === "critical") return "critical";
-  if (v === "warning") return "major";
-  if (v === "info") return "info";
-  return "minor";
-}
-
-function normalizeIncidentStatus(
-  value: string | null | undefined,
-): Incident["status"] {
-  const v = (value ?? "").toLowerCase();
-  if (v === "open") return "open";
-  if (v === "monitoring") return "monitoring";
-  return "resolved";
-}
-
-function mapIncident(row: IncidentRow): Incident {
+function emptySummary(note?: string): MetricsSummary {
   return {
-    id: row.id,
-    created_at: row.opened_at,
-    title: row.title ?? "",
-    severity: mapSeverity(row.severity),
-    status: normalizeIncidentStatus(row.status),
-    summary: row.summary ?? null,
+    configured: false,
+    realCount24h: 0,
+    syntheticCount24h: 0,
+    testCount24h: 0,
+    issuesOpen: 0,
+    uptimePct: 100,
+    flags: [],
+    volume: [],
+    events: [],
+    incidents: [],
+    generatedAt: new Date().toISOString(),
+    ...(note ? { note } : {}),
   };
 }
 
-function computeUptimePct(events: TelemetryEvent[]): number {
-  if (events.length === 0) return 100;
-  const failures = events.filter((e) => {
-    const status = (e.status ?? "").toLowerCase();
-    const message = (e.message ?? "").toLowerCase();
-    return (
-      status === "error" ||
-      status === "failed" ||
-      status === "failure" ||
-      message.includes("error")
-    );
-  }).length;
-  const pct = ((events.length - failures) / events.length) * 100;
-  return Math.max(0, Math.min(100, Math.round(pct * 100) / 100));
-}
-
-async function fetchStatusFlags(): Promise<StatusFlag[]> {
+async function fetchPublicStatusFlags(): Promise<StatusFlag[]> {
   const url = process.env.NEXT_PUBLIC_STATUS_URL || DEFAULT_STATUS_URL;
   try {
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, {
+      cache: "no-store",
+      headers: { accept: "application/json" },
+    });
     if (!res.ok) return [];
-    const json: unknown = await res.json();
-    if (!json || typeof json !== "object") return [];
-    const record = json as Record<string, unknown>;
-    const rawFlags = record.flags;
-    if (!Array.isArray(rawFlags)) return [];
+    const data: unknown = await res.json();
+    if (!data || typeof data !== "object") return [];
+
+    const record = data as Record<string, unknown>;
+    const rawFlags = Array.isArray(record.flags) ? record.flags : [];
     const flags: StatusFlag[] = [];
     for (const raw of rawFlags) {
       if (!raw || typeof raw !== "object") continue;
       const f = raw as Record<string, unknown>;
-      const id = typeof f.id === "string" ? f.id : null;
+      const id =
+        typeof f.id === "string"
+          ? f.id
+          : typeof f.flag === "string"
+            ? f.flag
+            : null;
       if (!id) continue;
-      const severityRaw = typeof f.severity === "string" ? f.severity : "info";
-      const severity: StatusFlag["severity"] =
-        severityRaw === "critical" ||
-        severityRaw === "major" ||
-        severityRaw === "minor" ||
-        severityRaw === "info"
-          ? severityRaw
-          : "info";
+      const triggered = f.triggered === true || f.active === true;
+      const count = typeof f.count === "number" ? f.count : undefined;
       flags.push({
         id,
         label: typeof f.label === "string" ? f.label : id,
-        severity,
-        active: f.active === true,
-        detail: typeof f.detail === "string" ? f.detail : "",
+        severity:
+          f.severity === "critical"
+            ? "critical"
+            : f.severity === "major" || f.severity === "warning"
+              ? "major"
+              : f.severity === "info"
+                ? "info"
+                : "minor",
+        active: triggered,
+        detail: count != null ? `${count} event(s)` : null,
       });
     }
     return flags;
@@ -227,66 +243,65 @@ async function fetchStatusFlags(): Promise<StatusFlag[]> {
 
 export async function getMetrics(): Promise<MetricsSummary> {
   const now = new Date();
-  const generatedAt = now.toISOString();
 
   if (!isSupabaseConfigured()) {
-    const flags = await fetchStatusFlags();
+    const flags = await fetchPublicStatusFlags();
     return {
-      configured: false,
-      realCount24h: 0,
-      syntheticCount24h: 0,
-      testCount24h: 0,
-      issuesOpen: flags.filter((f) => f.active).length,
-      uptimePct: 100,
+      ...emptySummary("Telemetry not configured"),
       flags,
-      volume: buildVolume([], now),
-      events: [],
-      incidents: [],
-      generatedAt,
-      note: "Telemetry not configured",
+      issuesOpen: flags.length,
     };
   }
 
-const since = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  try {
+    const since = new Date(now.getTime() - WINDOW_HOURS * HOUR_MS).toISOString();
 
-  const eventRows =
-    (await selectRows<EventRow>(
-      "events",
-      `select=*&ts=gte.${since}&order=ts.desc&limit=500`,
-    )) ?? [];
-  const incidentRows =
-    (await selectRows<IncidentRow>(
-      "incidents",
-      "select=*&public=eq.true&status=in.(open,monitoring)&order=opened_at.desc&limit=20",
-    )) ?? [];
+    const [eventRows, incidentRows] = await Promise.all([
+      selectRows<EventRow>(
+        "events",
+        `select=*&ts=gte.${encodeURIComponent(since)}&order=ts.desc&limit=${EVENT_LIMIT}`,
+      ),
+      selectRows<IncidentRow>(
+        "incidents",
+        `select=*&public=eq.true&status=in.(open,monitoring)&order=opened_at.desc&limit=${INCIDENT_LIMIT}`,
+      ),
+    ]);
 
-  const events = eventRows.map(mapEvent);
-  const incidents = incidentRows.map(mapIncident);
+    const events = (eventRows ?? []).map(mapEvent);
+    const incidents = (incidentRows ?? []).map(mapIncident);
 
-  let realCount24h = 0;
-  let syntheticCount24h = 0;
-  let testCount24h = 0;
+    let realCount24h = 0;
+    let syntheticCount24h = 0;
+    let testCount24h = 0;
+    for (const event of events) {
+      if (event.source === "real") realCount24h += 1;
+      else if (event.source === "synthetic") syntheticCount24h += 1;
+      else if (event.source === "test") testCount24h += 1;
+    }
 
-  for (const event of events) {
-    if (event.source === "real") realCount24h++;
-    else if (event.source === "synthetic") syntheticCount24h++;
-    else if (event.source === "test") testCount24h++;
+    const flags = deriveFlags(events);
+    const issuesOpen = flags.length + incidents.filter((i) => i.status === "open").length;
+
+    const volume = buildVolume(events, now);
+
+    const totalReal = volume.reduce((sum, b) => sum + b.real, 0);
+    const uptimePct =
+      totalReal === 0 ? 100 : Math.max(0, Math.min(100, 100 - (flags.length / totalReal) * 100));
+
+    return {
+      configured: true,
+      realCount24h,
+      syntheticCount24h,
+      testCount24h,
+      issuesOpen,
+      uptimePct: Math.round(uptimePct * 100) / 100,
+      flags,
+      volume,
+      events,
+      incidents,
+      generatedAt: now.toISOString(),
+    };
+  } catch {
+    return emptySummary("Telemetry unavailable");
   }
-
-  const flags = deriveFlags(events);
-  const issuesOpen = flags.filter((f) => f.active).length;
-
-  return {
-    configured: true,
-    realCount24h,
-    syntheticCount24h,
-    testCount24h,
-    issuesOpen,
-    uptimePct: computeUptimePct(events),
-    flags,
-    volume: buildVolume(events, now),
-    events,
-    incidents,
-    generatedAt,
-  };
 }
