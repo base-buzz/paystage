@@ -6,8 +6,16 @@ PayStage sits in front of an agent's wallet and answers one question before mone
 
 ## Quick start
 
+## Quick start
+
+You can run the umbrella MCP server (@paystage/mcp, including 4 tools like `evaluate_hip3_trade`) via `npx` or install it locally using npm:
+
 ```bash
+# Option 1: Run instantly with npx
 npx -y @paystage/mcp
+
+# Option 2: Install locally via npm
+npm install @paystage/mcp
 ```
 
 `@paystage/mcp` 0.2.0 is the umbrella MCP server (4 tools including `evaluate_hip3_trade`). It exposes the PayStage tools over stdio and reads a local policy file.
@@ -21,8 +29,9 @@ npx -y @paystage/mcp
 
 ## Configure
 
-Claude Desktop (`claude_desktop_config.json`):
+Update your `claude_desktop_config.json` (or Cursor config) based on your installation method:
 
+### Using npx:
 ```json
 {
   "mcpServers": {
@@ -31,32 +40,27 @@ Claude Desktop (`claude_desktop_config.json`):
       "args": ["-y", "@paystage/mcp"],
       "env": {
         "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json",
-        "PAYSTAGE_RPC_URL": "https://mainnet.base.org"
+        "PAYSTAGE_RPC_URL": "https://base.org"
       }
     }
   }
 }
 ```
 
-Cursor (`.cursor/mcp.json`):
-
+### Using local npm install:
 ```json
 {
   "mcpServers": {
     "paystage": {
-      "command": "npx",
-      "args": ["-y", "@paystage/mcp"],
+      "command": "node",
+      "args": ["./node_modules/@paystage/mcp/dist/index.js"],
       "env": {
         "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json",
-        "PAYSTAGE_RPC_URL": "https://mainnet.base.org"
+        "PAYSTAGE_RPC_URL": "https://base.org"
       }
     }
   }
 }
-```
-
-- `PAYSTAGE_POLICY_PATH` (required): path to your local `policy.json`.
-- `PAYSTAGE_RPC_URL` (optional): RPC endpoint used by on-chain checks. Defaults to a public Base RPC.
 
 ## Tools
 
