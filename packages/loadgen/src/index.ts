@@ -12,6 +12,8 @@ import {
 import { dayIndexFromStart, callsRemainingToday } from "./schedule";
 import { loadWallets, publicWalletList } from "./wallets";
 import { pickScenario } from "./scenarios";
+import { pickFundedWallet } from "./balance";
+import { runPaidSyntheticCall } from "./pay";
 
 export interface Env {
   LOADGEN_STATE: KVNamespace;
@@ -23,6 +25,9 @@ export interface Env {
   LOADGEN_KEY_1?: string;
   LOADGEN_KEY_2?: string;
   LOADGEN_KEY_3?: string;
+  BASE_RPC_URL?: string;
+  ALCHEMY_API_KEY?: string;
+  ALCHEMY_BASE_URL?: string;
 }
 
 export interface LoadgenState {
@@ -126,13 +131,55 @@ async function dryRunAllow(env: Env): Promise<CallResult> {
   }
 }
 
+function resolveRpcUrl(env: Env): string {
+  const direct = env.ALCHEMY_BASE_URL?.trim() || env.BASE_RPC_URL?.trim();
+  if (direct) return direct;
+  const key = env.ALCHEMY_API_KEY?.trim();
+  if (key) return `https://base-mainnet.g.alchemy.com/v2/${key}`;
+  return "https://mainnet.base.org";
+}
+
 async function paidAllow(env: Env): Promise<CallResult> {
-  // Real USDC pay path only when both flags are on. Until x402 pay is wired
-  // for loadgen, refuse rather than spend unexpectedly.
   if (env.LOADGEN_PAY !== "1" || env.LOADGEN_ENABLED !== "1") {
     return dryRunAllow(env);
   }
-  throw new Error("pay_not_wired");
+  const wallets = loadWallets(env);
+  const rpcUrl = resolveRpcUrl(env);
+  const picked = await pickFundedWallet(wallets, rpcUrl);
+  if (!picked) {
+    return {
+      scenario: "allow",
+      ok: false,
+      paid: false,
+      status: 0,
+      note: "insufficient_funds",
+    };
+  }
+  try {
+    const result = await runPaidSyntheticCall({
+      account: picked.wallet.account,
+      apiBase: env.API_BASE || "https://api.paystage.xyz",
+    });
+    return {
+      scenario: "allow",
+      ok: result.ok,
+      paid: !!result.txHash,
+      status: result.status,
+      note: result.txHash
+        ? `tx:${result.txHash}`
+        : result.decision
+          ? `decision:${result.decision}`
+          : undefined,
+    };
+  } catch (e) {
+    return {
+      scenario: "allow",
+      ok: false,
+      paid: false,
+      status: 0,
+      note: e instanceof Error ? e.message.slice(0, 120) : "pay_error",
+    };
+  }
 }
 
 async function policyBlock(env: Env): Promise<CallResult> {

@@ -9,7 +9,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "viem": "^2.21.0"
+    "viem": "^2.21.0",
+    "@x402/evm": "^2.29.0",
+    "@x402/fetch": "^2.29.0",
+    "@x402/core": "^2.29.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240909.0",
