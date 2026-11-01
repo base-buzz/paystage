@@ -14,6 +14,7 @@ import {
   createRpcClient,
   resolveRpcUrl,
 } from "@paystage/auth-watch";
+import type { AuthItem, EvaluateAuthResult } from "@paystage/auth-watch";
 import {
   evaluateTrade,
   parseTradePolicy,
@@ -159,7 +160,7 @@ function registerAllTools(server: McpServer): void {
         rpc,
         eip3009Nonces: args.eip3009_nonces,
       });
-      const serialized = items.map((i) => ({
+      const serialized = items.map((i: AuthItem) => ({
         ...i,
         amount: i.amount.toString(),
       }));
@@ -194,7 +195,7 @@ function registerAllTools(server: McpServer): void {
         eip3009Nonces: args.eip3009_nonces,
       });
       const results = evaluateOutstandingAuths(items, policy);
-      const serialized = results.map((r) => ({
+      const serialized = results.map((r: EvaluateAuthResult) => ({
         item: { ...r.item, amount: r.item.amount.toString() },
         flags: r.flags,
         summary: r.summary,
