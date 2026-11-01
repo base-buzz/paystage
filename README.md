@@ -6,19 +6,16 @@ PayStage sits in front of an agent's wallet and answers one question before mone
 
 ## Quick start
 
-## Quick start
-
-You can run the umbrella MCP server (@paystage/mcp, including 4 tools like `evaluate_hip3_trade`) via `npx` or install it locally using npm:
-
 ```bash
-# Option 1: Run instantly with npx
+# Option 1: run instantly
 npx -y @paystage/mcp
 
-# Option 2: Install locally via npm
+# Option 2: install locally, then use the package bin
 npm install @paystage/mcp
+npx paystage-mcp
 ```
 
-`@paystage/mcp` 0.2.0 is the umbrella MCP server (4 tools including `evaluate_hip3_trade`). It exposes the PayStage tools over stdio and reads a local policy file.
+`@paystage/mcp` **0.2.2** is the umbrella MCP server (**5 tools**, including `evaluate_hip3_trade` and `evaluate_velocity`). It exposes the PayStage tools over stdio and reads a local policy file.
 
 ## Listed on
 
@@ -29,9 +26,10 @@ npm install @paystage/mcp
 
 ## Configure
 
-Update your `claude_desktop_config.json` (or Cursor config) based on your installation method:
+The same MCP config works for Claude Desktop (`claude_desktop_config.json`) and Cursor (`.cursor/mcp.json`).
 
-### Using npx:
+### Using npx
+
 ```json
 {
   "mcpServers": {
@@ -40,27 +38,32 @@ Update your `claude_desktop_config.json` (or Cursor config) based on your instal
       "args": ["-y", "@paystage/mcp"],
       "env": {
         "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json",
-        "PAYSTAGE_RPC_URL": "https://base.org"
+        "PAYSTAGE_RPC_URL": "https://mainnet.base.org"
       }
     }
   }
 }
 ```
 
-### Using local npm install:
+### Using a local npm install
+
 ```json
 {
   "mcpServers": {
     "paystage": {
       "command": "node",
-      "args": ["./node_modules/@paystage/mcp/dist/index.js"],
+      "args": ["./node_modules/@paystage/mcp/dist/cli.js"],
       "env": {
         "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json",
-        "PAYSTAGE_RPC_URL": "https://base.org"
+        "PAYSTAGE_RPC_URL": "https://mainnet.base.org"
       }
     }
   }
 }
+```
+
+- `PAYSTAGE_POLICY_PATH` (required): path to your local `policy.json`.
+- `PAYSTAGE_RPC_URL` (optional): RPC endpoint used by on-chain checks. Defaults to a public Base RPC.
 
 ## Tools
 
@@ -70,6 +73,7 @@ Update your `claude_desktop_config.json` (or Cursor config) based on your instal
 | `list_outstanding_auths` | Available now | Lists payments that are authorized but not yet settled. |
 | `evaluate_outstanding_auths` | Available now | Evaluates outstanding authorizations and flags double-pay or limbo risk. |
 | `evaluate_hip3_trade` | Available now | Evaluates a proposed HIP-3 / trade.xyz order against a local TradePolicy (`allow` \| `review` \| `do_not_trade`). Not financial advice — local policy gate only. |
+| `evaluate_velocity` | Available now | Rate and spend-pattern velocity checks against the local policy. |
 
 ## Packages
 
