@@ -11,24 +11,42 @@ export const SOURCES: readonly KnownDrainerSource[] = [
   {
     name: "MyEtherWallet ethereum-lists address darklist",
     url: "https://github.com/MyEtherWallet/ethereum-lists/blob/master/src/addresses/addresses-darklist.json",
-    retrieved: "2026-11-01",
+    retrieved: "2026-11-02",
   },
   {
     name: "MetaMask eth-phishing-detect (domain list; related ecosystem)",
     url: "https://github.com/MetaMask/eth-phishing-detect",
-    retrieved: "2026-11-01",
+    retrieved: "2026-11-02",
   },
   {
     name: "Ethereum burn / non-receivable sentinel 0x…dEaD",
     url: "https://etherscan.io/address/0x000000000000000000000000000000000000dead",
-    retrieved: "2026-11-01",
+    retrieved: "2026-11-02",
+  },
+  {
+    name: "0xCERT IOC address feed (Base incidents incl. 0xCERT-2026-0230)",
+    url: "https://www.0xcert.com/iocs",
+    retrieved: "2026-11-02",
+  },
+  {
+    name: "Matcha Meta / CryptoTimes SwapNet approval-drain advisory",
+    url: "https://www.cryptotimes.io/2026/01/26/security-alert-matcha-meta-flags-swapnet-bug-as-over-16-8m-is-drained/",
+    retrieved: "2026-11-02",
+  },
+  {
+    name: "Chainabuse contract-exploit reports (Base EIP-7702 / USDC drains)",
+    url: "https://chainabuse.com/category/contract-exploit",
+    retrieved: "2026-11-02",
+  },
+  {
+    name: "Chainabuse address report (Base USDC theft Jul 2026)",
+    url: "https://chainabuse.com/address/0x2cff890f0378a11913b6129b2e97417a2c302680",
+    retrieved: "2026-11-02",
   },
 ];
 
 /**
- * Small curated subset. Each entry other than dEaD is taken from the MEW
- * addresses-darklist.json with the comment preserved in the adjacent note.
- * Do not add addresses without a public citation.
+ * Small curated subset. Do not add addresses without a public citation.
  */
 export const KNOWN_DRAINERS: readonly string[] = Object.freeze([
   // Canonical burn address — non-receivable sink (demo + sentinel).
@@ -49,6 +67,29 @@ export const KNOWN_DRAINERS: readonly string[] = Object.freeze([
   "0x8444173280e5fdc0525494638123b014cffcc521",
   // MEW darklist: Trust-trading scam
   "0x5d82db63cf0c54d47006d416bdc7dab09ea2f3f1",
+
+  // --- Added 2026-11-02 NZDT ---
+  // 0xCERT-2026-0230 Base attacker EOA (GoPlus Security; PeckShield); Basescan phishing label
+  // https://www.0xcert.com/iocs
+  "0x0b5126e1bc27c0de77e02e97945760a674edb034",
+  // 0xCERT-2026-0230 Base exploit contract (GoPlus)
+  // https://www.0xcert.com/iocs
+  "0xcdfe91301356da873562ef513828a60dba1f569d",
+  // SwapNet router — Matcha Meta approval-drain advisory (arbitrary call); CryptoTimes 2026-01-26; Basescan Exploit
+  // https://www.cryptotimes.io/2026/01/26/security-alert-matcha-meta-flags-swapnet-bug-as-over-16-8m-is-drained/
+  "0x616000e384ef1c2b52f5f3a88d57a3b64f23757e",
+  // Chainabuse Base EIP-7702 drain 2026-10-08; Basescan phishing
+  // https://chainabuse.com/category/contract-exploit
+  "0xc9002a87e2e3efdcc26cfb0bc9034b919d38fb03",
+  // Chainabuse Base drain forwarder 2026-10-08
+  // https://chainabuse.com/category/contract-exploit
+  "0x101a548bcda171b5f00179aaca0ac32074a2b86a",
+  // Chainabuse Base USDC theft Jul 2026
+  // https://chainabuse.com/address/0x2cff890f0378a11913b6129b2e97417a2c302680
+  "0x678245175aae05ba3301a7812a38f1a2592a97a8",
+  // Chainabuse reported drain receiver (Bitget Swap2 incident report)
+  // https://chainabuse.com/category/contract-exploit
+  "0x9cc58d06f299f2a37050403eb9c90482f38ee3ad",
 ]);
 
 const SET: ReadonlySet<string> = new Set(

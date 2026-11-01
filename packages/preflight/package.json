@@ -1,6 +1,6 @@
 {
   "name": "@paystage/preflight",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Evaluate x402 PaymentRequired against a local spending policy before an agent pays",
   "license": "MIT",
   "type": "module",

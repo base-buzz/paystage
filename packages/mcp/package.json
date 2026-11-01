@@ -1,6 +1,6 @@
 {
   "name": "@paystage/mcp",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "PayStage umbrella MCP: payment preflight, auth watch, HIP-3 trade preflight, and velocity rate/spend-pattern checks",
   "license": "MIT",
   "type": "module",
@@ -41,7 +41,7 @@
     "@modelcontextprotocol/sdk": "^1.12.0",
     "@paystage/auth-watch": "0.1.0",
     "@paystage/policy": "0.1.0",
-    "@paystage/preflight": "0.1.0",
+    "@paystage/preflight": "0.1.1",
     "@paystage/trade-preflight": "^0.1.2",
     "@paystage/velocity": "^0.1.2",
     "zod": "^3.23.8"
