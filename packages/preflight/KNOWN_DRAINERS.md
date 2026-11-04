@@ -21,6 +21,13 @@ checks it **before** `unknown_payee` review so listed payees return
 - [Chainabuse contract-exploit category](https://chainabuse.com/category/contract-exploit) — Base EIP-7702 drain (`0xc900…fb03`, forwarder `0x101a…b86a`, 2026-10-08); Bitget Swap2 drain receiver `0x9cc5…e3ad`
 - [Chainabuse address report](https://chainabuse.com/address/0x2cff890f0378a11913b6129b2e97417a2c302680) — Base USDC theft Jul 2026 (`0x6782…97a8`)
 
+## Added 2026-11-05 NZDT
+
+- [0xCERT-2026-0292](https://www.0xcert.com/advisory/0xCERT-2026-0292) — Step Drainer payout wallets (55/30/15 split), same address on all EVM chains, per Bitquery: `0x012f…d386`, `0x7bf2…7695`, `0x5aff…8dbf`
+- [0xCERT-2026-0303](https://www.0xcert.com/advisory/0xCERT-2026-0303) / [0xCERT-2026-0308](https://www.0xcert.com/advisory/0xCERT-2026-0308) — Mercado Bitcoin incident destination `0xe485…2478` (confirmed by Mercado Bitcoin; seen on Base, Arbitrum, Optimism per Bitquery)
+
+Reviewed but not added (precision over recall): single anonymous Chainabuse reports without corroboration, non-EVM addresses, and exploit tx hashes.
+
 ## Updating
 
 1. Add lowercased address to `KNOWN_DRAINERS` with a comment citing source + date.

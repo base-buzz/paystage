@@ -43,6 +43,16 @@ export const SOURCES: readonly KnownDrainerSource[] = [
     url: "https://chainabuse.com/address/0x2cff890f0378a11913b6129b2e97417a2c302680",
     retrieved: "2026-11-02",
   },
+  {
+    name: "0xCERT advisory 0xCERT-2026-0292 (Step Drainer payout wallets, per Bitquery)",
+    url: "https://www.0xcert.com/advisory/0xCERT-2026-0292",
+    retrieved: "2026-11-05",
+  },
+  {
+    name: "0xCERT advisories 0xCERT-2026-0303 / 0xCERT-2026-0308 (Mercado Bitcoin incident; confirmed by Mercado Bitcoin, Base per Bitquery)",
+    url: "https://www.0xcert.com/advisory/0xCERT-2026-0303",
+    retrieved: "2026-11-05",
+  },
 ];
 
 /**
@@ -90,6 +100,17 @@ export const KNOWN_DRAINERS: readonly string[] = Object.freeze([
   // Chainabuse reported drain receiver (Bitget Swap2 incident report)
   // https://chainabuse.com/category/contract-exploit
   "0x9cc58d06f299f2a37050403eb9c90482f38ee3ad",
+
+  // --- Added 2026-11-05 NZDT ---
+  // Step Drainer payout wallets, same address on all EVM chains (0xCERT-2026-0292, per Bitquery; first seen 2026-11-02 UTC)
+  // https://www.0xcert.com/advisory/0xCERT-2026-0292
+  "0x012f89ff307568f8409bbe379ca92ed41bc4d386", // 55% share
+  "0x7bf2037264efbff55bd52777772779c1d9e87695", // 30% share
+  "0x5aff449b63c033df386af0c45384cd20c5918dbf", // 15% share
+  // Mercado Bitcoin incident destination address, confirmed by Mercado Bitcoin (0xCERT-2026-0303);
+  // also flagged on Base/Arbitrum/Optimism (0xCERT-2026-0308, per Bitquery)
+  // https://www.0xcert.com/advisory/0xCERT-2026-0303
+  "0xe485e7a70b1131216cb47ca4555c4bbb2c742478",
 ]);
 
 const SET: ReadonlySet<string> = new Set(

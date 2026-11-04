@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import { McpServer } from "@modelcontextprotocol/server";
 import {
   EvaluateVelocityInputSchema,
   evaluateVelocity,
@@ -9,7 +9,7 @@ import {
 
 const server = new McpServer({
   name: "paystage-velocity",
-  version: "0.1.0",
+  version: "0.2.0",
 });
 
 server.registerTool(

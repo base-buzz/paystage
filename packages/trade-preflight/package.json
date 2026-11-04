@@ -1,6 +1,6 @@
 {
   "name": "@paystage/trade-preflight",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Evaluate HIP-3/trade.xyz orders against a local TradePolicy before an agent trades",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,8 @@
   "files": [
     "dist",
     "server.json",
-    "README.md"
+    "README.md",
+    "!dist/**/*.map"
   ],
   "mcpName": "xyz.paystage/trade-preflight",
   "engines": {
@@ -48,13 +49,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.0",
-    "zod": "^3.23.8"
+    "@modelcontextprotocol/server": "^2.4.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
     "typescript": "^5.5.4",
-    "vitest": "^2.0.5"
+    "vitest": "^4.1.12"
   },
   "publishConfig": {
     "access": "public"

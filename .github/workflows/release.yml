@@ -1,16 +1,17 @@
-# Release workflow for @paystage/policy, @paystage/preflight, and @paystage/mcp.
+# Release workflow for all published @paystage/* packages.
 #
-# Trusted publishing (npm OIDC) must be configured on npmjs.com for EACH package
-# before this workflow can publish:
-#   - Package: @paystage/policy     -> Trusted Publisher: GitHub Actions
-#   - Package: @paystage/preflight  -> Trusted Publisher: GitHub Actions
-#   For both, point at:
-#     Repository: base-buzz/paystage
-#     Workflow file: release.yml
-#     Environment: (leave blank unless you use one)
+# Publishes with npm provenance (signed SLSA attestation linking each tarball to
+# this repo + commit) using npm Trusted Publishing (OIDC). No long-lived NPM_TOKEN.
 #
-# With trusted publishing, npm verifies provenance via OIDC. No long-lived
-# NPM_TOKEN is required. NODE_AUTH_TOKEN is unused for OIDC publishing.
+# One-time setup on npmjs.com (needs the `paystage` npm login + 2FA), for EACH package:
+#   @paystage/policy, @paystage/preflight, @paystage/auth-watch,
+#   @paystage/velocity, @paystage/trade-preflight, @paystage/mcp
+#   Settings -> Trusted Publisher -> GitHub Actions
+#     Organization/user: base-buzz   Repository: paystage
+#     Workflow filename: release.yml  Environment: (blank)
+#
+# Each publish step skips versions already on npm, so re-running a tag (or a tag
+# pushed after a local publish) is a safe no-op.
 
 name: release
 
@@ -48,45 +49,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build
+        run: npm run build
+
       - name: Typecheck
         run: npm run typecheck
 
       - name: Test
         run: npm test
 
-      - name: Build
-        run: npm run build
-
-      - name: Publish @paystage/policy (skip if version exists)
+      - name: Publish packages (dependency order, skip existing, with provenance)
         run: |
           set -euo pipefail
-          VERSION=$(node -p "require('./packages/policy/package.json').version")
-          echo "policy version: $VERSION"
-          if npm view "@paystage/policy@$VERSION" version >/dev/null 2>&1; then
-            echo "@paystage/policy@$VERSION already exists on npm; skipping publish."
-          else
-            npm publish -w @paystage/policy --access public
-          fi
-
-      - name: Publish @paystage/preflight (skip if version exists)
-        run: |
-          set -euo pipefail
-          VERSION=$(node -p "require('./packages/preflight/package.json').version")
-          echo "preflight version: $VERSION"
-          if npm view "@paystage/preflight@$VERSION" version >/dev/null 2>&1; then
-            echo "@paystage/preflight@$VERSION already exists on npm; skipping publish."
-          else
-            npm publish -w @paystage/preflight --access public
-          fi
-
-      - name: Publish @paystage/mcp (skip if version exists)
-        run: |
-          set -euo pipefail
-          VERSION=$(node -p "require('./packages/mcp/package.json').version")
-          echo "mcp version: $VERSION"
-          if npm view "@paystage/mcp@$VERSION" version >/dev/null 2>&1; then
-            echo "@paystage/mcp@$VERSION already exists on npm; skipping publish."
-          else
-            npm publish -w @paystage/mcp --access public
-          fi
-
+          for pkg in policy preflight auth-watch velocity trade-preflight mcp; do
+            VERSION=$(node -p "require('./packages/$pkg/package.json').version")
+            if npm view "@paystage/$pkg@$VERSION" version >/dev/null 2>&1; then
+              echo "@paystage/$pkg@$VERSION already on npm; skipping."
+            else
+              npm publish -w "@paystage/$pkg" --access public --provenance
+            fi
+          done

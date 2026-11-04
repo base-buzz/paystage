@@ -1,12 +1,9 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { loadPolicy, parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
-import {
-  evaluatePayment,
-  normalizePaymentRequired,
-} from "@paystage/preflight";
+import { evaluatePayment, normalizePaymentRequired } from "@paystage/preflight";
 import type { EvaluateResult } from "@paystage/preflight";
 import {
   listOutstandingAuths,
@@ -110,11 +107,11 @@ function registerAllTools(server: McpServer): void {
     {
       description:
         "Evaluate an x402 PaymentRequired payload against a PayStage spending policy before paying",
-      inputSchema: {
+      inputSchema: z.object({
         payment_required: z.unknown(),
         policy_path: z.string().optional(),
         policy: z.unknown().optional(),
-      },
+      }),
     },
     async (input: {
       payment_required: unknown;
@@ -141,10 +138,12 @@ function registerAllTools(server: McpServer): void {
     },
   );
 
-  server.tool(
+  server.registerTool(
     "list_outstanding_auths",
-    "List outstanding token authorizations for a wallet",
-    authWatchShape,
+    {
+      description: "List outstanding token authorizations for a wallet",
+      inputSchema: z.object(authWatchShape),
+    },
     async (args: AuthWatchArgs) => {
       const policy = await resolvePolicy(args);
       const network = args.network ?? DEFAULT_NETWORK;
@@ -175,10 +174,13 @@ function registerAllTools(server: McpServer): void {
     },
   );
 
-  server.tool(
+  server.registerTool(
     "evaluate_outstanding_auths",
-    "List and evaluate outstanding token authorizations against a policy",
-    authWatchShape,
+    {
+      description:
+        "List and evaluate outstanding token authorizations against a policy",
+      inputSchema: z.object(authWatchShape),
+    },
     async (args: AuthWatchArgs) => {
       const policy = await resolvePolicy(args);
       const network = args.network ?? DEFAULT_NETWORK;
@@ -216,14 +218,16 @@ function registerAllTools(server: McpServer): void {
     {
       description:
         "Evaluate a Hyperliquid HIP-3 (trade.xyz) order against a TradePolicy before an agent trades. Returns decision allow | review | do_not_trade.",
-      inputSchema: {
+      inputSchema: z.object({
         proposal: tradeProposalShape,
         policy: z.unknown().optional(),
         policy_path: z.string().optional(),
         snapshot: z.unknown().optional(),
-      },
+      }),
     },
-    async (args: TradeToolArgs): Promise<{
+    async (
+      args: TradeToolArgs,
+    ): Promise<{
       content: Array<{ type: "text"; text: string }>;
       isError?: boolean;
     }> => {
@@ -256,13 +260,13 @@ function registerAllTools(server: McpServer): void {
     {
       description:
         "Rolling-window rate and spend-pattern check for a proposed payment against recent action history and a policy.velocity config",
-      inputSchema: {
+      inputSchema: z.object({
         history: EvaluateVelocityInputSchema.shape.history,
         proposed: EvaluateVelocityInputSchema.shape.proposed,
         policy: z.unknown().optional(),
         policy_path: z.string().optional(),
         now_ms: z.number().int().nonnegative().optional(),
-      },
+      }),
     },
     async (input: {
       history?: unknown;
@@ -296,7 +300,7 @@ function registerAllTools(server: McpServer): void {
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "paystage",
-    version: "0.1.0",
+    version: "0.3.0",
   });
   registerAllTools(server);
   return server;

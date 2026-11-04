@@ -1,6 +1,6 @@
 {
   "name": "@paystage/auth-watch",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "List and evaluate outstanding ERC-20 / Permit2 / EIP-3009 authorizations for an agent wallet (read-only)",
   "license": "MIT",
   "type": "module",
@@ -15,7 +15,11 @@
   "bin": {
     "paystage-auth-watch": "./dist/cli.js"
   },
-  "files": ["dist", "server.json"],
+  "files": [
+    "dist",
+    "server.json",
+    "!dist/**/*.map"
+  ],
   "mcpName": "xyz.paystage/auth-watch",
   "engines": {
     "node": ">=20"
@@ -48,13 +52,13 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.0",
-    "@paystage/policy": "0.1.0",
-    "zod": "^3.23.8"
+    "@modelcontextprotocol/server": "^2.4.0",
+    "@paystage/policy": "0.2.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
     "typescript": "^5.5.4",
-    "vitest": "^2.0.5"
+    "vitest": "^4.1.12"
   }
 }

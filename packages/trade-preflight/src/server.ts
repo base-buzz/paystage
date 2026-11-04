@@ -1,5 +1,5 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { parseTradePolicy } from "./policy.js";
 import { fetchMetaAndAssetCtxs } from "./fetch.js";
@@ -18,14 +18,16 @@ const TradeProposalSchema = z.object({
 
 const SnapshotSchema = z.object({
   dex: z.string(),
-  meta: z.object({ universe: z.array(z.record(z.unknown())) }).passthrough(),
-  assetCtxs: z.array(z.record(z.unknown())),
+  meta: z
+    .object({ universe: z.array(z.record(z.string(), z.unknown())) })
+    .passthrough(),
+  assetCtxs: z.array(z.record(z.string(), z.unknown())),
 });
 
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "paystage-trade-preflight",
-    version: "0.0.0",
+    version: "0.2.0",
   });
 
   server.registerTool(
@@ -33,11 +35,11 @@ export function createServer(): McpServer {
     {
       description:
         "Evaluate a Hyperliquid HIP-3 (trade.xyz) order against a TradePolicy before an agent trades. Returns decision allow | review | do_not_trade.",
-      inputSchema: {
+      inputSchema: z.object({
         proposal: TradeProposalSchema,
         policy: z.unknown(),
         snapshot: SnapshotSchema.optional(),
-      },
+      }),
     },
     async (args: {
       proposal: TradeProposal;

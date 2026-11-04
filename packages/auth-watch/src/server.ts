@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { loadPolicy, parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
@@ -61,13 +61,15 @@ const commonShape = {
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "paystage-auth-watch",
-    version: "0.1.0",
+    version: "0.2.0",
   });
 
-  server.tool(
+  server.registerTool(
     "list_outstanding_auths",
-    "List outstanding token authorizations for a wallet",
-    commonShape,
+    {
+      description: "List outstanding token authorizations for a wallet",
+      inputSchema: z.object(commonShape),
+    },
     async (args) => {
       const policy = await resolvePolicy(args);
       const network = args.network ?? DEFAULT_NETWORK;
@@ -95,13 +97,16 @@ export function createServer(): McpServer {
           },
         ],
       };
-    }
+    },
   );
 
-  server.tool(
+  server.registerTool(
     "evaluate_outstanding_auths",
-    "List and evaluate outstanding token authorizations against a policy",
-    commonShape,
+    {
+      description:
+        "List and evaluate outstanding token authorizations against a policy",
+      inputSchema: z.object(commonShape),
+    },
     async (args) => {
       const policy = await resolvePolicy(args);
       const network = args.network ?? DEFAULT_NETWORK;
@@ -131,7 +136,7 @@ export function createServer(): McpServer {
           },
         ],
       };
-    }
+    },
   );
 
   return server;

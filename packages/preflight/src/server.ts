@@ -1,5 +1,5 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { loadPolicy, parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
@@ -10,7 +10,7 @@ import type { EvaluateResult } from "./evaluate.js";
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "paystage-preflight",
-    version: "0.1.0",
+    version: "0.2.0",
   });
 
   server.registerTool(
@@ -18,11 +18,11 @@ export function createServer(): McpServer {
     {
       description:
         "Evaluate an x402 PaymentRequired payload against a PayStage spending policy before paying",
-      inputSchema: {
+      inputSchema: z.object({
         payment_required: z.unknown(),
         policy_path: z.string().optional(),
         policy: z.unknown().optional(),
-      },
+      }),
     },
     async (input: {
       payment_required: unknown;

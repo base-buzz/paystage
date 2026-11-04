@@ -3,7 +3,7 @@
   "name": "xyz.paystage/preflight",
   "title": "PayStage Preflight",
   "description": "Evaluate x402 PaymentRequired against a local spending policy before an agent pays",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "websiteUrl": "https://paystage.xyz",
   "repository": {
     "url": "https://github.com/base-buzz/paystage",
@@ -15,7 +15,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@paystage/preflight",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio"
       },
