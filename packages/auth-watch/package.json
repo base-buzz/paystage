@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "paystage-auth-watch": "./dist/cli.js"
+    "paystage-auth-watch": "dist/cli.js"
   },
   "files": [
     "dist",

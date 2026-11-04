@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "paystage-mcp": "./dist/cli.js"
+    "paystage-mcp": "dist/cli.js"
   },
   "files": [
     "dist",
