@@ -26,6 +26,13 @@ checks it **before** `unknown_payee` review so listed payees return
 - [0xCERT-2026-0292](https://www.0xcert.com/advisory/0xCERT-2026-0292) — Step Drainer payout wallets (55/30/15 split), same address on all EVM chains, per Bitquery: `0x012f…d386`, `0x7bf2…7695`, `0x5aff…8dbf`
 - [0xCERT-2026-0303](https://www.0xcert.com/advisory/0xCERT-2026-0303) / [0xCERT-2026-0308](https://www.0xcert.com/advisory/0xCERT-2026-0308) — Mercado Bitcoin incident destination `0xe485…2478` (confirmed by Mercado Bitcoin; seen on Base, Arbitrum, Optimism per Bitquery)
 
+## Added 2026-11-07 NZDT
+
+- [0xCERT-2026-0314](https://www.0xcert.com/advisory/0xCERT-2026-0314) — Loopscale attack campaign, two EVM addresses named by Loopscale: `0xb7ec…f854`, `0xb895…bfb2` (chain not stated by the feed; treated as EVM-wide)
+- [0xCERT-2026-0309](https://www.0xcert.com/advisory/0xCERT-2026-0309) — CoreVault exploit on BNB Chain: attacker EOA `0xd356…5304` and the exploit contract it created, `0xc28c…87e2` (CertiK-cited transaction, corroborated on-chain)
+
+2026-11-07 review also covered the other new 0xCERT IOCs from 2026-11-03 through 2026-11-05 (ZachXBT EU-institution theft, BTCPay hot-wallet sweeps, TENDRIL/USDT pool, King bot drain, Udesk typosquat) — none added: Ethereum-/Bitcoin-/Solana-only, or transaction hashes and domains rather than EVM payees.
+
 Reviewed but not added (precision over recall): single anonymous Chainabuse reports without corroboration, non-EVM addresses, and exploit tx hashes.
 
 ## Updating

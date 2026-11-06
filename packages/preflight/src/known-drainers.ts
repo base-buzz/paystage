@@ -53,6 +53,16 @@ export const SOURCES: readonly KnownDrainerSource[] = [
     url: "https://www.0xcert.com/advisory/0xCERT-2026-0303",
     retrieved: "2026-11-05",
   },
+  {
+    name: "0xCERT advisory 0xCERT-2026-0314 (Loopscale attack campaign; EVM addresses named by Loopscale)",
+    url: "https://www.0xcert.com/advisory/0xCERT-2026-0314",
+    retrieved: "2026-11-07",
+  },
+  {
+    name: "0xCERT advisory 0xCERT-2026-0309 (CoreVault exploit; attacker EOA and exploit contract, BNB Chain per CertiK)",
+    url: "https://www.0xcert.com/advisory/0xCERT-2026-0309",
+    retrieved: "2026-11-07",
+  },
 ];
 
 /**
@@ -111,6 +121,17 @@ export const KNOWN_DRAINERS: readonly string[] = Object.freeze([
   // also flagged on Base/Arbitrum/Optimism (0xCERT-2026-0308, per Bitquery)
   // https://www.0xcert.com/advisory/0xCERT-2026-0303
   "0xe485e7a70b1131216cb47ca4555c4bbb2c742478",
+
+  // --- Added 2026-11-07 NZDT ---
+  // Loopscale attack campaign, EVM addresses named by Loopscale (0xCERT-2026-0314; chain not stated by the feed)
+  // https://www.0xcert.com/advisory/0xCERT-2026-0314
+  "0xb7ec7ef24fd73f3000c651ca9d0fa45b61dcf854",
+  "0xb8959aca4e4c796a3bada66833eae60b1bc0bfb2",
+  // CoreVault exploit, BNB Chain: attacker EOA (sender) and the exploit contract it created
+  // (0xCERT-2026-0309; CertiK-cited transaction, on-chain)
+  // https://www.0xcert.com/advisory/0xCERT-2026-0309
+  "0xd3565b191b28b49cc517189b984dacdb1ff05304",
+  "0xc28cfeee046e1421e9dbfb2cf689074bf9f387e2",
 ]);
 
 const SET: ReadonlySet<string> = new Set(

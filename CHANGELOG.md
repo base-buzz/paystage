@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-12
+
+- `@paystage/preflight@0.2.1` + `@paystage/mcp@0.3.1`: known-drainer list refresh (+4 cited EVM addresses, 25 total).
+- Added from [0xCERT-2026-0314](https://www.0xcert.com/advisory/0xCERT-2026-0314) (Loopscale campaign, two EVM addresses named by Loopscale) and [0xCERT-2026-0309](https://www.0xcert.com/advisory/0xCERT-2026-0309) (CoreVault exploit on BNB Chain: attacker EOA + exploit contract).
+- Reviewed and deliberately not added: the week's Ethereum-/Bitcoin-/Solana-only indicators (ZachXBT EU-institution theft, BTCPay hot-wallet sweeps, TENDRIL/USDT, King bot drain) and the Udesk typosquat domains — no EVM payee to block, and the list stays precision-first.
+- No code change: `evaluate` behaviour, policy schema and tool arguments are unchanged.
+
 ## 2026-11-05
 
 - Released: `@paystage/policy` 0.2.0, `@paystage/preflight` 0.2.0, `@paystage/auth-watch` 0.2.0, `@paystage/velocity` 0.2.0, `@paystage/trade-preflight` 0.2.0, `@paystage/mcp` 0.3.0.
