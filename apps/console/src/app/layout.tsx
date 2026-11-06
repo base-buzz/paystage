@@ -3,9 +3,13 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PayStage Console",
+  metadataBase: new URL("https://paystage.xyz"),
+  title: {
+    default: "PayStage — Safety tools for AI agent payments",
+    template: "%s — PayStage",
+  },
   description:
-    "Public seatbelt console: run payment safety scenarios, live Real/Synthetic/Test feed, and issue flags.",
+    "PayStage is a read-only safety layer for AI agent payments: local-policy preflight that returns pay, review or do-not-pay before anything is signed.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
