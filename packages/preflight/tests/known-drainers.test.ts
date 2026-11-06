@@ -66,7 +66,7 @@ describe("known-drainers", () => {
   });
 });
 
-describe("known-drainers 2026-11-02 + 2026-11-05 refresh", () => {
+describe("known-drainers 2026-11-02 + 2026-11-05 + 2026-11-07 refresh", () => {
   const added = [
     "0x0b5126e1bc27c0de77e02e97945760a674edb034",
     "0xcdfe91301356da873562ef513828a60dba1f569d",
@@ -79,10 +79,14 @@ describe("known-drainers 2026-11-02 + 2026-11-05 refresh", () => {
     "0x7bf2037264efbff55bd52777772779c1d9e87695",
     "0x5aff449b63c033df386af0c45384cd20c5918dbf",
     "0xe485e7a70b1131216cb47ca4555c4bbb2c742478",
+    "0xb7ec7ef24fd73f3000c651ca9d0fa45b61dcf854",
+    "0xb8959aca4e4c796a3bada66833eae60b1bc0bfb2",
+    "0xd3565b191b28b49cc517189b984dacdb1ff05304",
+    "0xc28cfeee046e1421e9dbfb2cf689074bf9f387e2",
   ];
 
   it("includes newly cited Base/EVM drain addresses", () => {
-    expect(KNOWN_DRAINERS.length).toBe(21);
+    expect(KNOWN_DRAINERS.length).toBe(25);
     for (const a of added) {
       expect(isKnownDrainer(a)).toBe(true);
       expect(isKnownDrainer(a.toUpperCase())).toBe(true);
