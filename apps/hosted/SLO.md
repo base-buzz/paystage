@@ -10,7 +10,8 @@ behaving. Every number here is measured, dated, and reproducible with
 |---|---|---|
 | Availability, `GET /health` | 99.9% monthly | not yet measured over a window |
 | Availability, `POST /v1/evaluate_mcp_payment` | 99.9% monthly | not yet measured over a window |
-| Server time, unpaid 402 | p50 ≤ 10 ms, p95 ≤ 50 ms | **met** — p50 0 ms / p95 0 ms (2026-11-09) |
+| Server time, unpaid 402 — warm isolate | p50 ≤ 10 ms, p95 ≤ 50 ms | **met** — p50 0 ms / p95 0 ms (2026-11-09, n=20) |
+| Server time, unpaid 402 — first request in a fresh isolate | p95 ≤ 400 ms | **~220-260 ms** (2026-11-09) |
 | Server time, paid evaluation | p50 ≤ 150 ms, p95 ≤ 500 ms | **not measured** — needs a funded wallet |
 | Time to first byte, external | p50 ≤ 150 ms from NZ | **met** — 18 ms wall (2026-11-09) |
 
@@ -68,6 +69,23 @@ is wrong, not slow.
 - It does not retry a paid call for you; that is the caller's policy.
 - It does not guarantee the drainer list is complete — only that every entry is
   cited.
+
+## Cold-start tax (be precise about this)
+
+The numbers above are **warm-isolate** numbers. A fresh isolate pays the
+facilitator's `getSupported()` discovery once, measured at **~220-260 ms**. Six
+rapid requests after a quiet period returned `app;dur=0.0`; requests after ~10
+minutes idle returned `app;dur=224-257`.
+
+So the honest statement is: *warm requests are effectively free; the first request
+in a new isolate costs a quarter of a second.* Under sustained traffic that
+amortises to nothing. Under bursty, low-volume traffic — which is what this service
+sees today — most calls may pay it.
+
+Mitigations considered and not taken yet: a keep-warm cron (fights the platform,
+extra invocations), pre-seeding supported kinds instead of discovering them (needs
+a static config path in the x402 server), or accepting it and setting expectations.
+Currently accepting it and setting expectations.
 
 ## Known cost of trust
 
