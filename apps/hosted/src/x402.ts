@@ -3,6 +3,7 @@ import { x402ResourceServer } from "@x402/hono";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { createFacilitatorConfig } from "@coinbase/x402";
+import { withSupportedCache } from "./facilitator-cache.js";
 import type { MiddlewareHandler } from "hono";
 
 export interface FacilitatorAuth {
@@ -48,7 +49,12 @@ export function buildResourceServer(
     client = new HTTPFacilitatorClient({ url: cfg.facilitatorUrl });
   }
 
-  const server = new x402ResourceServer(client as never);
+  // Cache the facilitator's supported-kinds answer at the edge, so a cold isolate
+  // does not pay a network round trip on the request path. Injected clients (tests)
+  // are left untouched.
+  const routed = facilitatorClient ? client : withSupportedCache(client as object);
+
+  const server = new x402ResourceServer(routed as never);
   server.register(cfg.network, new ExactEvmScheme());
   return server;
 }
