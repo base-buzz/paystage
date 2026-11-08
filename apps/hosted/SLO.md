@@ -112,6 +112,11 @@ Mitigated, not fixed:
   402** while discovery is backing off. That is worse than a challenge and better
   than a hang. It is visible to any caller and to the conformance kit.
 
+**Fixed 2026-11-09** by caching the discovery answer in the Workers Cache API
+(10-minute TTL, per colo, no binding). Verified after deploy: first request 279 ms
+(cold, populates the cache), then 12 ms, then 0 ms; a 10-request burst returned
+ten 402s and no 503s. Cache failures fall through to the real facilitator.
+
 Ruled out: setting `syncFacilitatorOnStart: false` to skip eager discovery — tried
 2026-11-09, it breaks 4 of 40 tests because the challenge and verification paths
 need the supported-kinds map.
