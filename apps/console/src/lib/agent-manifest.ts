@@ -116,6 +116,18 @@ export const PAYSTAGE_MANIFEST = {
     sepolia: "https://sepolia.api.paystage.xyz",
     price_usdc_per_call: "0.002",
   },
+  reliability: {
+    slo_doc: "https://github.com/base-buzz/paystage/blob/main/apps/hosted/SLO.md",
+    timing_header: "Server-Timing: app;dur=<ms> on every response",
+    measure: "node apps/hosted/scripts/latency.mjs --n 50",
+    fail_closed: true,
+    idempotent: ["POST /v1/evaluate_mcp_payment", "POST /v1/evaluate_outstanding_auths"],
+    measured_2026_11_09: {
+      unpaid_402_server_ms: { p50: 0, p95: 0 },
+      unpaid_402_wall_ms: { p50: 18, p95: 101 },
+      paid_evaluation: "not measured — needs a funded wallet",
+    },
+  },
   receipts: {
     endpoint: "POST /v1/evaluate_mcp_payment returns a `receipt` field",
     key_endpoint: "https://api.paystage.xyz/v1/public/receipt-key.json",
