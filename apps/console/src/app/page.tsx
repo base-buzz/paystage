@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./landing.css";
+import { AliveStrip } from "@/components/AliveStrip";
 
 export const metadata: Metadata = {
   title: "PayStage — Safety tools for AI agent payments",
@@ -141,6 +142,8 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        <AliveStrip />
 
         <section className="lp-section" id="how">
           <div className="lp-wrap">
