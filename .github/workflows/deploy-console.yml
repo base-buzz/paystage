@@ -1,0 +1,120 @@
+# Deploy paystage.xyz (the console/site Worker) from CI.
+#
+# Replaces the previous "Dave deploys from the Mac" rule for this Worker. The
+# Cloudflare token lives in GitHub secrets, never in the agent's container — so
+# the agent can trigger a deploy by merging, without holding a credential that
+# could rewrite Workers routes or account settings.
+#
+# What it deploys:
+#   apps/console -> Worker `paystage-console` -> paystage.xyz + www.paystage.xyz
+#
+# What it does NOT deploy:
+#   apps/hosted (api.paystage.xyz, sepolia.api.paystage.xyz). Those embed the
+#   preflight known-drainer list and the CDP facilitator wiring; they stay a
+#   deliberate, separate action. Add them here once that is reviewed.
+
+name: deploy-console
+
+on:
+  # Automatic on main. Comment this block out if deploys should stay manual and
+  # use only workflow_dispatch.
+  push:
+    branches: [main]
+    paths:
+      - "apps/console/**"
+      - "packages/**"
+      - ".github/workflows/deploy-console.yml"
+  # Manual run from the Actions tab, or `gh workflow run deploy-console`.
+  workflow_dispatch:
+
+# One deploy at a time; never cancel a deploy mid-flight.
+concurrency:
+  group: deploy-console
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: apps/console
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: apps/console/package-lock.json
+
+      # apps/console consumes the workspace packages through `file:` paths, so
+      # they must be built before the console is bundled.
+      - name: Install workspace dependencies
+        working-directory: .
+        run: npm ci
+
+      - name: Build workspace packages
+        working-directory: .
+        run: npm run build
+
+      - name: Install console dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      # Same gate as console-ci.yml: the agent-facing routes are generated from
+      # one manifest, and a broken generator still compiles.
+      - name: Build
+        run: npm run build
+
+      - name: Verify machine-readable surfaces
+        run: |
+          set -euo pipefail
+          npx next start -p 3007 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+
+          for attempt in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://localhost:3007/; then break; fi
+            sleep 1
+          done
+
+          for path in / /console /llms.txt /llms-full.txt /.well-known/paystage.json; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:3007${path}")
+            [ "$code" = "200" ] || { echo "FAIL ${path} -> ${code}"; exit 1; }
+            echo "ok   ${path}"
+          done
+
+      - name: Build Worker bundle (OpenNext)
+        run: npx opennextjs-cloudflare build
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/console
+          command: deploy
+          # Versions make a bad deploy revertible from the dashboard.
+          wranglerVersion: "4"
+
+      - name: Smoke test the live apex
+        run: |
+          set -euo pipefail
+          sleep 10
+          for path in / /console /llms.txt /llms-full.txt /.well-known/paystage.json; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://paystage.xyz${path}")
+            [ "$code" = "200" ] || { echo "FAIL ${path} -> ${code}"; exit 1; }
+            echo "ok   ${path}"
+          done
+          echo "deployed: $(curl -s https://paystage.xyz/llms.txt | head -1)"

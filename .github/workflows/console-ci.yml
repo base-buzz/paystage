@@ -1,0 +1,121 @@
+# CI for the console/site app (apps/console).
+#
+# The root `ci.yml` covers the workspace packages only — it runs the package
+# build/typecheck/test tarball scripts and never touches apps/console. That means
+# a change to the landing page, the agent surfaces, or the console dashboard can
+# reach main with no automated verification at all.
+#
+# This workflow is the patch for Dave to review and merge: the agent's git
+# credential deliberately has no `workflow` scope, so it cannot land this itself.
+#
+# What it proves:
+#   - apps/console typechecks and builds under Next.js
+#   - apps/console tests pass (currently siwe-session + agent-manifest)
+#   - the machine-readable surfaces still render (llms.txt, llms-full.txt,
+#     .well-known/paystage.json) and the manifest parses as JSON
+#
+# It does NOT deploy. Deployment stays Dave's, from his Mac.
+
+name: console-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/console/**"
+      - "packages/**"
+      - ".github/workflows/console-ci.yml"
+  pull_request:
+    paths:
+      - "apps/console/**"
+      - "packages/**"
+      - ".github/workflows/console-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  console:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/console
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: apps/console/package-lock.json
+
+      # apps/console depends on the workspace packages by `file:` path, so they
+      # must be built before the console can typecheck against their dist output.
+      - name: Install workspace dependencies
+        working-directory: .
+        run: npm ci
+
+      - name: Build workspace packages
+        working-directory: .
+        run: npm run build
+
+      - name: Install console dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # The three agent-facing routes are the reason this check exists: they are
+      # generated from one manifest and a broken generator is invisible in a
+      # typecheck. Serve the built app and assert each one answers.
+      - name: Verify machine-readable surfaces
+        run: |
+          set -euo pipefail
+          npx next start -p 3007 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+
+          for attempt in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://localhost:3007/; then break; fi
+            sleep 1
+          done
+
+          check() {
+            local path="$1" expect="$2"
+            local code
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:3007${path}")
+            if [ "$code" != "$expect" ]; then
+              echo "FAIL ${path} -> ${code} (expected ${expect})"
+              exit 1
+            fi
+            echo "ok   ${path} -> ${code}"
+          }
+
+          check / 200
+          check /console 200
+          check /llms.txt 200
+          check /llms-full.txt 200
+          check /.well-known/paystage.json 200
+
+          curl -fsS http://localhost:3007/.well-known/paystage.json \
+            | node -e '
+              let raw = "";
+              process.stdin.on("data", (c) => (raw += c));
+              process.stdin.on("end", () => {
+                const m = JSON.parse(raw);
+                const fail = (msg) => { console.error("FAIL " + msg); process.exit(1); };
+                if (m.holds_keys !== false) fail("manifest must state holds_keys: false");
+                if (!Array.isArray(m.tools) || m.tools.length === 0) fail("manifest lists no tools");
+                if (!m.package_versions || !m.package_versions["@paystage/mcp"]) fail("manifest is missing package versions");
+                console.log("ok   manifest: " + m.tools.length + " tools, mcp@" + m.package_versions["@paystage/mcp"]);
+              });
+            '
