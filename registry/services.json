@@ -1,0 +1,13 @@
+[
+  {
+    "name": "PayStage Evaluate",
+    "url": "https://api.paystage.xyz/v1/evaluate_mcp_payment",
+    "network": "eip155:8453",
+    "description": "Evaluates a proposed x402 payment against a local policy and returns pay, review or do_not_pay with the rule that fired.",
+    "price": "$0.002 per call",
+    "asset": "USDC",
+    "payTo": "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
+  }
+]
