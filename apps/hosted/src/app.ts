@@ -288,6 +288,26 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
 
   const protect = opts.protect ?? true;
   if (protect) {
+    // Fail fast, never hang. The x402 middleware performs facilitator discovery on
+    // a cold isolate, and that discovery retries with backoff when the facilitator
+    // rate-limits. Observed 2026-11-09: a burst of unpaid requests eventually left
+    // one hanging past 30 s with no response. A caller waiting on a socket is the
+    // worst failure mode for an agent; a 503 it can retry from is the good one.
+    const UPSTREAM_GUARD_MS = Number((cfg as { upstreamGuardMs?: number }).upstreamGuardMs ?? 5000);
+    app.use("*", async (c, next) => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const guard = new Promise<"timeout">((resolve) => {
+        timer = setTimeout(() => resolve("timeout"), UPSTREAM_GUARD_MS);
+      });
+      try {
+        const winner = await Promise.race([next().then(() => "done" as const), guard]);
+        if (winner === "timeout") {
+          return c.json({ error: "upstream_timeout", retry_after_seconds: 5 }, 503);
+        }
+      } finally {
+        if (timer !== undefined) clearTimeout(timer);
+      }
+    });
     app.use("*", buildPaymentMiddleware(cfg, opts.facilitatorClient));
   }
 
