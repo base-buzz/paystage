@@ -44,6 +44,7 @@ publish.
 | Policy fails schema validation | `400 evaluation_failed` + message | fix the policy; do not pay |
 | No payment supplied | `402` + challenge | pay per the challenge, then retry |
 | Facilitator unreachable | `502`-class from the x402 layer | retry with backoff, then fail closed |
+| Payment layer exceeded 5 s | `503 upstream_timeout` + `retry_after_seconds` | retry with backoff; do not pay |
 | Unexpected error | `500` | retry with backoff, then fail closed |
 
 ### Retries
@@ -94,3 +95,28 @@ request: ~220 ms of server time per call, measured 2026-11-09. Fixed by building
 the app once per isolate (`af3eb0f` → `f1a2c3`-era change, see CHANGELOG).
 Unpaid 402 went from 265 ms to 18 ms wall. Recorded here because it is the kind of
 regression that a p95 target would otherwise hide behind a green dashboard.
+
+
+## Known issue — facilitator discovery gates the challenge (2026-11-09)
+
+The x402 middleware performs facilitator `getSupported()` discovery on a cold
+isolate, and the 402 challenge path depends on it. When the facilitator rate-limits
+that discovery, the retry-with-backoff can block a request for tens of seconds.
+
+Mitigated, not fixed:
+
+- The payment path now races a **5 s guard** and returns `503 upstream_timeout`
+  with `retry_after_seconds`. A hang becomes a retryable error, which is what
+  fail-closed is supposed to look like.
+- Measured consequence: a burst of unpaid requests can now return **503 instead of
+  402** while discovery is backing off. That is worse than a challenge and better
+  than a hang. It is visible to any caller and to the conformance kit.
+
+Ruled out: setting `syncFacilitatorOnStart: false` to skip eager discovery — tried
+2026-11-09, it breaks 4 of 40 tests because the challenge and verification paths
+need the supported-kinds map.
+
+Not yet tried, in rough order of preference: cache the discovery result in KV so a
+cold isolate reads instead of asking; pin the facilitator's supported kinds at
+deploy time; or move discovery off the request path entirely with a scheduled
+refresh.
