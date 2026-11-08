@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { buildReceipt } from "../receipt.js";
 import {
   evaluatePayment,
   normalizePaymentRequired,
@@ -28,7 +29,15 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
     const normalized = normalizePaymentRequired(b.payment_required as never);
     const policy = parsePolicy(b.policy as never);
     const decision = evaluatePayment(normalized, policy);
-    return c.json(decision);
+    // Additive: the receipt binds the verdict to these exact inputs. It never
+    // changes the decision, and degrades to signed:false when no key is set.
+    const receipt = await buildReceipt({
+      decision,
+      request: normalized,
+      policy,
+      signingKeyPkcs8B64: (c.env as { RECEIPT_SIGNING_KEY_PKCS8?: string } | undefined)?.RECEIPT_SIGNING_KEY_PKCS8,
+    });
+    return c.json({ ...decision, receipt });
   } catch (err) {
     return c.json(
       { error: "evaluation_failed", message: (err as Error).message },

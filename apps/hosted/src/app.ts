@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { healthRoutes } from "./routes/health.js";
 import { evaluateRoutes } from "./routes/evaluate.js";
 import { publicStatusRoutes } from "./routes/public-status.js";
+import { receiptKeyRoutes } from "./routes/receipt-key.js";
 import { recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { CORS_ORIGINS } from "./cors-origins.js";
 import {
@@ -21,6 +22,8 @@ export interface AppEnv {
   CDP_API_KEY_SECRET?: string;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
+  /** PKCS#8 base64 ECDSA P-256 key. Unset = receipts are emitted unsigned. */
+  RECEIPT_SIGNING_KEY_PKCS8?: string;
 }
 
 export interface CreateAppOptions {
@@ -271,6 +274,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
 
   // Public status feed — must be mounted BEFORE payment middleware.
   app.route("/", publicStatusRoutes);
+  app.route("/", receiptKeyRoutes);
 
   const protect = opts.protect ?? true;
   if (protect) {
