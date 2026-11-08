@@ -118,3 +118,57 @@ jobs:
             echo "ok   ${path}"
           done
           echo "deployed: $(curl -s https://paystage.xyz/llms.txt | head -1)"
+
+  deploy-hosted:
+    # api.paystage.xyz (mainnet) + sepolia.api.paystage.xyz. Separate from the
+    # console because it ships the preflight drainer list and the CDP facilitator
+    # wiring, so a bad console deploy must not be able to take the paid API with it.
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: apps/hosted
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: apps/hosted/package-lock.json
+      # apps/hosted resolves the workspace packages through file: paths.
+      - name: Install workspace dependencies
+        working-directory: .
+        run: npm ci
+      - name: Build workspace packages
+        working-directory: .
+        run: npm run build
+      - name: Install hosted dependencies
+        run: npm ci
+      - name: Test
+        run: npx vitest run
+      - name: Deploy mainnet
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/hosted
+          command: deploy
+          wranglerVersion: "4"
+      - name: Deploy sepolia
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/hosted
+          command: deploy --env sepolia
+          wranglerVersion: "4"
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          sleep 10
+          for host in https://api.paystage.xyz https://sepolia.api.paystage.xyz; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$host/health")
+            echo "$host/health -> $code"
+            [ "$code" = "200" ] || exit 1
+          done
+          curl -s https://api.paystage.xyz/v1/public/receipt-key.json | head -c 300; echo
