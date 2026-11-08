@@ -7,7 +7,6 @@ import { EventFeed } from "@/components/EventFeed";
 import { IncidentFeed } from "@/components/IncidentFeed";
 import { ScenarioRunner } from "@/components/ScenarioRunner";
 import { ProgressStrip } from "@/components/ProgressStrip";
-import { NpmDownloads } from "@/components/NpmDownloads";
 import { SiweStub } from "@/components/SiweStub";
 import { SyntheticWallets } from "@/components/SyntheticWallets";
 import { ConfidenceChecklist } from "@/components/ConfidenceChecklist";
@@ -103,7 +102,6 @@ export default async function Page() {
         </div>
 
         <ProgressStrip />
-        <NpmDownloads />
         <VolumeChart data={m.volume} />
         <IncidentFeed incidents={m.incidents} />
         <ConfidenceChecklist />
