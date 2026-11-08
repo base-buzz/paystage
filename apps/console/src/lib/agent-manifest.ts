@@ -116,6 +116,15 @@ export const PAYSTAGE_MANIFEST = {
     sepolia: "https://sepolia.api.paystage.xyz",
     price_usdc_per_call: "0.002",
   },
+  receipts: {
+    endpoint: "POST /v1/evaluate_mcp_payment returns a `receipt` field",
+    key_endpoint: "https://api.paystage.xyz/v1/public/receipt-key.json",
+    format_version: 1,
+    alg: "ECDSA-P256-SHA256",
+    binding: "request_sha256 + policy_sha256 over canonical JSON; verdict included",
+    signing: "optional — check the key endpoint; receipts say signed:false when unsigned",
+    docs: "https://github.com/base-buzz/paystage/blob/main/apps/hosted/RECEIPTS.md",
+  },
   access: [
     { kind: "filesystem.read", detail: "one policy JSON file (policy_path / PAYSTAGE_POLICY_PATH)" },
     { kind: "network", detail: "JSON-RPC reads to Base or a configured RPC; read-only Hyperliquid info query" },
