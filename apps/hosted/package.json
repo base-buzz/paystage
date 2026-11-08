@@ -9,7 +9,6 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "e2e:paid": "node scripts/e2e-paid.mjs",
-    "build:try-it": "node ../../site/build-try-it.mjs",
     "try-it:harness": "node scripts/try-it-sepolia-harness.mjs"
   },
   "dependencies": {
