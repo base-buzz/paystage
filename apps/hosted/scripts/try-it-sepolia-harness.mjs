@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Sepolia harness — same browser module (site/try-it/pay.js) as the lander widget.
+// Sepolia harness — same browser module as the console's Try-it widget
+// (apps/console/src/lib/try-it/pay.js). Sends X-PayStage-Source: synthetic.
 // Key ONLY from PAYSTAGE_E2E_KEY_FILE. Never prints the key. Testnet only.
 
 import { readFileSync } from "node:fs";
@@ -9,7 +10,7 @@ import {
   NETWORKS,
   createLocalSigner,
   runPaidEvaluate,
-} from "../../../site/try-it/pay.js";
+} from "../../console/src/lib/try-it/pay.js";
 
 const KEY_FILE =
   process.env.PAYSTAGE_E2E_KEY_FILE ||

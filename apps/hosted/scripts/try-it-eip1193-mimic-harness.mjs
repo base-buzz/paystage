@@ -12,7 +12,7 @@ import {
   runPaidEvaluate,
   ensureWalletChain,
   serializeTypedDataForWallet,
-} from "../../../site/try-it/pay.js";
+} from "../../console/src/lib/try-it/pay.js";
 
 const KEY_FILE =
   process.env.PAYSTAGE_E2E_KEY_FILE ||
