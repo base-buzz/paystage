@@ -10,12 +10,12 @@ import {
 
 /** Generate a throwaway P-256 key and return its PKCS#8 base64. */
 async function makeKey(): Promise<string> {
-  const pair = await crypto.subtle.generateKey(
+  const pair = (await crypto.subtle.generateKey(
     { name: "ECDSA", namedCurve: "P-256" },
     true,
     ["sign", "verify"],
-  );
-  const pkcs8 = await crypto.subtle.exportKey("pkcs8", pair.privateKey);
+  )) as CryptoKeyPair;
+  const pkcs8 = (await crypto.subtle.exportKey("pkcs8", pair.privateKey)) as ArrayBuffer;
   return btoa(String.fromCharCode(...new Uint8Array(pkcs8)));
 }
 
