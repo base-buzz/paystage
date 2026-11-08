@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-11-12
+## 2026-11-09
 
 - `@paystage/preflight@0.2.1` + `@paystage/mcp@0.3.1`: known-drainer list refresh (+4 cited EVM addresses, 25 total).
 - Added from [0xCERT-2026-0314](https://www.0xcert.com/advisory/0xCERT-2026-0314) (Loopscale campaign, two EVM addresses named by Loopscale) and [0xCERT-2026-0309](https://www.0xcert.com/advisory/0xCERT-2026-0309) (CoreVault exploit on BNB Chain: attacker EOA + exploit contract).
