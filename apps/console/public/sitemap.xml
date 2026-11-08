@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Human pages only. The machine surfaces (/llms.txt, /llms-full.txt,
+  /.well-known/paystage.json) are discovered by agents from /llms.txt and the
+  well-known path, not from a crawler sitemap, so they are deliberately absent
+  here — listing them was the old mistake: two of them 404'd in production.
+
+  Keep in sync with apps/console/src/app/page.tsx (/) and console/page.tsx.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://paystage.xyz/</loc>
@@ -6,8 +14,8 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://paystage.xyz/llms.txt</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <loc>https://paystage.xyz/console</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
