@@ -1,18 +1,25 @@
 import bakedCommits from "@/lib/recent-commits.json";
+/**
+ * Published versions come from the registry, not from this file.
+ *
+ * They used to be hardcoded here and went stale the moment a release shipped:
+ * the console advertised 0.2.1 while npm had 0.3.0, for a week. A version the
+ * console cannot verify is a version it should not print.
+ */
 const PACKAGES = [
-  { name: "@paystage/mcp", version: "0.2.1" },
-  { name: "@paystage/preflight", version: "0.1.0" },
-  { name: "@paystage/velocity", version: "0.1.2" },
-  { name: "@paystage/auth-watch", version: "0.1.0" },
-  { name: "@paystage/trade-preflight", version: "0.1.2" },
-  { name: "@paystage/policy", version: "0.1.0" },
+  { name: "@paystage/mcp" },
+  { name: "@paystage/preflight" },
+  { name: "@paystage/velocity" },
+  { name: "@paystage/auth-watch" },
+  { name: "@paystage/trade-preflight" },
+  { name: "@paystage/policy" },
 ] as const;
 
 const REPO = "base-buzz/paystage";
 
 interface PkgStat {
   name: string;
-  version: string;
+  version: string | null;
   downloads: number | null;
 }
 
@@ -31,6 +38,19 @@ async function fetchDownloads(name: string): Promise<number | null> {
     if (!res.ok) return null;
     const data = (await res.json()) as { downloads?: number };
     return typeof data.downloads === "number" ? data.downloads : null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchVersion(name: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}/latest`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { version?: string };
+    return typeof data.version === "string" ? data.version : null;
   } catch {
     return null;
   }
@@ -125,15 +145,16 @@ function relativeDate(iso: string | null): string {
 }
 
 export async function ProgressStrip() {
-  const [stars, commits, release, ...dl] = await Promise.all([
+  const [stars, commits, release, ...rest] = await Promise.all([
     fetchStars(),
     fetchCommits(),
     fetchLatestRelease(),
-    ...PACKAGES.map((p) => fetchDownloads(p.name)),
+    ...PACKAGES.flatMap((p) => [fetchDownloads(p.name), fetchVersion(p.name)]),
   ]);
   const pkgs: PkgStat[] = PACKAGES.map((p, i) => ({
     ...p,
-    downloads: dl[i] ?? null,
+    downloads: (rest[i * 2] as number | null) ?? null,
+    version: (rest[i * 2 + 1] as string | null) ?? null,
   }));
 
   return (
@@ -149,7 +170,7 @@ export async function ProgressStrip() {
         {pkgs.map((p) => (
           <div key={p.name} className="progress-item">
             <code className="progress-name">{p.name}</code>
-            <span className="muted">v{p.version}</span>
+            <span className="muted">{p.version ? `v${p.version}` : "version unknown"}</span>
             <span className="progress-dl">{fmt(p.downloads)} /mo</span>
           </div>
         ))}
