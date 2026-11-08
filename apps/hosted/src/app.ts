@@ -267,6 +267,16 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
     }
   });
 
+  // Server-Timing on every response, so any caller can measure this service
+  // without trusting our published numbers. Mounted before the payment
+  // middleware so the header survives a 402 as well as a 200.
+  app.use("*", async (c, next) => {
+    const started = performance.now();
+    await next();
+    const dur = performance.now() - started;
+    c.header("Server-Timing", `app;dur=${dur.toFixed(1)}`);
+  });
+
   // Short-circuit OPTIONS in case payment middleware would otherwise run.
   app.options("*", (c) => c.body(null, 204));
 
