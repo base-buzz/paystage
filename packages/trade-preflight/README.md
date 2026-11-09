@@ -87,6 +87,17 @@ Example policy shape:
 | `review` | Order needs a human or higher-level check. |
 | `do_not_trade` | Order violates a hard policy rule. |
 
+## Supply chain and access
+
+| Flag | Why it is there |
+| --- | --- |
+| Network access | One read-only `POST` to `https://api.hyperliquid.xyz/info` (`metaAndAssetCtxs`) when the caller does not pass a market snapshot. |
+| URL strings | That endpoint. |
+| Filesystem access | Indirect, through the policy file for `TradePolicy`. |
+
+It never places an order and never signs. Not financial advice. Full table:
+[SECURITY.md](../../SECURITY.md).
+
 ## Links
 
 - Website: [paystage.xyz](https://paystage.xyz)

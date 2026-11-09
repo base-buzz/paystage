@@ -40,6 +40,16 @@ humanToAtomic("0.50"); // "500000"
 - `loadPolicy(path)` — read + parse a JSON policy file.
 - `humanToAtomic(amount)` — convert `"0.50"` → `"500000"` (USDC, 6 decimals).
 
+## Supply chain and access
+
+| Flag | Why it is there |
+| --- | --- |
+| Filesystem access | `loadPolicy()` reads one JSON file — the policy it evaluates against. It never writes. |
+| Environment variable access | `PAYSTAGE_POLICY_PATH`, as a fallback when no path argument is given. |
+| Network access | None. This package is pure: policy in, normalised policy out. |
+
+No shell, no `eval`, no telemetry. Full table: [SECURITY.md](../../SECURITY.md).
+
 ## Links
 
 - Website: <https://paystage.xyz>

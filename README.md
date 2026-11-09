@@ -87,6 +87,33 @@ The same MCP config works for Claude Desktop (`claude_desktop_config.json`) and 
 | `@paystage/policy` | Policy parsing and evaluation | [npm](https://www.npmjs.com/package/@paystage/policy) |
 | `@paystage/trade-preflight` | HIP-3 / trade.xyz trade preflight | [npm](https://www.npmjs.com/package/@paystage/trade-preflight) |
 
+## Verify it yourself
+
+Every claim this project makes about itself is reducible to a command. Run it before
+you trust anything on the website:
+
+```sh
+node apps/hosted/scripts/conformance.mjs
+```
+
+It checks the published surfaces against reality — manifest shape, the five tools
+being listed, machine surfaces being genuinely different from each other, health and
+timing headers on both networks, the receipt key endpoint, that an unpaid evaluation
+is challenge-only, and that malformed input fails closed. Read-only: no payment, no
+key, no account. Exit code 1 if anything is off.
+
+It runs daily in CI ([cadence.yml](.github/workflows/cadence.yml)) and the result
+history is on the [site](https://paystage.xyz).
+
+## Supply chain
+
+Socket.dev scores packages on capability, so a payment-safety tool will always carry
+flags: it reads a policy file, reads two environment variables and talks to an RPC.
+Every package README states exactly what it touches and why, and
+[SECURITY.md](SECURITY.md) has the full table. The umbrella `@paystage/mcp` is ~16 KB
+with no network, no filesystem and no `eval` of its own — the capability lives in the
+tools it bundles.
+
 ## Links
 
 - Website: https://paystage.xyz

@@ -87,6 +87,21 @@ CAIP-2 identifiers.
 | `review`      | Allowed but above a human threshold — ask a human before paying.        |
 | `do_not_pay`  | Violates policy (network, asset, payTo, amount, timeout, or malformed). |
 
+## Supply chain and access
+
+Socket.dev scores this package on what it *can* do, not what it does with it, so the
+flags it raises are worth explaining rather than removing:
+
+| Flag | Why it is there |
+| --- | --- |
+| Filesystem access | Reads the policy JSON you point it at (`policy_path` / `PAYSTAGE_POLICY_PATH`). Nothing is written. |
+| Environment variable access | `PAYSTAGE_POLICY_PATH` only (and `PAYSTAGE_RPC_URL` via `auth-watch`). |
+| Network access, URL strings | None in this package. The RPC endpoints you may see in the tree belong to `@paystage/auth-watch`. |
+
+No shell, no `eval`, no telemetry, no key custody. The full table is in
+[SECURITY.md](../../SECURITY.md); the deny list is published with a citation per
+entry in [KNOWN_DRAINERS.md](./KNOWN_DRAINERS.md).
+
 ## Links
 
 - Website: <https://paystage.xyz>

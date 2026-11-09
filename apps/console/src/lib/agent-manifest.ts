@@ -147,6 +147,7 @@ export const PAYSTAGE_MANIFEST = {
   verify: [
     "npx -y @paystage/mcp",
     "npm audit signatures",
+    "node apps/hosted/scripts/conformance.mjs",
     "https://github.com/base-buzz/paystage/blob/main/SECURITY.md",
   ],
   machine_surfaces: {

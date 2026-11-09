@@ -41,6 +41,17 @@ callers that want the whole gate.
 - Base Sepolia: https://sepolia.api.paystage.xyz — ${m.networks.sepolia}
 - Price: $0.002 USDC per call on both networks.
 
+## Verify it yourself
+
+\`\`\`
+node apps/hosted/scripts/conformance.mjs
+\`\`\`
+
+Checks the published surfaces against reality: manifest shape, five tools listed,
+machine surfaces distinct, health and Server-Timing on both networks, receipt key
+endpoint, unpaid evaluation challenge-only, malformed input fails closed. Read-only,
+no payment, no key. Runs daily in CI; history at https://paystage.xyz.
+
 ## Machine-readable
 
 - \`/.well-known/paystage.json\` — manifest: tools, verdicts, dependencies, env

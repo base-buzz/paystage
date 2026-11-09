@@ -85,6 +85,26 @@ this tool.
 | `@paystage/velocity` | 0.2.0 | Rate / spend-pattern checks |
 | `@paystage/policy` | 0.2.0 | Shared policy schema + loader |
 
+## Supply chain and access
+
+This is the umbrella, so its install tree is wider than any single tool and Socket
+flags it accordingly. What it actually contains:
+
+| Flag | Where it comes from |
+| --- | --- |
+| Network access, URL strings | `@paystage/auth-watch` (Base RPC reads) and `@paystage/trade-preflight` (one Hyperliquid info query). |
+| Filesystem access | `@paystage/policy` reading your policy file. |
+| Environment variable access | `PAYSTAGE_POLICY_PATH`, `PAYSTAGE_RPC_URL`. |
+| "AI-detected code anomaly" | The official `@modelcontextprotocol/server` SDK's bundled JSON-schema validator, not PayStage code. |
+
+The umbrella itself is ~16 KB with no network, no filesystem and no `eval` — the
+capability lives in the dependencies, because that is what the tools are for.
+
+Install a narrower surface if you only need part of it: `@paystage/preflight` and
+`@paystage/policy` make no network calls at all.
+
+Full table: [SECURITY.md](../../SECURITY.md).
+
 ## Links
 
 - Website: [paystage.xyz](https://paystage.xyz)
