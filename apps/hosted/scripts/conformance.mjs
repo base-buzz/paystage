@@ -74,6 +74,24 @@ async function checkSite() {
     llmsFull.res.ok && divergence > 1.2,
     `${llmsFull.text.length} vs ${llms.text.length} bytes (${divergence.toFixed(1)}x)`);
 
+  // The cadence endpoint is how an agent checks the project is alive. If it stops
+  // answering, that claim silently rots.
+  const cadenceRes = await get(`${SITE}/v1/public/cadence.json`);
+  let cadence;
+  try {
+    cadence = JSON.parse(cadenceRes.text);
+  } catch {
+    cadence = null;
+  }
+  record("site: /v1/public/cadence.json parses",
+    cadenceRes.res.ok && cadence !== null,
+    `HTTP ${cadenceRes.res.status}`);
+  if (cadence) {
+    record("cadence: releases and checks reported",
+      typeof cadence.releases?.count === "number" && Array.isArray(cadence.checks?.recent_runs),
+      `${cadence.releases?.count ?? "?"} releases, ${cadence.checks?.passing ?? "?"}/${cadence.checks?.total ?? "?"} checks`);
+  }
+
   const security = await get(`${REPO_RAW}/SECURITY.md`);
   record("docs: SECURITY.md is reachable", security.res.ok, `HTTP ${security.res.status}`);
 
