@@ -1,0 +1,54 @@
+# Daily cadence checks — the evidence behind the "this project is alive" claim.
+#
+# Runs the conformance kit against production and the dependency audit against the
+# workspace. Results are read back by the landing page from the Actions API, so the
+# site shows the real run history rather than a badge we assert.
+#
+# Deliberately read-only: no `contents: write`, no deploys, no publishing. A check
+# that can change what it checks is not a check.
+
+name: cadence
+
+on:
+  schedule:
+    - cron: "0 20 * * *" # 09:00 NZDT
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    name: conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Run the conformance kit against production
+        run: node apps/hosted/scripts/conformance.mjs
+        continue-on-error: true
+        id: conformance
+      - name: Print the summary
+        run: |
+          echo "### Conformance" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          node apps/hosted/scripts/conformance.mjs >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+      - name: Fail if the kit failed
+        if: steps.conformance.outcome == 'failure'
+        run: exit 1
+
+  deps:
+    name: dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - name: npm audit (production tree)
+        run: npm audit --omit=dev
