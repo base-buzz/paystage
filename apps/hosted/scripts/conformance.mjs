@@ -89,9 +89,15 @@ async function checkSite() {
     }
     record("registry: @paystage/mcp reachable", true, published ? `v${published}` : "unknown");
     if (published && manifest.package_versions?.["@paystage/mcp"]) {
-      record("registry: manifest version matches npm",
-        published === manifest.package_versions["@paystage/mcp"],
-        `npm ${published} vs manifest ${manifest.package_versions["@paystage/mcp"]}`);
+      // Direction matters. Manifest BEHIND npm means the site advertises something
+      // older than what people install — that is drift, and it fails.
+      // Manifest AHEAD of npm is the normal gap between a merge and a tag, so it
+      // warns without failing; otherwise every day between release PR and publish
+      // is a red check, and a check that is always red gets ignored.
+      const local = manifest.package_versions["@paystage/mcp"];
+      const cmp = compareVersions(local, published);
+      record("registry: site is not advertising an older version than npm", cmp >= 0,
+        cmp === 0 ? `aligned at ${published}` : cmp > 0 ? `manifest ${local} ahead of npm ${published} (publish pending)` : `manifest ${local} is BEHIND npm ${published}`);
     }
   } else {
     record("registry: @paystage/mcp reachable", false, "registry fetch failed");
@@ -115,15 +121,30 @@ async function checkApi(base, label) {
     `configured=${keyBody.configured}`);
 }
 
+/** Numeric comparison of `x.y.z` version strings: -1 older, 0 same, 1 newer. */
+function compareVersions(a, b) {
+  const pa = String(a).split(/[.-]/).slice(0, 3).map((n) => Number.parseInt(n, 10) || 0);
+  const pb = String(b).split(/[.-]/).slice(0, 3).map((n) => Number.parseInt(n, 10) || 0);
+  for (let i = 0; i < 3; i += 1) {
+    if (pa[i] > pb[i]) return 1;
+    if (pa[i] < pb[i]) return -1;
+  }
+  return 0;
+}
+
 async function checkUnpaidChallenge() {
   const { res, text } = await get(`${API}/v1/evaluate_mcp_payment`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ payment_required: { x402Version: 2, accepts: [] }, policy: {} }),
   });
-  record("api: unpaid evaluate is challenge-only (402)",
-    res.status === 402,
-    `HTTP ${res.status} ${text.slice(0, 60)}`);
+  // 402 is the normal answer. 503 upstream_timeout is the documented fail-closed
+  // state when facilitator discovery backs off (SLO.md) — a retryable degradation,
+  // not a conformance failure. Anything else, or no answer at all, is a failure.
+  const degraded = res.status === 503 && /upstream_timeout/.test(text);
+  record("api: unpaid evaluate answers, challenge or documented degradation",
+    res.status === 402 || degraded,
+    `HTTP ${res.status}${degraded ? " (upstream_timeout — retryable)" : ""} ${degraded ? "" : text.slice(0, 40)}`);
 }
 
 async function checkDocsNotLying() {
