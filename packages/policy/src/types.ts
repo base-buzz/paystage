@@ -44,5 +44,10 @@ export interface Policy {
   disallow_unlimited_approvals?: boolean;
   /** Optional rolling-window rate and spend-pattern limits. */
   velocity?: { windows: VelocityWindow[] };
+  /**
+   * Per-agent narrowing overlays. When present, a caller must pass a known
+   * `agent_id`; an override may only tighten the fields above, never loosen them.
+   */
+  agents?: Record<string, import("./agents.js").AgentBudget>;
 }
 

@@ -54,6 +54,25 @@ export const PolicySchema = z.object({
   disallow_unlimited_approvals: z.boolean().optional(),
   velocity: z
     .object({ windows: z.array(velocityWindowSchema).min(1) })
+    .optional(),
+  /**
+   * Per-agent overlays. Shape is validated here; the *narrowing* rule is enforced in
+   * `resolveAgentPolicy`, because it needs the surrounding policy to compare against.
+   */
+  agents: z
+    .record(
+      z.string().min(1),
+      z.object({
+        max_amount: amountSpecSchema.optional(),
+        daily_cap: amountSpecSchema.optional(),
+        allowed_pay_to: z.array(addressSchema).optional(),
+        allowed_assets: z.array(assetSchema).optional(),
+        allowed_networks: z.array(z.string().regex(/^eip155:\d+$/)).optional(),
+        unknown_payee: z.enum(["review", "deny"]).optional(),
+        require_human_above: amountSpecSchema.optional(),
+        velocity: z.object({ windows: z.array(velocityWindowSchema).min(1) }).optional(),
+      }),
+    )
     .optional()
 });
 

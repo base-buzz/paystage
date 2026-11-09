@@ -1,6 +1,7 @@
 import {
   humanToAtomic,
   atomicToHuman,
+  resolveAgentPolicy,
   type Policy,
   type Asset,
 } from "@paystage/policy";
@@ -166,10 +167,32 @@ function cheapest(accepts: AcceptOption[]): AcceptOption | undefined {
   })[0];
 }
 
+export interface EvaluateOptions {
+  /**
+   * Which agent is asking. Required when the policy declares per-agent budgets:
+   * a policy with agents must never fall back to the loosest rules in the file.
+   */
+  agentId?: string;
+}
+
 export function evaluatePayment(
   pr: PaymentRequest,
   policy: Policy,
+  options: EvaluateOptions = {},
 ): EvaluateResult {
+  // Rule 0: per-agent budgets. Resolve first — every later rule must run against the
+  // narrowed policy, not the global one, or a cheap agent could be judged by the
+  // expensive agent's ceiling.
+  const resolution = resolveAgentPolicy(policy, options.agentId);
+  if (!resolution.ok) {
+    return {
+      decision: "do_not_pay",
+      acceptResults: [],
+      reasons: [resolution.reason],
+      summary: "Agent identity could not be resolved against the policy.",
+    };
+  }
+  const effective = resolution.policy;
   // Rule 1: malformed
   if (!pr || pr.x402Version !== 2) {
     return {
@@ -188,7 +211,7 @@ export function evaluatePayment(
     };
   }
 
-  const acceptResults = pr.accepts.map((a) => evaluateAccept(a, policy));
+  const acceptResults = pr.accepts.map((a) => evaluateAccept(a, effective));
 
   const payAccepts = acceptResults
     .filter((r) => r.status === "pay")
