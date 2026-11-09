@@ -43,6 +43,16 @@ export interface CadenceData {
   releasesTotal: number;
   version: string | null;
   checks: CheckRun[];
+  /**
+   * Whether the check history could actually be read.
+   *
+   * Distinguishing "the API said no" from "zero runs" matters: rendering 0/0 as
+   * "nothing passing" is a false alarm, and GitHub's unauthenticated limit is shared
+   * with every other Worker on the same egress IP, so a failed read is routine rather
+   * than exceptional.
+   */
+  checksAvailable: boolean;
+  releasesAvailable: boolean;
 }
 
 function weekLabel(date: Date): string {
@@ -96,5 +106,7 @@ export async function getCadence(): Promise<CadenceData> {
     releasesTotal,
     version: npm?.version ?? null,
     checks,
+    checksAvailable: runs !== null,
+    releasesAvailable: commits !== null,
   };
 }
