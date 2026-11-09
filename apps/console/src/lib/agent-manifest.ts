@@ -23,6 +23,17 @@ export const PACKAGE_VERSIONS: Record<string, string> = {
   "@paystage/velocity": velocityPkg.version,
 };
 
+/**
+ * Places a human can follow the project. One array, because the footer, `/llms.txt`
+ * and the manifest must not disagree about where we live. `verified` means a
+ * maintainer loaded the URL and saw our own profile; nothing here is inferred
+ * from a handle that merely looked right.
+ */
+export const SOCIALS: { label: string; handle: string; url: string }[] = [
+  { label: "X", handle: "@paystage_xyz", url: "https://x.com/paystage_xyz" },
+  { label: "GitHub", handle: "base-buzz/paystage", url: "https://github.com/base-buzz/paystage" },
+];
+
 export type ToolEntry = {
   name: string;
   package: string;
@@ -97,6 +108,7 @@ export const PAYSTAGE_MANIFEST = {
   license: "MIT",
   homepage: "https://paystage.xyz",
   repository: "https://github.com/base-buzz/paystage",
+  socials: SOCIALS,
   holds_keys: false,
   signs_transactions: false,
   telemetry: false,

@@ -117,8 +117,10 @@ tools it bundles.
 ## Links
 
 - Website: https://paystage.xyz
+- X: https://x.com/paystage_xyz
 - GitHub: https://github.com/base-buzz/paystage
 - npm: https://www.npmjs.com/org/paystage
+- Machine-readable: https://paystage.xyz/llms.txt
 
 ## Development
 

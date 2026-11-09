@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./landing.css";
 import { AliveStrip } from "@/components/AliveStrip";
 import { CadencePanel } from "@/components/CadencePanel";
+import { SOCIALS } from "@/lib/agent-manifest";
 
 export const metadata: Metadata = {
   title: "PayStage — Safety tools for AI agent payments",
@@ -461,9 +462,11 @@ export default function LandingPage() {
               </div>
             </div>
             <nav className="lp-footer-nav" aria-label="Footer">
-              <a href="https://github.com/base-buzz/paystage" rel="noopener">
-                GitHub
-              </a>
+              {SOCIALS.map((social) => (
+                <a key={social.label} href={social.url} rel="me noopener">
+                  {social.label}
+                </a>
+              ))}
               <a href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">
                 npm
               </a>

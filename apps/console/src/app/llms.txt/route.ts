@@ -65,7 +65,7 @@ ${m.access.map((row) => `- ${row.kind}: ${row.detail}`).join("\n")}
 ## Links
 
 - Website: https://paystage.xyz
-- GitHub: https://github.com/base-buzz/paystage
+${m.socials.map((social) => `- ${social.label}: ${social.url}`).join("\n")}
 - Security policy: https://github.com/base-buzz/paystage/blob/main/SECURITY.md
 - Drainer list + sources: https://github.com/base-buzz/paystage/blob/main/packages/preflight/KNOWN_DRAINERS.md
 - Changelog: https://github.com/base-buzz/paystage/blob/main/CHANGELOG.md

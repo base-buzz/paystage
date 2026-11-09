@@ -98,3 +98,9 @@ No shell, no `eval`, no telemetry. Full table: [SECURITY.md](../../SECURITY.md).
 ## License
 
 MIT
+
+## Links
+
+- Website: <https://paystage.xyz>
+- X: <https://x.com/paystage_xyz>
+- Source: <https://github.com/base-buzz/paystage>

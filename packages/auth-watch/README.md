@@ -71,3 +71,9 @@ no `eval`, no telemetry. Full table: [SECURITY.md](../../SECURITY.md).
 
 - `eip155:8453` — Base mainnet (`https://mainnet.base.org`)
 - `eip155:84532` — Base Sepolia (`https://sepolia.base.org`)
+
+## Links
+
+- Website: <https://paystage.xyz>
+- X: <https://x.com/paystage_xyz>
+- Source: <https://github.com/base-buzz/paystage>

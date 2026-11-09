@@ -51,4 +51,13 @@ describe("agent manifest", () => {
     expect(payment?.decisions).toEqual(["pay", "review", "do_not_pay"]);
     expect(trade?.decisions).toEqual(["allow", "review", "do_not_trade"]);
   });
+
+  it("points socials at https URLs a human can load", () => {
+    expect(PAYSTAGE_MANIFEST.socials.length).toBeGreaterThan(0);
+    for (const social of PAYSTAGE_MANIFEST.socials) {
+      expect(social.url).toMatch(/^https:\/\/[\w.-]+\/[\w.@/-]+$/);
+      expect(social.label).not.toHaveLength(0);
+    }
+    expect(PAYSTAGE_MANIFEST.socials.map((s) => s.label)).toContain("X");
+  });
 });
