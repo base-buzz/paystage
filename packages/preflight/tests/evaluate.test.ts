@@ -181,3 +181,48 @@ describe("evaluatePayment", () => {
     expect(r.dailyCapNote).toContain("10.00");
   });
 });
+
+describe("per-agent budgets", () => {
+  const agentPolicy: Policy = {
+    ...policy,
+    agents: {
+      reader: { max_amount: { value: "0.05", asset: "USDC", decimals: 6 } },
+      trader: {}, // no overrides: same as the global policy
+    },
+  };
+
+  it("denies when the policy declares agents and none is identified", () => {
+    const result = evaluatePayment(makeRequest([makeAccept()]), agentPolicy);
+    expect(result.decision).toBe("do_not_pay");
+    expect(result.reasons.join(" ")).toMatch(/agent_id/);
+  });
+
+  it("denies an unknown agent instead of using the global ceiling", () => {
+    const result = evaluatePayment(makeRequest([makeAccept()]), agentPolicy, { agentId: "miner" });
+    expect(result.decision).toBe("do_not_pay");
+    expect(result.reasons.join(" ")).toMatch(/unknown agent/);
+  });
+
+  it("judges the payment against the agent's narrower ceiling", () => {
+    // 0.20 USDC: fine under the global 1.00 ceiling, over the reader's 0.05.
+    const result = evaluatePayment(makeRequest([makeAccept({ amount: "200000" })]), agentPolicy, {
+      agentId: "reader",
+    });
+    expect(result.decision).toBe("do_not_pay");
+    expect(result.reasons.join(" ")).toMatch(/max_amount/);
+  });
+
+  it("still pays a cheap request for the narrow agent", () => {
+    const result = evaluatePayment(makeRequest([makeAccept({ amount: "10000" })]), agentPolicy, {
+      agentId: "reader",
+    });
+    expect(result.decision).toBe("pay");
+  });
+
+  it("uses the global ceiling for an agent with no overrides", () => {
+    const result = evaluatePayment(makeRequest([makeAccept({ amount: "200000" })]), agentPolicy, {
+      agentId: "trader",
+    });
+    expect(result.decision).toBe("pay");
+  });
+});
