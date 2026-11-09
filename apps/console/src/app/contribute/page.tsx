@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+import services from "../../../../../registry/services.json";
+
+// Read the count from the registry itself so the copy cannot drift from the data.
+const registryCount = (services as unknown[]).length;
 import "../landing.css";
 
 export const metadata: Metadata = {
@@ -62,7 +66,8 @@ export default function ContributePage() {
             <p className="lp-lede">
               Three ways in, all of them useful to you first. Nothing here asks for
               unpaid marketing — every contribution either gets your work discovered or
-              blocks someone who is stealing.
+              blocks someone who is stealing. The registry currently lists{" "}
+              {registryCount} verified endpoints, every one probed before it went in.
             </p>
           </div>
         </section>
