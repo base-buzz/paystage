@@ -26,7 +26,10 @@ const TARGETS = [
 const CHALLENGE = {
   name: "mainnet challenge",
   url: "https://api.paystage.xyz/v1/evaluate_mcp_payment",
-  expect: [402, 503], // 503 upstream_timeout is the documented fail-closed state
+  // Only a 402 counts. A 503 upstream_timeout is fail-closed and technically honest,
+  // but an agent that cannot get a challenge cannot pay — for its purpose that is an
+  // outage, so the probe reports it as one.
+  expect: [402],
 };
 
 const TIMEOUT_MS = 12_000;
