@@ -155,6 +155,7 @@ export const PAYSTAGE_MANIFEST = {
     llms_full: "/llms-full.txt",
     manifest: "/.well-known/paystage.json",
     mcp_registry: "xyz.paystage/mcp",
+    cadence: "/v1/public/cadence.json",
   },
   not_advice: true,
 } as const;
