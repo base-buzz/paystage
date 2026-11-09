@@ -59,6 +59,16 @@ nothing bought.
 
 ## Status
 
-The registry is being seeded. Entries will appear here as services are verified;
-the file starts empty rather than padded, because a list of unverified entries is
-worse than no list.
+Seeded **10 Nov 2026** with 11 third-party services. Each was verified the same way:
+a request to the listed endpoint returned `402` with an `accepts` entry on
+`eip155:8453`, and the `payTo`, price and network in this file were copied from that
+live challenge rather than from a directory listing.
+
+Candidates came from Coinbase's x402 discovery index, de-duplicated to one entry per
+seller, then probed directly. Nine of the first twenty were dropped — five returned
+`402` with no parsable `accepts`, two were not JSON, two resolved to another network.
+That is the failure rate for directory data, and the reason nothing enters this file
+unprobed.
+
+Re-verification is manual today. A nightly probe that marks dead entries is the next
+piece of work; until it exists, treat `verified_at` as the honest freshness signal.

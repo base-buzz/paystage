@@ -9,5 +9,126 @@
     "payTo": "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
     "x402_version": 2,
     "verified_at": "2026-11-09"
+  },
+  {
+    "name": "x402.tbs-digital.com",
+    "url": "https://x402.tbs-digital.com/weather/current",
+    "network": "eip155:8453",
+    "description": "Complete weather bundle in one call: current conditions (temperature, feels-like, humidity, wind speed/direction/gusts, pressure, cloud cover, precipi.",
+    "price": "0.001 USDC per call",
+    "asset": "USDC",
+    "payTo": "0xd6fCE15298Fc9D60f867d9455D497177Da9BFB0a",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
+  },
+  {
+    "name": "x402.clashofcoins.com",
+    "url": "https://x402.clashofcoins.com/x402/cheap-health",
+    "network": "eip155:8453",
+    "description": "Low-cost gateway health probe for real x402 settlement checks.",
+    "price": "0.001 USDC per call",
+    "asset": "USDC",
+    "payTo": "0x8b29DABD6fBb5A09DAcbC7978eaed66A8540721d",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
+  },
+  {
+    "name": "websearch.use.x402atlas.com",
+    "url": "https://websearch.use.x402atlas.com/search",
+    "network": "eip155:8453",
+    "description": "Real-time web search for AI agents \u2014 search the web and get ranked SERP-style results as clean JSON: title, URL, snippet, relevance score, optional LL.",
+    "price": "0.01 USDC per call",
+    "asset": "USDC",
+    "payTo": "0xF752eEB75d3Bea24AA867ad93bfd8EF5a2F431B9",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
+  },
+  {
+    "name": "api.nansen.ai",
+    "url": "https://api.nansen.ai/api/v1/profiler/address/current-balance",
+    "network": "eip155:8453",
+    "description": "Get Address Current Balance Data.",
+    "price": "0.01 USDC per call",
+    "asset": "USDC",
+    "payTo": "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
+  },
+  {
+    "name": "hyperliquid-predict.use.x402atlas.com",
+    "url": "https://hyperliquid-predict.use.x402atlas.com/outcomes",
+    "network": "eip155:8453",
+    "description": "The catalog of Hyperliquid prediction-market outcomes and their metadata.",
+    "price": "0.005 USDC per call",
+    "asset": "USDC",
+    "payTo": "0xA55B06462A2e48661bAdF22f5841F95aE654b716",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
+  },
+  {
+    "name": "wiki.use.x402atlas.com",
+    "url": "https://wiki.use.x402atlas.com/summary",
+    "network": "eip155:8453",
+    "description": "Wikipedia article summary \u2014 plain-text and HTML extract, short description, thumbnail and Wikidata id for any title, in a clean normalized envelope wi.",
+    "price": "0.005 USDC per call",
+    "asset": "USDC",
+    "payTo": "0x6A706D6Fcf192C15fB592d7502258Ed41425DD36",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
+  },
+  {
+    "name": "agent.pocket.network",
+    "url": "https://agent.pocket.network/v1/meadow",
+    "network": "eip155:8453",
+    "description": "An agent-only messaging network.",
+    "price": "0.005 USDC per call",
+    "asset": "USDC",
+    "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
+  },
+  {
+    "name": "headers.use.x402atlas.com",
+    "url": "https://headers.use.x402atlas.com/",
+    "network": "eip155:8453",
+    "description": "Audit a URL's HTTP security headers over a single body-free (HEAD) request.",
+    "price": "0.01 USDC per call",
+    "asset": "USDC",
+    "payTo": "0x7f8043c400799643bcb62B41B84b297a8Ecb7b9c",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
+  },
+  {
+    "name": "search.cyberwarex.com",
+    "url": "https://search.cyberwarex.com/search",
+    "network": "eip155:8453",
+    "description": "Live web results for your agent with no search API key, quota or monthly plan.",
+    "price": "0.00435 USDC per call",
+    "asset": "USDC",
+    "payTo": "0x058D0Cc5CC97e61e8A9f38D6d6365bce525921B2",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
+  },
+  {
+    "name": "api.chit402.com",
+    "url": "https://api.chit402.com/v1/chat/completions",
+    "network": "eip155:8453",
+    "description": "Signed spend receipts for agent x402 payments \u2014 who paid which call, verifiable by a third party.",
+    "price": "0.002 USDC per call",
+    "asset": "USDC",
+    "payTo": "0x23f713411c30BBd9A989c9cbC22EB0b55F7f7334",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
+  },
+  {
+    "name": "api.aidress.ai",
+    "url": "https://api.aidress.ai/pay/agent_ottoai_crypto_news",
+    "network": "eip155:8453",
+    "description": "Importance-ranked crypto headlines with per-article source links and publish times, plus a sentiment-scored market brief.",
+    "price": "0.001 USDC per call",
+    "asset": "USDC",
+    "payTo": "0x0E84dDEdAaE6A779c462C22a59F301EC31B6b808",
+    "x402_version": 2,
+    "verified_at": "2026-11-09"
   }
 ]
