@@ -5,7 +5,8 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "paystage-mcp": "dist/cli.js"
+    "paystage-mcp": "dist/cli.js",
+    "paystage-verify": "dist/verify-cli.js"
   },
   "files": [
     "dist",

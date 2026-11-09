@@ -160,6 +160,7 @@ export const PAYSTAGE_MANIFEST = {
     "npx -y @paystage/mcp",
     "npm audit signatures",
     "node apps/hosted/scripts/conformance.mjs",
+    "npx -y -p @paystage/mcp paystage-verify <receipt.json>",
     "https://github.com/base-buzz/paystage/blob/main/SECURITY.md",
   ],
   machine_surfaces: {
