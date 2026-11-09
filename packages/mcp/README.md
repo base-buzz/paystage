@@ -85,6 +85,28 @@ this tool.
 | `@paystage/velocity` | 0.2.0 | Rate / spend-pattern checks |
 | `@paystage/policy` | 0.2.0 | Shared policy schema + loader |
 
+## Verify a receipt
+
+Every verdict can carry a signed receipt. `paystage-verify` checks one without trusting
+us — it fetches the published key and verifies the signature over the canonical payload.
+
+```sh
+npx -y -p @paystage/mcp paystage-verify receipt.json
+cat receipt.json | npx -y -p @paystage/mcp paystage-verify -
+```
+
+Exit codes are distinct on purpose:
+
+| Code | Meaning |
+|---|---|
+| 0 | signature matches the payload |
+| 1 | **invalid** — altered, or signed by a different key |
+| 2 | unsigned — a record of the decision, with no proof of who made it |
+| 3 | unverifiable — the key could not be fetched, so nothing can be checked |
+
+"Invalid" and "could not check" are different facts and must not collapse into one
+failure. `--key <file>` verifies against a local JWK for point-in-time checks.
+
 ## Supply chain and access
 
 This is the umbrella, so its install tree is wider than any single tool and Socket
@@ -106,6 +128,8 @@ Install a narrower surface if you only need part of it: `@paystage/preflight` an
 Full table: [SECURITY.md](../../SECURITY.md).
 
 ## Links
+
+- Verify receipts: `npx -y -p @paystage/mcp paystage-verify <receipt.json>`
 
 - Website: [paystage.xyz](https://paystage.xyz)
 - HIP-3 context: [docs.trade.xyz](https://docs.trade.xyz)
