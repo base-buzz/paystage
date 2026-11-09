@@ -86,17 +86,7 @@ export function withSupportedCache<T extends object>(client: T): T {
     },
   };
 
-  // Everything else delegates unchanged, including `this` for methods that use it.
-  return new Proxy(client as object, {
-    get(target, prop, receiver) {
-      if (prop === "getSupported") return wrapped.getSupported;
-      const value = Reflect.get(target, prop, receiver);
-      return typeof value === "function" ? value.bind(target) : value;
-    },
-    set(target, prop, value) {
-      return Reflect.set(target, prop, value, target);
-    },
-  }) as T;
+  return delegate(client, wrapped.getSupported);
 }
 
 
@@ -117,6 +107,43 @@ export function withSupportedCache<T extends object>(client: T): T {
  * Deliberately not a silent stub: `supportedSource()` reports which answer won, so
  * the health endpoint and the conformance kit can tell a fallback from the truth.
  */
+
+
+/**
+ * Delegate to a real client without a Proxy.
+ *
+ * A Proxy was the obvious implementation and is the wrong one here: the x402
+ * facilitator client is a class instance, and proxying it risks breaking private
+ * class fields or `this`-bound internals in ways that surface as a fast 500 during a
+ * request rather than at construction. This enumerates the methods the resource
+ * server actually calls and binds them to the original object, which is duller and
+ * cannot fail that way.
+ */
+function delegate<T extends object>(client: T, getSupported: () => Promise<unknown>): T {
+  const delegating = {
+    getSupported,
+    verify: (client as { verify?: (...args: unknown[]) => unknown }).verify?.bind(client),
+    settle: (client as { settle?: (...args: unknown[]) => unknown }).settle?.bind(client),
+  } as Record<string, unknown>;
+  // Anything else the caller touches falls through on the original object.
+  for (const key of Object.keys(client)) {
+    if (key === "getSupported") continue; // keep the wrapped one
+    delegating[key] = (client as Record<string, unknown>)[key];
+  }
+
+  // Keep prototype methods reachable too (e.g. helper predicates on the class).
+  let proto = Object.getPrototypeOf(client) as object | null;
+  while (proto !== null && proto !== Object.prototype) {
+    for (const key of Object.getOwnPropertyNames(proto)) {
+      if (key === "constructor" || key in delegating) continue;
+      const value = (client as Record<string, unknown>)[key];
+      if (typeof value === "function") delegating[key] = (value as (...args: unknown[]) => unknown).bind(client);
+    }
+    proto = Object.getPrototypeOf(proto) as object | null;
+  }
+
+  return delegating as T;
+}
 
 export type SupportedSource = "facilitator" | "static-fallback" | "facilitator-cached";
 
@@ -168,14 +195,5 @@ export function withFallbackSupported<T extends object>(
     },
   };
 
-  return new Proxy(client as object, {
-    get(target, prop, receiver) {
-      if (prop === "getSupported") return wrapped.getSupported;
-      const value = Reflect.get(target, prop, receiver);
-      return typeof value === "function" ? value.bind(target) : value;
-    },
-    set(target, prop, value) {
-      return Reflect.set(target, prop, value, target);
-    },
-  }) as T;
+  return delegate(client, wrapped.getSupported);
 }
