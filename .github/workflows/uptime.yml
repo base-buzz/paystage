@@ -81,3 +81,9 @@ jobs:
             gh issue comment "$existing" --body "Recovered — probe green at $(date -u +%FT%TZ)."
             gh issue close "$existing"
           fi
+
+      # The issue is the durable signal, but a green run would let the failure hide in
+      # the Actions tab. Make the run red too.
+      - name: Fail the run when the probe failed
+        if: steps.probe.outputs.exit != '0'
+        run: exit 1
