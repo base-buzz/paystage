@@ -23,7 +23,8 @@ export async function GET() {
     repository: `https://github.com/${REPO}`,
     releases: {
       window_weeks: WEEKS,
-      count: data.releasesTotal,
+      count: data.releasesAvailable ? data.releasesTotal : null,
+      available: data.releasesAvailable,
       per_week: data.weeks,
       latest_version: data.version,
     },
@@ -31,9 +32,10 @@ export async function GET() {
       workflow: `https://github.com/${REPO}/actions/workflows/cadence.yml`,
       schedule: "daily 09:00 Pacific/Auckland",
       recent_runs: data.checks,
-      passing,
-      total: data.checks.length,
-      all_passing: data.checks.length > 0 && passing === data.checks.length,
+      available: data.checksAvailable,
+      passing: data.checksAvailable ? passing : null,
+      total: data.checksAvailable ? data.checks.length : null,
+      all_passing: data.checksAvailable ? data.checks.length > 0 && passing === data.checks.length : null,
     },
     note:
       "Release counts come from commits whose message starts 'release:'; check results from the cadence workflow's run history. Cached hourly.",

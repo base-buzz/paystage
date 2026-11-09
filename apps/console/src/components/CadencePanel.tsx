@@ -50,13 +50,22 @@ export async function CadencePanel() {
             <div className="lp-cadence-head">
               <span>Automated checks · recent runs</span>
               <span className="lp-cadence-strong">
-                {data.checks.length === 0
-                  ? "—"
-                  : `${data.checks.filter((c) => c.ok).length}/${data.checks.length} passing`}
+                {!data.checksAvailable
+                  ? "history unavailable"
+                  : data.checks.length === 0
+                    ? "no runs yet"
+                    : `${data.checks.filter((c) => c.ok).length}/${data.checks.length} passing`}
               </span>
             </div>
             <div className="lp-runs">
-              {data.checks.length === 0 && <span className="lp-cadence-foot">No runs recorded yet.</span>}
+              {!data.checksAvailable && (
+                <span className="lp-cadence-foot">
+                  GitHub API rate-limited — check history not readable right now.{" "}
+                </span>
+              )}
+              {data.checksAvailable && data.checks.length === 0 && (
+                <span className="lp-cadence-foot">No runs recorded yet.</span>
+              )}
               {data.checks.map((check) => (
                 <span
                   key={check.at}
