@@ -105,5 +105,6 @@ entry in [KNOWN_DRAINERS.md](./KNOWN_DRAINERS.md).
 ## Links
 
 - Website: <https://paystage.xyz>
+- X: <https://x.com/paystage_xyz>
 - Source: <https://github.com/base-buzz/paystage>
 - License: MIT

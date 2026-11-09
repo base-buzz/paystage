@@ -110,6 +110,7 @@ Full table: [SECURITY.md](../../SECURITY.md).
 - Website: [paystage.xyz](https://paystage.xyz)
 - HIP-3 context: [docs.trade.xyz](https://docs.trade.xyz)
 - Source: [github.com/base-buzz/paystage](https://github.com/base-buzz/paystage)
+- X: [x.com/paystage_xyz](https://x.com/paystage_xyz)
 
 ## License
 

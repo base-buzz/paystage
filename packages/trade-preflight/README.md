@@ -103,6 +103,7 @@ It never places an order and never signs. Not financial advice. Full table:
 - Website: [paystage.xyz](https://paystage.xyz)
 - HIP-3 context: [docs.trade.xyz](https://docs.trade.xyz)
 - Source: [github.com/base-buzz/paystage](https://github.com/base-buzz/paystage) (`packages/trade-preflight`)
+- X: [x.com/paystage_xyz](https://x.com/paystage_xyz)
 
 ## License
 
