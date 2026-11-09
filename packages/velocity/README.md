@@ -86,6 +86,15 @@ npx @paystage/mcp
 
 The umbrella registers `evaluate_velocity` alongside the other PayStage tools.
 
+## Supply chain and access
+
+| Flag | Why it is there |
+| --- | --- |
+| Filesystem access | Two reads: the policy file, and the spend history the caller passes in. No writes. |
+| Network access | None. |
+
+No shell, no `eval`, no telemetry. Full table: [SECURITY.md](../../SECURITY.md).
+
 ## License
 
 MIT

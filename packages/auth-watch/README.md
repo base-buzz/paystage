@@ -53,6 +53,20 @@ Both accept `wallet`, optional `network`, `tokens`, `spenders`,
 
 - `PAYSTAGE_RPC_URL` — overrides the default RPC URL for the network.
 
+## Supply chain and access
+
+This is the package that legitimately touches the network, so the flags matter more
+here and deserve a plain answer:
+
+| Flag | Why it is there |
+| --- | --- |
+| Network access | JSON-RPC `eth_call` reads against Base (`https://mainnet.base.org` by default, or `PAYSTAGE_RPC_URL`, or an `rpc_url` argument). Read-only. |
+| URL strings | The known public RPC endpoints above. |
+| Environment variable access | `PAYSTAGE_RPC_URL`, so an operator can pin their own node. |
+
+It holds no keys and signs nothing — it reads allowance and nonce state. No shell,
+no `eval`, no telemetry. Full table: [SECURITY.md](../../SECURITY.md).
+
 ## Networks
 
 - `eip155:8453` — Base mainnet (`https://mainnet.base.org`)
