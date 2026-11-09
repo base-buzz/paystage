@@ -43,7 +43,7 @@ not that it is absent.
 | Surface | Reader | What it needs from us | Status |
 |---|---|---|---|
 | [Official MCP Registry](https://registry.modelcontextprotocol.io) | agent + builder | `server.json` per package | **Listed** — `xyz.paystage/auth-watch` and siblings answer the search API |
-| [mcp.so](https://mcp.so/server/paystage) | builder | listing text | Listed; returns 301, confirm the canonical URL resolves |
+| [mcp.so](https://mcp.so/server/paystage) | builder | listing text | Listed; the old path 301s to https://mcp.so/servers/paystage-6d8a8f, use that in copy |
 | [x402scan.com](https://x402scan.com) | agent builder | a live 402 endpoint | Unverified |
 | [Agentic.Market](https://agentic.market) | agent builder | listing | Unverified |
 | [pay.sh](https://pay.sh) | agent builder | listing | Unverified |
@@ -59,7 +59,8 @@ not that it is absent.
 
 The five x402 directories in the middle of that table are the ones the x402
 project itself points people at; the list comes from the
-[coinbase/x402 README](https://github.com/coinbase/x402) (line 93). They are
+[coinbase/x402 README](https://github.com/coinbase/x402) (the "Curated
+third-party SDKs" note points at the same five). They are
 community-maintained, so each has its own submission route and none can be
 assumed to index us automatically.
 
