@@ -52,14 +52,16 @@ export function buildResourceServer(
   // Cache the facilitator's supported-kinds answer at the edge, so a cold isolate
   // does not pay a network round trip on the request path. Injected clients (tests)
   // are left untouched.
-  // Cache first (avoids the round trip on a warm colo), then the deadline fallback
-  // (keeps challenges working when the facilitator will not answer at all).
-  const routed = facilitatorClient
-    ? client
-    : withFallbackSupported(
-        withSupportedCache(client as object),
-        { network: cfg.network, scheme: "exact" },
-      );
+  // Cache first (avoids the round trip on a warm colo). The deadline fallback is
+  // built but OFF by default: a static supported-kind answer initialised the server
+  // and then failed later in the request (500s instead of 503s) because the exact
+  // scheme needs fields the facilitator normally supplies. Enable only once that
+  // shape is known to be complete.
+  const withCache = facilitatorClient ? client : withSupportedCache(client as object);
+  const routed =
+    facilitatorClient || (cfg as { facilitatorFallback?: boolean }).facilitatorFallback !== true
+      ? withCache
+      : withFallbackSupported(withCache as object, { network: cfg.network, scheme: "exact" });
 
   const server = new x402ResourceServer(routed as never);
   server.register(cfg.network, new ExactEvmScheme());
