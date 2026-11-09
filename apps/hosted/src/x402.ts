@@ -29,6 +29,14 @@ export const PROTECTED_ROUTES = [
   "POST /v1/evaluate_outstanding_auths",
 ] as const;
 
+/**
+ * The x402 client types describe an interface with an index signature, which a class
+ * instance does not structurally satisfy even though it implements the same methods.
+ * One named alias beats scattering `as never` at each call site, and keeps the cast
+ * local rather than at every usage.
+ */
+type ClientLike = FacilitatorClient & Record<string, unknown>;
+
 export function buildResourceServer(
   cfg: X402Config,
   facilitatorClient?: FacilitatorClient,
@@ -43,10 +51,10 @@ export function buildResourceServer(
       cfg.facilitatorAuth.apiKeyId,
       cfg.facilitatorAuth.apiKeySecret,
     );
-    client = new HTTPFacilitatorClient(config as never);
+    client = new HTTPFacilitatorClient(config as never) as unknown as ClientLike;
   } else {
     // Testnet: x402.org facilitator (no auth).
-    client = new HTTPFacilitatorClient({ url: cfg.facilitatorUrl });
+    client = new HTTPFacilitatorClient({ url: cfg.facilitatorUrl } as never) as unknown as ClientLike;
   }
 
   // Cache the facilitator's supported-kinds answer at the edge, so a cold isolate
@@ -69,7 +77,7 @@ export function buildResourceServer(
       });
 
   const server = new x402ResourceServer(routed as never);
-  server.register(cfg.network, new ExactEvmScheme());
+  server.register(cfg.network as `${string}:${string}`, new ExactEvmScheme());
   return server;
 }
 
@@ -109,5 +117,11 @@ export function buildPaymentMiddleware(
   const server = buildResourceServer(cfg, facilitatorClient);
   const routes = buildRoutesConfig(cfg);
   // Workers: do not sync facilitator on start (no long-lived process).
-  return paymentMiddleware(routes, server, undefined, undefined, true);
+  return paymentMiddleware(
+    routes as unknown as Parameters<typeof paymentMiddleware>[0],
+    server,
+    undefined,
+    undefined,
+    true,
+  );
 }

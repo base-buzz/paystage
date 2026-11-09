@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
 import { recordEvent, sourceFromHeaders } from "../src/telemetry.js";
 
 describe("sourceFromHeaders", () => {
@@ -32,8 +32,10 @@ describe("sourceFromHeaders", () => {
 });
 
 describe("recordEvent", () => {
-  let logSpy: ReturnType<typeof vi.spyOn>;
-  let fetchSpy: ReturnType<typeof vi.spyOn>;
+  // The spy types differ per target, so name them from the targets themselves
+  // rather than from the generic `vi.spyOn` signature.
+  let logSpy: MockInstance<typeof console.log>;
+  let fetchSpy: MockInstance<typeof globalThis.fetch>;
 
   beforeEach(() => {
     logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -56,7 +58,7 @@ describe("recordEvent", () => {
   it("no-ops without config and logs telemetry_skipped", () => {
     recordEvent({}, baseEvent);
     expect(fetchSpy).not.toHaveBeenCalled();
-    const logged = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
+    const logged = logSpy.mock.calls.map((c: unknown[]) => String(c[0])).join("\n");
     expect(logged).toContain("telemetry_skipped");
     expect(logged).toContain("missing_config");
   });
@@ -85,7 +87,7 @@ describe("recordEvent", () => {
       waitUntil,
     );
     expect(waitUntil).toHaveBeenCalledTimes(1);
-    await waitUntil.mock.calls[0][0];
+    await waitUntil.mock.calls[0]?.[0];
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
@@ -115,8 +117,8 @@ describe("recordEvent", () => {
       baseEvent,
       waitUntil,
     );
-    await waitUntil.mock.calls[0][0];
-    const logged = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
+    await waitUntil.mock.calls[0]?.[0];
+    const logged = logSpy.mock.calls.map((c: unknown[]) => String(c[0])).join("\n");
     expect(logged).toContain("telemetry_failed");
     expect(logged).toContain("fetch_error");
     // Ensure no secret leaked into logs.
@@ -134,8 +136,8 @@ describe("recordEvent", () => {
       baseEvent,
       waitUntil,
     );
-    await waitUntil.mock.calls[0][0];
-    const logged = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
+    await waitUntil.mock.calls[0]?.[0];
+    const logged = logSpy.mock.calls.map((c: unknown[]) => String(c[0])).join("\n");
     expect(logged).toContain("telemetry_failed");
     expect(logged).toContain("http_error");
   });
