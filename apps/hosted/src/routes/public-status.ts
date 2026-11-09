@@ -66,8 +66,11 @@ async function fetchJson<T>(
 
 publicStatusRoutes.get("/v1/public/status", async (c) => {
   const generated_at = new Date().toISOString();
-  const url = c.env?.SUPABASE_URL as string | undefined;
-  const key = c.env?.SUPABASE_SERVICE_ROLE_KEY as string | undefined;
+  // c.env is typed as {} when the route is registered without a generic; read the two
+  // optional bindings through a narrow local view instead of an untyped cast.
+  const env = (c.env ?? {}) as { SUPABASE_URL?: string; SUPABASE_SERVICE_ROLE_KEY?: string };
+  const url = env.SUPABASE_URL;
+  const key = env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!nonEmpty(url) || !nonEmpty(key)) {
     const body: StatusResponse = {
