@@ -295,6 +295,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
     // worst failure mode for an agent; a 503 it can retry from is the good one.
     const UPSTREAM_GUARD_MS = Number((cfg as { upstreamGuardMs?: number }).upstreamGuardMs ?? 5000);
     app.use("*", async (c, next) => {
+      const started = performance.now();
       let timer: ReturnType<typeof setTimeout> | undefined;
       const guard = new Promise<"timeout">((resolve) => {
         timer = setTimeout(() => resolve("timeout"), UPSTREAM_GUARD_MS);
@@ -302,6 +303,11 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
       try {
         const winner = await Promise.race([next().then(() => "done" as const), guard]);
         if (winner === "timeout") {
+          // Say why. A guard that swallows the reason is untraceable from outside,
+          // which is exactly the hole that cost an afternoon of guessing.
+          const source = (await import("./facilitator-cache.js")).supportedSource();
+          const elapsed = performance.now() - started;
+          c.header("x-paystage-debug", `upstream_timeout source=${source ?? "none"} elapsed_ms=${elapsed.toFixed(0)}`);
           return c.json({ error: "upstream_timeout", retry_after_seconds: 5 }, 503);
         }
       } finally {
