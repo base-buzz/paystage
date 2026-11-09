@@ -1,0 +1,83 @@
+# Uptime probe — what a caller experiences, every 10 minutes, from GitHub's network.
+#
+# The conformance kit answers "do our published claims still hold?", once a day. This
+# answers "can an agent reach the gate right now?", which is the question that matters
+# during an incident and the one our own CI cannot answer: it runs on the same account
+# and the same assumptions as the thing it checks.
+#
+# On failure it opens (or updates) a single deduplicated issue; on recovery it closes
+# it. Read + issues write only — it never deploys or changes anything.
+
+name: uptime
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Probe production
+        id: probe
+        run: |
+          set +e
+          node scripts/uptime-probe.mjs > probe.json
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+          node -e '
+            const d = require("./probe.json");
+            const lines = d.results.map((r) =>
+              `| ${r.ok ? "ok" : "**FAIL**"} | ${r.name} | ${r.status ?? "-"} | ${r.ms} ms | ${r.server_timing ?? ""} |`);
+            console.log("## Uptime probe\n");
+            console.log("checked at " + d.checked_at + "\n");
+            console.log("| | check | status | time | server-timing |");
+            console.log("|---|---|---|---|---|");
+            console.log(lines.join("\n"));
+            require("fs").writeFileSync("body.md", ["## Uptime probe", "", "checked at " + d.checked_at, "", "| | check | status | time | server-timing |", "|---|---|---|---|---|", ...lines].join("\n"));
+            console.log("\nfailed: " + (d.failed.length ? d.failed.join("; ") : "none"));
+          '
+        continue-on-error: true
+
+      - name: Show the table
+        run: cat body.md >> "$GITHUB_STEP_SUMMARY"
+
+      # A degraded challenge path (503) counts as a failure here on purpose: an agent
+      # that cannot get a challenge cannot pay, which is an outage for its purpose even
+      # though the Worker is up.
+      - name: Open or update the incident issue
+        if: steps.probe.outputs.exit != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          title="uptime: production is not answering correctly"
+          existing=$(gh issue list --label uptime --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file body.md
+          else
+            gh issue create --title "$title" --label uptime --body-file body.md
+          fi
+
+      - name: Close the incident issue on recovery
+        if: steps.probe.outputs.exit == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          existing=$(gh issue list --label uptime --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Recovered — probe green at $(date -u +%FT%TZ)."
+            gh issue close "$existing"
+          fi
