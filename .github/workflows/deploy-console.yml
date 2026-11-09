@@ -147,6 +147,26 @@ jobs:
         run: npm ci
       - name: Test
         run: npx vitest run
+      # Push the receipt signing key before deploying, so receipts are signed from
+      # the first request after a deploy. The value comes from a repository secret
+      # and is piped into wrangler's stdin — it is never echoed, and never touches
+      # the repo or a log.
+      - name: Set receipt signing key (mainnet)
+        if: ${{ secrets.RECEIPT_SIGNING_KEY_PKCS8 != '' }}
+        working-directory: apps/hosted
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          KEY: ${{ secrets.RECEIPT_SIGNING_KEY_PKCS8 }}
+        run: printf '%s' "$KEY" | npx wrangler secret put RECEIPT_SIGNING_KEY_PKCS8 --env ""
+      - name: Set receipt signing key (sepolia)
+        if: ${{ secrets.RECEIPT_SIGNING_KEY_PKCS8 != '' }}
+        working-directory: apps/hosted
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          KEY: ${{ secrets.RECEIPT_SIGNING_KEY_PKCS8 }}
+        run: printf '%s' "$KEY" | npx wrangler secret put RECEIPT_SIGNING_KEY_PKCS8 --env sepolia
       - name: Deploy mainnet
         uses: cloudflare/wrangler-action@v3
         with:
