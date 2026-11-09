@@ -57,11 +57,16 @@ export function buildResourceServer(
   // and then failed later in the request (500s instead of 503s) because the exact
   // scheme needs fields the facilitator normally supplies. Enable only once that
   // shape is known to be complete.
-  const withCache = facilitatorClient ? client : withSupportedCache(client as object);
-  const routed =
-    facilitatorClient || (cfg as { facilitatorFallback?: boolean }).facilitatorFallback !== true
-      ? withCache
-      : withFallbackSupported(withCache as object, { network: cfg.network, scheme: "exact" });
+  // Cache the discovery answer at the edge, then fall back to a static kind if the
+  // facilitator will not answer in time. The fallback is what keeps a challenge
+  // servable when the facilitator is slow; it is safe now that delegation is explicit
+  // rather than a Proxy over a class instance.
+  const routed = facilitatorClient
+    ? client
+    : withFallbackSupported(withSupportedCache(client as object), {
+        network: cfg.network,
+        scheme: "exact",
+      });
 
   const server = new x402ResourceServer(routed as never);
   server.register(cfg.network, new ExactEvmScheme());
