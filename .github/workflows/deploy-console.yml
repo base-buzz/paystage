@@ -152,7 +152,7 @@ jobs:
       # and is piped into wrangler's stdin — it is never echoed, and never touches
       # the repo or a log.
       - name: Set receipt signing key (mainnet)
-        if: ${{ secrets.RECEIPT_SIGNING_KEY_PKCS8 != '' }}
+        if: env.KEY != ''
         working-directory: apps/hosted
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -160,7 +160,7 @@ jobs:
           KEY: ${{ secrets.RECEIPT_SIGNING_KEY_PKCS8 }}
         run: printf '%s' "$KEY" | npx wrangler secret put RECEIPT_SIGNING_KEY_PKCS8 --env ""
       - name: Set receipt signing key (sepolia)
-        if: ${{ secrets.RECEIPT_SIGNING_KEY_PKCS8 != '' }}
+        if: env.KEY != ''
         working-directory: apps/hosted
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
