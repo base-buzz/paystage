@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./landing.css";
 import { AliveStrip } from "@/components/AliveStrip";
+import { CadencePanel } from "@/components/CadencePanel";
 
 export const metadata: Metadata = {
   title: "PayStage — Safety tools for AI agent payments",
@@ -359,7 +360,9 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="lp-section lp-section-alt" id="evidence">
+        <CadencePanel />
+
+        <section className="lp-section" id="evidence">
           <div className="lp-wrap">
             <div className="lp-section-head">
               <h2 className="lp-h2">Safety, as artifacts</h2>
