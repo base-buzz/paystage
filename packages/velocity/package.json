@@ -2,6 +2,29 @@
   "name": "@paystage/velocity",
   "version": "0.2.0",
   "description": "Rolling-window rate and spend-pattern checks for agent payments.",
+  "keywords": [
+    "paystage",
+    "x402",
+    "mcp",
+    "agent payments",
+    "spend limit",
+    "velocity",
+    "rate limit",
+    "base",
+    "usdc",
+    "ai agents",
+    "payment safety"
+  ],
+  "homepage": "https://paystage.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/base-buzz/paystage.git",
+    "directory": "packages/velocity"
+  },
+  "bugs": {
+    "url": "https://github.com/base-buzz/paystage/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,19 +34,11 @@
       "import": "./dist/index.js"
     }
   },
-  "bin": {
-    "paystage-velocity": "dist/server.js"
-  },
   "files": [
     "dist",
     "README.md",
     "!dist/**/*.map"
   ],
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
-  },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.4.0",
     "@paystage/policy": "0.2.0",
@@ -34,15 +49,16 @@
     "vitest": "^4.1.12",
     "@types/node": "^20.14.0"
   },
-  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "bin": {
+    "paystage-velocity": "dist/server.js"
+  },
   "engines": {
     "node": ">=20"
-  },
-  "homepage": "https://paystage.xyz",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/base-buzz/paystage.git",
-    "directory": "packages/velocity"
   },
   "publishConfig": {
     "access": "public"
