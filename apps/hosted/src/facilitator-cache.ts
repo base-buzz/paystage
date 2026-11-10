@@ -57,6 +57,7 @@ export function withSupportedCache<T extends object>(client: T): T {
 
   const wrapped = {
     getSupported: async () => {
+      supportedCalls += 1;
       const c = cache();
       if (c === undefined) return getSupported.call(client);
 
@@ -149,6 +150,13 @@ export type SupportedSource = "facilitator" | "static-fallback" | "facilitator-c
 
 let lastSource: SupportedSource | null = null;
 
+/** How many times discovery was attempted in this isolate — the guard reports it. */
+let supportedCalls = 0;
+
+export function supportedCallCount(): number {
+  return supportedCalls;
+}
+
 export function supportedSource(): SupportedSource | null {
   return lastSource;
 }
@@ -173,6 +181,7 @@ export function withFallbackSupported<T extends object>(
 
   const wrapped = {
     getSupported: async () => {
+      supportedCalls += 1;
       let timer: ReturnType<typeof setTimeout> | undefined;
       const deadline = new Promise<null>((resolve) => {
         timer = setTimeout(() => resolve(null), timeoutMs);

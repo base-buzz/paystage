@@ -305,9 +305,12 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
         if (winner === "timeout") {
           // Say why. A guard that swallows the reason is untraceable from outside,
           // which is exactly the hole that cost an afternoon of guessing.
-          const source = (await import("./facilitator-cache.js")).supportedSource();
+          const cache = await import("./facilitator-cache.js");
           const elapsed = performance.now() - started;
-          c.header("x-paystage-debug", `upstream_timeout source=${source ?? "none"} elapsed_ms=${elapsed.toFixed(0)}`);
+          c.header(
+            "x-paystage-debug",
+            `upstream_timeout source=${cache.supportedSource() ?? "none"} calls=${cache.supportedCallCount()} elapsed_ms=${elapsed.toFixed(0)}`,
+          );
           return c.json({ error: "upstream_timeout", retry_after_seconds: 5 }, 503);
         }
       } finally {
