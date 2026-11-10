@@ -85,15 +85,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+      # The publisher is a Go binary from the registry's GitHub releases. There is an
+      # npm package called `mcp-publisher` too, but it is an MCP server — installing it
+      # makes this job "succeed" while publishing nothing, which is exactly what
+      # happened on the first attempt.
       - name: Install the publisher
-        run: npm install -g mcp-publisher
+        run: |
+          curl -sSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher --version || ./mcp-publisher --help | head -5
       - name: Authenticate with GitHub OIDC
-        run: mcp-publisher login github-oidc
+        run: ./mcp-publisher login github-oidc
       - name: Publish every server.json
         working-directory: packages
         run: |
           set -e
           for manifest in */server.json; do
             echo "publishing $manifest"
-            (cd "$(dirname "$manifest")" && mcp-publisher publish)
+            (cd "$(dirname "$manifest")" && "$GITHUB_WORKSPACE/mcp-publisher" publish)
           done
