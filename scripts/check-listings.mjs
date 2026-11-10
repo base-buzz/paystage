@@ -27,7 +27,14 @@ const LISTINGS = [
     name: "mcp.so",
     url: "https://mcp.so/servers/paystage-6d8a8f",
     // No version number is published there, so the tool names are the whole signal.
-    requires: "tools-and-install",
+    kind: "html",
+  },
+  {
+    name: "mcp-registry",
+    // The official registry is what MCP clients actually resolve against, so a stale
+    // version here is worse than anywhere else: it is authoritative to the tooling.
+    url: "https://registry.modelcontextprotocol.io/v0/servers?search=xyz.paystage",
+    kind: "mcp-registry",
   },
 ];
 
@@ -58,7 +65,83 @@ function stripTags(html) {
     .replace(/\s+/g, " ");
 }
 
+/** Highest version among the entries for one server name, compared numerically. */
+function highest(entries) {
+  const cmp = (a, b) => {
+    const pa = a.split(".").map(Number);
+    const pb = b.split(".").map(Number);
+    for (let i = 0; i < 3; i += 1) {
+      if ((pa[i] ?? 0) !== (pb[i] ?? 0)) return (pa[i] ?? 0) - (pb[i] ?? 0);
+    }
+    return 0;
+  };
+  return entries.sort(cmp).at(-1);
+}
+
+async function checkMcpRegistry(listing, want) {
+  let res;
+  try {
+    res = await fetch(listing.url, {
+      headers: { "user-agent": "PayStageListingCheck/1.0 (+https://paystage.xyz)" },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch (error) {
+    return { name: listing.name, url: listing.url, ok: false, reason: error instanceof Error ? error.name : "error" };
+  }
+  if (!res.ok) return { name: listing.name, url: listing.url, ok: false, reason: `HTTP ${res.status}` };
+
+  const body = await res.json();
+  const servers = Array.isArray(body.servers) ? body.servers : [];
+  if (servers.length === 0) {
+    return { name: listing.name, url: listing.url, ok: false, reason: "no entries for xyz.paystage" };
+  }
+
+  // The registry keeps every version ever published, so only the highest per name is
+  // "what a client resolves". Comparing every historical entry would fail forever.
+  const latest = new Map();
+  for (const entry of servers) {
+    const server = entry.server ?? entry;
+    const name = String(server.name ?? "");
+    if (name === "") continue;
+    const version = String(server.version ?? "0");
+    latest.set(name, highest([latest.get(name), version].filter(Boolean)));
+  }
+
+  const stale = [];
+  for (const [name, published] of latest) {
+    const pkg = name.split("/")[1];
+    if (!pkg) continue;
+    let localVersion;
+    try {
+      localVersion = JSON.parse(await readFile(new URL(`../packages/${pkg}/server.json`, import.meta.url), "utf8")).version;
+    } catch {
+      continue;
+    }
+    if (published !== localVersion) {
+      stale.push(`${name} published ${published}, repo ${localVersion}`);
+    }
+  }
+
+  // A server missing entirely is a different failure from one lagging behind.
+  const publishedNames = new Set(servers.map((e) => String((e.server ?? e).name ?? "")));
+  for (const pkg of want.packages.filter((p) => p !== "@paystage/policy")) {
+    const name = `xyz.paystage/${pkg.replace("@paystage/", "")}`;
+    if (!publishedNames.has(name) && pkg === "@paystage/mcp") {
+      stale.push(`${name} is not published at all`);
+    }
+  }
+
+  return {
+    name: listing.name,
+    url: listing.url,
+    ok: stale.length === 0,
+    entries: servers.length,
+    ...(stale.length === 0 ? {} : { reason: `stale: ${stale.join("; ")}`, stale }),
+  };
+}
+
 async function checkListing(listing, want) {
+  if (listing.kind === "mcp-registry") return checkMcpRegistry(listing, want);
   let res;
   try {
     res = await fetch(listing.url, {
