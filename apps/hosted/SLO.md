@@ -128,33 +128,42 @@ refresh.
 
 ## Scalability — measured, not asserted
 
-Measured 2026-11-10 from a single host against production, on the unpaid challenge path
-(the one an agent hits first and a griefer would flood):
+Measured 2026-11-11 against production, on the unpaid challenge path (the one an agent
+hits first and a griefer would flood). Reproduce with `node scripts/load-test.mjs`.
 
-| Load | Outcome | p50 | p95 | p99 | max |
-|---|---|---|---|---|---|
-| 100 calls, 100 concurrent | 100× `402` | 793 ms | 4,500 ms | — | 4,520 ms |
-| 300 calls, 20 concurrent | 300× `402` | 18 ms | 247 ms | 393 ms | 399 ms |
-| 200 calls, 25 concurrent | 200× `402` | 21 ms | 239 ms | 337 ms | 510 ms |
+| Load | Outcome | round-trip p50 | p95 | **worker time p95** |
+|---|---|---|---|---|
+| 300 calls, 20 concurrent | 300× `402` | 18 ms | 247 ms | 0 ms |
+| 200 calls, 25 concurrent | 200× `402` | 21 ms | 239 ms | 0 ms |
+| 100 calls, 100 concurrent | 100× `402` | 409 ms | 2,504 ms | **0 ms** |
 
-Reproduce with `node scripts/load-test.mjs` (options: `--total`, `--conc`, `--url`).
+The `server-timing: app;dur` header separates the two halves of a request, and the
+separation matters: **the Worker spends zero milliseconds on a challenge.** Everything
+in the round-trip column is connection setup and edge queueing, which is what happens
+when one host opens a hundred fresh TLS connections at once. It is not the API being
+slow, and the load script now prints both columns so the two cannot be conflated.
 
-Three honest observations:
+### Correction to an earlier reading
+
+An earlier version of this section blamed high full-concurrency latency on cold-start
+facilitator discovery. That was partly wrong: discovery *was* on the cold path and did
+cost seconds per fresh isolate, but the numbers were measured before the fix and
+attributed by inference rather than by the `server-timing` header. Once discovery was
+removed from the request path the Worker time went to zero, and what remains is
+connection setup. Measuring the right thing changed the conclusion.
+
+### Three honest observations
 
 **There is no application-level rate limit.** Nothing in the Worker counts requests.
-Sustained load is absorbed by the Cloudflare edge and by the stateless design — no
-session, no queue, no per-caller state — which is why 300 calls at 20 concurrency finish
-in 1.1 s. The trade: a determined caller is not slowed by us, only by the edge.
+Stateless design and the edge absorb volume; a determined caller is not slowed by us.
+Publishing a limit we do not enforce would be worse than publishing none.
 
-**Full concurrency is worse than sustained concurrency.** 100 simultaneous cold
-requests tripped the 5 s guard on some calls (p95 4.5 s) while 300 at 20 concurrency
-stayed under 400 ms. Bursting is the failure mode, not volume, and that is a property of
-cold-start discovery rather than of throughput.
+**Bursting costs connections, not compute.** 100 simultaneous requests from one host
+push p95 to ~2.5 s while the Worker stays at 0 ms. An agent making sequential calls sees
+the p50 column.
 
-**A 503 here means "retry", not "down".** The guard returns
-`503 upstream_timeout` with `retry_after_seconds: 5` and an `x-paystage-debug` header
-naming the cause. Any client that treats 503 as fatal will see an outage that does not
-exist.
+**A 503 means "retry", not "down".** The guard returns `503 upstream_timeout` with
+`retry_after_seconds: 5` and an `x-paystage-debug` header naming the cause.
 
 ### What this means for a buyer
 
