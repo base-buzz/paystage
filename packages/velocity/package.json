@@ -1,6 +1,6 @@
 {
   "name": "@paystage/velocity",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Rolling-window rate and spend-pattern checks for agent payments.",
   "keywords": [
     "paystage",
