@@ -21,14 +21,22 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
   } catch {
     return c.json({ error: "invalid_json" }, 400);
   }
-  const b = body as { payment_required?: unknown; policy?: unknown };
+  const b = body as { payment_required?: unknown; policy?: unknown; agent_id?: unknown };
   if (!b || typeof b !== "object" || b.payment_required == null) {
     return c.json({ error: "missing_payment_required" }, 400);
+  }
+  if (b.agent_id !== undefined && typeof b.agent_id !== "string") {
+    return c.json({ error: "agent_id_must_be_a_string" }, 400);
   }
   try {
     const normalized = normalizePaymentRequired(b.payment_required as never);
     const policy = parsePolicy(b.policy as never);
-    const decision = evaluatePayment(normalized, policy);
+    // Without this the hosted API could not reach per-agent budgets at all: the policy
+    // declares them, the packages enforce them, and the endpoint silently judged every
+    // caller against the loosest rules in the file.
+    const decision = evaluatePayment(normalized, policy, {
+      ...(typeof b.agent_id === "string" ? { agentId: b.agent_id } : {}),
+    });
     // Additive: the receipt binds the verdict to these exact inputs. It never
     // changes the decision, and degrades to signed:false when no key is set.
     const receipt = await buildReceipt({
