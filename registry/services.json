@@ -6,9 +6,10 @@
     "description": "Evaluates a proposed x402 payment against a local policy and returns pay, review or do_not_pay with the rule that fired.",
     "price": "$0.002 per call",
     "asset": "USDC",
-    "payTo": "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
+    "payTo": "0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE",
     "x402_version": 2,
-    "verified_at": "2026-11-09"
+    "verified_at": "2026-11-09",
+    "method": "POST"
   },
   {
     "name": "x402.tbs-digital.com",
