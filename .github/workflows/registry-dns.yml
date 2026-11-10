@@ -40,9 +40,19 @@ jobs:
           record=$(echo "$out" | sed -n 's/^v=MCPv1.*/&/p' | head -1)
           if [ -z "$record" ]; then echo "could not read the expected record"; exit 1; fi
           echo "record=$record" >> "$GITHUB_OUTPUT"
-          echo "Token exchange will fail until the DNS record is updated — that is expected."
+          # If the DNS record already carries our key, login succeeds here and there is
+          # nothing to write. Only a failing exchange means the record needs changing.
+          if echo "$out" | grep -q "Successfully logged in"; then
+            echo "login_ok=true" >> "$GITHUB_OUTPUT"
+            echo "already authenticated by DNS — no record change needed"
+          else
+            echo "login_ok=false" >> "$GITHUB_OUTPUT"
+            echo "Token exchange failed; the DNS record needs updating."
+          fi
 
       - name: Find the zone
+        if: steps.proof.outputs.login_ok != 'true'
+
         id: zone
         run: |
           zone=$(curl -sS -H "Authorization: Bearer $CF_TOKEN" \
@@ -52,7 +62,7 @@ jobs:
           echo "zone id: $zone"
 
       - name: Upsert the TXT record
-        if: startsWith(steps.zone.outputs.zone, 'ERR') == false
+        if: steps.proof.outputs.login_ok != 'true' && startsWith(steps.zone.outputs.zone, 'ERR') == false
         run: |
           zone="${{ steps.zone.outputs.zone }}"
           record="${{ steps.proof.outputs.record }}"
@@ -75,6 +85,8 @@ jobs:
 
 
       - name: Wait for propagation
+        if: steps.proof.outputs.login_ok != 'true'
+
         run: |
           expected="${{ steps.proof.outputs.record }}"
           for i in $(seq 1 30); do
@@ -86,6 +98,7 @@ jobs:
           echo "record did not propagate in 10 minutes"; exit 1
 
       - name: Prove ownership and publish
+        if: steps.proof.outputs.login_ok == 'true' || steps.zone.outcome == 'success'
         run: |
           ./mcp-publisher login dns --domain paystage.xyz --private-key "$REGISTRY_KEY"
           cd packages
