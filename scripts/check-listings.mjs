@@ -88,6 +88,18 @@ async function checkMcpRegistry(listing, want) {
   } catch (error) {
     return { name: listing.name, url: listing.url, ok: false, reason: error instanceof Error ? error.name : "error" };
   }
+  // A 403 from a bot-protected directory is not evidence of drift — GitHub's runners
+  // come from datacenter ranges these sites block. Reporting "cannot check" as
+  // "out of date" would train everyone to ignore the alert.
+  if (res.status === 403 || res.status === 429) {
+    return {
+      name: listing.name,
+      url: listing.url,
+      ok: true,
+      unverifiable: true,
+      reason: `HTTP ${res.status} — the site blocks this network, so the listing could not be read`,
+    };
+  }
   if (!res.ok) return { name: listing.name, url: listing.url, ok: false, reason: `HTTP ${res.status}` };
 
   const body = await res.json();
@@ -151,6 +163,18 @@ async function checkListing(listing, want) {
   } catch (error) {
     return { name: listing.name, url: listing.url, ok: false, reason: error instanceof Error ? error.name : "error" };
   }
+  // A 403 from a bot-protected directory is not evidence of drift — GitHub's runners
+  // come from datacenter ranges these sites block. Reporting "cannot check" as
+  // "out of date" would train everyone to ignore the alert.
+  if (res.status === 403 || res.status === 429) {
+    return {
+      name: listing.name,
+      url: listing.url,
+      ok: true,
+      unverifiable: true,
+      reason: `HTTP ${res.status} — the site blocks this network, so the listing could not be read`,
+    };
+  }
   if (!res.ok) return { name: listing.name, url: listing.url, ok: false, reason: `HTTP ${res.status}` };
 
   const text = stripTags(await res.text());
@@ -190,9 +214,16 @@ if (asJson) {
         ? `${r.expected_tools} tools present`
         : `${r.entries} entries, all at the repo version`
       : r.reason;
-    process.stdout.write(`${r.ok ? "ok  " : "DRIFT"} ${r.name.padEnd(12)} ${detail}\n`);
+    const mark = r.unverifiable ? "skip" : r.ok ? "ok  " : "DRIFT";
+    process.stdout.write(`${mark} ${r.name.padEnd(12)} ${r.unverifiable ? r.reason : detail}\n`);
   }
-  process.stdout.write(`\n${results.filter((r) => r.ok).length}/${results.length} listings in sync\n`);
+  const drift = results.filter((r) => !r.ok);
+  const skipped = results.filter((r) => r.unverifiable);
+  process.stdout.write(
+    `\n${results.length - drift.length}/${results.length} listings fine` +
+      (skipped.length > 0 ? ` (${skipped.length} not readable from here)` : "") +
+      "\n",
+  );
 }
 
 process.exit(summary.ok ? 0 : 1);
