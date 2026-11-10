@@ -92,6 +92,21 @@ async function checkSite() {
       `${cadence.releases?.count ?? "?"} releases, ${cadence.checks?.passing ?? "?"}/${cadence.checks?.total ?? "?"} checks`);
   }
 
+  // The machine surfaces are what an agent reads before it trusts anything. If they
+  // describe an older product than the one shipping, the tools nobody can find are
+  // also the tools nobody knows about.
+  const llmsSurface = await get(`${SITE}/llms.txt`);
+  record("site: /llms.txt documents agent_id", /agent_id/.test(llmsSurface.text), llmsSurface.text.includes("agent_id") ? "present" : "missing");
+  record("site: /llms.txt documents paystage-verify", /paystage-verify/.test(llmsSurface.text), llmsSurface.text.includes("paystage-verify") ? "present" : "missing");
+
+  const manifestCheck = await get(`${SITE}/.well-known/paystage.json`);
+  let manifestNow;
+  try { manifestNow = JSON.parse(manifestCheck.text); } catch { manifestNow = null; }
+  if (manifestNow) {
+    const verifyList = Array.isArray(manifestNow.verify) ? manifestNow.verify.join(" ") : "";
+    record("manifest: verify list mentions the receipt checker", /paystage-verify/.test(verifyList), verifyList.includes("paystage-verify") ? "present" : "missing");
+  }
+
   const security = await get(`${REPO_RAW}/SECURITY.md`);
   record("docs: SECURITY.md is reachable", security.res.ok, `HTTP ${security.res.status}`);
 
