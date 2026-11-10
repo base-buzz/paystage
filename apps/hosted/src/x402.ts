@@ -3,7 +3,7 @@ import { x402ResourceServer } from "@x402/hono";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { createFacilitatorConfig } from "@coinbase/x402";
-import { withFallbackSupported, withSupportedCache } from "./facilitator-cache.js";
+import { withStaticSupported } from "./facilitator-cache.js";
 import type { MiddlewareHandler } from "hono";
 
 export interface FacilitatorAuth {
@@ -65,16 +65,12 @@ export function buildResourceServer(
   // and then failed later in the request (500s instead of 503s) because the exact
   // scheme needs fields the facilitator normally supplies. Enable only once that
   // shape is known to be complete.
-  // Cache the discovery answer at the edge, then fall back to a static kind if the
-  // facilitator will not answer in time. The fallback is what keeps a challenge
-  // servable when the facilitator is slow; it is safe now that delegation is explicit
-  // rather than a Proxy over a class instance.
+  // The supported-kinds answer comes from config, not from the facilitator. A burst of
+  // cold isolates used to queue behind a discovery round trip and hit the 5s guard;
+  // paying is unaffected because verify/settle still delegate to the real client.
   const routed = facilitatorClient
     ? client
-    : withFallbackSupported(withSupportedCache(client as object), {
-        network: cfg.network,
-        scheme: "exact",
-      });
+    : withStaticSupported(client as object, { network: cfg.network, scheme: "exact" });
 
   const server = new x402ResourceServer(routed as never);
   server.register(cfg.network as `${string}:${string}`, new ExactEvmScheme());

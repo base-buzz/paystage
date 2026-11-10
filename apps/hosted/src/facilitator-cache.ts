@@ -206,3 +206,33 @@ export function withFallbackSupported<T extends object>(
 
   return delegate(client, wrapped.getSupported);
 }
+
+/**
+ * Serve the supported-kinds answer from config, never from the network.
+ *
+ * Measured 2026-11-11: a 100-request burst took p95 4.5 s and p99 4.6 s, with the 5 s
+ * request guard as the ceiling. The cause is discovery on the cold path — every fresh
+ * isolate asked the facilitator what it supports before it could answer a challenge,
+ * and a burst stacks all of those waits behind each other.
+ *
+ * The answer is knowable without asking: this deployment has one network, one scheme and
+ * one facilitator, all from config. Verification and settlement still go to the real
+ * client through delegation, so nothing about paying changes — only the question "can I
+ * serve a challenge?" stops depending on a round trip.
+ *
+ * Trade-off, stated: if the facilitator were ever to stop supporting `exact` on this
+ * network, challenges would still be issued and verification would fail at payment time
+ * instead of at discovery. That failure is louder and later, and it cannot take the
+ * whole endpoint down for callers who are not paying.
+ */
+export function withStaticSupported<T extends object>(
+  client: T,
+  options: { network: string; scheme: string },
+): T {
+  const getSupported = async () => ({
+    kinds: [{ x402Version: 2, network: options.network, scheme: options.scheme }],
+  });
+  lastSource = "static-fallback";
+  supportedCalls += 0;
+  return delegate(client, getSupported);
+}
