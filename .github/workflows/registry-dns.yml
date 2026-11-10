@@ -61,12 +61,18 @@ jobs:
             | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{const j=JSON.parse(d);const r=(j.result||[]).find(x=>String(x.content).startsWith("v=MCPv1"));console.log(r?r.id:"none")})')
           body=$(node -e 'console.log(JSON.stringify({type:"TXT",name:"paystage.xyz",content:process.argv[1],ttl:60}))' "$record")
           if [ "$existing" = "none" ]; then
-            curl -sS -X POST -H "Authorization: Bearer $CF_TOKEN" -H "content-type: application/json" \
-              "https://api.cloudflare.com/client/v4/zones/$zone/dns_records" -d "$body" | head -c 300; echo
+            method=POST; url="https://api.cloudflare.com/client/v4/zones/$zone/dns_records"
           else
-            curl -sS -X PATCH -H "Authorization: Bearer $CF_TOKEN" -H "content-type: application/json" \
-              "https://api.cloudflare.com/client/v4/zones/$zone/dns_records/$existing" -d "$body" | head -c 300; echo
+            method=PATCH; url="https://api.cloudflare.com/client/v4/zones/$zone/dns_records/$existing"
           fi
+          response=$(curl -sS -X "$method" -H "Authorization: Bearer $CF_TOKEN" \
+            -H "content-type: application/json" "$url" -d "$body")
+          echo "$response" | head -c 300; echo
+          # The previous version printed this and moved on, so a 401 from a token without
+          # DNS scope looked exactly like success and the job failed ten minutes later at
+          # the propagation check.
+          echo "$response" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{const j=JSON.parse(d);if(!j.success){console.error("Cloudflare rejected the write:", JSON.stringify(j.errors||j));process.exit(1)}})'
+
 
       - name: Wait for propagation
         run: |
