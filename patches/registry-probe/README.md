@@ -1,8 +1,14 @@
-# Nightly registry re-verification
+# Nightly registry and listings re-verification
 
-`scripts/verify-registry.mjs` re-checks every entry in `registry/services.json`
-(402 present, same network, same payTo, same price). Wired here as a patch rather
-than applied, because it needs a workflow file.
+Two checks, both read-only:
+
+- `scripts/verify-registry.mjs` — every entry in `registry/services.json`: 402 present,
+  same network, same payTo, same price.
+- `scripts/check-listings.mjs` — third-party listings (currently mcp.so) still show all
+  five tool names and the install command. Those pages are snapshots; adding a sixth
+  tool does not update them, and nobody would notice.
+
+Wired here as a patch rather than applied, because it needs a workflow file.
 
 ## Apply
 
@@ -45,8 +51,18 @@ jobs:
           if [ -n "$existing" ]; then gh issue comment "$existing" --body "$body"; else
             gh issue create --title "registry: entries are no longer verified" --label registry --body "$body"
           fi
+      - name: Check third-party listings
+        id: listings
+        continue-on-error: true
+        run: |
+          node scripts/check-listings.mjs --json > listings.json
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+          node -e 'const r=require("./listings.json"); for (const l of r.listings) console.log(`${l.ok?"ok":"DRIFT"} ${l.name}: ${l.ok?"in sync":l.reason}`);'
       - name: Fail the run when entries are dead
         if: steps.verify.outputs.exit != '0'
+        run: exit 1
+      - name: Fail the run when a listing has drifted
+        if: steps.listings.outputs.exit != '0'
         run: exit 1
 ```
 
