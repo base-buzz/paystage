@@ -125,3 +125,40 @@ Not yet tried, in rough order of preference: cache the discovery result in KV so
 cold isolate reads instead of asking; pin the facilitator's supported kinds at
 deploy time; or move discovery off the request path entirely with a scheduled
 refresh.
+
+## Scalability — measured, not asserted
+
+Measured 2026-11-10 from a single host against production, on the unpaid challenge path
+(the one an agent hits first and a griefer would flood):
+
+| Load | Outcome | p50 | p95 | p99 | max |
+|---|---|---|---|---|---|
+| 100 calls, 100 concurrent | 100× `402` | 793 ms | 4,500 ms | — | 4,520 ms |
+| 300 calls, 20 concurrent | 300× `402` | 18 ms | 247 ms | 393 ms | 399 ms |
+| 200 calls, 25 concurrent | 200× `402` | 21 ms | 239 ms | 337 ms | 510 ms |
+
+Reproduce with `node scripts/load-test.mjs` (options: `--total`, `--conc`, `--url`).
+
+Three honest observations:
+
+**There is no application-level rate limit.** Nothing in the Worker counts requests.
+Sustained load is absorbed by the Cloudflare edge and by the stateless design — no
+session, no queue, no per-caller state — which is why 300 calls at 20 concurrency finish
+in 1.1 s. The trade: a determined caller is not slowed by us, only by the edge.
+
+**Full concurrency is worse than sustained concurrency.** 100 simultaneous cold
+requests tripped the 5 s guard on some calls (p95 4.5 s) while 300 at 20 concurrency
+stayed under 400 ms. Bursting is the failure mode, not volume, and that is a property of
+cold-start discovery rather than of throughput.
+
+**A 503 here means "retry", not "down".** The guard returns
+`503 upstream_timeout` with `retry_after_seconds: 5` and an `x-paystage-debug` header
+naming the cause. Any client that treats 503 as fatal will see an outage that does not
+exist.
+
+### What this means for a buyer
+
+An agent paying per call should budget for a p99 near 400 ms and treat 503 as
+retryable. If you need a hard per-caller limit, do it on your side or ask for a dedicated
+deployment — we do not enforce one today, and publishing a limit we do not enforce would
+be worse than publishing none.
