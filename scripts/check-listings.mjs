@@ -185,7 +185,12 @@ if (asJson) {
   process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
 } else {
   for (const r of results) {
-    process.stdout.write(`${r.ok ? "ok  " : "DRIFT"} ${r.name.padEnd(10)} ${r.ok ? `${r.expected_tools} tools present` : r.reason}\n`);
+    const detail = r.ok
+      ? r.entries === undefined
+        ? `${r.expected_tools} tools present`
+        : `${r.entries} entries, all at the repo version`
+      : r.reason;
+    process.stdout.write(`${r.ok ? "ok  " : "DRIFT"} ${r.name.padEnd(12)} ${detail}\n`);
   }
   process.stdout.write(`\n${results.filter((r) => r.ok).length}/${results.length} listings in sync\n`);
 }
