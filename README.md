@@ -67,6 +67,18 @@ The same MCP config works for Claude Desktop (`claude_desktop_config.json`) and 
 - `PAYSTAGE_POLICY_PATH` (required): path to your local `policy.json`.
 - `PAYSTAGE_RPC_URL` (optional): RPC endpoint used by on-chain checks. Defaults to a public Base RPC.
 
+## Policies
+
+Everything PayStage does is decided by one local policy file. Three complete, annotated
+examples are in [`registry/examples/`](registry/examples/) — copy one, change the
+addresses and amounts, and point `PAYSTAGE_POLICY_PATH` at it. Each is schema-exact for
+[`@paystage/policy`](packages/policy/README.md) and annotated field by field in
+[`registry/examples/README.md`](registry/examples/README.md).
+
+- [Reader bot](registry/examples/reader-bot.policy.json) — reads articles and search results; 0.05 USDC per call, unknown payees denied.
+- [Trading bot](registry/examples/trading-bot.policy.json) — places HIP-3 orders; per-agent budgets, velocity windows and human review above 10 USDC.
+- [Research agent](registry/examples/research-agent.policy.json) — discovers data endpoints; unknown payees go to review, never an unattended pay.
+
 ## Tools
 
 | Tool | Status | What it does |
