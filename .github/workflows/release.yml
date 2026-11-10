@@ -69,3 +69,31 @@ jobs:
               npm publish -w "@paystage/$pkg" --access public --provenance
             fi
           done
+
+  # After npm, publish the manifests to the official MCP registry — the place MCP
+  # clients actually resolve against. It was two releases behind because nothing did
+  # this automatically. Auth is GitHub OIDC: no token to rotate, nothing that can
+  # publish outside CI.
+  registry:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install the publisher
+        run: npm install -g mcp-publisher
+      - name: Authenticate with GitHub OIDC
+        run: mcp-publisher login github-oidc
+      - name: Publish every server.json
+        working-directory: packages
+        run: |
+          set -e
+          for manifest in */server.json; do
+            echo "publishing $manifest"
+            (cd "$(dirname "$manifest")" && mcp-publisher publish)
+          done

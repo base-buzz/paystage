@@ -1,0 +1,100 @@
+# Nightly verification of everything we publish and everything we link to.
+#
+# Two failure classes, both silent until a stranger hits them:
+#
+#  1. A registry entry that no longer answers, changed its payee, or moved price.
+#  2. A third-party listing still advertising the tool set from the day it was
+#     submitted.
+#
+# Read-only. Opens one deduplicated issue per class and fails the run.
+
+name: registry
+
+on:
+  schedule:
+    - cron: "0 19 * * *" # 08:00 NZDT
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: registry
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Re-verify every registry entry
+        id: registry
+        continue-on-error: true
+        run: |
+          set +e
+          node scripts/verify-registry.mjs --json > registry.json
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Check third-party listings
+        id: listings
+        continue-on-error: true
+        run: |
+          set +e
+          node scripts/check-listings.mjs --json > listings.json
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Render the report
+        run: |
+          node -e '
+            const fs = require("fs");
+            const lines = ["## Registry and listing verification", ""];
+            try {
+              const r = JSON.parse(fs.readFileSync("registry.json", "utf8"));
+              lines.push(`**Registry: ${r.live}/${r.total} live.**`, "");
+              for (const e of r.entries.filter((e) => !e.ok)) {
+                lines.push(`- **${e.name}** — ${e.reason} (\`${e.url}\`)`);
+              }
+              lines.push("");
+            } catch {}
+            try {
+              const l = JSON.parse(fs.readFileSync("listings.json", "utf8"));
+              for (const x of l.listings) {
+                lines.push(`- ${x.ok ? "ok" : "**DRIFT**"} ${x.name}: ${x.ok ? "in sync" : x.reason}`);
+              }
+            } catch {}
+            fs.writeFileSync("report.md", lines.join("\n"));
+            console.log(lines.join("\n"));
+          '
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open or update the issue
+        if: steps.registry.outputs.exit != '0' || steps.listings.outputs.exit != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          existing=$(gh issue list --label registry --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file report.md
+          else
+            gh issue create --title "registry: entries or listings need attention" --label registry --body-file report.md
+          fi
+
+      - name: Close the issue on recovery
+        if: steps.registry.outputs.exit == '0' && steps.listings.outputs.exit == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          existing=$(gh issue list --label registry --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Recovered — registry and listings green at $(date -u +%FT%TZ)."
+            gh issue close "$existing"
+          fi
+
+      - name: Fail the run when anything drifted
+        if: steps.registry.outputs.exit != '0' || steps.listings.outputs.exit != '0'
+        run: exit 1
