@@ -25,6 +25,30 @@ order against your policy and never places one.
 
 ${toolLines}
 
+## Per-agent budgets
+
+A policy may declare \`agents\`, giving each agent its own ceiling, payee list and
+network list as a **narrowing** overlay on the global rules. When it does, callers must
+pass \`agent_id\`:
+
+\`\`\`json
+{ "payment_required": { ... }, "policy": { ... }, "agent_id": "reader" }
+\`\`\`
+
+Missing or unknown \`agent_id\` is \`do_not_pay\` — never a fallback to the loosest rules.
+Overrides that widen (raise a ceiling, add a payee) are rejected when the policy loads.
+
+## Verify a receipt
+
+\`\`\`
+npx -y -p @paystage/mcp paystage-verify receipt.json
+\`\`\`
+
+Checks the ECDSA signature against the key published at
+${"`" + m.networks.mainnet + "`"}/v1/public/receipt-key.json. Exit codes: 0 valid,
+1 invalid, 2 unsigned, 3 unverifiable. "Could not check" is distinct from "forged" on
+purpose.
+
 ## Install
 
 \`\`\`
