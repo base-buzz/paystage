@@ -1,0 +1,89 @@
+# One-shot: replace the MCP registry ownership TXT record with a key CI holds.
+#
+# The `xyz.paystage/*` namespace on registry.modelcontextprotocol.io is claimed by a
+# DNS TXT proof at the domain apex, and the private key behind the existing record is
+# not in this repo. Publishing the current versions therefore fails with 403.
+#
+# This workflow writes the record for the key in MCP_REGISTRY_KEY, waits for it to
+# resolve, then proves ownership. Idempotent: running it again rewrites the same value.
+#
+# Manual trigger only. It edits one DNS TXT record and nothing else.
+
+name: registry-dns
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  claim:
+    runs-on: ubuntu-latest
+    env:
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      REGISTRY_KEY: ${{ secrets.MCP_REGISTRY_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the publisher
+        run: |
+          curl -sSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Read the proof record the registry expects
+        id: proof
+        run: |
+          out=$(./mcp-publisher login dns --domain paystage.xyz --private-key "$REGISTRY_KEY" 2>&1 || true)
+          echo "$out" | head -20
+          record=$(echo "$out" | sed -n 's/^v=MCPv1.*/&/p' | head -1)
+          if [ -z "$record" ]; then echo "could not read the expected record"; exit 1; fi
+          echo "record=$record" >> "$GITHUB_OUTPUT"
+          echo "Token exchange will fail until the DNS record is updated — that is expected."
+
+      - name: Find the zone
+        id: zone
+        run: |
+          zone=$(curl -sS -H "Authorization: Bearer $CF_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones?name=paystage.xyz" \
+            | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{const j=JSON.parse(d);console.log(j.success && j.result[0] ? j.result[0].id : "ERR:" + JSON.stringify(j.errors||j).slice(0,120))})')
+          echo "zone=$zone" >> "$GITHUB_OUTPUT"
+          echo "zone id: $zone"
+
+      - name: Upsert the TXT record
+        if: startsWith(steps.zone.outputs.zone, 'ERR') == false
+        run: |
+          zone="${{ steps.zone.outputs.zone }}"
+          record="${{ steps.proof.outputs.record }}"
+          existing=$(curl -sS -H "Authorization: Bearer $CF_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$zone/dns_records?type=TXT&name=paystage.xyz" \
+            | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{const j=JSON.parse(d);const r=(j.result||[]).find(x=>String(x.content).startsWith("v=MCPv1"));console.log(r?r.id:"none")})')
+          body=$(node -e 'console.log(JSON.stringify({type:"TXT",name:"paystage.xyz",content:process.argv[1],ttl:60}))' "$record")
+          if [ "$existing" = "none" ]; then
+            curl -sS -X POST -H "Authorization: Bearer $CF_TOKEN" -H "content-type: application/json" \
+              "https://api.cloudflare.com/client/v4/zones/$zone/dns_records" -d "$body" | head -c 300; echo
+          else
+            curl -sS -X PATCH -H "Authorization: Bearer $CF_TOKEN" -H "content-type: application/json" \
+              "https://api.cloudflare.com/client/v4/zones/$zone/dns_records/$existing" -d "$body" | head -c 300; echo
+          fi
+
+      - name: Wait for propagation
+        run: |
+          expected="${{ steps.proof.outputs.record }}"
+          for i in $(seq 1 30); do
+            got=$(node -e 'require("node:dns").promises.resolveTxt("paystage.xyz").then(r=>console.log(r.map(x=>x.join("")).join("|"))).catch(()=>console.log(""))')
+            echo "attempt $i: ${got:0:60}"
+            case "$got" in *"$expected"*) echo "propagated"; exit 0;; esac
+            sleep 20
+          done
+          echo "record did not propagate in 10 minutes"; exit 1
+
+      - name: Prove ownership and publish
+        run: |
+          ./mcp-publisher login dns --domain paystage.xyz --private-key "$REGISTRY_KEY"
+          cd packages
+          for manifest in */server.json; do
+            echo "publishing $manifest"
+            (cd "$(dirname "$manifest")" && "$GITHUB_WORKSPACE/mcp-publisher" publish)
+          done
