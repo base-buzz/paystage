@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "xyz.paystage/preflight",
+  "name": "io.github.base-buzz/preflight",
   "title": "PayStage Preflight",
   "description": "Evaluate x402 PaymentRequired against a local spending policy before an agent pays",
   "version": "0.2.2",
