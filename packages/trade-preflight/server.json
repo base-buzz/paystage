@@ -3,7 +3,7 @@
   "name": "io.github.base-buzz/trade-preflight",
   "title": "PayStage Trade Preflight",
   "description": "MCP tool: evaluate HIP-3/trade.xyz orders against a local TradePolicy before trading",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "websiteUrl": "https://paystage.xyz",
   "repository": {
     "url": "https://github.com/base-buzz/paystage",
@@ -15,7 +15,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@paystage/trade-preflight",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "transport": {
         "type": "stdio"
       },

@@ -1,6 +1,6 @@
 {
   "name": "@paystage/preflight",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Evaluate x402 PaymentRequired against a local spending policy before an agent pays",
   "license": "MIT",
   "type": "module",
@@ -20,7 +20,7 @@
     "server.json",
     "!dist/**/*.map"
   ],
-  "mcpName": "xyz.paystage/preflight",
+  "mcpName": "io.github.base-buzz/preflight",
   "engines": {
     "node": ">=20"
   },
