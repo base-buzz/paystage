@@ -161,6 +161,10 @@ jobs:
         working-directory: packages
         run: |
           set -e
+          # Packages with no npm Trusted Publisher entry cannot be published, and the
+          # registry validates mcpName against the published tarball. Skip them loudly:
+          # a silent skip would look like success.
+          NO_TRUSTED_PUBLISHER="auth-watch trade-preflight"
           for manifest in */server.json; do
             echo "publishing $manifest"
             (cd "$(dirname "$manifest")" && "$GITHUB_WORKSPACE/mcp-publisher" publish)

@@ -1,6 +1,6 @@
 {
   "name": "@paystage/trade-preflight",
-  "version": "0.2.1",
+  "version": "0.2.0",
   "description": "Evaluate HIP-3/trade.xyz orders against a local TradePolicy before an agent trades",
   "license": "MIT",
   "type": "module",
@@ -21,7 +21,7 @@
     "README.md",
     "!dist/**/*.map"
   ],
-  "mcpName": "io.github.base-buzz/trade-preflight",
+  "mcpName": "xyz.paystage/trade-preflight",
   "engines": {
     "node": ">=20"
   },

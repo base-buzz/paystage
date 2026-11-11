@@ -50,10 +50,10 @@
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.4.0",
-    "@paystage/auth-watch": "0.2.1",
+    "@paystage/auth-watch": "0.2.0",
     "@paystage/policy": "0.2.1",
     "@paystage/preflight": "0.2.3",
-    "@paystage/trade-preflight": "0.2.1",
+    "@paystage/trade-preflight": "0.2.0",
     "@paystage/velocity": "0.2.0",
     "zod": "^4.6.7"
   },

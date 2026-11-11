@@ -1,6 +1,6 @@
 {
   "name": "@paystage/auth-watch",
-  "version": "0.2.1",
+  "version": "0.2.0",
   "description": "List and evaluate outstanding ERC-20 / Permit2 / EIP-3009 authorizations for an agent wallet (read-only)",
   "license": "MIT",
   "type": "module",
@@ -20,7 +20,7 @@
     "server.json",
     "!dist/**/*.map"
   ],
-  "mcpName": "io.github.base-buzz/auth-watch",
+  "mcpName": "xyz.paystage/auth-watch",
   "engines": {
     "node": ">=20"
   },
