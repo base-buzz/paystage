@@ -60,7 +60,14 @@ for (const file of readmes) {
     if (!existsSync(resolved)) problems.push(`${short}: dead relative link -> ${target}`);
   }
 
-  // 3. The claim the whole project rests on must be present, in some form.
+  // 3. Install commands must be runnable. @paystage/mcp publishes two bins, so
+  //    `npx -y @paystage/mcp` fails with "could not determine executable to run" — it was
+  //    in every readme for three releases and no test read prose.
+  for (const bad of [/npx\s+-y\s+@paystage\/mcp(?!\s+-p)/]) {
+    if (bad.test(text)) problems.push(`${short}: documented command cannot run — needs -p @paystage/mcp paystage-mcp`);
+  }
+
+  // 4. The claim the whole project rests on must be present, in some form.
   if (/^#/m.test(text) && !/pay\b.*review\b.*do_not_pay/s.test(text.replace(/\s+/g, " "))) {
     warnings.push(`${short}: does not state the pay / review / do_not_pay verdict`);
   }

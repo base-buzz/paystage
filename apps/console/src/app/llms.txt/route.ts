@@ -52,7 +52,7 @@ purpose.
 ## Install
 
 \`\`\`
-npx -y @paystage/mcp
+npx -y -p @paystage/mcp paystage-mcp
 \`\`\`
 
 Each tool ships in its own package where one exists
