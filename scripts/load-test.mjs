@@ -39,7 +39,7 @@ async function worker() {
     try {
       const res = await fetch(url, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", "x-paystage-source": "test" },
         body,
         signal: AbortSignal.timeout(20_000),
       });
