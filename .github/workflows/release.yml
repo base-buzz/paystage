@@ -19,6 +19,11 @@ on:
   push:
     tags:
       - "v*"
+  # Daily canary. Same workflow file on purpose: npm Trusted Publishing is bound to a
+  # workflow *filename*, so a separate canary.yml would be rejected with a 404 that looks
+  # exactly like "publisher not configured".
+  schedule:
+    - cron: "0 20 * * *" # 09:00 NZDT
   workflow_dispatch:
 
 permissions:
@@ -58,15 +63,65 @@ jobs:
       - name: Test
         run: npm test
 
+      # Tag push -> stable release on `latest`.
+      # Schedule -> canary build on the `canary` tag, versioned by run number, so the
+      # daily cadence never touches what anyone installs by default. This is the model
+      # Next.js/TypeScript/Angular use: bleeding edge daily, stable on demand.
       - name: Publish packages (dependency order, skip existing, with provenance)
         run: |
           set -euo pipefail
-          for pkg in policy preflight auth-watch velocity trade-preflight mcp; do
+          PKGS="policy preflight auth-watch velocity trade-preflight mcp"
+
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "stable release from tag ${GITHUB_REF_NAME}"
+            for pkg in $PKGS; do
+              VERSION=$(node -p "require('./packages/$pkg/package.json').version")
+              if npm view "@paystage/$pkg@$VERSION" version >/dev/null 2>&1; then
+                echo "@paystage/$pkg@$VERSION already on npm; skipping."
+              else
+                npm publish -w "@paystage/$pkg" --access public --provenance
+              fi
+            done
+            exit 0
+          fi
+
+          echo "canary build from ${GITHUB_REF_NAME} run ${GITHUB_RUN_NUMBER}"
+          SUFFIX="canary.${GITHUB_RUN_NUMBER}"
+
+          # Stamp every package with the same canary version and point the umbrella at
+          # its siblings, so a canary of @paystage/mcp actually contains canaries rather
+          # than resolving back to the last stable versions.
+          node -e '
+            const fs = require("fs");
+            const suffix = process.argv[1];
+            const pkgs = process.argv.slice(2);
+            const versions = {};
+            for (const p of pkgs) {
+              const f = `packages/${p}/package.json`;
+              const j = JSON.parse(fs.readFileSync(f, "utf8"));
+              versions[`@paystage/${p}`] = `${j.version}-${suffix}`;
+              j.version = `${j.version}-${suffix}`;
+              fs.writeFileSync(f, JSON.stringify(j, null, 2) + "\n");
+            }
+            for (const p of pkgs) {
+              const f = `packages/${p}/package.json`;
+              const j = JSON.parse(fs.readFileSync(f, "utf8"));
+              for (const dep of Object.keys(j.dependencies || {})) {
+                if (versions[dep]) j.dependencies[dep] = versions[dep];
+              }
+              fs.writeFileSync(f, JSON.stringify(j, null, 2) + "\n");
+            }
+            console.log("stamped:", JSON.stringify(versions, null, 1));
+          ' "$SUFFIX" $PKGS
+
+          npm run build
+
+          for pkg in $PKGS; do
             VERSION=$(node -p "require('./packages/$pkg/package.json').version")
             if npm view "@paystage/$pkg@$VERSION" version >/dev/null 2>&1; then
               echo "@paystage/$pkg@$VERSION already on npm; skipping."
             else
-              npm publish -w "@paystage/$pkg" --access public --provenance
+              npm publish -w "@paystage/$pkg" --access public --provenance --tag canary
             fi
           done
 
@@ -76,6 +131,9 @@ jobs:
   # publish outside CI.
   registry:
     needs: publish
+    # Only a stable tag publishes to the MCP registry; canary builds must not move what
+    # clients resolve to.
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions:
       contents: read
