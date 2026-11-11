@@ -1,6 +1,6 @@
 {
   "name": "@paystage/mcp",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "PayStage umbrella MCP: payment preflight, auth watch, HIP-3 trade preflight, and velocity rate/spend-pattern checks",
   "license": "MIT",
   "type": "module",
