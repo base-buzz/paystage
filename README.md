@@ -1,8 +1,27 @@
 # PayStage
 
-Safety tools for AI agent payments (x402 + MCP).
+**Your agent's wallet should not sign because a server asked it to.**
 
-PayStage sits in front of an agent's wallet and answers one question before money moves: should this payment happen? Tools return `pay`, `review`, or `do_not_pay`.
+PayStage sits between an agent and the x402 payment it is about to make, and answers one
+question before the signature exists: *should this payment happen?* Every tool returns
+`pay`, `review`, or `do_not_pay`, with the rule that fired and a receipt you can keep.
+
+The gap it fills is narrow and load-bearing. x402 makes paying trivial and leaves *deciding*
+to the caller: a wallet enforces signatures, not intent. `@paystage/x402-guard` evaluates the
+challenge before the wallet signs, so a wrong payee, an over-cap amount or an unknown asset
+never reaches the signing step at all.
+
+Try it without installing anything:
+
+```bash
+curl -s -X POST https://api.paystage.xyz/v1/evaluate_mcp_payment \
+  -H 'content-type: application/json' \
+  -d '{"payment_required":{…},"policy":{…}}'
+```
+
+The hosted endpoint serves a real verdict with no payment and no account for the first 1,000 calls
+per IP per day — an agent cannot fill in a signup form, so requiring one would exclude exactly
+the callers this is built for.
 
 ## Quick start
 
@@ -17,11 +36,20 @@ npx paystage-mcp
 
 The server waits silently for an agent app to connect. That's normal; press Ctrl+C to exit. To try the tools without an app, run `npx @modelcontextprotocol/inspector npx -y @paystage/mcp`.
 
-`@paystage/mcp` **0.3.0** is the umbrella MCP server (**5 tools**, including `evaluate_hip3_trade` and `evaluate_velocity`). It exposes the PayStage tools over stdio and reads a local policy file. See [SECURITY.md](SECURITY.md) for exactly what it accesses and why.
+`@paystage/mcp` is the umbrella MCP server (**5 tools**, including `evaluate_hip3_trade` and `evaluate_velocity`). It exposes the PayStage tools over stdio and reads a local policy file. See [SECURITY.md](SECURITY.md) for exactly what it accesses and why.
+
+## Four ways in
+
+| You want | Use |
+|---|---|
+| the gate inside an agent's payment loop | [`@paystage/x402-guard`](packages/x402-guard) |
+| the tools in Claude Desktop or Cursor | [`@paystage/mcp`](packages/mcp) |
+| a verdict from your own service, hosting included | `POST https://api.paystage.xyz/v1/evaluate_mcp_payment` |
+| the evaluator as a library | [`@paystage/preflight`](packages/preflight) |
 
 ## Listed on
 
-- [mcp.so](https://mcp.so/server/paystage)
+- [mcp.so](https://mcp.so/servers/paystage-6d8a8f)
 - [Official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=xyz.paystage)
 - [npm](https://www.npmjs.com/package/@paystage/mcp)
 - [GitHub](https://github.com/base-buzz/paystage)

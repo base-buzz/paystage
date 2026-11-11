@@ -17,7 +17,16 @@ if ! node scripts/check-manifests.mjs; then
   fail=1
 fi
 
-# 2. Any dependency added in this push gets scored before it lands.
+# 2. Copy drift: a README that hardcodes a version goes stale the next release, and nobody
+#    reads a README to find out it is wrong. Local links only here — network checks stay in
+#    CI so a push never waits on someone else's server.
+if ! node scripts/check-copy.mjs >/tmp/prepush-copy.txt 2>&1; then
+  note "copy check failed — a README names a stale version or a dead link"
+  tail -6 /tmp/prepush-copy.txt | sed 's/^/    /'
+  fail=1
+fi
+
+# 3. Any dependency added in this push gets scored before it lands.
 base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
 if [ -n "$base" ]; then
   added=$(git diff "$base" HEAD -- 'packages/*/package.json' 'package.json' \
@@ -36,7 +45,7 @@ if [ -n "$base" ]; then
   fi
 fi
 
-# 3. A push that changes source must typecheck. Skipped for docs-only pushes.
+# 4. A push that changes source must typecheck. Skipped for docs-only pushes.
 if [ -n "$base" ] && git diff --name-only "$base" HEAD | grep -qE '^(packages|apps)/.*\.(ts|tsx)$'; then
   if ! npm run typecheck >/tmp/prepush-tc.txt 2>&1; then
     note "typecheck failed — see /tmp/prepush-tc.txt"

@@ -5,7 +5,7 @@ PayStage umbrella MCP server: payment preflight, auth watch, HIP-3 trade preflig
 > Not financial advice. The trade preflight tool is a local policy gate only — it does not
 > place orders or recommend trades.
 
-Published on npm as **`@paystage/mcp@0.3.0`**.
+Published on npm as **`@paystage/mcp`** — see the [npm page](https://www.npmjs.com/package/@paystage/mcp) for the current version rather than a number here that can go stale.
 
 ## Install
 
@@ -65,7 +65,7 @@ Evaluates a proposed HIP-3 / trade.xyz order against a local `TradePolicy` and r
 decision: `allow` | `review` | `do_not_trade`.
 
 Backed by [`@paystage/trade-preflight`](https://www.npmjs.com/package/@paystage/trade-preflight)
-(`0.2.0`), which is also published on npm and can be run standalone:
+(published separately), which can also be run standalone:
 
 ```sh
 npx -y @paystage/trade-preflight
@@ -78,12 +78,12 @@ this tool.
 
 | Package | Version | Purpose |
 | --- | --- | --- |
-| `@paystage/mcp` | 0.3.0 | Umbrella server (5 tools) |
-| `@paystage/preflight` | 0.2.0 | x402 payment preflight |
-| `@paystage/auth-watch` | 0.2.0 | Outstanding-auth tools |
-| `@paystage/trade-preflight` | 0.2.0 | HIP-3 / trade.xyz trade preflight |
-| `@paystage/velocity` | 0.2.0 | Rate / spend-pattern checks |
-| `@paystage/policy` | 0.2.0 | Shared policy schema + loader |
+| `@paystage/mcp` | Umbrella server (5 tools) |
+| `@paystage/preflight` | x402 payment preflight |
+| `@paystage/auth-watch` | Outstanding-auth tools |
+| `@paystage/trade-preflight` | HIP-3 / trade.xyz trade preflight |
+| `@paystage/velocity` | Rate / spend-pattern checks |
+| `@paystage/policy` | Shared policy schema + loader |
 
 ## Verify a receipt
 
