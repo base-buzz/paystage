@@ -17,6 +17,38 @@
 
 const REPO = "base-buzz/paystage";
 
+/**
+ * Weekly installs across every published package. Includes our own CI and mirrors —
+ * said in the caption rather than subtracted, because hiding a real number is its own
+ * kind of dishonesty.
+ */
+const NPM_PACKAGES = [
+  "@paystage/mcp",
+  "@paystage/preflight",
+  "@paystage/policy",
+  "@paystage/velocity",
+  "@paystage/auth-watch",
+  "@paystage/trade-preflight",
+];
+
+async function npmWeekly(): Promise<number | null> {
+  try {
+    const results = await Promise.all(
+      NPM_PACKAGES.map(async (name) => {
+        const res = await fetch(`https://api.npmjs.org/downloads/point/last-week/${name}`, {
+          next: { revalidate: 3600 },
+        });
+        if (!res.ok) return 0;
+        const body = (await res.json()) as { downloads?: number };
+        return body.downloads ?? 0;
+      }),
+    );
+    return results.reduce((a, b) => a + b, 0);
+  } catch {
+    return null;
+  }
+}
+
 interface GhHeaders {
   [key: string]: string;
 }
@@ -42,6 +74,7 @@ async function gh<T>(path: string): Promise<T | null> {
 export interface AliveStats {
   commits30d: number | null;
   contributors: number | null;
+  agents: number | null;
   tags: number | null;
   lastTag: string | null;
 }
@@ -60,16 +93,20 @@ export async function getAliveStats(): Promise<AliveStats> {
   const weeks = participation?.all ?? [];
   const commits30d = weeks.length >= 4 ? weeks.slice(-4).reduce((a, b) => a + b, 0) : null;
 
-  const humans = (contributors ?? []).filter((c) => {
+  // Every contributor counts, agents included. The project is built and shipped by
+  // agents; stripping them out of the number hid the most interesting fact about it.
+  const everyone = (contributors ?? []).filter((c) => (c.login ?? "") !== "");
+  const agents = everyone.filter((c) => {
     const login = c.login ?? "";
-    return login !== "" && !isBot(login) && c.type !== "Bot";
+    return login.endsWith("[bot]") || login === "paystage" || login === "dependabot[bot]";
   });
 
   const tagList = tags ?? [];
 
   return {
     commits30d,
-    contributors: contributors === null ? null : humans.length,
+    contributors: contributors === null ? null : everyone.length,
+    agents: contributors === null ? null : agents.length,
     tags: tags === null ? null : tagList.length,
     lastTag: tagList[0]?.name ?? null,
   };
@@ -80,12 +117,12 @@ function fmt(value: number | null): string {
 }
 
 export async function AliveStrip() {
-  const stats = await getAliveStats();
+  const [stats, installs] = await Promise.all([getAliveStats(), npmWeekly()]);
 
   const items = [
     { value: fmt(stats.commits30d), label: "commits, last 30 days" },
-    { value: fmt(stats.contributors), label: "human contributors" },
     { value: fmt(stats.tags), label: "tagged releases" },
+    { value: fmt(installs), label: "npm installs this week" },
     { value: stats.lastTag ?? "—", label: "latest tag" },
   ];
 
@@ -100,9 +137,14 @@ export async function AliveStrip() {
         ))}
       </div>
       <p className="lp-wrap lp-alive-note">
-        Read from the public GitHub repository, cached hourly. Contributors excludes
-        bots; commits are the last four weeks, because a lifetime total would flatter
-        without showing momentum.{" "}
+        Commits and releases are last four weeks; installs include our own CI and
+        mirrors — subtract nothing, just know what you are reading.{" "}
+        <strong>
+          This project is written, tested and released by AI agents
+        </strong>
+        , which is the point rather than a caveat: an agent-payment tool developed the
+        way its users operate. The commit history, CI logs and release provenance are
+        all public.{" "}
         <a href="https://github.com/base-buzz/paystage" rel="noopener">
           See the work
         </a>{" "}
