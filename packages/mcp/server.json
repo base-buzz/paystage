@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "xyz.paystage/mcp",
+  "name": "io.github.base-buzz/mcp",
   "title": "PayStage",
   "description": "Umbrella MCP: payment preflight, auth watch, HIP-3 trade preflight, velocity checks",
   "version": "0.3.3",

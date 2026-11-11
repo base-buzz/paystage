@@ -30,7 +30,7 @@ The package exposes a `stdio` MCP server (bin: `paystage-mcp`).
   "mcpServers": {
     "paystage": {
       "command": "npx",
-      "args": ["-y", "@paystage/mcp"],
+      "args": ["-y", "-p", "@paystage/mcp", "paystage-mcp"],
       "env": {
         "PAYSTAGE_POLICY_PATH": "./policy.json"
       }

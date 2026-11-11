@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "xyz.paystage/trade-preflight",
+  "name": "io.github.base-buzz/trade-preflight",
   "title": "PayStage Trade Preflight",
   "description": "MCP tool: evaluate HIP-3/trade.xyz orders against a local TradePolicy before trading",
   "version": "0.2.0",
