@@ -11,6 +11,9 @@ const baseEnv = {
   PAYSTAGE_PRICE: "$0.002",
   PAYSTAGE_NETWORK: "eip155:84532",
   FACILITATOR_URL: "https://x402.org/facilitator",
+  // These cases assert the paid gate. The free tier is on by default in production, so
+  // disable it here rather than having every gate test silently exercise the free path.
+  FREE_TIER_ENABLED: "false",
 };
 
 function mockFacilitatorClient() {
