@@ -166,6 +166,12 @@ jobs:
           # a silent skip would look like success.
           NO_TRUSTED_PUBLISHER="auth-watch trade-preflight"
           for manifest in */server.json; do
+            pkg=$(dirname "$manifest")
+            if printf '%s' " $NO_TRUSTED_PUBLISHER " | grep -q " $pkg "; then
+              echo "skipping $pkg — no npm Trusted Publisher for @paystage/$pkg yet."
+              echo "  fix: add the Trusted Publisher, delete it from NO_TRUSTED_PUBLISHER, republish."
+              continue
+            fi
             echo "publishing $manifest"
-            (cd "$(dirname "$manifest")" && "$GITHUB_WORKSPACE/mcp-publisher" publish)
+            (cd "$pkg" && "$GITHUB_WORKSPACE/mcp-publisher" publish)
           done
