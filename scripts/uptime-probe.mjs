@@ -37,7 +37,12 @@ const TIMEOUT_MS = 12_000;
 async function probe(target, init) {
   const started = Date.now();
   try {
-    const res = await fetch(target.url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
+    const res = await fetch(target.url, {
+      ...init,
+      // Label our own probe so it is never counted as a real caller in /api/metrics.
+      headers: { "x-paystage-source": "test", ...(init?.headers ?? {}) },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
     await res.arrayBuffer().catch(() => {});
     const ok = target.expect.includes(res.status);
     return {
@@ -63,7 +68,7 @@ for (const target of TARGETS) results.push(await probe(target));
 results.push(
   await probe(CHALLENGE, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "x-paystage-source": "test" },
     body: JSON.stringify({ payment_required: { x402Version: 2, accepts: [] }, policy: {} }),
   }),
 );

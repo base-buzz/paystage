@@ -35,7 +35,13 @@ const TIMEOUT_MS = Number(process.env.PAYSTAGE_CONFORMANCE_TIMEOUT_MS ?? 10_000)
 
 async function get(url, init = {}) {
   const started = Date.now();
-  const res = await fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
+  const res = await fetch(url, {
+    ...init,
+    // Our own checks must never be counted as real callers. `/api/metrics` treats an
+    // unlabelled request as real, so omitting this inflated realCount24h.
+    headers: { "x-paystage-source": "test", ...(init.headers ?? {}) },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
   const text = await res.text().catch(() => "");
   return { res, text, ms: Date.now() - started };
 }
@@ -87,9 +93,17 @@ async function checkSite() {
     cadenceRes.res.ok && cadence !== null,
     `HTTP ${cadenceRes.res.status}`);
   if (cadence) {
+    // "GitHub would not answer" is not "the cadence is wrong". The endpoint already says
+    // which by setting `available: false`, so treat that as a documented degradation
+    // rather than a failure — otherwise the check goes red every time the Worker's shared
+    // egress IP is rate limited, and a permanently red check teaches people to ignore it.
+    const unavailable = cadence.releases?.available === false || cadence.checks?.available === false;
+    const shapeOk = typeof cadence.releases?.count === "number" && Array.isArray(cadence.checks?.recent_runs);
     record("cadence: releases and checks reported",
-      typeof cadence.releases?.count === "number" && Array.isArray(cadence.checks?.recent_runs),
-      `${cadence.releases?.count ?? "?"} releases, ${cadence.checks?.passing ?? "?"}/${cadence.checks?.total ?? "?"} checks`);
+      shapeOk || unavailable,
+      unavailable
+        ? "data unavailable (GitHub rate limited the read) — not a cadence failure"
+        : `${cadence.releases?.count ?? "?"} releases, ${cadence.checks?.passing ?? "?"}/${cadence.checks?.total ?? "?"} checks`);
   }
 
   // The machine surfaces are what an agent reads before it trusts anything. If they
