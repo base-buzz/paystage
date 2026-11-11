@@ -5,6 +5,7 @@ import { evaluateRoutes } from "./routes/evaluate.js";
 import { publicStatusRoutes } from "./routes/public-status.js";
 import { receiptKeyRoutes } from "./routes/receipt-key.js";
 import { recordEvent, sourceFromHeaders } from "./telemetry.js";
+import { freeTierMiddleware } from "./free-tier.js";
 import { CORS_ORIGINS } from "./cors-origins.js";
 import {
   buildPaymentMiddleware,
@@ -24,7 +25,15 @@ export interface AppEnv {
   SUPABASE_SERVICE_ROLE_KEY?: string;
   /** PKCS#8 base64 ECDSA P-256 key. Unset = receipts are emitted unsigned. */
   RECEIPT_SIGNING_KEY_PKCS8?: string;
+  /** Free tier for callers with no payment and no account. Default on. */
+  FREE_TIER_ENABLED?: string;
+  FREE_TIER_DAILY_LIMIT?: string;
 }
+
+/** Context variables set by middleware and read further down the stack. */
+type Variables = {
+  paystageFree: boolean;
+};
 
 export interface CreateAppOptions {
   facilitatorClient?: FacilitatorClient;
@@ -128,7 +137,7 @@ function classifyStatus(status: number): {
   return { facilitator_status: null, error_class: null };
 }
 
-export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
+export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Variables: Variables }> {
   const facilitatorAuth: FacilitatorAuth | undefined =
     nonEmpty(env.CDP_API_KEY_ID) && nonEmpty(env.CDP_API_KEY_SECRET)
       ? { apiKeyId: env.CDP_API_KEY_ID, apiKeySecret: env.CDP_API_KEY_SECRET }
@@ -144,7 +153,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
     facilitatorAuth,
   };
 
-  const app = new Hono();
+  const app = new Hono<{ Variables: Variables }>();
 
   // CORS must be first so preflight is answered before payment middleware.
   app.use(
@@ -317,7 +326,16 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono {
         if (timer !== undefined) clearTimeout(timer);
       }
     });
-    app.use("*", buildPaymentMiddleware(cfg, opts.facilitatorClient));
+    // Free tier first: a caller without a payment signature may still be served, up to a
+    // daily per-IP allowance. Marked on the context so the payment middleware steps aside
+    // instead of answering 402 to a caller we already agreed to serve.
+    app.use("*", freeTierMiddleware({
+      enabled: env.FREE_TIER_ENABLED !== "false",
+      dailyLimit: Number(env.FREE_TIER_DAILY_LIMIT ?? 1000),
+    }));
+
+    const payMw = buildPaymentMiddleware(cfg, opts.facilitatorClient);
+    app.use("*", (c, next) => (c.get("paystageFree") === true ? next() : payMw(c, next)));
   }
 
   app.route("/", evaluateRoutes);

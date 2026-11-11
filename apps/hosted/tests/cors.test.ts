@@ -10,6 +10,8 @@ const baseEnv = {
   PAYSTAGE_PRICE: "$0.002",
   PAYSTAGE_NETWORK: "eip155:84532",
   FACILITATOR_URL: "https://x402.org/facilitator",
+  // This suite asserts the 402 challenge, so the free tier must be off here.
+  FREE_TIER_ENABLED: "false",
 };
 
 function mockFacilitatorClient() {

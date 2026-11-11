@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Pre-push gate. Three cheap checks that have each caught a real defect this month.
+#
+# Enabled with: git config core.hooksPath .githooks
+# Bypass once with: git push --no-verify  (say why in the commit, not in silence)
+set -uo pipefail
+root=$(git rev-parse --show-toplevel)
+cd "$root" || exit 1
+
+fail=0
+note() { printf 'pre-push: %s\n' "$1"; }
+
+# 1. Every package declares what it builds. @paystage/mcp shipped .d.ts files with no
+#    "types" field for three releases; nobody noticed because nobody imported it in TS.
+if ! node scripts/check-manifests.mjs; then
+  note "manifests failed — a package would ship untyped"
+  fail=1
+fi
+
+# 2. Any dependency added in this push gets scored before it lands.
+base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
+if [ -n "$base" ]; then
+  added=$(git diff "$base" HEAD -- 'packages/*/package.json' 'package.json' \
+    | grep -E '^\+\s+"[^"]+":\s+"[\^~0-9]' \
+    | sed -E 's/^\+\s+"([^"]+)".*/\1/' \
+    | grep -v '^@paystage/' | sort -u)
+  if [ -n "$added" ]; then
+    for dep in $added; do
+      if ! node scripts/npm-check.mjs "$dep" >/tmp/prepush-dep.txt 2>&1; then
+        status=$?
+        note "dependency $dep scored exit $status — read /tmp/prepush-dep.txt"
+        sed -n '1,10p' /tmp/prepush-dep.txt | sed 's/^/    /'
+        [ "$status" = "1" ] && fail=1
+      fi
+    done
+  fi
+fi
+
+# 3. A push that changes source must typecheck. Skipped for docs-only pushes.
+if [ -n "$base" ] && git diff --name-only "$base" HEAD | grep -qE '^(packages|apps)/.*\.(ts|tsx)$'; then
+  if ! npm run typecheck >/tmp/prepush-tc.txt 2>&1; then
+    note "typecheck failed — see /tmp/prepush-tc.txt"
+    tail -5 /tmp/prepush-tc.txt | sed 's/^/    /'
+    fail=1
+  fi
+fi
+
+if [ "$fail" = "1" ]; then
+  note "blocked. Fix above, or push with --no-verify and say why."
+  exit 1
+fi
+note "ok"

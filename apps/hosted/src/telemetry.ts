@@ -5,7 +5,9 @@
 //   * Never throw to caller; all failures are logged and swallowed.
 //   * Never log secrets (URL/key) — only reason codes.
 
-export type TelemetrySource = "real" | "synthetic" | "test";
+// `free-tier` is a real caller who did not pay: labelled separately so the free funnel can
+// be measured without ever inflating the count of paying customers.
+export type TelemetrySource = "real" | "synthetic" | "test" | "free-tier";
 
 export interface TelemetryEvent {
   source: TelemetrySource;
@@ -32,7 +34,7 @@ function nonEmpty(v: string | undefined | null): v is string {
 }
 
 function isValidSource(v: string | null | undefined): v is TelemetrySource {
-  return v === "real" || v === "synthetic" || v === "test";
+  return v === "real" || v === "synthetic" || v === "test" || v === "free-tier";
 }
 
 /**
