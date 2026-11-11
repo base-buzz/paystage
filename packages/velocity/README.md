@@ -81,7 +81,7 @@ Amounts may be given as `amount_atomic` (decimal string of atomic units) or as
 Via the PayStage umbrella MCP server:
 
 ```sh
-npx @paystage/mcp
+npx -y -p @paystage/mcp paystage-mcp
 ```
 
 The umbrella registers `evaluate_velocity` alongside the other PayStage tools.
