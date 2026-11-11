@@ -31,21 +31,34 @@ const NPM_PACKAGES = [
   "@paystage/trade-preflight",
 ];
 
-async function npmWeekly(): Promise<number | null> {
+/**
+ * Weekly and all-time installs across every published package. Both are shown because
+ * the weekly number says "alive now" and the total says "this has been used for a while" —
+ * different claims, and a visitor can read either one without the other being implied.
+ */
+async function npmDownloads(): Promise<{ week: number | null; total: number | null }> {
+  const fetchCount = async (path: string): Promise<number | null> => {
+    try {
+      const res = await fetch(`https://api.npmjs.org/downloads/point/${path}`, {
+        next: { revalidate: 3600 },
+      });
+      if (!res.ok) return null;
+      const body = (await res.json()) as { downloads?: number };
+      return body.downloads ?? 0;
+    } catch {
+      return null;
+    }
+  };
+
   try {
-    const results = await Promise.all(
-      NPM_PACKAGES.map(async (name) => {
-        const res = await fetch(`https://api.npmjs.org/downloads/point/last-week/${name}`, {
-          next: { revalidate: 3600 },
-        });
-        if (!res.ok) return 0;
-        const body = (await res.json()) as { downloads?: number };
-        return body.downloads ?? 0;
-      }),
-    );
-    return results.reduce((a, b) => a + b, 0);
+    const [weekCounts, totalCounts] = await Promise.all([
+      Promise.all(NPM_PACKAGES.map((name) => fetchCount(`last-week/${name}`))),
+      Promise.all(NPM_PACKAGES.map((name) => fetchCount(`2026-01-01:${new Date().toISOString().slice(0, 10)}/${name}`))),
+    ]);
+    const sum = (xs: Array<number | null>) => (xs.some((x) => x === null) ? null : xs.reduce<number>((a, b) => a + (b ?? 0), 0));
+    return { week: sum(weekCounts), total: sum(totalCounts) };
   } catch {
-    return null;
+    return { week: null, total: null };
   }
 }
 
@@ -117,12 +130,13 @@ function fmt(value: number | null): string {
 }
 
 export async function AliveStrip() {
-  const [stats, installs] = await Promise.all([getAliveStats(), npmWeekly()]);
+  const [stats, downloads] = await Promise.all([getAliveStats(), npmDownloads()]);
 
   const items = [
     { value: fmt(stats.commits30d), label: "commits, last 30 days" },
     { value: fmt(stats.tags), label: "tagged releases" },
-    { value: fmt(installs), label: "npm installs this week" },
+    { value: fmt(downloads.week), label: "npm installs this week" },
+    { value: fmt(downloads.total), label: "npm installs all time" },
     { value: stats.lastTag ?? "—", label: "latest tag" },
   ];
 
