@@ -82,7 +82,7 @@ export default function LandingPage() {
                 >
                   Get started
                 </a>
-                <code className="lp-btn lp-btn-ghost">npx -y @paystage/mcp</code>
+                <code className="lp-btn lp-btn-ghost">npx -y -p @paystage/mcp paystage-mcp</code>
               </div>
               <p className="lp-hero-note">
                 No key, no config, no account. MIT licensed. Holds no keys and never signs.
@@ -343,7 +343,7 @@ export default function LandingPage() {
             <pre className="lp-code">
               <code>
                 <span className="c"># 1. starts with no key and no config</span>
-                {"\n"}npx -y @paystage/mcp{"\n\n"}
+                {"\n"}npx -y -p @paystage/mcp paystage-mcp{"\n\n"}
                 <span className="c"># 2. run one evaluation against the example policy</span>
                 {"\n"}
                 <span className="c">{"#    → returns review, with a named reason"}</span>
@@ -426,7 +426,7 @@ export default function LandingPage() {
             <div className="lp-section-head">
               <h2 className="lp-h2">The five tools</h2>
               <p className="lp-h2-note">
-                Installed together by <code>npx -y @paystage/mcp</code>, or one package at
+                Installed together by <code>npx -y -p @paystage/mcp paystage-mcp</code>, or one package at
                 a time.
               </p>
             </div>

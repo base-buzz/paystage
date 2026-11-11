@@ -89,7 +89,7 @@ payment.
 ## Install and verify
 
 \`\`\`sh
-npx -y @paystage/mcp
+npx -y -p @paystage/mcp paystage-mcp
 npm audit signatures
 \`\`\`
 

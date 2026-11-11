@@ -10,10 +10,10 @@ Published on npm as **`@paystage/mcp`** — see the [npm page](https://www.npmjs
 ## Install
 
 ```sh
-npx -y @paystage/mcp
+npx -y -p @paystage/mcp paystage-mcp
 ```
 
-The server waits silently for an agent app to connect. That's normal; press Ctrl+C to exit. To try the tools without an app, run `npx @modelcontextprotocol/inspector npx -y @paystage/mcp`.
+The server waits silently for an agent app to connect. That's normal; press Ctrl+C to exit. To try the tools without an app, run `npx @modelcontextprotocol/inspector npx -y -p @paystage/mcp paystage-mcp`.
 
 Or:
 

@@ -157,7 +157,7 @@ export const PAYSTAGE_MANIFEST = {
     { kind: "secrets", detail: "none read by PayStage; no key custody" },
   ],
   verify: [
-    "npx -y @paystage/mcp",
+    "npx -y -p @paystage/mcp paystage-mcp",
     "npm audit signatures",
     "node apps/hosted/scripts/conformance.mjs",
     "npx -y -p @paystage/mcp paystage-verify <receipt.json>",

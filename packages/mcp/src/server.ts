@@ -1,4 +1,13 @@
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import { createRequire } from "node:module";
+
+/**
+ * Report the real package version. This was hardcoded as "0.3.0" and stayed there two
+ * releases, so every client logging serverInfo was told the wrong version.
+ */
+const SERVER_VERSION = (
+  createRequire(import.meta.url)("../package.json") as { version: string }
+).version;
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { loadPolicy, parsePolicy } from "@paystage/policy";
@@ -300,7 +309,7 @@ function registerAllTools(server: McpServer): void {
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "paystage",
-    version: "0.3.0",
+    version: SERVER_VERSION,
   });
   registerAllTools(server);
   return server;
