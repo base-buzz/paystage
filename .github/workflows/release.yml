@@ -70,7 +70,7 @@ jobs:
       - name: Publish packages (dependency order, skip existing, with provenance)
         run: |
           set -euo pipefail
-          PKGS="policy preflight auth-watch velocity trade-preflight mcp"
+          PKGS="policy preflight auth-watch velocity trade-preflight x402-guard mcp"
 
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
             echo "stable release from tag ${GITHUB_REF_NAME}"

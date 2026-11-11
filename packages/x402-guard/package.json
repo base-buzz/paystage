@@ -1,0 +1,47 @@
+{
+  "name": "@paystage/x402-guard",
+  "version": "0.1.0",
+  "description": "Preflight policy gate for x402-fetch: evaluate the payment before the wallet signs, and refuse the ones your policy denies",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "x402",
+    "x402-fetch",
+    "agent-payments",
+    "payment-policy",
+    "spend-limits",
+    "base"
+  ],
+  "dependencies": {
+    "@paystage/policy": "0.2.1",
+    "@paystage/preflight": "0.2.2"
+  },
+  "peerDependencies": {
+    "x402-fetch": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "x402-fetch": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}
