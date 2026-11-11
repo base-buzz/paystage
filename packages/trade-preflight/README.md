@@ -6,7 +6,7 @@ MCP tool: evaluate HIP-3 / trade.xyz orders against a local `TradePolicy` before
 > orders, or recommend trades. It evaluates a proposed order against rules you define and
 > returns a decision.
 
-Published on npm as **`@paystage/trade-preflight@0.2.0`**.
+Published on npm as **`@paystage/trade-preflight`**.
 
 ## What it does
 
