@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "max_amount": {
+    "value": "0.20",
+    "asset": "USDC",
+    "decimals": 6
+  },
+  "daily_cap": {
+    "value": "15.00",
+    "asset": "USDC",
+    "decimals": 6
+  },
+  "allowed_pay_to": [
+    "0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE",
+    "0xF752eEB75d3Bea24AA867ad93bfd8EF5a2F431B9",
+    "0x6A706D6Fcf192C15fB592d7502258Ed41425DD36",
+    "0x058D0Cc5CC97e61e8A9f38D6d6365bce525921B2",
+    "0x93053f1e7A5eFEDa532Fe69CbbE43cBEc3A0F13f",
+    "0xd6fCE15298Fc9D60f867d9455D497177Da9BFB0a"
+  ],
+  "allowed_assets": [
+    {
+      "symbol": "USDC",
+      "decimals": 6,
+      "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "network": "eip155:8453"
+    },
+    {
+      "symbol": "USDC",
+      "decimals": 6,
+      "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "network": "eip155:84532"
+    }
+  ],
+  "allowed_networks": [
+    "eip155:8453",
+    "eip155:84532"
+  ],
+  "max_timeout_seconds": 300,
+  "require_human_above": {
+    "value": "0.10",
+    "asset": "USDC",
+    "decimals": 6
+  },
+  "unknown_payee": "review",
+  "max_auth_validity_seconds": 900,
+  "allowed_spenders": [
+    "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+  ],
+  "disallow_unlimited_approvals": true,
+  "velocity": {
+    "windows": [
+      {
+        "window_seconds": 60,
+        "max_count": 10
+      },
+      {
+        "window_seconds": 3600,
+        "max_amount": {
+          "value": "5.00",
+          "asset": "USDC",
+          "decimals": 6
+        }
+      }
+    ]
+  },
+  "agents": {
+    "crawler": {
+      "max_amount": {
+        "value": "0.02",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "daily_cap": {
+        "value": "1.00",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "allowed_networks": [
+        "eip155:84532"
+      ],
+      "unknown_payee": "deny"
+    },
+    "analyst": {
+      "max_amount": {
+        "value": "0.20",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "daily_cap": {
+        "value": "15.00",
+        "asset": "USDC",
+        "decimals": 6
+      }
+    }
+  }
+}

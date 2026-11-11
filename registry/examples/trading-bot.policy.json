@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "max_amount": {
+    "value": "25.00",
+    "asset": "USDC",
+    "decimals": 6
+  },
+  "daily_cap": {
+    "value": "100.00",
+    "asset": "USDC",
+    "decimals": 6
+  },
+  "allowed_pay_to": [
+    "0xA55B06462A2e48661bAdF22f5841F95aE654b716"
+  ],
+  "allowed_assets": [
+    {
+      "symbol": "USDC",
+      "decimals": 6,
+      "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "network": "eip155:8453"
+    }
+  ],
+  "allowed_networks": [
+    "eip155:8453"
+  ],
+  "max_timeout_seconds": 120,
+  "require_human_above": {
+    "value": "10.00",
+    "asset": "USDC",
+    "decimals": 6
+  },
+  "unknown_payee": "deny",
+  "velocity": {
+    "windows": [
+      {
+        "window_seconds": 60,
+        "max_count": 2,
+        "max_amount": {
+          "value": "25.00",
+          "asset": "USDC",
+          "decimals": 6
+        }
+      },
+      {
+        "window_seconds": 3600,
+        "max_amount": {
+          "value": "50.00",
+          "asset": "USDC",
+          "decimals": 6
+        }
+      }
+    ]
+  },
+  "agents": {
+    "market-scout": {
+      "max_amount": {
+        "value": "0.10",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "daily_cap": {
+        "value": "5.00",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "require_human_above": {
+        "value": "0.05",
+        "asset": "USDC",
+        "decimals": 6
+      }
+    },
+    "position-manager": {
+      "max_amount": {
+        "value": "25.00",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "daily_cap": {
+        "value": "100.00",
+        "asset": "USDC",
+        "decimals": 6
+      }
+    }
+  }
+}
