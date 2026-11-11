@@ -163,7 +163,8 @@ export async function AliveStrip() {
           See the work
         </a>{" "}
         ·{" "}
-        <a href="/contribute">Ways to contribute</a>
+        <a href="/contribute">Ways to contribute</a> ·{" "}
+        <a href="/try">Try the gate — no install</a>
       </p>
     </section>
   );
