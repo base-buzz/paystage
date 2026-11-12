@@ -58,6 +58,14 @@ export default function LandingPage() {
       </header>
 
       <main>
+      {/* Atmospheric background: three drifting colour fields plus a grain overlay. Fixed,
+          purely decorative, and disabled under prefers-reduced-motion. */}
+      <div className="lp-aurora" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="lp-grain" aria-hidden="true" />
         <section className="lp-hero">
           <div className="lp-wrap lp-hero-grid">
             <div>
@@ -117,6 +125,45 @@ export default function LandingPage() {
                 </p>
               </div>
             </aside>
+          </div>
+        </section>
+
+
+        <section className="lp-wrap" aria-label="Where this is verifiable">
+          <div className="lp-badges">
+            <a
+              className="lp-badge lp-glass"
+              href="https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz"
+            >
+              <span className="dot" aria-hidden="true" />
+              listed in the MCP Registry
+            </a>
+            <a className="lp-badge lp-glass" href="https://www.npmjs.com/package/@paystage/mcp">
+              <span className="dot" aria-hidden="true" />
+              npm · published with provenance
+            </a>
+            <a
+              className="lp-badge lp-glass"
+              href="https://github.com/base-buzz/paystage/blob/main/LICENSE"
+            >
+              <span className="dot" aria-hidden="true" />
+              MIT licensed
+            </a>
+            <a
+              className="lp-badge lp-glass"
+              href="https://github.com/coinbase/x402"
+            >
+              <span className="dot" aria-hidden="true" />
+              builds on x402 · Base
+            </a>
+            <span className="lp-badge lp-glass lp-badge-static">
+              <span className="dot" aria-hidden="true" />
+              runs on Cloudflare Workers
+            </span>
+            <a className="lp-badge lp-glass" href="https://arcade.dev">
+              <span className="dot" aria-hidden="true" />
+              callable through Arcade
+            </a>
           </div>
         </section>
 
