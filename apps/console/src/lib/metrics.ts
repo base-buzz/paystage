@@ -21,6 +21,8 @@ type EventRow = {
   latency_ms: number | null;
   amount_usdc: number | string | null;
   tx_hash: string | null;
+  /** Added 2026-11-12: the address that settled, from the PAYMENT-RESPONSE receipt. */
+  payer: string | null;
   request_id: string | null;
   facilitator_status: string | null;
   error_class: string | null;
@@ -67,6 +69,7 @@ function mapEvent(row: EventRow): TelemetryEvent {
     created_at: row.ts,
     latency_ms: typeof row.latency_ms === "number" ? row.latency_ms : null,
     tx_hash: row.tx_hash ?? null,
+    payer: row.payer ?? null,
   };
 }
 
@@ -182,6 +185,7 @@ function emptySummary(note?: string): MetricsSummary {
   return {
     configured: false,
     realCount24h: 0,
+    uniquePayers24h: 0,
     syntheticCount24h: 0,
     testCount24h: 0,
     issuesOpen: 0,
@@ -271,6 +275,19 @@ export async function getMetrics(): Promise<MetricsSummary> {
     const events = (eventRows ?? []).map(mapEvent);
     const incidents = (incidentRows ?? []).map(mapIncident);
 
+    // Distinct addresses that actually settled, over real traffic only. A payer is counted
+    // once no matter how many calls they made, and only when a settlement receipt gave us an
+    // address — an unparseable receipt contributes nothing rather than a placeholder.
+    const payers = new Set<string>();
+    for (const event of events) {
+      if (event.source !== "real") continue;
+      if (!event.tx_hash) continue;
+      if (typeof event.payer === "string" && /^0x[0-9a-f]{40}$/i.test(event.payer)) {
+        payers.add(event.payer.toLowerCase());
+      }
+    }
+    const uniquePayers24h = payers.size;
+
     let realCount24h = 0;
     let syntheticCount24h = 0;
     let testCount24h = 0;
@@ -292,6 +309,7 @@ export async function getMetrics(): Promise<MetricsSummary> {
     return {
       configured: true,
       realCount24h,
+    uniquePayers24h,
       syntheticCount24h,
       testCount24h,
       issuesOpen,
