@@ -179,19 +179,70 @@ function compareVersions(a, b) {
   return 0;
 }
 
+const REAL_POLICY = {
+  version: 1,
+  max_amount: { value: "0.05", asset: "USDC", decimals: 6 },
+  allowed_pay_to: ["0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE"],
+  allowed_assets: [
+    {
+      symbol: "USDC",
+      decimals: 6,
+      address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      network: "eip155:8453",
+    },
+  ],
+  allowed_networks: ["eip155:8453"],
+  max_timeout_seconds: 300,
+  unknown_payee: "deny",
+};
+
+const REAL_CHALLENGE = {
+  x402Version: 2,
+  accepts: [
+    {
+      scheme: "exact",
+      network: "eip155:8453",
+      amount: "2000",
+      asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      payTo: "0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE",
+      maxTimeoutSeconds: 300,
+    },
+  ],
+};
+
 async function checkUnpaidChallenge() {
+  // Written before the free tier existed, this sent `{accepts: [], policy: {}}` and demanded 402.
+  // The free tier now answers unpaid calls, and that body is invalid input, so the kit began
+  // reporting 400 as a conformance failure — while the actual product was working. A check that
+  // tests the payment middleware instead of the evaluator will always drift out of date.
+  //
+  // It now sends a real challenge and policy, and accepts every correct outcome:
+  //   200 with a verdict  -> the free tier served it (no payment, no signup)
+  //   402                 -> daily allowance spent, payment required
+  //   503 upstream_timeout-> documented fail-closed degradation (SLO.md), retryable
   const { res, text } = await get(`${API}/v1/evaluate_mcp_payment`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ payment_required: { x402Version: 2, accepts: [] }, policy: {} }),
+    headers: { "content-type": "application/json", "x-paystage-source": "test" },
+    body: JSON.stringify({ payment_required: REAL_CHALLENGE, policy: REAL_POLICY }),
   });
-  // 402 is the normal answer. 503 upstream_timeout is the documented fail-closed
-  // state when facilitator discovery backs off (SLO.md) — a retryable degradation,
-  // not a conformance failure. Anything else, or no answer at all, is a failure.
+
+  let decision = null;
+  if (res.status === 200) {
+    try {
+      decision = JSON.parse(text)?.decision ?? null;
+    } catch {}
+  }
   const degraded = res.status === 503 && /upstream_timeout/.test(text);
-  record("api: unpaid evaluate answers, challenge or documented degradation",
-    res.status === 402 || degraded,
-    `HTTP ${res.status}${degraded ? " (upstream_timeout — retryable)" : ""} ${degraded ? "" : text.slice(0, 40)}`);
+  const ok = (res.status === 200 && ["pay", "review", "do_not_pay"].includes(decision)) ||
+    res.status === 402 || degraded;
+
+  record(
+    "api: unpaid evaluate answers with a verdict, a challenge, or documented degradation",
+    ok,
+    res.status === 200
+      ? `HTTP 200 decision=${decision ?? "MALFORMED"}`
+      : `HTTP ${res.status}${degraded ? " (upstream_timeout — retryable)" : ` ${text.slice(0, 40)}`}`,
+  );
 }
 
 async function checkDocsNotLying() {
