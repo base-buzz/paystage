@@ -143,6 +143,10 @@ export default function LandingPage() {
               <span className="dot" aria-hidden="true" />
               listed in the MCP Registry
             </a>
+            <a className="lp-badge lp-glass" href="https://glama.ai/mcp/servers/base-buzz/paystage">
+              <span className="dot" aria-hidden="true" />
+              listed on Glama
+            </a>
             <a className="lp-badge lp-glass" href="https://www.npmjs.com/package/@paystage/mcp">
               <span className="dot" aria-hidden="true" />
               npm · published with provenance
