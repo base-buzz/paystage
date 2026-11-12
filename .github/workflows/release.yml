@@ -174,5 +174,16 @@ jobs:
               continue
             fi
             echo "publishing $manifest"
-            (cd "$pkg" && "$GITHUB_WORKSPACE/mcp-publisher" publish)
+            out=$( (cd "$pkg" && "$GITHUB_WORKSPACE/mcp-publisher" publish) 2>&1 ) && { printf '%s\n' "$out"; continue; }
+            printf '%s\n' "$out"
+            # The registry validates each version once. A release tag republishes every
+            # manifest, so an unchanged sibling is expected to collide — that is not a
+            # failure, and treating it as one aborts the loop before the package that
+            # actually changed. Anything else is a real failure.
+            if printf '%s' "$out" | grep -q "cannot publish duplicate version"; then
+              echo "  already registered at this version; skipping"
+              continue
+            fi
+            echo "  registry publish failed for $pkg"
+            exit 1
           done
