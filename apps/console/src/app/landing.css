@@ -453,6 +453,9 @@
 
 .lp-code {
   margin: 0;
+  /* Long shell lines must scroll inside the block. Without max-width the block grew to 438px on
+     a 390px screen and widened the whole document. */
+  max-width: 100%;
   border: 1px solid var(--lp-line);
   border-radius: 10px;
   background: #0a0c11;
@@ -462,6 +465,14 @@
   font-size: 12.5px;
   line-height: 1.65;
   color: #cfd6e4;
+}
+
+/* On a narrow screen, wrap rather than scroll: a horizontal scrollbar inside a code block reads
+   as broken, and the reader is usually on a phone when they copy the first command. */
+.lp-code code {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .lp-code .k {
@@ -989,4 +1000,122 @@ body {
 
 .lp-badge-static {
   cursor: default;
+}
+
+/* Copy affordance: the command is meant to be copied, not read. */
+.lp-copy {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  /* The command is 40+ characters; on a 390px screen it must wrap or scroll inside its own box,
+     never widen the page. Measured: without this the document was 438px wide. */
+  max-width: 100%;
+  min-width: 0;
+}
+
+.lp-copy-code {
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.lp-copy-code {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.lp-copy-btn {
+  font: inherit;
+  font-size: 13px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--lp-fg) 22%, transparent);
+  border-left: 0;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  background: color-mix(in srgb, var(--lp-fg) 6%, transparent);
+  color: var(--lp-dim);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.lp-copy-btn:hover {
+  color: var(--lp-fg);
+  background: color-mix(in srgb, var(--lp-fg) 12%, transparent);
+}
+
+/* The three objections that stop a payment-safety tool being tried, stated next to the CTA. */
+.lp-reassure {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--lp-dim);
+}
+
+.lp-reassure li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.lp-reassure li::before {
+  content: "✓";
+  color: var(--lp-mint);
+  line-height: 1.45;
+}
+
+/* Scrim behind hero text so the aurora cannot push contrast below AA at its brightest point. */
+.lp-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(680px 420px at 18% 30%, rgba(7, 8, 11, 0.72), transparent 70%);
+}
+
+.lp-hero {
+  position: relative;
+}
+
+.lp-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.lp-faq {
+  display: grid;
+  gap: 10px;
+  margin-top: 26px;
+  max-width: 780px;
+}
+
+.lp-faq-item {
+  border: 1px solid var(--lp-line-soft);
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: color-mix(in srgb, var(--lp-panel) 55%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.lp-faq-q {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15.5px;
+}
+
+.lp-faq-a {
+  margin: 10px 0 0;
+  color: var(--lp-dim);
+  font-size: 14.5px;
+  line-height: 1.55;
+  max-width: 68ch;
+}
+
+.lp-cta-final {
+  padding: 84px 0 96px;
+  border-top: 1px solid var(--lp-line-soft);
+  background: radial-gradient(620px 320px at 50% 0%, rgba(110, 231, 183, 0.1), transparent 65%);
 }
