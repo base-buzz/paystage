@@ -7,6 +7,26 @@ PayStage umbrella MCP server: payment preflight, auth watch, HIP-3 trade preflig
 
 Published on npm as **`@paystage/mcp`** — see the [npm page](https://www.npmjs.com/package/@paystage/mcp) for the current version rather than a number here that can go stale.
 
+
+## What a valid receipt means
+
+`paystage-verify` returning exit 0 means **the issuer signed this receipt and it has not
+been altered**. That is all it means.
+
+It does **not** mean the payment happened — settlement is a separate on-chain event. It does
+not mean the verdict was correct — a receipt records a decision, not the soundness of the
+policy behind it. And it does not identify the caller; no caller identity is bound into the
+payload, by design.
+
+Two narrower points a careful reader should know:
+
+- **`key_source` tells you where the verifying key came from**: `published` (PayStage's
+  endpoint) or `supplied` (someone passed `--key`). A receipt verified against a supplied key
+  proves only that the holder of *that* key signed it.
+- **A receipt with `signed: false` is still useful**: the request and policy digests are
+  checkable, so "over these inputs" survives even when provenance does not.
+
+
 ## Install
 
 ```sh

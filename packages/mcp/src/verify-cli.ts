@@ -101,7 +101,10 @@ async function main(argv: string[]): Promise<number> {
   const verdict: VerifyVerdict = await verifyReceipt(receipt, options);
 
   if (asJson) {
-    process.stdout.write(`${JSON.stringify(verdict)}\n`);
+    // `key_source` says published-or-supplied; this says WHICH. A machine consumer that
+    // cannot tell those apart can be handed a forged receipt and a matching key.
+    const source = keyPath !== undefined ? `file:${keyPath}` : (keyUrl ?? DEFAULT_KEY_URL);
+    process.stdout.write(`${JSON.stringify({ ...verdict, key_source_detail: source })}\n`);
   } else if (verdict.ok) {
     process.stdout.write(
       [
