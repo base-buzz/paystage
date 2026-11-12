@@ -30,7 +30,7 @@
   ],
   "dependencies": {
     "@paystage/policy": "0.2.1",
-    "@paystage/preflight": "0.2.2"
+    "@paystage/preflight": "0.2.3"
   },
   "peerDependencies": {
     "x402-fetch": ">=1.0.0"
