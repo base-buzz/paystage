@@ -110,6 +110,25 @@ describe("duplicate symbols, and the unit the ceiling is computed in", () => {
           { symbol: "USDC", decimals: 2, address: "0x2222222222222222222222222222222222222222", network: "eip155:8453" },
         ],
       }),
-    ).toThrow(/duplicate asset symbol/i);
+    ).toThrow(/duplicate asset .*USDC@eip155:8453/i);
+  });
+});
+
+describe("the same ticker on different chains is not a duplicate", () => {
+  it("accepts USDC on mainnet and USDC on Sepolia", () => {
+    // CI caught the first version of this rule rejecting a real fixture: a ticker is only
+    // ambiguous within one chain, and cross-chain USDC is a normal policy.
+    expect(() =>
+      parsePolicy({
+        ...base,
+        allowed_networks: ["eip155:8453", "eip155:84532"],
+        allow_uncapped_assets: true,
+        max_amount: { value: "0.05", asset: "USDC", decimals: 6 },
+        allowed_assets: [
+          usdcAsset,
+          { symbol: "USDC", decimals: 6, address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", network: "eip155:84532" },
+        ],
+      }),
+    ).not.toThrow();
   });
 });
