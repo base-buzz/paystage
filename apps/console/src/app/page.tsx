@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./landing.css";
 import { AliveStrip } from "@/components/AliveStrip";
 import { CopyCommand } from "@/components/CopyCommand";
+import { LogoBanner } from "@/components/LogoBanner";
+import { AgentPrompt } from "@/components/AgentPrompt";
 import { CadencePanel } from "@/components/CadencePanel";
 import { SOCIALS } from "@/lib/agent-manifest";
 
@@ -100,6 +102,8 @@ export default function LandingPage() {
                 <li>holds no keys and never signs; the agent is still the only signer</li>
                 <li>no account, no email: an agent cannot fill in a signup form</li>
               </ul>
+
+              <AgentPrompt />
             </div>
 
             <aside className="lp-gate" aria-label="Example evaluation">
@@ -200,6 +204,8 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        <LogoBanner />
 
         <AliveStrip />
 
