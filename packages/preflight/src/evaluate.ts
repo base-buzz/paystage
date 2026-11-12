@@ -94,10 +94,12 @@ function evaluateAccept(accept: AcceptOption, policy: Policy): AcceptResult {
 
   // Rule 5: policy-level max_amount, only if asset symbol matches
   if (eq(policy.max_amount.asset, asset.symbol)) {
-    const maxAtomic = humanToAtomic(
-      policy.max_amount.value,
-      policy.max_amount.decimals,
-    );
+    // The ceiling is expressed in the unit of the asset this challenge actually matched —
+    // NOT in `max_amount.decimals`. Those can disagree when a policy lists the same ticker
+    // twice at different decimals, and a ceiling computed in one unit then compared against
+    // an amount in another fails open: 400 tokens read as 0.04 against a 0.05 cap.
+    // `max_amount.decimals` remains a parse-time cross-check; it must not define the unit.
+    const maxAtomic = humanToAtomic(policy.max_amount.value, asset.decimals);
     if (amount > maxAtomic) {
       reasons.push(
         `amount ${atomicToHuman(amount, asset.decimals)} ${asset.symbol} exceeds max_amount ${policy.max_amount.value} ${policy.max_amount.asset}`,

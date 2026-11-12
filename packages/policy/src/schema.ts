@@ -130,7 +130,21 @@ export const PolicySchema = BasePolicySchema.superRefine((p, ctx) => {
     });
   }
 
-  // 3. An allowed asset with no cap is uncapped, which contradicts "max_amount is the ceiling".
+  // 3. Duplicate symbols make the checks above ambiguous: `find()` picks the first, and the
+  //    uncapped filter matches by symbol, so a second entry with the same ticker and
+  //    different decimals was neither capped nor caught. A policy needing two same-ticker
+  //    assets can give one of them a distinct symbol.
+  const symbols = p.allowed_assets.map((a) => a.symbol);
+  const dupes = symbols.filter((s, i) => symbols.indexOf(s) !== i);
+  if (dupes.length > 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["allowed_assets"],
+      message: `duplicate asset symbol ${[...new Set(dupes)].map((d) => `"${d}"`).join(", ")} — one symbol, one asset; rename one if they are genuinely different`,
+    });
+  }
+
+  // 4. An allowed asset with no cap is uncapped, which contradicts "max_amount is the ceiling".
   const uncapped = p.allowed_assets.filter((a) => a.symbol !== p.max_amount.asset);
   if (uncapped.length > 0 && p.allow_uncapped_assets !== true) {
     ctx.addIssue({

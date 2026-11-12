@@ -94,3 +94,22 @@ describe("an allowed asset with no cap is uncapped, and must be opted into", () 
     ).not.toThrow();
   });
 });
+
+describe("duplicate symbols, and the unit the ceiling is computed in", () => {
+  it("refuses two entries with the same symbol and different decimals", () => {
+    // The hole in the first fix: checks identified an asset by symbol, so a second "USDC"
+    // at 2 decimals was neither capped nor caught. On that entry, 40,000 atomic units
+    // (400.00 tokens) was judged `pay` against a 0.05 cap — 8,000x over.
+    expect(() =>
+      parsePolicy({
+        ...base,
+        allow_uncapped_assets: true,
+        max_amount: { value: "0.05", asset: "USDC", decimals: 6 },
+        allowed_assets: [
+          usdcAsset,
+          { symbol: "USDC", decimals: 2, address: "0x2222222222222222222222222222222222222222", network: "eip155:8453" },
+        ],
+      }),
+    ).toThrow(/duplicate asset symbol/i);
+  });
+});
