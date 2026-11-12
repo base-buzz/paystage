@@ -10,27 +10,14 @@
  *
  * Node built-ins only (fetch, fs). No dependencies.
  *
- * IMPORTANT / READ BEFORE TRUSTING OUTPUT
- * ---------------------------------------
- * As of 2026-11-10, https://paystage.xyz/api/metrics does NOT expose payer
- * (sender) addresses. Each event is mapped by apps/console/src/lib/metrics.ts
- * `mapEvent()` to exactly:
- *     id, source, kind, status, route, message, created_at, latency_ms, tx_hash
- * The underlying public.events table (supabase/migrations/
- * 20261101080000_events_and_incidents.sql) has no sender column at all: it
- * records `pay_to` (the merchant address that receives funds) and `tx_hash`
- * (null for the 402 "payment_required" events that make up current traffic).
- * Neither is included in the public payload.
+ * STATUS 2026-11-12: this now works. The endpoint gained a `payer` field when the hosted
+ * service started reading the settlement receipt (route `PAYMENT-RESPONSE`), so a real payer
+ * address is finally recorded and exposed. Before that, the honest output was exit 2,
+ * "cannot determine" — not "0 payers", which would have been a fake metric.
  *
- * Consequence: this script cannot see payer addresses from this endpoint.
- * Rather than print a reassuring "0 payers, nothing new" result -- which would
- * be a fake metric and would violate the standing "no fake metrics" rule -- it
- * treats "no address-bearing field in the payload" as a hard error (exit 2).
- * That keeps the check honest: it only ever reports addresses it genuinely
- * read, and it cannot silently pass because the schema changed underneath it.
- *
- * If the endpoint later adds a sender field, add its name to ADDRESS_FIELDS
- * and the script starts working with no other changes.
+ * The guard is kept, not deleted: if the field disappears again, this must fail loudly
+ * rather than report a comfortable zero. A check that cannot tell "nobody paid" from "we
+ * cannot see who paid" is worse than no check.
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
