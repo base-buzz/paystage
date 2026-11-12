@@ -44,13 +44,14 @@ The server waits silently for an agent app to connect. That's normal; press Ctrl
 |---|---|
 | the gate inside an agent's payment loop | [`@paystage/x402-guard`](packages/x402-guard) |
 | the tools in Claude Desktop or Cursor | [`@paystage/mcp`](packages/mcp) |
+| nothing installed at all — connect to a URL | `https://api.paystage.xyz/mcp` (Streamable HTTP, listed in the [MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz) as a remote server) |
 | a verdict from your own service, hosting included | `POST https://api.paystage.xyz/v1/evaluate_mcp_payment` |
 | the evaluator as a library | [`@paystage/preflight`](packages/preflight) |
 
 ## Listed on
 
 - [mcp.so](https://mcp.so/servers/paystage-6d8a8f)
-- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=xyz.paystage)
+- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz)
 - [npm](https://www.npmjs.com/package/@paystage/mcp)
 - [GitHub](https://github.com/base-buzz/paystage)
 
