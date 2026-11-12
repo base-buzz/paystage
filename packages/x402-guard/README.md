@@ -20,11 +20,10 @@ changes how the request is made.
 npm install @paystage/x402-guard x402-fetch
 ```
 
-> **Not on npm yet.** The package is merged and tested, but publishing is waiting on an npm
-> Trusted Publisher entry. Until that lands, `npm install` returns 404 — build from source
-> with `npm run build -w @paystage/x402-guard` in the repository, or watch
-> [the repo](https://github.com/base-buzz/paystage). A README that invites an install that
-> 404s is worse than no README.
+> **Published, with one caveat.** `0.1.0` was published by hand on 2026-11-12, so it carries
+> **no provenance attestation** — the signed statement that the tarball was built by this
+> repository's CI. Every version after it is published by the release workflow with
+> provenance. If provenance matters to your supply-chain policy, pin `>0.1.0`.
 
 ```ts
 import { guardFetch } from "@paystage/x402-guard";

@@ -63,9 +63,10 @@ jobs:
       - name: Test
         run: npm test
 
-      # x402-guard is deliberately NOT in this list yet: npm Trusted Publishing is bound per
-      # package, and until its entry exists the publish 404s and takes the whole job down
-      # under `set -euo pipefail`. Add it back the moment the entry is configured.
+      # x402-guard joined on 2026-11-12, after its Trusted Publisher entry existed. Its
+      # 0.1.0 was published by hand and therefore carries no provenance; every version from
+      # here does. Do not add a package to this list before its publisher entry exists — the
+      # 404 takes the whole job down under `set -euo pipefail`.
       #
       # Tag push -> stable release on `latest`.
       # Schedule -> canary build on the `canary` tag, versioned by run number, so the
@@ -74,7 +75,7 @@ jobs:
       - name: Publish packages (dependency order, skip existing, with provenance)
         run: |
           set -euo pipefail
-          PKGS="policy preflight auth-watch velocity trade-preflight mcp"
+          PKGS="policy preflight x402-guard auth-watch velocity trade-preflight mcp"
 
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
             echo "stable release from tag ${GITHUB_REF_NAME}"

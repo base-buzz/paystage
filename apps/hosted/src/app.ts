@@ -6,6 +6,7 @@ import { publicStatusRoutes } from "./routes/public-status.js";
 import { receiptKeyRoutes } from "./routes/receipt-key.js";
 import { recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { freeTierMiddleware } from "./free-tier.js";
+import { settlementCaptureMiddleware } from "./settlement.js";
 import { CORS_ORIGINS } from "./cors-origins.js";
 import {
   buildPaymentMiddleware,
@@ -336,6 +337,9 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
 
     const payMw = buildPaymentMiddleware(cfg, opts.facilitatorClient);
     app.use("*", (c, next) => (c.get("paystageFree") === true ? next() : payMw(c, next)));
+    // After the payment middleware, read the settlement receipt it echoed. This is the only
+    // place the payer address exists — it is not in the request.
+    app.use("*", settlementCaptureMiddleware());
   }
 
   app.route("/", evaluateRoutes);

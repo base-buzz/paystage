@@ -19,6 +19,8 @@ export interface TelemetryEvent {
   amount_usdc?: number | null;
   pay_to?: string | null;
   tx_hash?: string | null;
+  /** The address that paid, lowercased. Null when the settlement receipt did not carry one. */
+  payer?: string | null;
   request_id?: string | null;
   facilitator_status?: string | null;
   error_class?: string | null;
@@ -85,6 +87,7 @@ export function recordEvent(
     amount_usdc: event.amount_usdc ?? null,
     pay_to: event.pay_to ?? null,
     tx_hash: event.tx_hash ?? null,
+    payer: event.payer ?? null,
     request_id: event.request_id ?? null,
     facilitator_status: event.facilitator_status ?? null,
     error_class: event.error_class ?? null,
