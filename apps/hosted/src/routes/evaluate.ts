@@ -44,6 +44,9 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
       request: normalized,
       policy,
       signingKeyPkcs8B64: (c.env as { RECEIPT_SIGNING_KEY_PKCS8?: string } | undefined)?.RECEIPT_SIGNING_KEY_PKCS8,
+      // Which build produced this verdict. Unset means the receipt says "unknown" rather
+      // than advertising a placeholder version as provenance.
+      serviceVersion: (c.env as { PAYSTAGE_SERVICE_VERSION?: string } | undefined)?.PAYSTAGE_SERVICE_VERSION,
     });
     return c.json({ ...decision, receipt });
   } catch (err) {
