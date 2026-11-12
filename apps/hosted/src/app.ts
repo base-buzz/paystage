@@ -7,6 +7,7 @@ import { receiptKeyRoutes } from "./routes/receipt-key.js";
 import { recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { freeTierMiddleware } from "./free-tier.js";
 import { settlementCaptureMiddleware } from "./settlement.js";
+import { mcpHandler } from "./mcp.js";
 import { CORS_ORIGINS } from "./cors-origins.js";
 import {
   buildPaymentMiddleware,
@@ -343,6 +344,12 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   }
 
   app.route("/", evaluateRoutes);
+
+  // Remote MCP endpoint. Mounted outside the payment gate on purpose: the gate protects the
+  // *evaluation* service, and an MCP client that cannot complete an x402 handshake still
+  // needs to discover tools. The evaluation itself runs with the caller's own policy.
+  const mcp = mcpHandler();
+  app.all("/mcp", (c) => mcp.fetch(c.req.raw));
 
   return app;
 }
