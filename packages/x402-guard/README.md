@@ -20,6 +20,12 @@ changes how the request is made.
 npm install @paystage/x402-guard x402-fetch
 ```
 
+> **Not on npm yet.** The package is merged and tested, but publishing is waiting on an npm
+> Trusted Publisher entry. Until that lands, `npm install` returns 404 — build from source
+> with `npm run build -w @paystage/x402-guard` in the repository, or watch
+> [the repo](https://github.com/base-buzz/paystage). A README that invites an install that
+> 404s is worse than no README.
+
 ```ts
 import { guardFetch } from "@paystage/x402-guard";
 import { privateKeyToAccount } from "viem/accounts";
