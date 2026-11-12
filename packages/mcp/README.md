@@ -10,8 +10,13 @@ Published on npm as **`@paystage/mcp`** — see the [npm page](https://www.npmjs
 
 ## What a valid receipt means
 
-`paystage-verify` returning exit 0 means **the issuer signed this receipt and it has not
-been altered**. That is all it means.
+`paystage-verify` returning exit 0 means **the key it verified against signed this receipt
+and it has not been altered**. That is all it means — and which key that was matters:
+
+- `key_source: "published"` → PayStage's published key: the issuer signed it.
+- `key_source: "supplied"` (you passed `--key` or `--key-url`) → **the key you named signed
+  it**, which is a weaker claim and not evidence about PayStage at all. Exit 0 on that path
+  says nothing more than that the holder of that key produced the receipt.
 
 It does **not** mean the payment happened — settlement is a separate on-chain event. It does
 not mean the verdict was correct — a receipt records a decision, not the soundness of the

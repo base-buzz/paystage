@@ -14,9 +14,12 @@ import { DEFAULT_KEY_URL, verifyReceipt, type JwkLike, type ReceiptLike, type Ve
 
 const EXIT: Record<VerifyVerdict["status"], number> = {
   "signed-and-valid": 0,
-  unsigned: 2,
   invalid: 1,
+  unsigned: 2,
   unverifiable: 3,
+  // New and deliberately distinct: "the receipt is genuine but does not cover the inputs
+  // you gave me" is not "this receipt is forged". A script needs to tell those apart.
+  "inputs-mismatch": 4,
 };
 
 function usage(): string {
@@ -31,6 +34,8 @@ function usage(): string {
     "  --key <path>   verify against a local JWK instead of the published one",
     "  --key-url <u>  override the published key endpoint",
     "  --json         machine-readable output",
+    "  --request <f>  check the receipt covers this request JSON",
+    "  --policy <f>   check the receipt covers this policy JSON",
     "",
     "Exit codes: 0 valid · 1 invalid · 2 unsigned · 3 unverifiable",
   ].join("\n");
@@ -53,10 +58,17 @@ async function main(argv: string[]): Promise<number> {
   let keyPath: string | undefined;
   let keyUrl: string | undefined;
   let asJson = false;
+  let requestPath: string | undefined;
+  let policyPath: string | undefined;
 
+  // One chain. The first version had standalone `if`s for the new flags followed by an
+  // `else if` chain, so `--json` matched the first test and then fell through to the
+  // positional branch — the flag was read as the receipt path.
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
     if (arg === "--json") asJson = true;
+    else if (arg === "--request") requestPath = args[++i];
+    else if (arg === "--policy") policyPath = args[++i];
     else if (arg === "--key") keyPath = args[++i];
     else if (arg === "--key-url") keyUrl = args[++i];
     else if (arg !== undefined) source = arg;
@@ -97,6 +109,21 @@ async function main(argv: string[]): Promise<number> {
     }
   }
   if (keyUrl !== undefined) options.keyUrl = keyUrl;
+
+  // --request / --policy turn the stated digests into a checked claim. An unreadable file
+  // is "could not check" (exit 3), never a pass and never a forgery verdict.
+  const readJson = async (p: string): Promise<unknown> => {
+    try {
+      return JSON.parse(await readFile(p, "utf8")) as unknown;
+    } catch (error) {
+      process.stdout.write(
+        `UNVERIFIABLE — could not read ${p}: ${error instanceof Error ? error.message : String(error)}\n`,
+      );
+      process.exit(3);
+    }
+  };
+  if (requestPath !== undefined) options.expectedRequest = await readJson(requestPath);
+  if (policyPath !== undefined) options.expectedPolicy = await readJson(policyPath);
 
   const verdict: VerifyVerdict = await verifyReceipt(receipt, options);
 
