@@ -30,6 +30,7 @@ head_sampling_rate = 1
 [vars]
 PAYSTAGE_PRICE = "$0.002"
 PAYSTAGE_NETWORK = "eip155:8453"
+PAYSTAGE_SERVICE_VERSION = "2026.11.12"
 
 [[routes]]
 pattern = "api.paystage.xyz"

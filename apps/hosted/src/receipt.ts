@@ -13,6 +13,9 @@
  *    third party cannot reproduce the digest.
  *  - Honest when unsigned. With no key configured the receipt is emitted with
  *    `signed: false` and no signature — never a placeholder or a fake.
+ *  - Honest about provenance. `service.version` says which build produced the verdict, and
+ *    falls back to "unknown" rather than "0.0.0", because a placeholder that looks like a
+ *    version is read as one. It was "0.0.0" on every live receipt until 2026-11-12.
  */
 
 export const RECEIPT_VERSION = 1;
@@ -101,7 +104,7 @@ export async function buildReceipt(input: BuildReceiptInput): Promise<Receipt> {
     v: RECEIPT_VERSION,
     issuer: "paystage",
     issued_at: (input.now ?? new Date()).toISOString(),
-    service: { name: "@paystage/hosted", version: input.serviceVersion ?? "0.0.0" },
+    service: { name: "@paystage/hosted", version: input.serviceVersion ?? "unknown" },
     verdict: {
       decision: input.decision.decision,
       reasons: input.decision.reasons ?? [],

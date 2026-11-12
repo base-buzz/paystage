@@ -14,7 +14,7 @@ wrong — that is the point of having them.
   "v": 1,
   "issuer": "paystage",
   "issued_at": "2026-11-12T00:00:00.000Z",
-  "service": { "name": "@paystage/hosted", "version": "0.3.4" },
+  "service": { "name": "@paystage/hosted", "version": "unknown" },
   "verdict": { "decision": "pay", "reasons": [], "summary": "Decision: pay." },
   "request_sha256": "37172a4f…",
   "policy_sha256": "49f9c17b…",
@@ -50,6 +50,18 @@ The **payload** — every field above except `signed`, `alg`, `key_id`, `signatu
 canonical form of the payload; verify against the same. `alg` is `ECDSA-P256-SHA256`, and
 the key is published at `https://api.paystage.xyz/.well-known/paystage-receipt-key.json`.
 
+
+### `service.version`, and a placeholder that read like provenance
+
+Until 2026-11-12 this field was `0.0.0` on **every live receipt**: the only production call
+site never passed a version, and the default was a placeholder that looked like a version
+number. No test read the field, so nothing caught it.
+
+It now comes from `PAYSTAGE_SERVICE_VERSION` (set in `wrangler.toml`), and the default is the
+word `unknown` — a value that cannot be mistaken for a release. The vectors below are
+generated with no override, which is why they show `unknown`; a deployed instance shows its
+own build.
+
 ## Vector 1 — an allowed payment
 
 **Request** (canonical, exactly this string):
@@ -71,7 +83,7 @@ the key is published at `https://api.paystage.xyz/.well-known/paystage-receipt-k
   "v": 1,
   "issuer": "paystage",
   "issued_at": "2026-11-12T00:00:00.000Z",
-  "service": { "name": "@paystage/hosted", "version": "0.3.4" },
+  "service": { "name": "@paystage/hosted", "version": "unknown" },
   "verdict": { "decision": "pay", "reasons": [], "summary": "Decision: pay." },
   "request_sha256": "37172a4ff969ab46b7b4ef4735c7f41b9f10740f3821faf7a67b2bdf9342ff2f",
   "policy_sha256": "49f9c17bea2410e4a187ca1593cbdd4a5ff8e260fd280f44c10114d52fcf7bfb",
@@ -103,7 +115,7 @@ moves.
   "v": 1,
   "issuer": "paystage",
   "issued_at": "2026-11-12T00:00:00.000Z",
-  "service": { "name": "@paystage/hosted", "version": "0.3.4" },
+  "service": { "name": "@paystage/hosted", "version": "unknown" },
   "verdict": {
     "decision": "do_not_pay",
     "reasons": ["payTo 0x1111111111111111111111111111111111111111 not in allowed_pay_to (deny)"],
