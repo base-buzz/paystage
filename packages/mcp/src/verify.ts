@@ -117,7 +117,14 @@ export type VerifyVerdict =
       key_id?: string;
       key_source: KeySource;
     }
-  | { ok: false; status: "unsigned"; reason: string }
+  | {
+      ok: false;
+      status: "unsigned";
+      reason: string;
+      /** Present only when --request/--policy were supplied: does the receipt cover them? */
+      inputs?: "match" | "mismatch";
+      mismatched?: Array<"request" | "policy">;
+    }
   | { ok: false; status: "invalid"; reason: string }
   | { ok: false; status: "unverifiable"; reason: string };
 
@@ -159,11 +166,29 @@ export async function verifyReceipt(
   }
 
   if (receipt.signed !== true) {
+    // No signature means the digest is the only evidence there is, so the recompute still
+    // runs. The status stays `unsigned` (exit 2): an unsigned receipt cannot be forged, so
+    // a mismatch here is not a forgery verdict.
+    const mismatchedUnsigned: Array<"request" | "policy"> = [];
+    const checkUnsigned = async (expected: unknown, claimed: unknown, which: "request" | "policy") => {
+      if (expected === undefined) return;
+      if (typeof claimed !== "string") {
+        mismatchedUnsigned.push(which);
+        return;
+      }
+      if ((await sha256Hex(expected)) !== claimed) mismatchedUnsigned.push(which);
+    };
+    await checkUnsigned(options.expectedRequest, receipt.request_sha256, "request");
+    await checkUnsigned(options.expectedPolicy, receipt.policy_sha256, "policy");
+
     return {
       ok: false,
       status: "unsigned",
       reason:
         "receipt carries no signature — it is still useful as a record of what was decided, but it cannot prove who decided it",
+      ...(options.expectedRequest === undefined && options.expectedPolicy === undefined
+        ? {}
+        : { inputs: mismatchedUnsigned.length === 0 ? "match" : "mismatch", mismatched: mismatchedUnsigned }),
     };
   }
 
@@ -251,7 +276,7 @@ export async function verifyReceipt(
       verdict: receipt.verdict?.decision,
       issued_at: receipt.issued_at,
       key_id: receipt.key_id,
-      key_source: options.jwk !== undefined ? "supplied" : "published",
+      key_source: options.jwk !== undefined || options.keyUrl !== undefined ? "supplied" : "published",
     };
   } catch (error) {
     return {

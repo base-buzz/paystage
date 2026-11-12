@@ -3,7 +3,7 @@
  * `paystage-verify <file|->` — check a PayStage receipt without trusting PayStage.
  *
  * Fetches the published key, verifies the signature over the canonical payload, and
- * prints one of four verdicts. Exit codes: 0 valid, 1 invalid, 2 unsigned,
+ * prints one of five verdicts. Exit codes are listed below and in --help.
  * 3 unverifiable (could not check). Distinct codes so a script can tell "forged" from
  * "no key published yet" — collapsing those into one failure would overstate what we
  * know.
@@ -37,7 +37,9 @@ function usage(): string {
     "  --request <f>  check the receipt covers this request JSON",
     "  --policy <f>   check the receipt covers this policy JSON",
     "",
-    "Exit codes: 0 valid · 1 invalid · 2 unsigned · 3 unverifiable",
+    "Exit codes:",
+    "  0 valid · 1 invalid · 2 unsigned · 3 unverifiable · 4 inputs-mismatch",
+    "  4 means the receipt is genuine but does not cover the inputs you supplied",
   ].join("\n");
 }
 

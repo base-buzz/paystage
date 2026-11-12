@@ -127,7 +127,8 @@ Exit codes are distinct on purpose:
 | 0 | signature matches the payload |
 | 1 | **invalid** — altered, or signed by a different key |
 | 2 | unsigned — a record of the decision, with no proof of who made it |
-| 3 | unverifiable — the key could not be fetched, so nothing can be checked |
+| 3 | unverifiable — the key could not be fetched, or an input file could not be read, so nothing can be checked |
+| 4 | inputs-mismatch — the receipt is genuine but does not cover the `--request`/`--policy` you supplied |
 
 "Invalid" and "could not check" are different facts and must not collapse into one
 failure. `--key <file>` verifies against a local JWK for point-in-time checks.
