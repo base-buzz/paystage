@@ -152,3 +152,30 @@ describe("amount ceiling — differential against an exact reference", () => {
     expect(evaluatePayment(requestFor(999n * 10n ** 18n, DAI), optedIn).decision).toBe("pay");
   });
 });
+
+describe("the ceiling is computed in the matched asset's unit", () => {
+  it("does not let a differently-scaled entry rescale the cap, even if it reaches the evaluator", () => {
+    // Defence in depth behind the schema's duplicate-symbol rejection: a policy object that
+    // did NOT come from parsePolicy must still be judged in the unit of the asset the
+    // challenge matched. On a 2-decimal entry, 40,000 atomic units is 400.00 tokens, and a
+    // 0.05 cap must refuse it — it used to read 40000 atomic as 0.04 tokens and allow it.
+    const policy = {
+      ...policyFor("0.05", 6),
+      allowed_assets: [
+        ...policyFor("0.05", 6).allowed_assets,
+        { symbol: "USDC", decimals: 2, address: "0x2222222222222222222222222222222222222222", network: NET },
+      ],
+    } as never;
+    const twoDec = {
+      x402Version: 2 as const,
+      accepts: [
+        {
+          scheme: "exact", network: NET, amount: "40000",
+          asset: "0x2222222222222222222222222222222222222222",
+          payTo: PAYEE, maxTimeoutSeconds: 300,
+        },
+      ],
+    };
+    expect(evaluatePayment(twoDec as never, policy).decision).toBe("do_not_pay");
+  });
+});

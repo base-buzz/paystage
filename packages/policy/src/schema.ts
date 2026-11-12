@@ -130,7 +130,27 @@ export const PolicySchema = BasePolicySchema.superRefine((p, ctx) => {
     });
   }
 
-  // 3. An allowed asset with no cap is uncapped, which contradicts "max_amount is the ceiling".
+  // 3. Duplicate symbols make the checks above ambiguous: `find()` picks the first, and the
+  //    uncapped filter matches by symbol, so a second entry with the same ticker and
+  //    different decimals was neither capped nor caught. A policy needing two same-ticker
+  //    assets can give one of them a distinct symbol.
+  // Keyed on symbol AND network. USDC on mainnet and USDC on Sepolia are different assets
+  // that legitimately share a ticker — a symbol-only rule rejected valid policies, which CI
+  // caught because the local suite ran the previously built schema. The hole needs the same
+  // ticker on the SAME chain at a different scale.
+  const keys = p.allowed_assets.map((a) => `${a.symbol}@${a.network}`);
+  const dupes = keys.filter((k, i) => keys.indexOf(k) !== i);
+  if (dupes.length > 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["allowed_assets"],
+      message:
+        `duplicate asset ${[...new Set(dupes)].map((d) => `"${d}"`).join(", ")} — same ticker on the same chain; ` +
+        `rename one if they are genuinely different assets`,
+    });
+  }
+
+  // 4. An allowed asset with no cap is uncapped, which contradicts "max_amount is the ceiling".
   const uncapped = p.allowed_assets.filter((a) => a.symbol !== p.max_amount.asset);
   if (uncapped.length > 0 && p.allow_uncapped_assets !== true) {
     ctx.addIssue({
