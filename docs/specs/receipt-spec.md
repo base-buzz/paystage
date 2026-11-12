@@ -86,6 +86,12 @@ printf '%s' "$CANONICAL_REQUEST" | sha256sum
 # 37172a4ff969ab46b7b4ef4735c7f41b9f10740f3821faf7a67b2bdf9342ff2f  -
 ```
 
+**The canonical form carries no trailing newline — use `printf '%s'`, not `echo`.** `echo`
+appends `\n`, and the digest becomes `67591b35…` instead of `37172a4f…`. Same bytes, one
+character different, and a reproducer who reaches for `echo` will conclude this document is
+wrong rather than the input. This is the single most likely way to "fail" to reproduce a
+correct receipt.
+
 ## Vector 2 — a denied payment
 
 Same policy, same amount, **wrong payee** (`0x1111…1111`). The interesting property: the
