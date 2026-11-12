@@ -35,6 +35,14 @@ export const RECEIPT_ALG = "ECDSA-P256-SHA256";
 export const DEFAULT_KEY_URL = "https://api.paystage.xyz/v1/public/receipt-key.json";
 
 /** JSON with recursively sorted keys and no insignificant whitespace. */
+/** Age in seconds, or null when `issued_at` is not a timestamp. */
+function ageSeconds(issuedAt: unknown, now: Date | undefined): number | null {
+  if (typeof issuedAt !== "string") return null;
+  const then = Date.parse(issuedAt);
+  if (Number.isNaN(then)) return null;
+  return ((now ?? new Date()).getTime() - then) / 1000;
+}
+
 /** SHA-256 over the canonical form, lowercase hex — same rule the issuer used. */
 async function sha256Hex(value: unknown): Promise<string> {
   const bytes = new TextEncoder().encode(canonicalize(value));
@@ -88,6 +96,15 @@ export interface VerifyOptions {
    */
   expectedRequest?: unknown;
   expectedPolicy?: unknown;
+  /**
+   * Reject a receipt older than this many seconds. A bound set by the *verifier*, not the
+   * issuer: nothing in the signed payload says how long a verdict is meant to hold, and
+   * inventing that would be a format change (`v: 2`). Boundary is inclusive — a receipt
+   * exactly at the limit is still fresh.
+   */
+  maxAgeSeconds?: number;
+  /** Injectable clock, so freshness tests do not depend on wall time. */
+  now?: Date;
   /** Override for tests and for point-in-time checks. */
   keyUrl?: string;
   fetchImpl?: typeof fetch;
@@ -102,6 +119,14 @@ export interface VerifyOptions {
 export type KeySource = "published" | "supplied";
 
 export type VerifyVerdict =
+  | {
+      ok: false;
+      status: "stale";
+      reason: string;
+      /** Age in seconds, and the bound that was exceeded. */
+      age_seconds: number;
+      max_age_seconds: number;
+    }
   | {
       ok: false;
       status: "inputs-mismatch";
@@ -268,6 +293,28 @@ export async function verifyReceipt(
         reason: `signature is valid but the receipt does not cover the supplied ${mismatched.join(" and ")} input`,
         mismatched,
       };
+    }
+
+    if (options.maxAgeSeconds !== undefined) {
+      const age = ageSeconds(receipt.issued_at, options.now);
+      if (age === null) {
+        // Garbage here is inside the signature: the issuer signed it, so it is the receipt
+        // that is invalid, not the verifier's input.
+        return {
+          ok: false,
+          status: "invalid",
+          reason: `issued_at is not a parseable timestamp: ${JSON.stringify(receipt.issued_at)}`,
+        };
+      }
+      if (age > options.maxAgeSeconds) {
+        return {
+          ok: false,
+          status: "stale",
+          reason: `receipt is ${Math.round(age)}s old, older than the ${options.maxAgeSeconds}s bound`,
+          age_seconds: age,
+          max_age_seconds: options.maxAgeSeconds,
+        };
+      }
     }
 
     return {
