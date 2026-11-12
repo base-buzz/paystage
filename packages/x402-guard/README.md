@@ -6,6 +6,16 @@ The ten lines between *"the agent decided to pay"* and *"the money moved."*
 not do is ask **whether that payment should happen**. This wraps it, evaluates your policy
 against the actual challenge, and refuses before the wallet signs.
 
+## The whole change
+
+```diff
+-const res = await fetch("https://api.example.com/paid");
++const res = await guarded("https://api.example.com/paid");
+```
+
+Two lines, one call site. The `policy` below is configuration you write once; the guard only
+changes how the request is made.
+
 ```sh
 npm install @paystage/x402-guard x402-fetch
 ```
