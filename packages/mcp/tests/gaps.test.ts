@@ -126,3 +126,44 @@ describe("CLI argument parsing", () => {
     }
   });
 });
+
+describe("key provenance cannot be spoofed by a URL", () => {
+  it("labels a caller-chosen --key-url as supplied, not published", async () => {
+    // Worker-2's find: `key_source` was computed from `options.jwk` alone, so a key fetched
+    // from a URL the caller chose was tagged with the one label that means "PayStage's".
+    // A consumer gating on key_source === "published" would accept an attacker-served key.
+    const pair = (await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"])) as CryptoKeyPair;
+    const pkcs8 = (await crypto.subtle.exportKey("pkcs8", pair.privateKey)) as ArrayBuffer;
+    const b64 = Buffer.from(new Uint8Array(pkcs8)).toString("base64");
+    const pub = (await crypto.subtle.exportKey("jwk", pair.publicKey)) as JsonWebKey;
+    const receipt = await buildReceipt({ decision: { decision: "pay", reasons: [] }, request: {}, policy: {}, signingKeyPkcs8B64: b64 });
+
+    const attackerFetch = (async () => new Response(JSON.stringify({ configured: true, jwk: pub }), { status: 200 })) as unknown as typeof fetch;
+    const v = await verifyReceipt(receipt, {
+      keyUrl: "http://127.0.0.1:8791/jwk.json",
+      fetchImpl: attackerFetch,
+    });
+    expect(v.ok).toBe(true);
+    if (v.ok) expect(v.key_source).toBe("supplied");
+  });
+});
+
+describe("unsigned receipts still get their digests checked", () => {
+  it("reports inputs:match when the digests line up, and stays exit 2 territory", async () => {
+    const request = { a: 1 };
+    const r = await buildReceipt({ decision: { decision: "pay", reasons: [] }, request, policy: { b: 2 } });
+    const v = await verifyReceipt(r, { expectedRequest: request });
+    expect(v.ok).toBe(false);
+    if (!v.ok && v.status === "unsigned") expect(v.inputs).toBe("match");
+  });
+
+  it("reports inputs:mismatch when the supplied request is not the one covered", async () => {
+    const r = await buildReceipt({ decision: { decision: "pay", reasons: [] }, request: { a: 1 }, policy: { b: 2 } });
+    const v = await verifyReceipt(r, { expectedRequest: { a: 999 } });
+    expect(v.ok).toBe(false);
+    if (!v.ok && v.status === "unsigned") {
+      expect(v.inputs).toBe("mismatch");
+      expect(v.mismatched).toEqual(["request"]);
+    }
+  });
+});
