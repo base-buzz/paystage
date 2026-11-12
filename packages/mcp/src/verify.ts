@@ -15,7 +15,7 @@
  *     `ieee-p1363` explicitly.
  */
 
-import { createPublicKey, verify as nodeVerify } from "node:crypto";
+import { createPublicKey, verify as nodeVerify, webcrypto } from "node:crypto";
 
 /** The receipt format version this verifier understands. Kept local on purpose: a verifier
  *  must not silently follow the issuer's constant upward — it validates what it knows. */
@@ -35,6 +35,13 @@ export const RECEIPT_ALG = "ECDSA-P256-SHA256";
 export const DEFAULT_KEY_URL = "https://api.paystage.xyz/v1/public/receipt-key.json";
 
 /** JSON with recursively sorted keys and no insignificant whitespace. */
+/** SHA-256 over the canonical form, lowercase hex — same rule the issuer used. */
+async function sha256Hex(value: unknown): Promise<string> {
+  const bytes = new TextEncoder().encode(canonicalize(value));
+  const digest = await webcrypto.subtle.digest("SHA-256", bytes);
+  return Buffer.from(new Uint8Array(digest)).toString("hex");
+}
+
 export function canonicalize(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
   if (Array.isArray(value)) return `[${value.map(canonicalize).join(",")}]`;
@@ -74,6 +81,13 @@ export function receiptPayload(receipt: ReceiptLike): Record<string, unknown> {
 export interface VerifyOptions {
   /** Published JWK. Fetched from DEFAULT_KEY_URL when omitted. */
   jwk?: JwkLike;
+  /**
+   * Inputs to check the receipt against. When supplied, the receipt's stated digests are
+   * recomputed over these values instead of being taken on trust — which is the difference
+   * between a receipt as a record and a receipt as evidence.
+   */
+  expectedRequest?: unknown;
+  expectedPolicy?: unknown;
   /** Override for tests and for point-in-time checks. */
   keyUrl?: string;
   fetchImpl?: typeof fetch;
@@ -88,6 +102,13 @@ export interface VerifyOptions {
 export type KeySource = "published" | "supplied";
 
 export type VerifyVerdict =
+  | {
+      ok: false;
+      status: "inputs-mismatch";
+      reason: string;
+      /** Which digest disagreed: "request", "policy", or both. */
+      mismatched: Array<"request" | "policy">;
+    }
   | {
       ok: true;
       status: "signed-and-valid";
@@ -199,6 +220,31 @@ export async function verifyReceipt(
         reason: "signature does not match the payload — the receipt was altered or was signed by a different key",
       };
     }
+    // Only now, with the signature proven, is it worth asking whether the receipt covers
+    // the inputs the caller has in hand. Doing this earlier would let a forgery masquerade
+    // as a mismatch, which is a less serious verdict than it deserves.
+    const mismatched: Array<"request" | "policy"> = [];
+    const checkDigest = async (expected: unknown, claimed: unknown, which: "request" | "policy") => {
+      if (expected === undefined) return;
+      if (typeof claimed !== "string") {
+        mismatched.push(which);
+        return;
+      }
+      const actual = await sha256Hex(expected);
+      if (actual !== claimed) mismatched.push(which);
+    };
+    await checkDigest(options.expectedRequest, receipt.request_sha256, "request");
+    await checkDigest(options.expectedPolicy, receipt.policy_sha256, "policy");
+
+    if (mismatched.length > 0) {
+      return {
+        ok: false,
+        status: "inputs-mismatch",
+        reason: `signature is valid but the receipt does not cover the supplied ${mismatched.join(" and ")} input`,
+        mismatched,
+      };
+    }
+
     return {
       ok: true,
       status: "signed-and-valid",
