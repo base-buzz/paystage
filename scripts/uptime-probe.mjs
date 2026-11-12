@@ -23,13 +23,55 @@ const TARGETS = [
   { name: "cadence", url: "https://paystage.xyz/v1/public/cadence.json", expect: [200] },
 ];
 
+/**
+ * A real payment, judged by the real evaluator.
+ *
+ * This used to send `{accepts: [], policy: {}}` and assert 402. That only ever tested the
+ * payment middleware, never the product — and once the free tier began serving unpaid calls,
+ * an invalid body started returning 400 and the probe called it an outage.
+ *
+ * Now it sends a valid challenge and accepts either outcome, because both are correct:
+ *   200 with a verdict   -> the free tier served it (no payment, no signup)
+ *   402                   -> the daily allowance is spent and the gate asks for payment
+ * A 400 here is a genuine failure: the evaluator rejected a policy that parses everywhere else.
+ * 503 remains an outage for the same reason as before — an agent that cannot get a verdict
+ * cannot pay.
+ */
 const CHALLENGE = {
-  name: "mainnet challenge",
+  name: "mainnet evaluate (real policy)",
   url: "https://api.paystage.xyz/v1/evaluate_mcp_payment",
-  // Only a 402 counts. A 503 upstream_timeout is fail-closed and technically honest,
-  // but an agent that cannot get a challenge cannot pay — for its purpose that is an
-  // outage, so the probe reports it as one.
-  expect: [402],
+  expect: [200, 402],
+};
+
+const REAL_POLICY = {
+  version: 1,
+  max_amount: { value: "0.05", asset: "USDC", decimals: 6 },
+  allowed_pay_to: ["0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE"],
+  allowed_assets: [
+    {
+      symbol: "USDC",
+      decimals: 6,
+      address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      network: "eip155:8453",
+    },
+  ],
+  allowed_networks: ["eip155:8453"],
+  max_timeout_seconds: 300,
+  unknown_payee: "deny",
+};
+
+const REAL_CHALLENGE = {
+  x402Version: 2,
+  accepts: [
+    {
+      scheme: "exact",
+      network: "eip155:8453",
+      amount: "2000",
+      asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      payTo: "0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE",
+      maxTimeoutSeconds: 300,
+    },
+  ],
 };
 
 const TIMEOUT_MS = 12_000;
@@ -69,7 +111,7 @@ results.push(
   await probe(CHALLENGE, {
     method: "POST",
     headers: { "content-type": "application/json", "x-paystage-source": "test" },
-    body: JSON.stringify({ payment_required: { x402Version: 2, accepts: [] }, policy: {} }),
+    body: JSON.stringify({ payment_required: REAL_CHALLENGE, policy: REAL_POLICY }),
   }),
 );
 
