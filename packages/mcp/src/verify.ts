@@ -35,6 +35,15 @@ export const RECEIPT_ALG = "ECDSA-P256-SHA256";
 export const DEFAULT_KEY_URL = "https://api.paystage.xyz/v1/public/receipt-key.json";
 
 /** JSON with recursively sorted keys and no insignificant whitespace. */
+/**
+ * How far ahead of the verifier's clock an `issued_at` may be before it is refused.
+ *
+ * A future-dated receipt is not "fresh" — it is a receipt that could not have been issued
+ * yet, and without this check `age > maxAge` is never true for it, so it never expires.
+ * Five minutes covers honest clock skew between two machines.
+ */
+const MAX_CLOCK_SKEW_SECONDS = 300;
+
 /** Age in seconds, or null when `issued_at` is not a timestamp. */
 function ageSeconds(issuedAt: unknown, now: Date | undefined): number | null {
   if (typeof issuedAt !== "string") return null;
@@ -304,6 +313,13 @@ export async function verifyReceipt(
           ok: false,
           status: "invalid",
           reason: `issued_at is not a parseable timestamp: ${JSON.stringify(receipt.issued_at)}`,
+        };
+      }
+      if (age < -MAX_CLOCK_SKEW_SECONDS) {
+        return {
+          ok: false,
+          status: "invalid",
+          reason: `issued_at is ${Math.round(-age)}s in the future, beyond any plausible clock skew — this receipt could not have been issued yet`,
         };
       }
       if (age > options.maxAgeSeconds) {

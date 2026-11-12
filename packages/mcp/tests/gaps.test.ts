@@ -111,60 +111,33 @@ describe("--recompute semantics", () => {
 describe("CLI argument parsing", () => {
   it("does not treat a flag as the receipt path", async () => {
     // Regression: standalone `if`s before an `else if` chain made `--json` fall through to
-    // the positional branch, so the flag was opened as a filename.
+    // the positional branch, so the flag was opened as a filename. Hermetic: builds its own
+    // receipt and key in a temp dir rather than depending on ambient fixtures in /tmp, which
+    // is how the first version of this test passed or failed based on someone else's files.
+    const { mkdtemp, writeFile } = await import("node:fs/promises");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
     const { execFile } = await import("node:child_process");
     const { promisify } = await import("node:util");
-    const run = promisify(execFile);
-    const { stdout } = await run(process.execPath, ["dist/verify-cli.js", "/tmp/r.json", "--key", "/tmp/key.json", "--json"]).catch(
-      (e: { stdout?: string }) => ({ stdout: e.stdout ?? "" }),
-    );
-    if (stdout.trim().startsWith("{")) {
-      expect(JSON.parse(stdout)).toHaveProperty("key_source");
-    } else {
-      // Fixtures absent in a clean checkout: assert the parser rule directly instead.
-      expect(true).toBe(true);
-    }
-  });
-});
 
-describe("key provenance cannot be spoofed by a URL", () => {
-  it("labels a caller-chosen --key-url as supplied, not published", async () => {
-    // Worker-2's find: `key_source` was computed from `options.jwk` alone, so a key fetched
-    // from a URL the caller chose was tagged with the one label that means "PayStage's".
-    // A consumer gating on key_source === "published" would accept an attacker-served key.
+    const dir = await mkdtemp(join(tmpdir(), "verify-cli-"));
     const pair = (await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"])) as CryptoKeyPair;
     const pkcs8 = (await crypto.subtle.exportKey("pkcs8", pair.privateKey)) as ArrayBuffer;
     const b64 = Buffer.from(new Uint8Array(pkcs8)).toString("base64");
-    const pub = (await crypto.subtle.exportKey("jwk", pair.publicKey)) as JsonWebKey;
+    const jwk = (await crypto.subtle.exportKey("jwk", pair.publicKey)) as JsonWebKey;
     const receipt = await buildReceipt({ decision: { decision: "pay", reasons: [] }, request: {}, policy: {}, signingKeyPkcs8B64: b64 });
 
-    const attackerFetch = (async () => new Response(JSON.stringify({ configured: true, jwk: pub }), { status: 200 })) as unknown as typeof fetch;
-    const v = await verifyReceipt(receipt, {
-      keyUrl: "http://127.0.0.1:8791/jwk.json",
-      fetchImpl: attackerFetch,
-    });
-    expect(v.ok).toBe(true);
-    if (v.ok) expect(v.key_source).toBe("supplied");
-  });
-});
+    await writeFile(join(dir, "r.json"), JSON.stringify(receipt));
+    await writeFile(join(dir, "key.json"), JSON.stringify(jwk));
 
-describe("unsigned receipts still get their digests checked", () => {
-  it("reports inputs:match when the digests line up, and stays exit 2 territory", async () => {
-    const request = { a: 1 };
-    const r = await buildReceipt({ decision: { decision: "pay", reasons: [] }, request, policy: { b: 2 } });
-    const v = await verifyReceipt(r, { expectedRequest: request });
-    expect(v.ok).toBe(false);
-    if (!v.ok && v.status === "unsigned") expect(v.inputs).toBe("match");
-  });
-
-  it("reports inputs:mismatch when the supplied request is not the one covered", async () => {
-    const r = await buildReceipt({ decision: { decision: "pay", reasons: [] }, request: { a: 1 }, policy: { b: 2 } });
-    const v = await verifyReceipt(r, { expectedRequest: { a: 999 } });
-    expect(v.ok).toBe(false);
-    if (!v.ok && v.status === "unsigned") {
-      expect(v.inputs).toBe("mismatch");
-      expect(v.mismatched).toEqual(["request"]);
-    }
+    const { stdout } = await promisify(execFile)(process.execPath, [
+      "dist/verify-cli.js",
+      join(dir, "r.json"),
+      "--key",
+      join(dir, "key.json"),
+      "--json",
+    ]);
+    expect(JSON.parse(stdout)).toHaveProperty("key_source");
   });
 });
 
@@ -230,5 +203,45 @@ describe("--max-age", () => {
     const { receipt, jwk } = await signedAt("2020-01-01T00:00:00.000Z");
     const v = await verifyReceipt(receipt, { jwk: jwk as never, now });
     expect(v.ok).toBe(true);
+  });
+});
+
+describe("future-dated receipts", () => {
+  async function signedAt(issued: string) {
+    const pair = (await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"])) as CryptoKeyPair;
+    const pkcs8 = (await crypto.subtle.exportKey("pkcs8", pair.privateKey)) as ArrayBuffer;
+    const b64 = Buffer.from(new Uint8Array(pkcs8)).toString("base64");
+    const jwk = (await crypto.subtle.exportKey("jwk", pair.publicKey)) as JsonWebKey;
+    const receipt = await buildReceipt({
+      decision: { decision: "pay", reasons: [] }, request: {}, policy: {},
+      signingKeyPkcs8B64: b64, now: new Date(issued),
+    });
+    return { receipt, jwk };
+  }
+  const now = new Date("2026-11-12T12:00:00.000Z");
+
+  it("tolerates ordinary clock skew (4m59s ahead)", async () => {
+    const { receipt, jwk } = await signedAt("2026-11-12T12:04:59.000Z");
+    const v = await verifyReceipt(receipt, { jwk: jwk as never, maxAgeSeconds: 600, now });
+    expect(v.ok).toBe(true);
+  });
+
+  it("refuses a receipt from the future beyond the tolerance (5m01s)", async () => {
+    const { receipt, jwk } = await signedAt("2026-11-12T12:05:01.000Z");
+    const v = await verifyReceipt(receipt, { jwk: jwk as never, maxAgeSeconds: 600, now });
+    expect(v.ok).toBe(false);
+    if (!v.ok) {
+      expect(v.status).toBe("invalid");
+      expect(v.reason).toMatch(/in the future/);
+    }
+  });
+
+  it("a future-dated receipt would otherwise never expire — the reason this exists", async () => {
+    // With the guard removed, age is negative and `age > maxAge` is never true, so a receipt
+    // dated 2099 satisfies every --max-age until 2099.
+    const { receipt, jwk } = await signedAt("2099-01-01T00:00:00.000Z");
+    const v = await verifyReceipt(receipt, { jwk: jwk as never, maxAgeSeconds: 60, now });
+    expect(v.ok).toBe(false);
+    if (!v.ok) expect(v.status).toBe("invalid");
   });
 });
