@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./landing.css";
 import { AliveStrip } from "@/components/AliveStrip";
+import { CopyCommand } from "@/components/CopyCommand";
 import { CadencePanel } from "@/components/CadencePanel";
 import { SOCIALS } from "@/lib/agent-manifest";
 
@@ -90,11 +91,15 @@ export default function LandingPage() {
                 >
                   Get started
                 </a>
-                <code className="lp-btn lp-btn-ghost">npx -y -p @paystage/mcp paystage-mcp</code>
+                <CopyCommand command="npx -y -p @paystage/mcp paystage-mcp" />
               </div>
-              <p className="lp-hero-note">
-                No key, no config, no account. MIT licensed. Holds no keys and never signs.
-              </p>
+              {/* The risk reducer belongs beside the CTA, not in 12px grey under it — these are
+                  the three objections that stop a payment-safety tool being tried. */}
+              <ul className="lp-reassure">
+                <li>MIT licensed — the whole evaluator, not a demo build</li>
+                <li>holds no keys and never signs; the agent is still the only signer</li>
+                <li>no account, no email: an agent cannot fill in a signup form</li>
+              </ul>
             </div>
 
             <aside className="lp-gate" aria-label="Example evaluation">
@@ -495,7 +500,64 @@ export default function LandingPage() {
             </p>
           </div>
         </section>
-      </main>
+      
+        <section className="lp-section" id="faq">
+          <div className="lp-wrap">
+            <h2 className="lp-h2">Questions a careful reader asks</h2>
+            <div className="lp-faq">
+              {[
+                {
+                  q: "Does it work with my stack?",
+                  a: "The package is a standard stdio MCP server, so anything that speaks MCP works: Claude Desktop, Cursor, Cline, VS Code, and any agent framework with an MCP client. The hosted endpoint is plain HTTP, so nothing needs to be installed for that path.",
+                },
+                {
+                  q: "Is this maintained?",
+                  a: "Releases are automated: a canary publishes daily from main, and stable versions publish on a tag, both with npm provenance. The commit history, CI logs and release notes are public, so you can check rather than take our word.",
+                },
+                {
+                  q: "Can I see the code before trusting it?",
+                  a: "Yes — it is MIT, and the evaluator that produces a verdict is the same code the tests run. The receipt vectors in the repo can be checked with sha256sum without installing anything.",
+                },
+                {
+                  q: "What does it not cover?",
+                  a: "Post-settlement reversals, colluding payees, and any promise made off-chain. The gate decides whether to sign; it cannot un-spend money, and it does not know what a seller does after it is paid.",
+                },
+                {
+                  q: "Does it hold my keys?",
+                  a: "No. It returns a verdict and never signs. Your agent remains the only signer, and that is enforced by what the code does rather than by policy.",
+                },
+                {
+                  q: "What does a call cost?",
+                  a: "The first 1,000 evaluations per IP per day are free with no account. Beyond that the hosted API is $0.002 per call, paid over x402. The packages are free and MIT licensed.",
+                },
+              ].map((item) => (
+                <details className="lp-faq-item" key={item.q}>
+                  <summary className="lp-faq-q">{item.q}</summary>
+                  <p className="lp-faq-a">{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="lp-cta-final">
+          <div className="lp-wrap">
+            <h2 className="lp-h2">Try it before you trust it</h2>
+            <p className="lp-hero-note" style={{ maxWidth: 620 }}>
+              One real evaluation, no install: a stranger can send a payment challenge to the
+              hosted API and see the verdict their agent would have received.
+            </p>
+            <div className="lp-actions" style={{ marginTop: 22 }}>
+              <a className="lp-btn lp-btn-primary" href="/try">
+                Run a real evaluation
+              </a>
+              <a className="lp-btn lp-btn-ghost" href="https://github.com/base-buzz/paystage" rel="noopener">
+                Read the source
+              </a>
+            </div>
+          </div>
+        </section>
+</main>
 
       <footer className="lp-footer">
         <div className="lp-wrap">
