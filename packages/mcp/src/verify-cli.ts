@@ -20,6 +20,9 @@ const EXIT: Record<VerifyVerdict["status"], number> = {
   // New and deliberately distinct: "the receipt is genuine but does not cover the inputs
   // you gave me" is not "this receipt is forged". A script needs to tell those apart.
   "inputs-mismatch": 4,
+  // Genuine and coverable, but older than the bound the caller set. A third fact again:
+  // "forged" (1), "could not check" (3), and "true but expired" (5).
+  stale: 5,
 };
 
 function usage(): string {
@@ -36,10 +39,12 @@ function usage(): string {
     "  --json         machine-readable output",
     "  --request <f>  check the receipt covers this request JSON",
     "  --policy <f>   check the receipt covers this policy JSON",
+    "  --max-age <s>  reject a receipt older than this many seconds",
     "",
     "Exit codes:",
-    "  0 valid · 1 invalid · 2 unsigned · 3 unverifiable · 4 inputs-mismatch",
+    "  0 valid · 1 invalid · 2 unsigned · 3 unverifiable · 4 inputs-mismatch · 5 stale",
     "  4 means the receipt is genuine but does not cover the inputs you supplied",
+    "  5 means the receipt is genuine but older than --max-age allows",
   ].join("\n");
 }
 
@@ -62,6 +67,7 @@ async function main(argv: string[]): Promise<number> {
   let asJson = false;
   let requestPath: string | undefined;
   let policyPath: string | undefined;
+  let maxAgeRaw: string | undefined;
 
   // One chain. The first version had standalone `if`s for the new flags followed by an
   // `else if` chain, so `--json` matched the first test and then fell through to the
@@ -73,6 +79,7 @@ async function main(argv: string[]): Promise<number> {
     else if (arg === "--policy") policyPath = args[++i];
     else if (arg === "--key") keyPath = args[++i];
     else if (arg === "--key-url") keyUrl = args[++i];
+    else if (arg === "--max-age") maxAgeRaw = args[++i];
     else if (arg !== undefined) source = arg;
   }
 
@@ -126,6 +133,14 @@ async function main(argv: string[]): Promise<number> {
   };
   if (requestPath !== undefined) options.expectedRequest = await readJson(requestPath);
   if (policyPath !== undefined) options.expectedPolicy = await readJson(policyPath);
+  if (maxAgeRaw !== undefined) {
+    const seconds = Number(maxAgeRaw);
+    if (!Number.isFinite(seconds) || seconds < 0) {
+      process.stderr.write(`paystage-verify: --max-age needs a number of seconds, got ${JSON.stringify(maxAgeRaw)}\n`);
+      return 3;
+    }
+    options.maxAgeSeconds = seconds;
+  }
 
   const verdict: VerifyVerdict = await verifyReceipt(receipt, options);
 

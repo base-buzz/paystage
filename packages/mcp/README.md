@@ -30,6 +30,10 @@ Two narrower points a careful reader should know:
   proves only that the holder of *that* key signed it.
 - **A receipt with `signed: false` is still useful**: the request and policy digests are
   checkable, so "over these inputs" survives even when provenance does not.
+- **`--max-age` is your policy, not the issuer's.** Nothing in the signed payload says how
+  long a verdict is meant to hold, so a freshness bound is set by the verifier. If "this
+  verdict is good for 24 hours" ever becomes the issuer's promise it has to be signed, and
+  that is a format change.
 
 
 ## Install
@@ -129,6 +133,7 @@ Exit codes are distinct on purpose:
 | 2 | unsigned — a record of the decision, with no proof of who made it |
 | 3 | unverifiable — the key could not be fetched, or an input file could not be read, so nothing can be checked |
 | 4 | inputs-mismatch — the receipt is genuine but does not cover the `--request`/`--policy` you supplied |
+| 5 | stale — the receipt is genuine but older than `--max-age` allows |
 
 "Invalid" and "could not check" are different facts and must not collapse into one
 failure. `--key <file>` verifies against a local JWK for point-in-time checks.

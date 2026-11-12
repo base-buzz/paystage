@@ -167,3 +167,68 @@ describe("unsigned receipts still get their digests checked", () => {
     }
   });
 });
+
+describe("--max-age", () => {
+  async function signedAt(issued: string) {
+    const pair = (await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"])) as CryptoKeyPair;
+    const pkcs8 = (await crypto.subtle.exportKey("pkcs8", pair.privateKey)) as ArrayBuffer;
+    const b64 = Buffer.from(new Uint8Array(pkcs8)).toString("base64");
+    const jwk = (await crypto.subtle.exportKey("jwk", pair.publicKey)) as JsonWebKey;
+    const receipt = await buildReceipt({
+      decision: { decision: "pay", reasons: [] },
+      request: {},
+      policy: {},
+      signingKeyPkcs8B64: b64,
+      now: new Date(issued),
+    });
+    return { receipt, jwk };
+  }
+  const now = new Date("2026-11-12T12:00:00.000Z");
+
+  it("accepts a receipt inside the bound", async () => {
+    const { receipt, jwk } = await signedAt("2026-11-12T11:59:00.000Z");
+    const v = await verifyReceipt(receipt, { jwk: jwk as never, maxAgeSeconds: 600, now });
+    expect(v.ok).toBe(true);
+  });
+
+  it("treats the boundary as inclusive", async () => {
+    const { receipt, jwk } = await signedAt("2026-11-12T11:50:00.000Z"); // exactly 600s
+    const v = await verifyReceipt(receipt, { jwk: jwk as never, maxAgeSeconds: 600, now });
+    expect(v.ok).toBe(true);
+  });
+
+  it("reports stale, and exit 5 territory, one second past it", async () => {
+    const { receipt, jwk } = await signedAt("2026-11-12T11:49:59.000Z"); // 601s
+    const v = await verifyReceipt(receipt, { jwk: jwk as never, maxAgeSeconds: 600, now });
+    expect(v.ok).toBe(false);
+    if (!v.ok) {
+      expect(v.status).toBe("stale");
+      expect(v.age_seconds).toBeGreaterThan(600);
+    }
+  });
+
+  it("orders freshness last: a forged and ancient receipt is invalid, never stale", async () => {
+    const { receipt, jwk } = await signedAt("2020-01-01T00:00:00.000Z");
+    const forged = { ...receipt, verdict: { decision: "do_not_pay", reasons: [] } };
+    const v = await verifyReceipt(forged, { jwk: jwk as never, maxAgeSeconds: 60, now });
+    expect(v.ok).toBe(false);
+    if (!v.ok) expect(v.status).toBe("invalid");
+  });
+
+  it("calls an unparseable issued_at invalid, because the issuer signed it", async () => {
+    const { receipt, jwk } = await signedAt("2026-11-12T11:59:00.000Z");
+    const v = await verifyReceipt({ ...receipt, issued_at: "not a date" }, {
+      jwk: jwk as never,
+      maxAgeSeconds: 600,
+      now,
+    });
+    expect(v.ok).toBe(false);
+    if (!v.ok) expect(v.status).toBe("invalid");
+  });
+
+  it("does nothing when no bound is set", async () => {
+    const { receipt, jwk } = await signedAt("2020-01-01T00:00:00.000Z");
+    const v = await verifyReceipt(receipt, { jwk: jwk as never, now });
+    expect(v.ok).toBe(true);
+  });
+});
