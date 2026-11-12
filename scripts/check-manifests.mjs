@@ -35,6 +35,13 @@ for (const dir of dirs) {
   if (!m.types && !m.typings) {
     problems.push(`${m.name}: ships .d.ts files but declares no "types" — importers get no types`);
   }
+  // Provenance binds the tarball to a repository; npm rejects the publish with E422 when
+  // repository.url is missing, which presents as an auth failure and is not one.
+  const versioned = m.version !== undefined;
+  if (versioned && m.repository?.url === undefined) {
+    problems.push(`${m.name}: declares no "repository" — provenance validation will reject it`);
+  }
+
   if (entry && !m.exports) {
     problems.push(`${m.name}: declares no "exports" map — resolution falls back to legacy main`);
   }
