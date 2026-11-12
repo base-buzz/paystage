@@ -1,7 +1,12 @@
 {
   "name": "@paystage/x402-guard",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Preflight policy gate for x402-fetch: evaluate the payment before the wallet signs, and refuse the ones your policy denies",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/base-buzz/paystage.git",
+    "directory": "packages/x402-guard"
+  },
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
