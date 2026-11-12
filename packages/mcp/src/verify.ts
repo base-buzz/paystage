@@ -17,6 +17,10 @@
 
 import { createPublicKey, verify as nodeVerify } from "node:crypto";
 
+/** The receipt format version this verifier understands. Kept local on purpose: a verifier
+ *  must not silently follow the issuer's constant upward — it validates what it knows. */
+const RECEIPT_VERSION = 1;
+
 
 /** Minimal JWK shape. The DOM lib's JsonWebKey is not available in a Node-only build. */
 export interface JwkLike {
@@ -75,8 +79,23 @@ export interface VerifyOptions {
   fetchImpl?: typeof fetch;
 }
 
+/**
+ * Where the verifying key came from. A machine consumer must be able to tell "verified
+ * against PayStage's published key" from "verified against a key someone handed me" — the
+ * human output said this all along, and `--json` did not, which is the difference between a
+ * receipt and a receipt-shaped claim.
+ */
+export type KeySource = "published" | "supplied";
+
 export type VerifyVerdict =
-  | { ok: true; status: "signed-and-valid"; verdict?: string; issued_at?: string; key_id?: string }
+  | {
+      ok: true;
+      status: "signed-and-valid";
+      verdict?: string;
+      issued_at?: string;
+      key_id?: string;
+      key_source: KeySource;
+    }
   | { ok: false; status: "unsigned"; reason: string }
   | { ok: false; status: "invalid"; reason: string }
   | { ok: false; status: "unverifiable"; reason: string };
@@ -96,6 +115,26 @@ export async function verifyReceipt(
 ): Promise<VerifyVerdict> {
   if (receipt === null || typeof receipt !== "object") {
     return { ok: false, status: "invalid", reason: "receipt is not an object" };
+  }
+
+  // A receipt from a future format version may mean something this code does not check.
+  // Validating it would assert more than we know.
+  if (receipt.v !== undefined && receipt.v !== RECEIPT_VERSION) {
+    return {
+      ok: false,
+      status: "invalid",
+      reason: `unsupported receipt version ${String(receipt.v)} (this verifier understands ${RECEIPT_VERSION})`,
+    };
+  }
+
+  // The verdict is what a caller acts on, so an unknown value is a refusal, not a pass.
+  const verdictValue = receipt.verdict?.decision;
+  if (verdictValue !== undefined && !["pay", "review", "do_not_pay"].includes(verdictValue)) {
+    return {
+      ok: false,
+      status: "invalid",
+      reason: `unknown verdict ${JSON.stringify(verdictValue)} — expected pay, review or do_not_pay`,
+    };
   }
 
   if (receipt.signed !== true) {
@@ -166,6 +205,7 @@ export async function verifyReceipt(
       verdict: receipt.verdict?.decision,
       issued_at: receipt.issued_at,
       key_id: receipt.key_id,
+      key_source: options.jwk !== undefined ? "supplied" : "published",
     };
   } catch (error) {
     return {
