@@ -45,9 +45,13 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  backdrop-filter: blur(14px);
-  background: color-mix(in srgb, var(--lp-bg) 82%, transparent);
-  border-bottom: 1px solid var(--lp-line-soft);
+  /* No panel: the aurora runs behind the nav too, so the page reads as one surface.
+     A hairline scrolls with it rather than a bar. Blur stays so text over a bright orb region
+     keeps its contrast without painting an opaque strip back on. */
+  background: transparent;
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  border-bottom: 1px solid color-mix(in srgb, var(--lp-fg) 6%, transparent);
 }
 
 .lp-header-inner {
