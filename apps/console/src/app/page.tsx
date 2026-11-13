@@ -8,18 +8,29 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { CadencePanel } from "@/components/CadencePanel";
 import { SOCIALS } from "@/lib/agent-manifest";
 
+// Page-level metadata replaces the layout's `openGraph` object wholesale rather than merging into it,
+// so the image declared in layout.tsx never reached the page that matters. Declared here in full, and
+// the description is 148 characters because Google truncates around 150–160 — at 211 the clause
+// saying what the tool does was the part being cut.
 export const metadata: Metadata = {
   title: "PayStage — Safety tools for AI agent payments",
   description:
-    "PayStage sits outside an agent's wallet: five small MCP tools that evaluate a proposed payment against your local policy and return pay, review or do-not-pay — with the rule that fired. No keys, no signing.",
+    "Read-only preflight for AI agent payments: get pay, review or do-not-pay before anything is signed, with the rule that fired.",
   alternates: { canonical: "https://paystage.xyz/" },
   openGraph: {
-    title: "PayStage — Safety tools for AI agent payments",
+    title: "Stop the payment before it's signed.",
     description:
-      "A read-only seatbelt outside the wallet. Local policy in, pay / review / do-not-pay out, before anything is signed.",
+      "Read-only preflight for AI agent payments: pay, review or do-not-pay — with the rule that fired.",
     url: "https://paystage.xyz/",
     siteName: "PayStage",
     type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "PayStage — stop the payment before it's signed" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Stop the payment before it's signed.",
+    description: "Read-only preflight for AI agent payments. Pay, review or do-not-pay — with the rule that fired.",
+    images: ["/og.png"],
   },
 };
 
