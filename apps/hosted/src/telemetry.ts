@@ -77,7 +77,7 @@ export function recordEvent(
 
   const endpoint = `${url.replace(/\/+$/, "")}/rest/v1/events`;
 
-  const body = JSON.stringify({
+  const row: Record<string, unknown> = {
     source: event.source,
     tool: event.tool,
     decision: event.decision,
@@ -91,7 +91,8 @@ export function recordEvent(
     request_id: event.request_id ?? null,
     facilitator_status: event.facilitator_status ?? null,
     error_class: event.error_class ?? null,
-  });
+  };
+  const body = JSON.stringify(row)
 
   const p: Promise<unknown> = (async () => {
     try {
@@ -105,6 +106,40 @@ export function recordEvent(
         },
         body,
       });
+      // A field the table does not have yet must not silence telemetry.
+      //
+      // On 2026-11-13 `payer` shipped a day before its migration, PostgREST answered PGRST204 for
+      // every row, and a day of events was dropped while every request returned 200. The retry
+      // below keeps the pipe open during that window and loses exactly one field instead of all of
+      // them; the field comes back on its own once the column exists, because nothing remembers the
+      // failure between invocations.
+      if (res.status === 400) {
+        const detail = await res.text().catch(() => "");
+        const missing = /PGRST204|column .* does not exist|Could not find the '([a-z_]+)' column/i.exec(detail);
+        if (missing) {
+          const field = missing[1] ?? "payer";
+          const { [field]: _dropped, ...rest } = row;
+          console.log(
+            JSON.stringify({
+              level: "warn",
+              msg: "telemetry_field_missing",
+              field,
+              note: "retrying without it; run the migration and it returns automatically",
+            }),
+          );
+          return fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: key,
+              Authorization: `Bearer ${key}`,
+              Prefer: "return=minimal",
+            },
+            body: JSON.stringify(rest),
+          });
+        }
+      }
+
       if (!res.ok) {
         console.log(
           JSON.stringify({
