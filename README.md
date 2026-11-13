@@ -177,13 +177,14 @@ tools it bundles.
 
 ## Development
 
-This is a monorepo.
+This is an npm-workspaces monorepo — `package-lock.json` is the lockfile and CI runs `npm ci`.
+There is no pnpm workspace and no `lint` script; `npm run typecheck` is the check that exists.
 
 ```bash
-pnpm install
-pnpm build
-pnpm test
-pnpm lint
+npm ci
+npm run build
+npm test
+npm run typecheck
 ```
 
 ## Contributing
