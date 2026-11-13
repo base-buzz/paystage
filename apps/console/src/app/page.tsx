@@ -4,6 +4,7 @@ import { AliveStrip } from "@/components/AliveStrip";
 import { CopyCommand } from "@/components/CopyCommand";
 import { LogoBanner } from "@/components/LogoBanner";
 import { AgentPrompt } from "@/components/AgentPrompt";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { CadencePanel } from "@/components/CadencePanel";
 import { SOCIALS } from "@/lib/agent-manifest";
 
@@ -69,6 +70,7 @@ export default function LandingPage() {
         <span />
       </div>
       <div className="lp-grain" aria-hidden="true" />
+      <ScrollReveal />
         <section className="lp-hero">
           <div className="lp-wrap lp-hero-grid">
             <div>
@@ -209,7 +211,7 @@ export default function LandingPage() {
 
         <AliveStrip />
 
-        <section className="lp-section" id="how">
+        <section className="lp-section" id="how" data-reveal>
           <div className="lp-wrap">
             <div className="lp-section-head">
               <h2 className="lp-h2">How it works</h2>
@@ -270,7 +272,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="lp-section lp-section-alt" id="why">
+        <section className="lp-section lp-section-alt" id="why" data-reveal>
           <div className="lp-wrap lp-split">
             <div className="lp-body">
               <h2 className="lp-h2" style={{ marginBottom: 18 }}>
@@ -344,7 +346,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="lp-section" id="agents">
+        <section className="lp-section" id="agents" data-reveal>
           <div className="lp-wrap">
             <div className="lp-section-head">
               <h2 className="lp-h2">For agents</h2>
@@ -425,7 +427,7 @@ export default function LandingPage() {
 
         <CadencePanel />
 
-        <section className="lp-section" id="evidence">
+        <section className="lp-section" id="evidence" data-reveal>
           <div className="lp-wrap">
             <div className="lp-section-head">
               <h2 className="lp-h2">Safety, as artifacts</h2>
@@ -511,7 +513,7 @@ export default function LandingPage() {
           </div>
         </section>
       
-        <section className="lp-section" id="faq">
+        <section className="lp-section" id="faq" data-reveal>
           <div className="lp-wrap">
             <h2 className="lp-h2">Questions a careful reader asks</h2>
             <div className="lp-faq">
@@ -550,7 +552,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="lp-cta-final">
+        <section className="lp-cta-final" data-reveal>
           <div className="lp-wrap">
             <h2 className="lp-h2">Try it before you trust it</h2>
             <p className="lp-hero-note" style={{ maxWidth: 620 }}>
