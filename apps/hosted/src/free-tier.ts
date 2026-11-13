@@ -39,6 +39,18 @@ export function freeTierMiddleware(cfg: FreeTierConfig = {}): MiddlewareHandler 
   return async (c, next) => {
     if (!enabled || c.req.method !== "POST" || !FREE_PATHS.has(c.req.path)) return next();
 
+    // Test hook: `x-paystage-force-payment: 1` opts a *synthetic* caller out of the free tier so the
+    // settlement path can be exercised on demand. Without it, a funded wallet can never pay from an
+    // IP that still has free calls left — which is how our first "paid" probe silently cost nothing
+    // and returned no PAYMENT-RESPONSE. Scoped to `source=synthetic` so a real caller cannot skip
+    // paying, and labelled in telemetry like every other synthetic call.
+    const forcePayment = c.req.header("x-paystage-force-payment") === "1";
+    const synthetic = c.req.header("x-paystage-source") === "synthetic";
+    if (forcePayment && synthetic) {
+      c.header("x-paystage-free-tier", "forced-paid");
+      return next();
+    }
+
     // A caller that brings a payment signature is a paid call, not a free one.
     const hasPayment =
       c.req.header("payment-signature") ||
