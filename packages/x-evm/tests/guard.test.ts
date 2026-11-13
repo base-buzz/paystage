@@ -95,6 +95,27 @@ describe("guardScheme", () => {
     expect(s).toBeInstanceOf(Scheme);
   });
 
+  it("guards Circle's batching scheme without touching its other hooks", async () => {
+    // @circle-fin/x402-batching's BatchEvmScheme exposes createPaymentPayload like every other scheme,
+    // plus batching hooks it needs. The guard wraps only the one method, so the rest must survive
+    // untouched — that is the difference between a wrapper and a reimplementation.
+    const calls = { created: 0, before: 0 };
+    const batching = {
+      async onBeforePaymentCreation() { calls.before += 1; return undefined; },
+      async createPaymentPayload(_v: number, _r: unknown) { calls.created += 1; return { payload: "batched" }; },
+      async signAuthorization() { return "0xsig"; },
+    };
+    const guarded = guardScheme(batching, { policy });
+    expect(guarded.signAuthorization).toBe(batching.signAuthorization);
+    await guarded.onBeforePaymentCreation();
+    expect(calls.before).toBe(1);
+    await expect(guarded.createPaymentPayload(2, overCap)).rejects.toBeInstanceOf(PaymentRefusedError);
+    expect(calls.created).toBe(0);
+    const allowed = await guarded.createPaymentPayload(2, ok);
+    expect(allowed).toEqual({ payload: "batched" });
+    expect(calls.created).toBe(1);
+  });
+
   it("createGuardedScheme constructs and guards in one step", async () => {
     class Scheme {
       created = 0;
