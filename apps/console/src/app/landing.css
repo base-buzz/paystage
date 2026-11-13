@@ -42,16 +42,15 @@
 /* ---------- header ---------- */
 
 .lp-header {
+  /* No surface of any kind. The gradient starts at the top of the viewport and runs behind the nav,
+     so there is no seam to see: no background, no backdrop blur (a blur is a visible band on a dark
+     page even when the fill is transparent), no border, no shadow. Sticky behaviour stays. */
   position: sticky;
   top: 0;
   z-index: 20;
-  /* No panel: the aurora runs behind the nav too, so the page reads as one surface.
-     A hairline scrolls with it rather than a bar. Blur stays so text over a bright orb region
-     keeps its contrast without painting an opaque strip back on. */
-  background: transparent;
-  backdrop-filter: blur(10px) saturate(1.1);
-  -webkit-backdrop-filter: blur(10px) saturate(1.1);
-  border-bottom: 1px solid color-mix(in srgb, var(--lp-fg) 6%, transparent);
+  background: none;
+  border: 0;
+  box-shadow: none;
 }
 
 .lp-header-inner {
@@ -909,7 +908,8 @@ body {
 }
 
 .lp-aurora span:nth-child(1) {
-  top: -20vmax;
+  /* Starts at the very top so the colour is present behind the nav, not only under the hero. */
+  top: -6vmax;
   left: -10vmax;
   background: radial-gradient(circle at 30% 30%, #3dd194, transparent 62%);
   animation: lp-drift-a 26s ease-in-out infinite alternate;
