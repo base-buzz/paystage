@@ -93,7 +93,19 @@ The same MCP config works for Claude Desktop (`claude_desktop_config.json`) and 
 }
 ```
 
-- `PAYSTAGE_POLICY_PATH` (required): path to your local `policy.json`.
+**The MCP server itself needs no environment variables and starts with an empty environment.** It
+answers an MCP handshake and lists its tools with nothing configured — the policy arrives as an
+argument on each call, not as a file path. Verified:
+
+```bash
+env -i npx -y -p @paystage/mcp paystage-mcp   # completes `initialize`, lists five tools
+```
+
+The two variables below are for the **stdio CLI path**, where a policy file is convenient. They are
+optional, and a directory that reads this section as "required configuration" will refuse to start a
+server that in fact needs nothing:
+
+- `PAYSTAGE_POLICY_PATH` (optional, CLI only): path to a `policy.json` the CLI reads at startup.
 - `PAYSTAGE_RPC_URL` (optional): RPC endpoint used by on-chain checks. Defaults to a public Base RPC.
 
 ## Policies
