@@ -336,11 +336,14 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
       dailyLimit: Number(env.FREE_TIER_DAILY_LIMIT ?? 1000),
     }));
 
+    // The capture has to WRAP the payment middleware, not sit inside it. Registered after, it runs
+    // before the response leaves payMw — so `PAYMENT-RESPONSE` does not exist yet and every real
+    // settlement was recorded as payer:null. Proven on the first mainnet payment: 0.002 USDC moved,
+    // the receipt echoed the payer, and the row still said null.
+    app.use("*", settlementCaptureMiddleware());
+
     const payMw = buildPaymentMiddleware(cfg, opts.facilitatorClient);
     app.use("*", (c, next) => (c.get("paystageFree") === true ? next() : payMw(c, next)));
-    // After the payment middleware, read the settlement receipt it echoed. This is the only
-    // place the payer address exists — it is not in the request.
-    app.use("*", settlementCaptureMiddleware());
   }
 
   app.route("/", evaluateRoutes);
