@@ -1086,6 +1086,12 @@ body {
 
 .lp-hero {
   position: relative;
+  /* The hero's own radial washes are the thing that starts 64px down, not the scrim: the right
+     column measured (12,12,16) just above the header line and (18,27,27) just below it. Pulling the
+     section up by the header height — and giving the space back as extra top padding so no content
+     moves — makes its background start at the top of the document. */
+  margin-top: -64px;
+  padding-top: 140px;
 }
 
 .lp-hero > * {
