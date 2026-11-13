@@ -116,6 +116,20 @@ export function recordEvent(
           }),
         );
       }
+      // PostgREST answers 400 for a row with an unknown field, and the effect of swallowing that is
+      // invisible: every request 200s, nothing is recorded, and the site reports zero users. The
+      // status and body are logged so the next schema drift is diagnosable from the logs alone.
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        console.log(
+          JSON.stringify({
+            level: "error",
+            msg: "telemetry_insert_rejected",
+            status: res.status,
+            body: body.slice(0, 300),
+          }),
+        );
+      }
     } catch (err) {
       console.log(
         JSON.stringify({
