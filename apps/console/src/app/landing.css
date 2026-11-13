@@ -1075,7 +1075,11 @@ body {
 .lp-hero::before {
   content: "";
   position: absolute;
-  inset: 0;
+  /* Extends above the hero by the header's height (64px). The scrim used to start at the hero's own
+     top edge, which is 64px down — leaving a measurable brightness step exactly where the nav ends
+     (right column: (12,12,16) above, (18,27,27) below). One continuous field means the scrim starts
+     at the top of the document too. */
+  inset: -64px 0 0;
   pointer-events: none;
   background: radial-gradient(680px 420px at 18% 30%, rgba(7, 8, 11, 0.72), transparent 70%);
 }
