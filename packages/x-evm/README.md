@@ -29,6 +29,13 @@ Not a return value. A caller that ignores a return value would sign anyway, and 
 cannot. Catch `PaymentRefusedError` and read `.verdict.reasons` — the sentences name what failed, so
 they can be pasted into a policy fix.
 
+## Works with batching schemes too
+
+`@circle-fin/x402-batching`'s `BatchEvmScheme` exposes `createPaymentPayload` like every other scheme,
+plus batching hooks. The guard wraps only that one method, so the hooks are untouched and a guarded
+batched payment is evaluated exactly like a single one. There is no separate batching package because
+none is needed — there is a test that proves the hooks survive.
+
 ## What it does not do
 
 No network calls, no keys, no signing of its own. It evaluates the requirements you were already
