@@ -26,7 +26,12 @@ jobs:
         run: npm run build
       - name: Install hosted dependencies
         working-directory: apps/hosted
-        run: npm ci --ignore-scripts
+        # --legacy-peer-deps because wrangler 4.158 wants @cloudflare/workers-types ^5 while the app
+        # pins ^4. That is a dev-only type package and the deploy workflow resolves it the same way
+        # (newer npm is stricter about peer ranges than the lockfile was written for). Without this,
+        # the paid job fails before it can test anything — a gate that is red for an unrelated reason
+        # is a gate nobody looks at.
+        run: npm ci --ignore-scripts --legacy-peer-deps
         # apps/hosted is not an npm workspace; it keeps its own lockfile.
       - name: Write the throwaway key
         env:
