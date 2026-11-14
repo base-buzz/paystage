@@ -43,6 +43,38 @@ describe("/mcp", () => {
     expect(body).toContain("paystage");
   });
 
+  it("lists all nine tools, not the one it used to", async () => {
+    // The site claimed nine while this endpoint served one. This assertion is the reason that cannot
+    // happen quietly again: it fails on a count change in either direction.
+    const app = createApp(env as never, { protect: false });
+    const res = await app.request(
+      "/mcp",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 9, method: "tools/list", params: {} }),
+      },
+      env as never,
+    );
+    const text = await res.text();
+    const names = [...text.matchAll(/"name":"([a-z0-9_]+)"/g)].map((m) => m[1]);
+    const set = new Set(names.filter((n) => n.includes("_") && n !== "paystage"));
+    expect(set.size).toBe(9);
+    for (const expected of [
+      "evaluate_mcp_payment",
+      "list_outstanding_auths",
+      "evaluate_outstanding_auths",
+      "evaluate_hip3_trade",
+      "evaluate_velocity",
+      "verify_receipt",
+      "decode_payment_required",
+      "validate_policy",
+      "evaluate_batch",
+    ]) {
+      expect(set.has(expected)).toBe(true);
+    }
+  });
+
   it("lists the evaluate_mcp_payment tool", async () => {
     const app = createApp(env as never, { protect: false });
     const res = await app.request(
