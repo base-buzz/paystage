@@ -113,6 +113,15 @@ export interface ToolDeps {
   resolvePolicy: (input: { policy?: unknown; policy_path?: string }) => Promise<Policy>;
   /** Reported in `serverInfo`; the Worker and the package version them separately. */
   version: string;
+  /**
+   * The published key, when the host already holds it.
+   *
+   * A Worker that serves `verify_receipt` cannot fetch its own `/v1/public/receipt-key.json`: the
+   * subrequest to its own origin came back 522/523, so a genuine signed receipt reported
+   * `unverifiable` on the live endpoint while the same check passed locally. Passing the key in
+   * removes the network from the one path that is supposed to be an independent check.
+   */
+  resolveReceiptKey?: () => Promise<Record<string, unknown> | null>;
 }
 
 export function registerAllTools(server: McpServer, deps: ToolDeps): void {
@@ -371,7 +380,15 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     },
     async ({ receipt, key_url }: { receipt: unknown; key_url?: string }) => {
       try {
-        const verdict = await verifyReceipt(receipt as never, key_url ? { keyUrl: key_url } : {});
+        // Prefer a key the host already holds; an explicit key_url still wins, so a caller can check
+        // a receipt from a different deployment against that deployment's published key.
+        const injected = key_url === undefined && deps.resolveReceiptKey
+          ? await deps.resolveReceiptKey()
+          : null;
+        const verdict = await verifyReceipt(
+          receipt as never,
+          key_url ? { keyUrl: key_url } : injected ? { jwk: injected as never } : {},
+        );
         return { content: [{ type: "text" as const, text: JSON.stringify(verdict, null, 2) }] };
       } catch (error) {
         return {

@@ -9,6 +9,7 @@
 import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
 import { registerAllTools, SERVER_CAPABILITIES } from "@paystage/mcp/tools";
 import { parsePolicy } from "@paystage/policy";
+import { publicKeyJwk } from "./receipt.js";
 import { recordEvent, sourceFromHeaders, type TelemetrySource } from "./telemetry.js";
 
 export const MCP_PATH = "/mcp";
@@ -34,6 +35,15 @@ function buildServer(env: Env, source: TelemetrySource): McpServer {
       return parsePolicy(input.policy as never);
     },
     version: SERVICE_VERSION,
+    // The Worker cannot fetch its own origin to read the published key — that subrequest returned
+    // 522/523, so `verify_receipt` reported a genuine signed receipt as unverifiable in production.
+    // The key material is already here; hand it over directly and keep the network out of the check.
+    resolveReceiptKey: async () => {
+      const pkcs8 = (env as { RECEIPT_SIGNING_KEY_PKCS8?: string } | undefined)?.RECEIPT_SIGNING_KEY_PKCS8;
+      if (!pkcs8) return null;
+      const jwk = await publicKeyJwk(pkcs8);
+      return jwk ? (jwk as unknown as Record<string, unknown>) : null;
+    },
   });
 
   // Telemetry: the MCP path recorded nothing until 2026-11-14, so a real agent call and a quiet day
