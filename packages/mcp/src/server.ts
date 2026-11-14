@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/server";
 import { loadPolicy, parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
-import { registerAllTools, TOOL_NAMES, type ToolName } from "./tools.js";
+import { registerAllTools, SERVER_CAPABILITIES, TOOL_NAMES, type ToolName } from "./tools.js";
 
 /**
  * Report the real package version. This was hardcoded as "0.3.0" and stayed there two releases,
@@ -24,7 +24,10 @@ async function resolvePolicy(input: { policy?: unknown; policy_path?: string }):
 }
 
 export function createServer(): McpServer {
-  const server = new McpServer({ name: "paystage", version: SERVER_VERSION });
+  const server = new McpServer(
+    { name: "paystage", version: SERVER_VERSION },
+    { capabilities: SERVER_CAPABILITIES },
+  );
   registerAllTools(server, { resolvePolicy, version: SERVER_VERSION });
   return server;
 }
