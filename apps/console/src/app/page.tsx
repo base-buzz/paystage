@@ -7,8 +7,6 @@ import { AgentPrompt } from "@/components/AgentPrompt";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { CadencePanel } from "@/components/CadencePanel";
 import { LiveFeed } from "@/components/LiveFeed";
-import { ChainTicker } from "@/components/ChainTicker";
-import { SettledStrip } from "@/components/SettledStrip";
 import { SOCIALS } from "@/lib/agent-manifest";
 import { TOOL_COUNT, TOOL_COUNT_WORD } from "@/lib/tools";
 
@@ -227,11 +225,6 @@ export default function LandingPage() {
               <div className="lp-proof-label">source, tests and CI public</div>
             </div>
           </div>
-        </section>
-
-        <section className="lp-wrap" aria-label="Live activity">
-          <ChainTicker />
-          <SettledStrip />
         </section>
 
         <LiveFeed />
