@@ -36,6 +36,15 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           node apps/hosted/scripts/conformance.mjs >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
           echo '```' >> "$GITHUB_STEP_SUMMARY"
+      - name: Listing freshness
+        # Informational: most surfaces are third parties we cannot push, so a stale listing is a
+        # report, not a build failure. The conformance kit is what fails the job.
+        run: |
+          echo "### Listings" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          node scripts/check-listings.mjs >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          node scripts/check-listings.mjs || true
       - name: Fail if the kit failed
         if: steps.conformance.outcome == 'failure'
         run: exit 1
