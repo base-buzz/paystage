@@ -1,6 +1,6 @@
 {
   "name": "@paystage/skill",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agent skill: check an x402 payment against a policy before signing it",
   "license": "MIT",
   "repository": {
@@ -8,8 +8,18 @@
     "url": "git+https://github.com/base-buzz/paystage.git",
     "directory": "packages/skill"
   },
-  "files": ["SKILL.md", "README.md"],
-  "keywords": ["x402", "agent-skills", "claude-skills", "agent-payments", "preflight", "402"],
+  "files": [
+    "SKILL.md",
+    "README.md"
+  ],
+  "keywords": [
+    "x402",
+    "agent-skills",
+    "claude-skills",
+    "agent-payments",
+    "preflight",
+    "402"
+  ],
   "scripts": {
     "build": "node -e \"process.exit(0)\"",
     "test": "node -e \"process.exit(0)\""
