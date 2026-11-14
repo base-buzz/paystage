@@ -121,12 +121,17 @@ function registerAllTools(server: McpServer): void {
         payment_required: z.unknown(),
         policy_path: z.string().optional(),
         policy: z.unknown().optional(),
+        agent_id: z
+          .string()
+          .optional()
+          .describe("Which agent is asking. Required to reach per-agent budgets in policy.agents."),
       }),
     },
     async (input: {
       payment_required: unknown;
       policy_path?: string;
       policy?: unknown;
+      agent_id?: string;
     }): Promise<{
       content: Array<{ type: "text"; text: string }>;
       isError?: boolean;
@@ -134,7 +139,11 @@ function registerAllTools(server: McpServer): void {
       try {
         const policy = await resolvePolicy(input);
         const pr = normalizePaymentRequired(input.payment_required);
-        const result: EvaluateResult = evaluatePayment(pr, policy);
+        const result: EvaluateResult = evaluatePayment(
+          pr,
+          policy,
+          input.agent_id !== undefined ? { agentId: input.agent_id } : {},
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };
