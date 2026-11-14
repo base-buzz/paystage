@@ -14,7 +14,14 @@ import { Hono } from "hono";
  */
 export const publicChainRoutes = new Hono();
 
-const RPC = "https://mainnet.base.org";
+// Coinbase's public RPC refused the Worker's egress while answering from a laptop, so a single host
+// made the endpoint permanently "unreachable". Several no-key endpoints, tried in order: whichever
+// answers first wins, and a failure names itself rather than looking like a chain stall.
+const RPCS = [
+  "https://base-rpc.publicnode.com",
+  "https://1rpc.io/base",
+  "https://mainnet.base.org",
+];
 const CACHE_SECONDS = 3;
 
 type ChainSnapshot = {
@@ -25,30 +32,34 @@ type ChainSnapshot = {
   note?: string;
 };
 
-async function rpc(method: string): Promise<string | null> {
-  try {
-    const res = await fetch(RPC, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params: [] }),
-      signal: AbortSignal.timeout(4000),
-    });
-    if (!res.ok) return null;
-    const body = (await res.json()) as { result?: string };
-    return typeof body.result === "string" ? body.result : null;
-  } catch {
-    return null;
+async function rpc(method: string): Promise<{ value: string | null; via: string | null }> {
+  for (const url of RPCS) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params: [] }),
+        signal: AbortSignal.timeout(3000),
+      });
+      if (!res.ok) continue;
+      const body = (await res.json()) as { result?: string };
+      if (typeof body.result === "string") return { value: body.result, via: new URL(url).host };
+    } catch {
+      // try the next one
+    }
   }
+  return { value: null, via: null };
 }
 
 publicChainRoutes.get("/v1/public/chain.json", async (c) => {
-  const [blockHex, gasHex] = await Promise.all([rpc("eth_blockNumber"), rpc("eth_gasPrice")]);
+  const [block, gas] = await Promise.all([rpc("eth_blockNumber"), rpc("eth_gasPrice")]);
 
-  const snapshot: ChainSnapshot = {
-    block: blockHex ? Number.parseInt(blockHex, 16) : null,
-    gasGwei: gasHex ? Number.parseFloat((Number.parseInt(gasHex, 16) / 1e9).toFixed(4)) : null,
-    ok: blockHex !== null,
+  const snapshot: ChainSnapshot & { via?: string | null } = {
+    block: block.value ? Number.parseInt(block.value, 16) : null,
+    gasGwei: gas.value ? Number.parseFloat((Number.parseInt(gas.value, 16) / 1e9).toFixed(4)) : null,
+    ok: block.value !== null,
     observedAt: new Date().toISOString(),
+    via: block.via,
   };
   if (!snapshot.ok) snapshot.note = "the public RPC did not answer; this is not a chain stall";
 
