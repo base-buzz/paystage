@@ -256,6 +256,42 @@ async function checkDocsNotLying() {
   record("api: malformed input fails closed", res.status >= 400, `HTTP ${res.status}`);
 }
 
+
+/**
+ * Tool parity: the URL a directory lists must expose what the README promises.
+ *
+ * This is the check that was missing when the site claimed nine tools and api.paystage.xyz/mcp served
+ * one. Nothing here compares prose to prose — it reads the names the package registers and the names
+ * the endpoint returns.
+ */
+async function checkToolParity() {
+  const fs = await import("node:fs/promises");
+  const path = await import("node:path");
+  const src = await fs.readFile(path.join(process.cwd(), "packages/mcp/src/tools.ts"), "utf8");
+  const block = src.slice(src.indexOf("export const TOOL_NAMES"), src.indexOf("] as const", src.indexOf("export const TOOL_NAMES")));
+  const expected = [...block.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
+
+  const res = await fetch(`${API}/mcp`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json, text/event-stream",
+      "x-paystage-source": "test",
+    },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }),
+    signal: AbortSignal.timeout(20_000),
+  });
+  const text = await res.text();
+  const names = [...text.matchAll(/"name":"([a-z0-9_]+)"/g)].map((m) => m[1]).filter((n) => n !== "paystage");
+
+  const missing = expected.filter((n) => !names.includes(n));
+  record(
+    "mcp: remote endpoint exposes every tool the package registers",
+    res.ok && missing.length === 0 && names.length === expected.length,
+    missing.length ? `missing: ${missing.join(", ")}` : `${names.length}/${expected.length} matching`,
+  );
+}
+
 // Sequential and named, so a timeout says *which* surface failed rather than
 // just "a check threw".
 const groups = [
@@ -264,6 +300,7 @@ const groups = [
   ["sepolia", () => checkApi(API_SEPOLIA, "sepolia")],
   ["unpaid challenge", checkUnpaidChallenge],
   ["fail-closed", checkDocsNotLying],
+  ["tool parity", checkToolParity],
 ];
 
 for (const [name, run] of groups) {
