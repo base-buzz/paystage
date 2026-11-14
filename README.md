@@ -55,6 +55,25 @@ The server waits silently for an agent app to connect. That's normal; press Ctrl
 
 `@paystage/mcp` is the umbrella MCP server (**9 tools**, including `evaluate_hip3_trade` and `evaluate_velocity`). It exposes the PayStage tools over stdio and reads a local policy file. See [SECURITY.md](SECURITY.md) for exactly what it accesses and why.
 
+
+## Connect in one command
+
+Copy the line for your client. The remote is Streamable HTTP, so nothing needs installing.
+
+```bash
+# Claude Code
+claude mcp add --transport http paystage https://api.paystage.xyz/mcp
+
+# Cursor — append to .cursor/mcp.json
+{"mcpServers":{"paystage":{"url":"https://api.paystage.xyz/mcp"}}}
+
+# Any MCP client, or just to read the tool schemas without an account
+npx -y mcporter list https://api.paystage.xyz/mcp
+```
+
+Prefer it local? `npx -y -p @paystage/mcp paystage-mcp` runs the same nine tools over stdio and reads a
+policy file from disk.
+
 ## Four ways in
 
 | You want | Use |
