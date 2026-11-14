@@ -4,6 +4,7 @@ import { healthRoutes } from "./routes/health.js";
 import { evaluateRoutes } from "./routes/evaluate.js";
 import { publicStatusRoutes } from "./routes/public-status.js";
 import { receiptKeyRoutes } from "./routes/receipt-key.js";
+import { publicChainRoutes } from "./routes/public-chain.js";
 import { recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { freeTierMiddleware } from "./free-tier.js";
 import { settlementCaptureMiddleware } from "./settlement.js";
@@ -296,6 +297,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   // Public status feed — must be mounted BEFORE payment middleware.
   app.route("/", publicStatusRoutes);
   app.route("/", receiptKeyRoutes);
+  app.route("/", publicChainRoutes);
 
   const protect = opts.protect ?? true;
   if (protect) {
