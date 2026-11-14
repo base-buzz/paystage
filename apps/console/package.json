@@ -16,6 +16,7 @@
     "@paystage/policy": "file:../../packages/policy",
     "@paystage/preflight": "file:../../packages/preflight",
     "@paystage/velocity": "file:../../packages/velocity",
+    "@supabase/supabase-js": "^2.119.0",
     "@x402/core": "^2.29.0",
     "@x402/evm": "^2.29.0",
     "@x402/fetch": "^2.29.0",
