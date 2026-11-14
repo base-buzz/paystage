@@ -59,6 +59,31 @@ export function freeTierMiddleware(cfg: FreeTierConfig = {}): MiddlewareHandler 
       c.req.header("X-PAYMENT");
     if (hasPayment) return next();
 
+    // A request that is not an evaluation must not consume a free call, and must not answer 200/400
+    // either — it should reach the payment challenge.
+    //
+    // x402scan's discovery spec lists this as a known failure: "Expected 402, got 400 from request
+    // validation running before payment challenge". An indexer probes with an empty body, so a free
+    // tier that answers first makes the endpoint look like it is not an x402 route at all, and it gets
+    // skipped. The same logic protects real callers: a typo in the body should not burn a free call.
+    if (c.req.path !== "/mcp") {
+      let looksLikeEvaluation = false;
+      try {
+        const body = await c.req.raw.clone().json() as Record<string, unknown>;
+        looksLikeEvaluation =
+          typeof body === "object" &&
+          body !== null &&
+          ("payment_required" in body || "auths" in body || "payments" in body) &&
+          "policy" in body;
+      } catch {
+        looksLikeEvaluation = false;
+      }
+      if (!looksLikeEvaluation) {
+        c.header("x-paystage-free-tier", "not-an-evaluation");
+        return next();
+      }
+    }
+
     const ip =
       c.req.header("cf-connecting-ip") ||
       c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
