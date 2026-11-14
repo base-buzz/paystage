@@ -82,3 +82,24 @@ the right amount sent to the wrong address is still a drained wallet.
 - [`@paystage/preflight`](https://www.npmjs.com/package/@paystage/preflight) — the evaluator
 - [`@paystage/policy`](https://www.npmjs.com/package/@paystage/policy) — the policy schema
 - [`@paystage/mcp`](https://www.npmjs.com/package/@paystage/mcp) — the same gate as an MCP server
+
+## The seller's side: refuse before verification
+
+`guardFetch` protects an agent that pays. `paystageVerifierHook` protects a seller that is about to be
+paid — it plugs into the hooks `@x402/core` runs before verification, so a payment that violates your
+policy is aborted before the facilitator is asked to verify or settle it.
+
+```ts
+import { x402ResourceServer } from "@x402/core/server";
+import { paystageVerifierHook } from "@paystage/x402-guard";
+
+const server = new x402ResourceServer(facilitator)
+  .registerExtension(paystageVerifierHook({ policy }));
+```
+
+It cannot be bypassed by a caller who forgot to use our client, which is the failure mode a
+client-side guard always has.
+
+**It fails closed.** If policy evaluation throws, the payment is aborted with
+`paystage_evaluation_failed`. A hook that failed open would look like protection and behave like
+consent — there is a test for exactly that.

@@ -165,3 +165,12 @@ function defaultWrap(): GuardOptions["wrap"] | undefined {
     return undefined;
   }
 }
+
+export {
+  paystageVerifierHook,
+  evaluateVerification,
+  type VerifierHookOptions,
+  type VerifyContextLike,
+  type PaymentRequirementsLike,
+  type HookOutcome,
+} from "./verifier-hook.js";
