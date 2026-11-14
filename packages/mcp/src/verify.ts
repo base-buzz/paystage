@@ -15,7 +15,9 @@
  *     `ieee-p1363` explicitly.
  */
 
-import { createPublicKey, verify as nodeVerify, webcrypto } from "node:crypto";
+// globalThis.crypto exists in Workers and in Node 18+. Importing `webcrypto` from node:crypto
+// works in Node and breaks the Worker bundle, which is the difference that matters here.
+const webcrypto = globalThis.crypto;
 
 /** The receipt format version this verifier understands. Kept local on purpose: a verifier
  *  must not silently follow the issuer's constant upward — it validates what it knows. */
@@ -58,6 +60,9 @@ async function sha256Hex(value: unknown): Promise<string> {
   const digest = await webcrypto.subtle.digest("SHA-256", bytes);
   return Buffer.from(new Uint8Array(digest)).toString("hex");
 }
+
+/** Minimal JWK shape: the fields Web Crypto reads, no lib.dom dependency. */
+type JsonWebKeyLike = { kty: string; crv?: string; x?: string; y?: string; n?: string; e?: string };
 
 export function canonicalize(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
@@ -261,16 +266,30 @@ export async function verifyReceipt(
     }
   }
 
-  const data = Buffer.from(canonicalize(receiptPayload(receipt)), "utf8");
-  const signature = base64UrlToBuffer(receipt.signature);
+  const data = new TextEncoder().encode(canonicalize(receiptPayload(receipt)));
+  const signatureBuffer = base64UrlToBuffer(receipt.signature);
+  const signature = new Uint8Array(
+    signatureBuffer.buffer,
+    signatureBuffer.byteOffset,
+    signatureBuffer.byteLength,
+  );
 
   try {
-    const publicKey = createPublicKey({ key: jwk as never, format: "jwk" });
-    const valid = nodeVerify(
-      "sha256",
-      data,
-      { key: publicKey, dsaEncoding: "ieee-p1363" },
+    // Web Crypto rather than node:crypto: identical verification, but it also runs in a Worker,
+    // which is what lets the hosted endpoint expose `verify_receipt` at all. The JWK already names
+    // the curve and hash, so the import is the whole setup.
+    const publicKey = await webcrypto.subtle.importKey(
+      "jwk",
+      jwk as unknown as JsonWebKeyLike,
+      { name: "ECDSA", namedCurve: String((jwk as { crv?: string }).crv ?? "P-256") },
+      false,
+      ["verify"],
+    );
+    const valid = await webcrypto.subtle.verify(
+      { name: "ECDSA", hash: "SHA-256" } as Parameters<typeof webcrypto.subtle.verify>[0],
+      publicKey,
       signature,
+      data,
     );
     if (!valid) {
       return {
