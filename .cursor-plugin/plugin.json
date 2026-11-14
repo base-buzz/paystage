@@ -1,0 +1,18 @@
+{
+  "name": "paystage",
+  "displayName": "PayStage",
+  "version": "0.3.5",
+  "description": "Read-only payment safety for AI agents: evaluate x402 payments, outstanding authorisations, HIP-3 orders and payment velocity against a local policy. Returns pay, review or do_not_pay and never signs.",
+  "author": {
+    "name": "PayStage"
+  },
+  "homepage": "https://paystage.xyz",
+  "repository": "https://github.com/base-buzz/paystage",
+  "license": "MIT",
+  "keywords": ["mcp", "x402", "payments", "security", "base", "agent-safety"],
+  "mcpServers": {
+    "paystage": {
+      "url": "https://api.paystage.xyz/mcp"
+    }
+  }
+}

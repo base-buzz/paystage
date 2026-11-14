@@ -615,6 +615,7 @@ export default function LandingPage() {
               </a>
               <a href="/llms.txt">llms.txt</a>
               <a href="/console">Console</a>
+              <a href="/privacy">Privacy</a>
               <a href="https://github.com/base-buzz/paystage/security/advisories/new" rel="noopener">
                 Report a vulnerability
               </a>
