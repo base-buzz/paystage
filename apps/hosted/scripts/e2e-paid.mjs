@@ -174,6 +174,18 @@ async function main() {
   console.log("response body:", JSON.stringify(parsed, null, 2));
 
   if (!res.ok) {
+    // A 402 that survives the payment attempt means the facilitator refused it. When the reason is an
+    // empty test wallet, that is a funding problem and must not read as a broken endpoint — the first
+    // run of this job showed exactly that: `invalid_exact_evm_insufficient_balance` printed after a
+    // generic "non-2xx response: 402", which is the shape someone loosens an assertion to silence.
+    const bodyText = typeof parsed === "string" ? parsed : JSON.stringify(parsed);
+    if (/insufficient_balance|insufficient funds|exceeds balance/i.test(bodyText)) {
+      console.error(
+        "FAIL: the test wallet cannot pay — the facilitator rejected the payment for insufficient " +
+          "balance. Fund the wallet; do not loosen the assertion.",
+      );
+      process.exit(4);
+    }
     console.error(`non-2xx response: ${res.status}`);
     process.exit(1);
   }
