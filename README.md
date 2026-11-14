@@ -23,6 +23,23 @@ The hosted endpoint serves a real verdict with no payment and no account for the
 per IP per day — an agent cannot fill in a signup form, so requiring one would exclude exactly
 the callers this is built for.
 
+## The nine tools
+
+Every one is read-only. None of them signs, holds a key, or moves money — the agent stays the only
+signer, which is the entire product.
+
+| tool | what it answers |
+|---|---|
+| `evaluate_mcp_payment` | should this x402 payment be signed? → `pay` · `review` · `do_not_pay` |
+| `evaluate_batch` | the same question for several payments at once, one verdict each |
+| `list_outstanding_auths` | which ERC-20 / Permit2 / EIP-3009 authorisations are still outstanding |
+| `evaluate_outstanding_auths` | which of those need attention before the next payment |
+| `evaluate_hip3_trade` | should this HIP-3 / trade.xyz order be placed? → `allow` · `review` · `do_not_trade` |
+| `evaluate_velocity` | is this spend a burst, a spike, or a runaway cadence |
+| `verify_receipt` | is this receipt really ours, checked against the published key |
+| `decode_payment_required` | what does this base64 402 header actually say |
+| `validate_policy` | is this policy document valid, and if not why |
+
 ## Quick start
 
 ```bash

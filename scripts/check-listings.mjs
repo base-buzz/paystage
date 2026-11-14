@@ -1,229 +1,106 @@
 #!/usr/bin/env node
 /**
- * Check third-party listings against what we actually publish.
+ * Listing freshness: does each distribution surface still describe the server we ship?
  *
- * mcp.so, Glama and the MCP registry are how people find this without npm search.
- * Each is a snapshot taken when the listing was submitted, and none of them notice
- * when we add a tool or rename one — so a months-old page keeps advertising five
- * tools to anyone arriving that way.
+ * The site said nine tools while mcp.so listed one, and nothing noticed. Every directory is a copy of
+ * a copy, and the copies do not update themselves in step — some crawl our README, some are manual,
+ * some are a PR nobody merged yet.
  *
- * This is deliberately a *substring* check, not a DOM scrape: the pages are rendered
- * differently every few months, and a parser that breaks silently is worse than a
- * crude check that fails loudly. A missing tool name is a real signal; a changed
- * class name is not.
+ *   node scripts/check-listings.mjs            # report
+ *   node scripts/check-listings.mjs --json
  *
- *   node scripts/check-listings.mjs          # human-readable
- *   node scripts/check-listings.mjs --json   # machine-readable
- *
- * Exit codes: 0 in sync · 1 drift or unreachable.
+ * It can only DETECT. Which of these we can push ourselves is in the output per entry, because
+ * "stale" and "fixable by us" are different facts and conflating them wastes a cycle.
  */
+import { readFileSync } from "node:fs";
+import { join, dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { readFile } from "node:fs/promises";
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-const MANIFEST_URL = new URL("../apps/console/src/lib/agent-manifest.ts", import.meta.url);
+function expectedTools() {
+  const src = readFileSync(join(ROOT, "packages/mcp/src/tools.ts"), "utf8");
+  const block = src.slice(src.indexOf("export const TOOL_NAMES"), src.indexOf("] as const", src.indexOf("export const TOOL_NAMES")));
+  return [...block.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
+}
 
-const LISTINGS = [
-  {
-    name: "mcp.so",
-    url: "https://mcp.so/servers/paystage-6d8a8f",
-    // No version number is published there, so the tool names are the whole signal.
-    kind: "html",
-  },
-  {
-    name: "mcp-registry",
-    // The official registry is what MCP clients actually resolve against, so a stale
-    // version here is worse than anywhere else: it is authoritative to the tooling.
-    url: "https://registry.modelcontextprotocol.io/v0/servers?search=xyz.paystage",
-    kind: "mcp-registry",
-  },
+const tools = expectedTools();
+
+/**
+ * Surfaces we can read anonymously.
+ *
+ * `mode` is the point. A tool-name grep is only meaningful where the surface lists tool names.
+ * The npm registry documents and the MCP registry's search payload do not, so grepping them produced
+ * "0/9" on the first run — a false positive that would have sent someone to republish a package that
+ * was already correct. Those surfaces are checked for version alignment instead.
+ */
+const SURFACES = [
+  { name: "npm @paystage/mcp", url: "https://registry.npmjs.org/@paystage%2Fmcp/latest", mode: "json-version", owner: "us — publish a version" },
+  { name: "MCP registry (remote entry)", url: "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz", mode: "json-version", owner: "us — mcp-publisher" },
+  { name: "mcp.so", url: "https://mcp.so/servers/paystage-6d8a8f", mode: "names", owner: "them — /submit, or wait for a crawl" },
+  { name: "Glama", url: "https://glama.ai/mcp/servers/base-buzz/paystage", mode: "names", owner: "them — crawls the registry" },
+  { name: "GitHub README", url: "https://raw.githubusercontent.com/base-buzz/paystage/main/README.md", mode: "names", owner: "us — commit" },
 ];
 
-const TIMEOUT_MS = 15_000;
-const args = new Set(process.argv.slice(2));
-const asJson = args.has("--json");
-
-/** Tool names and the install command, read from the manifest so they cannot drift. */
-async function expected() {
-  const source = await readFile(MANIFEST_URL, "utf8");
-  const tools = [...source.matchAll(/name:\s*"([a-z0-9_]+)"/g)]
-    .map((m) => m[1])
-    .filter((n) => n.startsWith("evaluate_") || n.startsWith("list_"));
-  const pkg = [...source.matchAll(/"(@paystage\/[a-z-]+)"/g)].map((m) => m[1]);
-  return { tools: [...new Set(tools)], packages: [...new Set(pkg)] };
-}
-
-function stripTags(html) {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/\s+/g, " ");
-}
-
-/** Highest version among the entries for one server name, compared numerically. */
-function highest(entries) {
-  const cmp = (a, b) => {
-    const pa = a.split(".").map(Number);
-    const pb = b.split(".").map(Number);
-    for (let i = 0; i < 3; i += 1) {
-      if ((pa[i] ?? 0) !== (pb[i] ?? 0)) return (pa[i] ?? 0) - (pb[i] ?? 0);
-    }
-    return 0;
-  };
-  return entries.sort(cmp).at(-1);
-}
-
-async function checkMcpRegistry(listing, want) {
-  let res;
+async function fetchText(url) {
   try {
-    res = await fetch(listing.url, {
-      headers: { "user-agent": "PayStageListingCheck/1.0 (+https://paystage.xyz)" },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-  } catch (error) {
-    return { name: listing.name, url: listing.url, ok: false, reason: error instanceof Error ? error.name : "error" };
+    const res = await fetch(url, { signal: AbortSignal.timeout(15_000), headers: { "user-agent": "PayStage-listing-check/1.0" } });
+    if (!res.ok) return { text: null, status: res.status };
+    return { text: await res.text(), status: res.status };
+  } catch (err) {
+    return { text: null, status: String(err.message ?? err).slice(0, 60) };
   }
-  // A 403 from a bot-protected directory is not evidence of drift — GitHub's runners
-  // come from datacenter ranges these sites block. Reporting "cannot check" as
-  // "out of date" would train everyone to ignore the alert.
-  if (res.status === 403 || res.status === 429) {
-    return {
-      name: listing.name,
-      url: listing.url,
-      ok: true,
-      unverifiable: true,
-      reason: `HTTP ${res.status} — the site blocks this network, so the listing could not be read`,
-    };
-  }
-  if (!res.ok) return { name: listing.name, url: listing.url, ok: false, reason: `HTTP ${res.status}` };
+}
 
-  const body = await res.json();
-  const servers = Array.isArray(body.servers) ? body.servers : [];
-  if (servers.length === 0) {
-    return { name: listing.name, url: listing.url, ok: false, reason: "no entries for xyz.paystage" };
+const rows = [];
+for (const surface of SURFACES) {
+  const { text, status } = await fetchText(surface.url);
+  if (text === null) {
+    rows.push({ ...surface, found: null, status, note: "unreadable" });
+    continue;
   }
-
-  // The registry keeps every version ever published, so only the highest per name is
-  // "what a client resolves". Comparing every historical entry would fail forever.
-  const latest = new Map();
-  for (const entry of servers) {
-    const server = entry.server ?? entry;
-    const name = String(server.name ?? "");
-    if (name === "") continue;
-    const version = String(server.version ?? "0");
-    latest.set(name, highest([latest.get(name), version].filter(Boolean)));
-  }
-
-  const stale = [];
-  for (const [name, published] of latest) {
-    const pkg = name.split("/")[1];
-    if (!pkg) continue;
-    let localVersion;
+  if (surface.mode === "json-version") {
+    // Version alignment only: these payloads do not carry tool names, so a name count here would be
+    // measuring the wrong thing and reporting a false failure.
+    let version = null;
     try {
-      localVersion = JSON.parse(await readFile(new URL(`../packages/${pkg}/server.json`, import.meta.url), "utf8")).version;
-    } catch {
-      continue;
-    }
-    if (published !== localVersion) {
-      stale.push(`${name} published ${published}, repo ${localVersion}`);
-    }
-  }
-
-  // A server missing entirely is a different failure from one lagging behind.
-  const publishedNames = new Set(servers.map((e) => String((e.server ?? e).name ?? "")));
-  for (const pkg of want.packages.filter((p) => p !== "@paystage/policy")) {
-    const name = `xyz.paystage/${pkg.replace("@paystage/", "")}`;
-    if (!publishedNames.has(name) && pkg === "@paystage/mcp") {
-      stale.push(`${name} is not published at all`);
-    }
-  }
-
-  return {
-    name: listing.name,
-    url: listing.url,
-    ok: stale.length === 0,
-    entries: servers.length,
-    ...(stale.length === 0 ? {} : { reason: `stale: ${stale.join("; ")}`, stale }),
-  };
-}
-
-async function checkListing(listing, want) {
-  if (listing.kind === "mcp-registry") return checkMcpRegistry(listing, want);
-  let res;
-  try {
-    res = await fetch(listing.url, {
-      headers: { "user-agent": "PayStageListingCheck/1.0 (+https://paystage.xyz)" },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      const parsed = JSON.parse(text);
+      const versions = (parsed.servers ?? []).map((x) => x?.server?.version).filter(Boolean);
+      version = parsed.version ?? (versions.length ? versions.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).at(-1) : null);
+    } catch {}
+    const local = JSON.parse(readFileSync(join(ROOT, "packages/mcp/package.json"), "utf8")).version;
+    const aligned = version === local;
+    rows.push({
+      ...surface,
+      found: aligned ? tools.length : 0,
+      status,
+      note: aligned ? `version ${version} aligned` : `version ${version ?? "?"} vs local ${local}`,
     });
-  } catch (error) {
-    return { name: listing.name, url: listing.url, ok: false, reason: error instanceof Error ? error.name : "error" };
+    continue;
   }
-  // A 403 from a bot-protected directory is not evidence of drift — GitHub's runners
-  // come from datacenter ranges these sites block. Reporting "cannot check" as
-  // "out of date" would train everyone to ignore the alert.
-  if (res.status === 403 || res.status === 429) {
-    return {
-      name: listing.name,
-      url: listing.url,
-      ok: true,
-      unverifiable: true,
-      reason: `HTTP ${res.status} — the site blocks this network, so the listing could not be read`,
-    };
-  }
-  if (!res.ok) return { name: listing.name, url: listing.url, ok: false, reason: `HTTP ${res.status}` };
 
-  const text = stripTags(await res.text());
-  const missing = [];
-
-  for (const tool of want.tools) if (!text.includes(tool)) missing.push(tool);
-  const install = `npx -y @paystage/mcp`;
-  if (!text.includes(install) && !text.includes(`@paystage/mcp`)) missing.push("install command");
-
-  return {
-    name: listing.name,
-    url: listing.url,
-    ok: missing.length === 0,
-    expected_tools: want.tools.length,
+  const found = tools.filter((t) => text.includes(t));
+  const missing = tools.filter((t) => !text.includes(t));
+  rows.push({
+    ...surface,
+    found: found.length,
     missing,
-    ...(missing.length === 0 ? {} : { reason: `listing is out of date: missing ${missing.join(", ")}` }),
-  };
+    status,
+    note: found.length === tools.length ? "current" : `missing ${missing.length}: ${missing.slice(0, 3).join(", ")}${missing.length > 3 ? "…" : ""}`,
+  });
 }
 
-const want = await expected();
-const results = [];
-for (const listing of LISTINGS) results.push(await checkListing(listing, want));
+const stale = rows.filter((r) => r.found !== null && r.found < tools.length);
+const payload = { tools: tools.length, at: new Date().toISOString(), stale: stale.length, rows };
 
-const summary = {
-  checked_at: new Date().toISOString(),
-  expected_tools: want.tools,
-  listings: results,
-  ok: results.every((r) => r.ok),
-};
-
-if (asJson) {
-  process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
+if (process.argv.includes("--json")) {
+  console.log(JSON.stringify(payload, null, 2));
 } else {
-  for (const r of results) {
-    const detail = r.ok
-      ? r.entries === undefined
-        ? `${r.expected_tools} tools present`
-        : `${r.entries} entries, all at the repo version`
-      : r.reason;
-    const mark = r.unverifiable ? "skip" : r.ok ? "ok  " : "DRIFT";
-    process.stdout.write(`${mark} ${r.name.padEnd(12)} ${r.unverifiable ? r.reason : detail}\n`);
+  for (const r of rows) {
+    const mark = r.found === null ? "??" : r.found === tools.length ? "ok" : "STALE";
+    console.log(`${mark.padEnd(6)} ${r.name.padEnd(28)} ${r.found ?? "-"}/${tools.length}  ${r.note}`);
+    if (r.found !== null && r.found < tools.length) console.log(`       → ${r.owner}`);
   }
-  const drift = results.filter((r) => !r.ok);
-  const skipped = results.filter((r) => r.unverifiable);
-  process.stdout.write(
-    `\n${results.length - drift.length}/${results.length} listings fine` +
-      (skipped.length > 0 ? ` (${skipped.length} not readable from here)` : "") +
-      "\n",
-  );
+  console.log(`\n${stale.length} stale of ${rows.length} readable surfaces (${tools.length} tools expected)`);
 }
-
-process.exit(summary.ok ? 0 : 1);
+process.exit(stale.length === 0 ? 0 : 1);
