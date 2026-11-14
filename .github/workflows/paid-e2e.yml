@@ -1,0 +1,52 @@
+name: paid-e2e
+
+# The money path, exercised by the thing that gates merges instead of by a container canary that dies
+# with its host. Nightly and on tags, not per-PR: a third-party facilitator's flakiness should not
+# block a merge, and forty seconds of network per push buys nothing.
+on:
+  schedule:
+    - cron: "17 3 * * *"   # 03:17 UTC daily — off the hour so it does not queue behind every other cron
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  paid:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - name: Build workspace packages
+        run: npm run build
+      - name: Install hosted dependencies
+        working-directory: apps/hosted
+        run: npm ci --ignore-scripts
+        # apps/hosted is not an npm workspace; it keeps its own lockfile.
+      - name: Write the throwaway key
+        env:
+          E2E_KEY: ${{ secrets.PAYSTAGE_E2E_SEPOLIA_KEY }}
+        run: |
+          if [ -z "$E2E_KEY" ]; then
+            echo "::error::PAYSTAGE_E2E_SEPOLIA_KEY is not set — the job cannot pay, and a green run would be empty"
+            exit 1
+          fi
+          umask 077
+          printf '%s\n' "$E2E_KEY" > "$RUNNER_TEMP/e2e.key"
+          echo "PAYSTAGE_E2E_KEY_FILE=$RUNNER_TEMP/e2e.key" >> "$GITHUB_ENV"
+      - name: Pay once on Base Sepolia
+        working-directory: apps/hosted
+        run: npm run e2e:paid
+        # The script itself exits non-zero and prints a distinct message for each failure:
+        #   3 = no PAYMENT-RESPONSE (the free tier answered; the job did not pay)
+        #   4 = the test wallet cannot pay (balance below the floor)
+        # Keeping them distinct is deliberate: a drained wallet must not be "fixed" by relaxing the
+        # receipt assertion.
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/e2e.key"

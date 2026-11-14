@@ -17,7 +17,10 @@ const KEY_FILE =
   "/home/box/.secrets/paystage-sepolia-throwaway.key";
 
 const BASE_URL = process.env.BASE_URL || process.env.PAYSTAGE_E2E_BASE_URL || "https://sepolia.api.paystage.xyz";
-const NETWORK = "eip155:84532"; // Base Sepolia (testnet only — mainnet paid e2e intentionally unsupported)
+const NETWORK = "eip155:84532";
+const SEPOLIA_USDC = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+/** 0.05 USDC. At $0.002 a run that is 25 runs of headroom, so a low balance is real news. */
+const MIN_BALANCE_ATOMIC = 50_000; // Base Sepolia (testnet only — mainnet paid e2e intentionally unsupported)
 
 function loadAccount() {
   let raw;
@@ -118,7 +121,16 @@ async function main() {
   try {
     res = await fetchWithPayment(url, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      // TEST-ONLY SURFACE. The free tier answers 200 before wrapFetchWithPayment can ever see a 402,
+      // so without these two headers this script would either fail its receipt assertion or — worse —
+      // be "fixed" into asserting HTTP 200 and testing nothing. `source: synthetic` keeps the call
+      // out of the real-traffic counters; `force-payment` skips the free tier for synthetic callers
+      // only. Neither is a product feature.
+      headers: {
+        "content-type": "application/json",
+        "x-paystage-source": "synthetic",
+        "x-paystage-force-payment": "1",
+      },
       body: JSON.stringify(body),
     });
   } catch (err) {
@@ -150,6 +162,50 @@ async function main() {
   if (!res.ok) {
     console.error(`non-2xx response: ${res.status}`);
     process.exit(1);
+  }
+
+  // The failure this job exists to catch. A 200 with no receipt means the free tier answered and no
+  // payment happened — a green light over an untested money path. The message says that, because the
+  // tempting fix is to relax the assertion.
+  if (!header) {
+    console.error(
+      "FAIL: the free tier answered — this job did not pay. " +
+        "Expected a 402 then a PAYMENT-RESPONSE; got 200 with no payment response.",
+    );
+    process.exit(3);
+  }
+  const receipt = decodeSafely(header.value);
+  if (!receipt || receipt.success !== true) {
+    console.error(`FAIL: settlement did not succeed: ${JSON.stringify(receipt)}`);
+    process.exit(3);
+  }
+
+  const balance = await sepoliaUsdcBalance(account.address);
+  if (balance === null || balance < MIN_BALANCE_ATOMIC) {
+    console.error(
+      `FAIL: the test wallet cannot pay — Sepolia USDC balance is ${balance === null ? "unreadable" : balance} ` +
+        `(floor ${MIN_BALANCE_ATOMIC}). Fund it; do not loosen the assertion.`,
+    );
+    process.exit(4);
+  }
+
+  console.log("e2e paid: OK — settled", receipt.transaction ?? receipt.txHash ?? "(no tx in receipt)");
+}
+
+/** Sepolia USDC balance, so a drained test wallet fails distinctly from a broken settlement. */
+async function sepoliaUsdcBalance(address) {
+  try {
+    const data = "0x70a08231" + address.toLowerCase().replace(/^0x/, "").padStart(64, "0");
+    const res = await fetch("https://sepolia.base.org", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to: SEPOLIA_USDC, data }, "latest"] }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    const json = await res.json();
+    return json.result ? Number(BigInt(json.result)) : null;
+  } catch {
+    return null;
   }
 }
 
