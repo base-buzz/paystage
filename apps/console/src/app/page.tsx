@@ -6,6 +6,7 @@ import { LogoBanner } from "@/components/LogoBanner";
 import { AgentPrompt } from "@/components/AgentPrompt";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { CadencePanel } from "@/components/CadencePanel";
+import { LiveFeed } from "@/components/LiveFeed";
 import { SOCIALS } from "@/lib/agent-manifest";
 import { TOOL_COUNT, TOOL_COUNT_WORD } from "@/lib/tools";
 
@@ -225,6 +226,8 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        <LiveFeed />
 
         <LogoBanner />
 

@@ -1393,3 +1393,86 @@ body {
     transform: none;
   }
 }
+
+/* Live feed — one line that moves when the endpoint is used. The label is the point: a synthetic
+   probe must never read as a customer. */
+.lp-live {
+  border-top: 1px solid var(--lp-line-soft);
+  border-bottom: 1px solid var(--lp-line-soft);
+  padding: 16px 0;
+}
+
+.lp-live-inner {
+  display: grid;
+  gap: 8px;
+}
+
+.lp-live-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.lp-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lp-mint);
+  box-shadow: 0 0 0 0 rgba(110, 231, 183, 0.6);
+}
+
+.lp-live-dot.is-offline {
+  background: var(--lp-faint);
+  box-shadow: none;
+}
+
+.lp-live-dot.is-pulsing {
+  animation: lp-live-pulse 1.4s ease-out;
+}
+
+@keyframes lp-live-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(110, 231, 183, 0.65); }
+  70% { box-shadow: 0 0 0 14px rgba(110, 231, 183, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(110, 231, 183, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-live-dot.is-pulsing { animation: none; }
+}
+
+.lp-live-row {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.lp-live-row code {
+  color: var(--lp-fg);
+}
+
+.lp-live-decision {
+  color: var(--lp-mint);
+}
+
+.lp-live-ago {
+  color: var(--lp-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.lp-live-empty {
+  color: var(--lp-dim);
+}
+
+.lp-live-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--lp-faint);
+  max-width: 70ch;
+}
