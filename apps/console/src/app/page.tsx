@@ -7,6 +7,7 @@ import { AgentPrompt } from "@/components/AgentPrompt";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { CadencePanel } from "@/components/CadencePanel";
 import { SOCIALS } from "@/lib/agent-manifest";
+import { TOOL_COUNT, TOOL_COUNT_WORD } from "@/lib/tools";
 
 // Page-level metadata replaces the layout's `openGraph` object wholesale rather than merging into it,
 // so the image declared in layout.tsx never reached the page that matters. Declared here in full, and
@@ -97,7 +98,10 @@ export default function LandingPage() {
                 AI agents now pay for things on their own — x402 APIs, MCP servers, perp
                 venues. Wallets sign whatever the agent asks and nothing checks whether
                 it should. PayStage is a read-only seatbelt outside the wallet:{" "}
-                <strong>nine small MCP tools</strong> that evaluate a proposed payment
+                <strong>
+                  {TOOL_COUNT_WORD} small MCP tools
+                </strong>{" "}
+                that evaluate a proposed payment
                 against your local policy and return <strong>pay</strong>,{" "}
                 <strong>review</strong> or <strong>do-not-pay</strong> — with the rule
                 that fired.
@@ -200,7 +204,7 @@ export default function LandingPage() {
         <section className="lp-proof" aria-label="Facts">
           <div className="lp-wrap lp-proof-grid">
             <div className="lp-proof-item">
-              <div className="lp-proof-value">5</div>
+              <div className="lp-proof-value">{TOOL_COUNT}</div>
               <div className="lp-proof-label">tools, one job each</div>
             </div>
             <div className="lp-proof-item">
@@ -503,7 +507,7 @@ export default function LandingPage() {
         <section className="lp-section">
           <div className="lp-wrap">
             <div className="lp-section-head">
-              <h2 className="lp-h2">The nine tools</h2>
+              <h2 className="lp-h2">The {TOOL_COUNT_WORD} tools</h2>
               <p className="lp-h2-note">
                 Installed together by <code>npx -y -p @paystage/mcp paystage-mcp</code>, or one package at
                 a time.

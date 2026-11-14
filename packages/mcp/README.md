@@ -107,7 +107,7 @@ this tool.
 
 | Package | Version | Purpose |
 | --- | --- | --- |
-| `@paystage/mcp` | Umbrella server (5 tools) |
+| `@paystage/mcp` | Umbrella server (9 tools) |
 | `@paystage/preflight` | x402 payment preflight |
 | `@paystage/auth-watch` | Outstanding-auth tools |
 | `@paystage/trade-preflight` | HIP-3 / trade.xyz trade preflight |
