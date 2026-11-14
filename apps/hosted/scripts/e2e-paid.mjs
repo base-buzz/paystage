@@ -135,7 +135,21 @@ async function main() {
     });
   } catch (err) {
     // Never include the key; err from x402/viem should not contain it, but be safe.
-    console.error("request failed:", err && err.message ? err.message : String(err));
+    const message = err && err.message ? err.message : String(err);
+
+    // The first real run of this job reached the handshake and the facilitator rejected it with
+    // `invalid_exact_evm_insufficient_balance`. That is the empty wallet, arriving one step earlier
+    // than the balance check — and reported as a generic request failure it looks like a product bug,
+    // which is the shape that gets an assertion loosened. Same fault, same code, same message.
+    if (/insufficient_balance|insufficient funds|exceeds balance/i.test(message)) {
+      console.error(
+        `FAIL: the test wallet cannot pay — the facilitator rejected the payment for insufficient ` +
+          `balance. Fund the wallet; do not loosen the assertion. (${message})`,
+      );
+      process.exit(4);
+    }
+
+    console.error("request failed:", message);
     process.exit(1);
   }
 
