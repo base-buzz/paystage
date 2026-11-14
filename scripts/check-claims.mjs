@@ -14,9 +14,12 @@
  * before the thing it checks could have been deployed.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { join, extname, dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = '/work/paystage';
+// Derive the repo root from this file's location. A hardcoded /work/paystage worked in the container
+// and failed in CI, which is the same class of mistake as a claim copied instead of referenced.
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const problems = [];
 const ok = [];
 
