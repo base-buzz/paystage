@@ -94,6 +94,15 @@ export function recordEvent(
   };
   const body = JSON.stringify(row)
 
+  /**
+   * Fields this file may silently drop when the table lacks them.
+   *
+   * One entry, added 2026-11-14 for the `payer` migration, and it should be deleted once every
+   * environment has the column. Adding to this set is a decision that a missing field is better than
+   * a missing row; that is true for an optional field on a live migration and false in general.
+   */
+  const DROPPABLE_FIELDS = new Set(["payer"]);
+
   const p: Promise<unknown> = (async () => {
     try {
       const res = await fetch(endpoint, {
@@ -109,22 +118,30 @@ export function recordEvent(
       // A field the table does not have yet must not silence telemetry.
       //
       // On 2026-11-13 `payer` shipped a day before its migration, PostgREST answered PGRST204 for
-      // every row, and a day of events was dropped while every request returned 200. The retry
-      // below keeps the pipe open during that window and loses exactly one field instead of all of
-      // them; the field comes back on its own once the column exists, because nothing remembers the
-      // failure between invocations.
+      // every row, and a day of events was dropped while every request returned 200. A retry keeps
+      // the pipe open during that window.
+      //
+      // But an unlimited retry trades a loud failure for a silent one: any future schema drift —
+      // a renamed column, a typo in this file — would be absorbed by dropping the field and logging
+      // a warning nobody reads. That is the same shape as the outage it was written for.
+      //
+      // So the drop is an allowlist, and the allowlist is one field with a date on it. Anything else
+      // fails loudly and keeps its error.
       if (res.status === 400) {
         const detail = await res.text().catch(() => "");
         const missing = /PGRST204|column .* does not exist|Could not find the '([a-z_]+)' column/i.exec(detail);
-        if (missing) {
-          const field = missing[1] ?? "payer";
+        const field = missing?.[1];
+        // No captured name means we cannot say what is missing; dropping anything (especially a
+        // default of `payer`) would be guessing with the field this project most needs.
+        const droppable = field !== undefined && DROPPABLE_FIELDS.has(field);
+        if (droppable) {
           const { [field]: _dropped, ...rest } = row;
           console.log(
             JSON.stringify({
-              level: "warn",
-              msg: "telemetry_field_missing",
+              level: "error",
+              msg: "telemetry_field_dropped",
               field,
-              note: "retrying without it; run the migration and it returns automatically",
+              note: "on the drop allowlist; retrying without it. Remove it from DROPPABLE_FIELDS once the column exists.",
             }),
           );
           return fetch(endpoint, {
