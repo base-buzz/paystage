@@ -29,6 +29,13 @@ Not a return value. A caller that ignores a return value would sign anyway, and 
 cannot. Catch `PaymentRefusedError` and read `.verdict.reasons` — the sentences name what failed, so
 they can be pasted into a policy fix.
 
+## Works across chains, not just EVM
+
+The name says EVM but the guard wraps `createPaymentPayload`, which every x402 client scheme exposes —
+`@x402/svm`'s `ExactSvmScheme`, `UptoSvmScheme` and `BatchSvmScheme` included. A Solana payment is
+evaluated by the same policy; `allowed_networks` is what decides, so an `eip155:`-only policy refuses
+it with a reason rather than signing it.
+
 ## Works with batching schemes too
 
 `@circle-fin/x402-batching`'s `BatchEvmScheme` exposes `createPaymentPayload` like every other scheme,
