@@ -14,6 +14,7 @@ import { loadPolicy, parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
 import { evaluatePayment, normalizePaymentRequired } from "@paystage/preflight";
 import type { EvaluateResult } from "@paystage/preflight";
+import { verifyReceipt } from "./verify.js";
 import {
   listOutstandingAuths,
   evaluateOutstandingAuths,
@@ -312,6 +313,111 @@ export function createServer(): McpServer {
     version: SERVER_VERSION,
   });
   registerAllTools(server);
+  // ---------------------------------------------------------------------------------------------
+  // Four more tools, added 2026-11-14. Each one reuses code that already shipped as a library or a
+  // CLI call: nothing here is new logic, it is the same evaluation reachable from an agent.
+  // ---------------------------------------------------------------------------------------------
+
+  server.registerTool(
+    "verify_receipt",
+    {
+      description:
+        "Verify a PayStage receipt against the published signing key. Returns the verdict it attests to, or why it cannot be trusted.",
+      inputSchema: z.object({
+        receipt: z.unknown().describe("The receipt object as issued"),
+        key_url: z.string().url().optional().describe("Override the published key location"),
+      }),
+    },
+    async ({ receipt, key_url }: { receipt: unknown; key_url?: string }) => {
+      try {
+        const verdict = await verifyReceipt(receipt as never, key_url ? { keyUrl: key_url } : {});
+        return { content: [{ type: "text" as const, text: JSON.stringify(verdict, null, 2) }] };
+      } catch (error) {
+        return {
+          isError: true,
+          content: [{ type: "text" as const, text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "decode_payment_required",
+    {
+      description:
+        "Decode a base64 `payment-required` header from a 402 response into the JSON challenge, so an agent can inspect it before deciding anything.",
+      inputSchema: z.object({
+        header: z.string().min(1).describe("The raw base64 value of the payment-required header"),
+      }),
+    },
+    async ({ header }: { header: string }) => {
+      // Inline rather than importing @paystage/x402-guard: this is four lines and a dependency for
+      // four lines is a supply-chain cost paid by every user of the umbrella.
+      let decoded: string;
+      try {
+        decoded = typeof atob === "function" ? atob(header) : Buffer.from(header, "base64").toString("utf8");
+      } catch {
+        return { isError: true, content: [{ type: "text" as const, text: "Error: header is not valid base64" }] };
+      }
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(decoded);
+      } catch {
+        return { isError: true, content: [{ type: "text" as const, text: "Error: decoded header is not JSON" }] };
+      }
+      return { content: [{ type: "text" as const, text: JSON.stringify(parsed, null, 2) }] };
+    },
+  );
+
+  server.registerTool(
+    "validate_policy",
+    {
+      description:
+        "Check a policy document without evaluating a payment. Returns the exact validation error when it is wrong, which is the question behind most support requests.",
+      inputSchema: z.object({ policy: z.unknown() }),
+    },
+    async ({ policy }: { policy: unknown }) => {
+      try {
+        const parsed = parsePolicy(policy as never);
+        return {
+          content: [{ type: "text" as const, text: JSON.stringify({ valid: true, version: (parsed as { version?: number }).version ?? null }, null, 2) }],
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          content: [{ type: "text" as const, text: JSON.stringify({ valid: false, error: message }, null, 2) }],
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "evaluate_batch",
+    {
+      description:
+        "Evaluate several payment challenges against one policy in a single call. Returns one verdict per input, in order, so an agent settling a batch decides once per payment and can stop at the first refusal.",
+      inputSchema: z.object({
+        payments: z.array(z.unknown()).min(1).max(50),
+        policy: z.unknown(),
+      }),
+    },
+    async ({ payments, policy }: { payments: unknown[]; policy: unknown }) => {
+      const parsedPolicy = parsePolicy(policy as never);
+      const results = payments.map((payment) => {
+        try {
+          const normalised = normalizePaymentRequired(payment as never);
+          return evaluatePayment(normalised as never, parsedPolicy as never);
+        } catch (error) {
+          return {
+            decision: "do_not_pay" as const,
+            reasons: [`could not evaluate: ${error instanceof Error ? error.message : String(error)}`],
+          };
+        }
+      });
+      return { content: [{ type: "text" as const, text: JSON.stringify({ results }, null, 2) }] };
+    },
+  );
+
   return server;
 }
 
