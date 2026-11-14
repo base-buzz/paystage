@@ -20,10 +20,10 @@ changes how the request is made.
 npm install @paystage/x402-guard x402-fetch
 ```
 
-> **Published, with one caveat.** `0.1.0` was published by hand on 2026-11-12, so it carries
-> **no provenance attestation** — the signed statement that the tarball was built by this
-> repository's CI. Every version after it is published by the release workflow with
-> provenance. If provenance matters to your supply-chain policy, pin `>0.1.0`.
+> **Published with provenance.** Every version from `0.1.1` onward is built and signed by this
+> repository's CI (`npm view @paystage/x402-guard dist.attestations` shows it). The one exception is
+> `0.1.0`, which was published by hand on 2026-11-12 before the Trusted Publisher existed and carries
+> no attestation — pin `>=0.1.1` if that matters to your policy.
 
 ```ts
 import { guardFetch } from "@paystage/x402-guard";
