@@ -22,7 +22,7 @@
     "@x402/hono": "^2.29.0",
     "hono": "^4.7.0",
     "viem": "^2.21.0",
-    "@paystage/mcp": "0.3.5"
+    "@paystage/mcp": "file:../../packages/mcp"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
