@@ -35,6 +35,10 @@ export const TOOL_NAMES = [
   "evaluate_outstanding_auths",
   "evaluate_hip3_trade",
   "evaluate_velocity",
+  "verify_receipt",
+  "decode_payment_required",
+  "validate_policy",
+  "evaluate_batch",
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];

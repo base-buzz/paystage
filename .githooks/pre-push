@@ -20,6 +20,12 @@ fi
 # 2. Copy drift: a README that hardcodes a version goes stale the next release, and nobody
 #    reads a README to find out it is wrong. Local links only here — network checks stay in
 #    CI so a push never waits on someone else's server.
+if ! node scripts/check-claims.mjs >/tmp/prepush-claims.txt 2>&1; then
+  note "copy claims drifted from the code — see /tmp/prepush-claims.txt"
+  cat /tmp/prepush-claims.txt
+  exit 1
+fi
+
 if ! node scripts/check-copy.mjs >/tmp/prepush-copy.txt 2>&1; then
   note "copy check failed — a README names a stale version or a dead link"
   tail -6 /tmp/prepush-copy.txt | sed 's/^/    /'
