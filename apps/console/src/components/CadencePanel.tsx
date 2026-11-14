@@ -9,6 +9,8 @@ import { getCadence, REPO, WEEKS } from "@/lib/cadence";
 export async function CadencePanel() {
   const data = await getCadence();
   const max = Math.max(1, ...data.weeks.map((w) => w.count));
+  const latest = data.checks[0];
+  const passing = data.checks.filter((c) => c.ok).length;
 
   return (
     <section className="lp-section lp-section-alt" aria-label="Cadence">
@@ -54,7 +56,11 @@ export async function CadencePanel() {
                   ? "history unavailable"
                   : data.checks.length === 0
                     ? "no runs yet"
-                    : `${data.checks.filter((c) => c.ok).length}/${data.checks.length} passing`}
+                    : latest ? (
+                        <>
+                          last run: {latest.ok ? "pass" : "fail"} · {passing}/{data.checks.length} passing
+                        </>
+                      ) : null}
               </span>
             </div>
             <div className="lp-runs">
@@ -66,9 +72,9 @@ export async function CadencePanel() {
               {data.checksAvailable && data.checks.length === 0 && (
                 <span className="lp-cadence-foot">No runs recorded yet.</span>
               )}
-              {data.checks.map((check) => (
+              {data.checks.map((check, index) => (
                 <span
-                  key={check.at}
+                  key={`${check.at}-${index}`}
                   className={check.ok ? "lp-run lp-run-ok" : "lp-run lp-run-fail"}
                   title={`${check.at}: ${check.ok ? "passed" : "failed"}`}
                 />
