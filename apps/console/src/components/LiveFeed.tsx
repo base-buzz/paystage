@@ -29,7 +29,9 @@ const LOOK: Record<string, { label: string; color: string }> = {
 export function LiveFeed() {
   const [rows, setRows] = useState<FeedRow[]>([]);
   const [pulse, setPulse] = useState(false);
-  const [connected, setConnected] = useState(false);
+  // Three states, not two: a boolean renders "· OFFLINE" for the first second of every page load,
+  // which makes a working feed look broken at exactly the moment someone is deciding whether it is.
+  const [status, setStatus] = useState<"connecting" | "live" | "offline">("connecting");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -43,7 +45,12 @@ export function LiveFeed() {
       .select("id,tool,decision,source,created_at")
       .order("created_at", { ascending: false })
       .limit(4)
-      .then(({ data }) => { if (data) setRows(data as FeedRow[]); });
+      // A failed read used to be indistinguishable from "no calls yet": the error was ignored, so a
+      // broken query presented as a quiet product. The seed error now sets offline, which is true.
+      .then(({ data, error }) => {
+        if (error) { setStatus("offline"); return; }
+        if (data) setRows(data as FeedRow[]);
+      });
 
     const channel = client
       .channel("events_feed")
@@ -58,7 +65,9 @@ export function LiveFeed() {
           timer.current = setTimeout(() => setPulse(false), 1400);
         },
       )
-      .subscribe((status) => setConnected(status === "SUBSCRIBED"));
+      .subscribe((channelStatus) => {
+        setStatus(channelStatus === "SUBSCRIBED" ? "live" : channelStatus === "CHANNEL_ERROR" || channelStatus === "TIMED_OUT" ? "offline" : "connecting");
+      });
 
     return () => {
       if (timer.current) clearTimeout(timer.current);
@@ -72,10 +81,14 @@ export function LiveFeed() {
     <section className="lp-live" aria-label="Live activity">
       <div className="lp-wrap lp-live-inner">
         <div className="lp-live-head">
-          <span className={`lp-live-dot${pulse ? " is-pulsing" : ""}${connected ? "" : " is-offline"}`} aria-hidden="true" />
+          <span
+            className={`lp-live-dot${pulse ? " is-pulsing" : ""}${status === "live" ? "" : " is-offline"}`}
+            aria-hidden="true"
+          />
           <span className="lp-live-title">
             {latest ? "last call" : "waiting for the first call"}
-            {!connected && " · offline"}
+            {status === "connecting" && " · connecting"}
+            {status === "offline" && " · offline"}
           </span>
         </div>
         {latest ? (
