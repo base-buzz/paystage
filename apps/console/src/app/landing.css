@@ -1476,3 +1476,58 @@ body {
   color: var(--lp-faint);
   max-width: 70ch;
 }
+
+/* Chain ticker — the only moving number on the page that is not ours, labelled as such. */
+.lp-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 18px;
+  padding: 10px 0;
+  font-size: 12.5px;
+  color: var(--lp-dim);
+  border-bottom: 1px solid var(--lp-line-soft);
+}
+
+.lp-chain-label {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.lp-chain-value strong {
+  color: var(--lp-fg);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.lp-chain-note {
+  margin-left: auto;
+  color: var(--lp-faint);
+  font-size: 11.5px;
+}
+
+/* Settled strip — honest by construction: it says "ours" out loud while that is still true. */
+.lp-settled {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 20px;
+  padding: 10px 0 14px;
+  font-size: 12.5px;
+  color: var(--lp-dim);
+  border-bottom: 1px solid var(--lp-line-soft);
+}
+
+.lp-settled-item strong {
+  color: var(--lp-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.lp-settled-note {
+  margin-left: auto;
+  color: var(--lp-faint);
+  font-size: 11.5px;
+  max-width: 52ch;
+}
