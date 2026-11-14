@@ -1,0 +1,56 @@
+{
+  "name": "@paystage/ai-sdk",
+  "version": "0.1.0",
+  "description": "PayStage preflight as AI SDK tools: pay / review / do_not_pay before an agent signs an x402 payment",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "README.md"
+  ],
+  "keywords": [
+    "ai-sdk",
+    "vercel",
+    "x402",
+    "payments",
+    "agents",
+    "preflight",
+    "mcp"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/base-buzz/paystage",
+    "directory": "packages/ai-sdk"
+  },
+  "homepage": "https://paystage.xyz/ai-sdk",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@paystage/preflight": "0.2.3",
+    "zod": "^4.6.7"
+  },
+  "peerDependencies": {
+    "ai": ">=5"
+  },
+  "peerDependenciesMeta": {
+    "ai": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "ai": "^6.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.0.0"
+  }
+}
