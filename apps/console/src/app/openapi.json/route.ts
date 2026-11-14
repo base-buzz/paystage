@@ -54,7 +54,7 @@ export function GET() {
         version: "2026.11.14",
         description:
           "Read-only preflight for x402 payments: pay / review / do_not_pay before anything is signed. Never signs, never holds a key.",
-        contact: { url: "https://paystage.xyz" },
+        contact: { url: "https://paystage.xyz", email: "basebuzz69@gmail.com" },
       },
       servers: [{ url: "https://api.paystage.xyz" }],
       paths: {

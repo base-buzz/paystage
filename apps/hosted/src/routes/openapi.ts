@@ -81,7 +81,7 @@ export const OPENAPI_DOCUMENT = {
     description:
       "Read-only preflight for x402 payments. Returns pay / review / do_not_pay before anything is " +
       "signed, with the rule that fired. Never signs and never holds a key.",
-    contact: { url: "https://paystage.xyz" },
+    contact: { url: "https://paystage.xyz", email: "basebuzz69@gmail.com" },
   },
   servers: [{ url: "https://api.paystage.xyz" }],
   paths: {
