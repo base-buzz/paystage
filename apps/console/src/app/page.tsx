@@ -36,10 +36,14 @@ export const metadata: Metadata = {
 
 const TOOLS = [
   ["evaluate_mcp_payment", "x402 payment request vs. local policy → pay · review · do_not_pay"],
+  ["evaluate_batch", "several payments against one policy · one verdict each, in order"],
   ["list_outstanding_auths", "ERC-20, Permit2 and EIP-3009 authorisations still outstanding"],
   ["evaluate_outstanding_auths", "flags authorisations needing attention before the next payment"],
   ["evaluate_hip3_trade", "HIP-3 / trade.xyz order vs. your TradePolicy → allow · review · do_not_trade"],
   ["evaluate_velocity", "rolling rate and spend checks: bursts, spikes, runaway cadence"],
+  ["verify_receipt", "check a receipt against the published signing key"],
+  ["decode_payment_required", "turn a 402 header into the JSON challenge, so an agent can look before it leaps"],
+  ["validate_policy", "check a policy document on its own — the question behind most support requests"],
 ] as const;
 
 export default function LandingPage() {
@@ -93,7 +97,7 @@ export default function LandingPage() {
                 AI agents now pay for things on their own — x402 APIs, MCP servers, perp
                 venues. Wallets sign whatever the agent asks and nothing checks whether
                 it should. PayStage is a read-only seatbelt outside the wallet:{" "}
-                <strong>five small MCP tools</strong> that evaluate a proposed payment
+                <strong>nine small MCP tools</strong> that evaluate a proposed payment
                 against your local policy and return <strong>pay</strong>,{" "}
                 <strong>review</strong> or <strong>do-not-pay</strong> — with the rule
                 that fired.
@@ -379,7 +383,7 @@ export default function LandingPage() {
                   <td>
                     <code>/llms.txt</code>
                   </td>
-                  <td>Short map: what this is, the five tools, install lines, endpoints.</td>
+                  <td>Short map: what this is, the nine tools, install lines, endpoints.</td>
                 </tr>
                 <tr>
                   <td>
@@ -499,7 +503,7 @@ export default function LandingPage() {
         <section className="lp-section">
           <div className="lp-wrap">
             <div className="lp-section-head">
-              <h2 className="lp-h2">The five tools</h2>
+              <h2 className="lp-h2">The nine tools</h2>
               <p className="lp-h2-note">
                 Installed together by <code>npx -y -p @paystage/mcp paystage-mcp</code>, or one package at
                 a time.

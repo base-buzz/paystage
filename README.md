@@ -98,7 +98,7 @@ answers an MCP handshake and lists its tools with nothing configured — the pol
 argument on each call, not as a file path. Verified:
 
 ```bash
-env -i npx -y -p @paystage/mcp paystage-mcp   # completes `initialize`, lists five tools
+env -i npx -y -p @paystage/mcp paystage-mcp   # completes `initialize`, lists nine tools
 ```
 
 The two variables below are for the **stdio CLI path**, where a policy file is convenient. They are
@@ -149,7 +149,7 @@ you trust anything on the website:
 node apps/hosted/scripts/conformance.mjs
 ```
 
-It checks the published surfaces against reality — manifest shape, the five tools
+It checks the published surfaces against reality — manifest shape, the nine tools
 being listed, machine surfaces being genuinely different from each other, health and
 timing headers on both networks, the receipt key endpoint, that an unpaid evaluation
 is challenge-only, and that malformed input fails closed. Read-only: no payment, no
