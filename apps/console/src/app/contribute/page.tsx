@@ -119,7 +119,10 @@ export default function ContributePage() {
         <div className="lp-wrap">
           <p className="lp-fine">
             PayStage is MIT licensed. Contributions are reviewed for accuracy, not
-            volume. Not financial advice.
+            volume. Not financial advice.{" "}
+            <a href="/privacy" style={{ textDecoration: "underline" }}>
+              Privacy
+            </a>
           </p>
         </div>
       </footer>
