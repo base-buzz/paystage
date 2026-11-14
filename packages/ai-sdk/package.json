@@ -1,6 +1,6 @@
 {
   "name": "@paystage/ai-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "PayStage preflight as AI SDK tools: pay / review / do_not_pay before an agent signs an x402 payment",
   "license": "MIT",
   "type": "module",
