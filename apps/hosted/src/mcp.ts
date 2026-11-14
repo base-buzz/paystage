@@ -7,7 +7,7 @@
  * only one list.
  */
 import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
-import { registerAllTools } from "@paystage/mcp/tools";
+import { registerAllTools, SERVER_CAPABILITIES } from "@paystage/mcp/tools";
 import { parsePolicy } from "@paystage/policy";
 import { recordEvent, sourceFromHeaders, type TelemetrySource } from "./telemetry.js";
 
@@ -17,7 +17,10 @@ const SERVICE_VERSION = "2026.11.14";
 type Env = { SUPABASE_URL?: string; SUPABASE_SERVICE_ROLE_KEY?: string };
 
 function buildServer(env: Env, source: TelemetrySource): McpServer {
-  const server = new McpServer({ name: "paystage", version: SERVICE_VERSION });
+  const server = new McpServer(
+    { name: "paystage", version: SERVICE_VERSION },
+    { capabilities: SERVER_CAPABILITIES },
+  );
 
   registerAllTools(server, {
     // No filesystem in a Worker: a caller must send the policy inline. Refusing `policy_path` with a

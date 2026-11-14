@@ -1,5 +1,5 @@
 
-import { McpServer } from "@modelcontextprotocol/server";
+import { McpServer, type ServerCapabilities } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
@@ -44,6 +44,17 @@ export const TOOL_NAMES = [
 export type ToolName = (typeof TOOL_NAMES)[number];
 
 const DEFAULT_NETWORK = "base";
+
+/**
+ * The server exposes tools only, but it must answer `resources/list` and `prompts/list` with an
+ * empty result rather than `-32601 Method not found`: Anthropic's and Cursor's MCP checks treat a
+ * declared-but-unimplemented capability as a bug, and a client that probes either list gets a hard
+ * error instead of "none". Declaring the capabilities is what makes the SDK serve the empty lists
+ * (see `ServerOptions.capabilities`); no resource or prompt is registered.
+ *
+ * Shared by the stdio server and the hosted Worker so both surfaces answer the same way.
+ */
+export const SERVER_CAPABILITIES: ServerCapabilities = { resources: {}, prompts: {} };
 
 function tokensForNetwork(policy: Policy, network: string): string[] {
   const tokens = (policy as { tokens?: Record<string, string[]> }).tokens;
@@ -110,6 +121,12 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     {
       description:
         "Evaluate an x402 PaymentRequired payload against a PayStage spending policy before paying",
+      annotations: {
+        title: "Evaluate an x402 payment (read-only, never signs)",
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
       inputSchema: z.object({
         payment_required: z.unknown(),
         policy_path: z.string().optional(),
@@ -154,6 +171,12 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "list_outstanding_auths",
     {
       description: "List outstanding token authorizations for a wallet",
+      annotations: {
+        title: "List outstanding token authorizations (read-only, never signs)",
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: true,
+      },
       inputSchema: z.object(authWatchShape),
     },
     async (args: AuthWatchArgs) => {
@@ -191,6 +214,12 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     {
       description:
         "List and evaluate outstanding token authorizations against a policy",
+      annotations: {
+        title: "Evaluate outstanding token authorizations (read-only, never signs)",
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: true,
+      },
       inputSchema: z.object(authWatchShape),
     },
     async (args: AuthWatchArgs) => {
@@ -230,6 +259,12 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     {
       description:
         "Evaluate a Hyperliquid HIP-3 (trade.xyz) order against a TradePolicy before an agent trades. Returns decision allow | review | do_not_trade.",
+      annotations: {
+        title: "Evaluate a HIP-3 trade (read-only, never signs)",
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: true,
+      },
       inputSchema: z.object({
         proposal: tradeProposalShape,
         policy: z.unknown().optional(),
@@ -272,6 +307,12 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     {
       description:
         "Rolling-window rate and spend-pattern check for a proposed payment against recent action history and a policy.velocity config",
+      annotations: {
+        title: "Evaluate payment velocity (read-only, never signs)",
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
       inputSchema: z.object({
         history: EvaluateVelocityInputSchema.shape.history,
         proposed: EvaluateVelocityInputSchema.shape.proposed,
@@ -317,6 +358,12 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     {
       description:
         "Verify a PayStage receipt against the published signing key. Returns the verdict it attests to, or why it cannot be trusted.",
+      annotations: {
+        title: "Verify a receipt against the published key (read-only, never signs)",
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: true,
+      },
       inputSchema: z.object({
         receipt: z.unknown().describe("The receipt object as issued"),
         key_url: z.string().url().optional().describe("Override the published key location"),
@@ -340,6 +387,12 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     {
       description:
         "Decode a base64 `payment-required` header from a 402 response into the JSON challenge, so an agent can inspect it before deciding anything.",
+      annotations: {
+        title: "Decode a payment-required header (read-only, never signs)",
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
       inputSchema: z.object({
         header: z.string().min(1).describe("The raw base64 value of the payment-required header"),
       }),
@@ -368,6 +421,12 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     {
       description:
         "Check a policy document without evaluating a payment. Returns the exact validation error when it is wrong, which is the question behind most support requests.",
+      annotations: {
+        title: "Validate a spending policy (read-only, never signs)",
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
       inputSchema: z.object({ policy: z.unknown() }),
     },
     async ({ policy }: { policy: unknown }) => {
@@ -390,6 +449,12 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     {
       description:
         "Evaluate several payment challenges against one policy in a single call. Returns one verdict per input, in order, so an agent settling a batch decides once per payment and can stop at the first refusal.",
+      annotations: {
+        title: "Evaluate a batch of x402 payments (read-only, never signs)",
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
       inputSchema: z.object({
         payments: z.array(z.unknown()).min(1).max(50),
         policy: z.unknown(),

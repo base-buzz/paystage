@@ -57,8 +57,8 @@ describe("/mcp", () => {
       env as never,
     );
     const text = await res.text();
-    const names = [...text.matchAll(/"name":"([a-z0-9_]+)"/g)].map((m) => m[1]);
-    const set = new Set(names.filter((n) => n.includes("_") && n !== "paystage"));
+    const names = [...text.matchAll(/"name":"([a-z0-9_]+)"/g)].map((m) => m[1] ?? "");
+    const set = new Set(names.filter((n): n is string => Boolean(n) && n.includes("_") && n !== "paystage"));
     expect(set.size).toBe(9);
     for (const expected of [
       "evaluate_mcp_payment",
@@ -87,5 +87,26 @@ describe("/mcp", () => {
       env as never,
     );
     expect(res.status).toBeLessThan(400);
+  });
+
+  it("answers resources/list and prompts/list with empty arrays, not -32601", async () => {
+    // The live endpoint answered `-32601 Method not found` to both, which is a hard error to
+    // Anthropic's and Cursor's checks. An empty list is the correct answer: the server has no
+    // resources and no prompts, and says so instead of appearing broken.
+    const app = createApp(env as never, { protect: false });
+    for (const method of ["resources/list", "prompts/list"]) {
+      const res = await app.request(
+        "/mcp",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+          body: JSON.stringify({ jsonrpc: "2.0", id: 3, method, params: {} }),
+        },
+        env as never,
+      );
+      const text = await res.text();
+      expect(text, `${method} must not be Method not found`).not.toContain("-32601");
+      expect(text).toContain('"result"');
+    }
   });
 });
