@@ -41,6 +41,14 @@ export interface AcceptResult {
 
 export interface EvaluateResult {
   decision: Decision;
+  /**
+   * Which agent the policy was narrowed for, when one was supplied.
+   *
+   * Without it, two agents with different caps produce two verdicts that look identical in a log —
+   * the operator can see a refusal but not whose budget it was. Absent means the global policy
+   * applied, which is a different fact and must not be guessed at.
+   */
+  agent?: string;
   selectedAccept?: AcceptOption;
   acceptResults: AcceptResult[];
   reasons: string[];
@@ -192,9 +200,11 @@ export function evaluatePayment(
       acceptResults: [],
       reasons: [resolution.reason],
       summary: "Agent identity could not be resolved against the policy.",
+      ...(options.agentId !== undefined ? { agent: options.agentId } : {}),
     };
   }
   const effective = resolution.policy;
+  const agent = options.agentId;
   // Rule 1: malformed
   if (!pr || pr.x402Version !== 2) {
     return {
@@ -263,6 +273,7 @@ export function evaluatePayment(
 
   return {
     decision,
+    ...(agent !== undefined ? { agent } : {}),
     selectedAccept,
     acceptResults,
     reasons,
