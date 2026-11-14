@@ -116,6 +116,28 @@ describe("guardScheme", () => {
     expect(calls.created).toBe(1);
   });
 
+  it("guards a Solana scheme too — the guard is transport-agnostic", async () => {
+    // @x402/svm's ExactSvmScheme exposes createPaymentPayload like the EVM one. The guard wraps the
+    // method, not the chain, so a Solana payment is evaluated by the same policy — the network field
+    // is what the policy decides on, and an eip155-only policy refuses it.
+    const calls = { created: 0 };
+    const svm = {
+      async createPaymentPayload(_v: number, _r: unknown) {
+        calls.created += 1;
+        return { payload: "svm-signed" };
+      },
+    };
+    const guarded = guardScheme(svm, { policy });
+    const solanaChallenge = {
+      ...ok,
+      network: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+    };
+    await expect(guarded.createPaymentPayload(2, solanaChallenge)).rejects.toBeInstanceOf(
+      PaymentRefusedError,
+    );
+    expect(calls.created).toBe(0);
+  });
+
   it("createGuardedScheme constructs and guards in one step", async () => {
     class Scheme {
       created = 0;
