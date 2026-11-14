@@ -77,6 +77,44 @@ export function buildResourceServer(
   return server;
 }
 
+/**
+ * The input schema an indexer needs to invoke this route.
+ *
+ * x402scan's spec is explicit: a route with no input schema is listed as non-invocable and skipped.
+ * The schema is the request body we already accept, so it is derived from the same shape rather than
+ * hand-written twice.
+ */
+function bazaarInfo(summary: string, bodySchema: Record<string, unknown>) {
+  return {
+    bazaar: {
+      info: {
+        input: {
+          type: "http",
+          method: "POST",
+          bodyType: "json",
+          body: bodySchema,
+        },
+        output: { type: "json" },
+      },
+    },
+    // Human-readable summary shown by explorers that render it.
+    summary,
+  };
+}
+
+const PAYMENT_BODY_SCHEMA = {
+  type: "object",
+  required: ["payment_required", "policy"],
+  properties: {
+    payment_required: {
+      type: "object",
+      description: "The decoded x402 challenge the agent is considering signing",
+    },
+    policy: { type: "object", description: "The spend policy to evaluate it against" },
+    agent_id: { type: "string", description: "Optional identifier for per-agent budgets" },
+  },
+};
+
 export function buildRoutesConfig(cfg: X402Config) {
   return {
     "POST /v1/evaluate_mcp_payment": {
@@ -90,6 +128,7 @@ export function buildRoutesConfig(cfg: X402Config) {
       ],
       description: "Evaluate MCP payment against spend policy",
       mimeType: "application/json",
+      extensions: bazaarInfo("Should this x402 payment be signed?", PAYMENT_BODY_SCHEMA),
     },
     "POST /v1/evaluate_outstanding_auths": {
       accepts: [
@@ -102,6 +141,17 @@ export function buildRoutesConfig(cfg: X402Config) {
       ],
       description: "Evaluate outstanding EIP-3009 authorizations against spend policy",
       mimeType: "application/json",
+      extensions: bazaarInfo(
+        "Which outstanding EIP-3009 authorisations need attention?",
+        {
+          type: "object",
+          required: ["auths", "policy"],
+          properties: {
+            auths: { type: "array", description: "Outstanding authorisations to evaluate" },
+            policy: { type: "object", description: "The spend policy to evaluate them against" },
+          },
+        },
+      ),
     },
   };
 }
