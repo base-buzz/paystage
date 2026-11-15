@@ -1608,3 +1608,80 @@ body {
   font-variant-numeric: tabular-nums;
   color: var(--lp-fg);
 }
+
+/* Chart strip — the shapes behind the numbers. */
+.lp-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 22px;
+  padding: 16px 0;
+  border-top: 1px solid var(--lp-line-soft);
+  border-bottom: 1px solid var(--lp-line-soft);
+}
+
+.lp-chart {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.lp-chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.lp-chart-note {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11px;
+}
+
+.lp-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 64px;
+}
+
+.lp-chart-bar {
+  flex: 1;
+  min-width: 2px;
+  border-radius: 1px 1px 0 0;
+  background: var(--lp-mint);
+  opacity: 0.75;
+  display: flex;
+  align-items: flex-end;
+}
+
+.lp-chart-bar.is-current {
+  opacity: 1;
+}
+
+/* Unlabelled traffic is the solid part of a stacked bar; our own traffic is the faint remainder. */
+.lp-chart-bar.is-stacked {
+  background: var(--lp-line-soft);
+  opacity: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.lp-chart-fill-real {
+  width: 100%;
+  background: var(--lp-mint);
+  opacity: 0.8;
+  border-radius: 1px 1px 0 0;
+}
+
+.lp-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--lp-faint);
+  font-variant-numeric: tabular-nums;
+}
