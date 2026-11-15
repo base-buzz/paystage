@@ -80,7 +80,14 @@ async function npmWeekly(): Promise<Array<{ week: string; installs: number }> | 
 async function requestsDaily() {
   if (!isSupabaseConfigured()) return null;
   const since = new Date(Date.now() - 30 * DAY_MS).toISOString();
-  const rows = await selectRows<EventRow>("events", `select=ts,source&ts=gte.${since}&limit=5000`);
+  // Newest first, and a cap large enough for the window. Without `order`, PostgREST returned the
+  // *oldest* thousand rows, so every recent day charted as zero — a truncation that looked exactly
+  // like a drop in traffic.
+  const LIMIT = 20_000;
+  const rows = await selectRows<EventRow>(
+    "events",
+    `select=ts,source&ts=gte.${since}&order=ts.desc&limit=${LIMIT}`,
+  );
   if (rows === null) return null;
 
   const days: Array<{ day: string; real: number; synthetic: number; test: number }> = [];
@@ -98,7 +105,7 @@ async function requestsDaily() {
     const bucket = byDay.get(day) ?? { real: 0, synthetic: 0, test: 0 };
     days.push({ day, ...bucket });
   }
-  return days;
+  return { days, truncated: rows.length >= LIMIT };
 }
 
 export async function GET() {
