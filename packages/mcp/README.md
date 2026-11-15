@@ -196,3 +196,20 @@ npx -y -p @paystage/mcp paystage-policy check policy.json
 
 Exit `0` valid, `1` invalid (one line per offending field), `2` unreadable. Offline, no key, no signup —
 the same schema the evaluator enforces, so a file that passes here is a file that will load there.
+
+## Explain a receipt in words
+
+```bash
+npx -y -p @paystage/mcp paystage-explain receipt.json
+```
+
+```
+Decision: do_not_pay
+  signature valid — this receipt is what PayStage issued
+  issued 2026-11-15T18:27:34Z by @paystage/hosted
+
+  · It asks for 1 USDC, and the policy allows at most 0.05 USDC.
+```
+
+It verifies the signature first and says plainly when a receipt cannot be trusted. Rules it does not
+recognise are **quoted, not paraphrased** — guessing at a refusal's meaning is worse than repeating it.
