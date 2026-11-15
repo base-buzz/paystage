@@ -227,7 +227,7 @@ npm run typecheck
 
 ## Contributing
 
-PayStage is built in the open, and outside contributions are welcome.
+PayStage is built in the open, outside contributions are welcome.
 
 - **Add a drainer address.** Open a PR adding it to `KNOWN_DRAINERS.md` with a public source link (incident report, explorer label, or security write-up). Unsourced addresses won't be merged.
 - **Add an integration example.** LangChain, AgentKit, ElizaOS and others are all welcome.
