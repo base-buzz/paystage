@@ -9,6 +9,30 @@
 // be measured without ever inflating the count of paying customers.
 export type TelemetrySource = "real" | "synthetic" | "test" | "free-tier";
 
+/**
+ * Dropped-field signals, visible from outside.
+ *
+ * The drop allowlist exists so a missing column does not silence telemetry. That is the right behaviour
+ * and the wrong failure mode: it converts "every write rejected" into "one field quietly absent", and the
+ * first version of it logged a warning nobody read. This keeps a per-isolate count so /health can say
+ * *something is being dropped*, and the Coordinator digest can carry it where decisions are made.
+ */
+const droppedFields: Array<{ field: string; at: string }> = [];
+const MAX_DROPS = 20;
+
+export function recordDroppedField(field: string): void {
+  droppedFields.push({ field, at: new Date().toISOString() });
+  if (droppedFields.length > MAX_DROPS) droppedFields.shift();
+}
+
+export function telemetryDrops(): { count: number; fields: string[]; last: string | null } {
+  return {
+    count: droppedFields.length,
+    fields: [...new Set(droppedFields.map((d) => d.field))],
+    last: droppedFields.at(-1)?.at ?? null,
+  };
+}
+
 export interface TelemetryEvent {
   source: TelemetrySource;
   tool: string;
@@ -136,6 +160,7 @@ export function recordEvent(
         const droppable = field !== undefined && DROPPABLE_FIELDS.has(field);
         if (droppable) {
           const { [field]: _dropped, ...rest } = row;
+          recordDroppedField(field);
           console.log(
             JSON.stringify({
               level: "error",

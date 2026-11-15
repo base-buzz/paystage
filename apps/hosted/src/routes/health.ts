@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { telemetryDrops } from "../telemetry.js";
 
 export const healthRoutes = new Hono();
 
@@ -19,6 +20,9 @@ healthRoutes.get("/health", (c) => {
   return c.json({
     ok: true,
     telemetry: {
+      // "configured" only says the pipe is open. This says whether anything is being dropped on the way
+      // through it — the difference between a working pipe and one leaking a column.
+      drops: telemetryDrops(),
       // Both are required for a write to happen; reporting them separately says which one to set.
       url,
       key,
