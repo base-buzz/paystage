@@ -28,7 +28,6 @@ const PACKAGES = [
   "@paystage/ai-sdk",
 ];
 
-type EventRow = { ts: string; source: string | null };
 
 const DAY_MS = 86_400_000;
 
@@ -77,35 +76,40 @@ async function npmWeekly(): Promise<Array<{ week: string; installs: number }> | 
   }
 }
 
-async function requestsDaily() {
+type DailyRow = { day: string; source: string; n: number };
+
+/**
+ * Requests per day, from the database's own counts.
+ *
+ * Reading events and bucketing them here was wrong twice over: PostgREST caps a response at 1000 rows
+ * (the project's db-max-rows), and without an order clause those rows were the oldest — so a month of
+ * traffic charted as three days. `events_daily` counts in Postgres, so the 30 rows we need are exactly
+ * 30 rows, and no cap can silently truncate a chart again.
+ */
+async function requestsDaily(): Promise<Array<{ day: string; real: number; synthetic: number; test: number }> | null> {
   if (!isSupabaseConfigured()) return null;
-  const since = new Date(Date.now() - 30 * DAY_MS).toISOString();
-  // Newest first, and a cap large enough for the window. Without `order`, PostgREST returned the
-  // *oldest* thousand rows, so every recent day charted as zero — a truncation that looked exactly
-  // like a drop in traffic.
-  const LIMIT = 20_000;
-  const rows = await selectRows<EventRow>(
-    "events",
-    `select=ts,source&ts=gte.${since}&order=ts.desc&limit=${LIMIT}`,
+  const since = new Date(Date.now() - 30 * DAY_MS).toISOString().slice(0, 10);
+  const rows = await selectRows<DailyRow>(
+    "events_daily",
+    `select=day,source,n&day=gte.${since}&order=day.desc`,
   );
   if (rows === null) return null;
 
-  const days: Array<{ day: string; real: number; synthetic: number; test: number }> = [];
   const byDay = new Map<string, { real: number; synthetic: number; test: number }>();
   for (const row of rows) {
-    const key = dayKey(row.ts);
-    const bucket = byDay.get(key) ?? { real: 0, synthetic: 0, test: 0 };
-    const source = row.source === "synthetic" ? "synthetic" : row.source === "test" ? "test" : "real";
-    bucket[source] += 1;
-    byDay.set(key, bucket);
+    const bucket = byDay.get(row.day) ?? { real: 0, synthetic: 0, test: 0 };
+    if (row.source === "synthetic") bucket.synthetic += row.n;
+    else if (row.source === "test") bucket.test += row.n;
+    else bucket.real += row.n;
+    byDay.set(row.day, bucket);
   }
 
+  const days: Array<{ day: string; real: number; synthetic: number; test: number }> = [];
   for (let i = 29; i >= 0; i--) {
     const day = new Date(Date.now() - i * DAY_MS).toISOString().slice(0, 10);
-    const bucket = byDay.get(day) ?? { real: 0, synthetic: 0, test: 0 };
-    days.push({ day, ...bucket });
+    days.push({ day, ...(byDay.get(day) ?? { real: 0, synthetic: 0, test: 0 }) });
   }
-  return { days, truncated: rows.length >= LIMIT };
+  return days;
 }
 
 export async function GET() {
