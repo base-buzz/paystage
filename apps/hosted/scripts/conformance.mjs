@@ -27,23 +27,50 @@ const TOOLS = [
   "evaluate_velocity",
 ];
 
+import { parsePolicy } from "@paystage/policy";
+
 const results = [];
 const record = (name, ok, detail) => results.push({ name, ok, detail });
 
 /** Every request is bounded: a conformance run must never hang on a slow endpoint. */
 const TIMEOUT_MS = Number(process.env.PAYSTAGE_CONFORMANCE_TIMEOUT_MS ?? 10_000);
 
+async function attempt(url, init, started) {
+  try {
+    const res = await fetch(url, {
+      ...init,
+      // Our own checks must never be counted as real callers. `/api/metrics` treats an
+      // unlabelled request as real, so omitting this inflated realCount24h.
+      headers: { "x-paystage-source": "test", ...(init.headers ?? {}) },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    const text = await res.text().catch(() => "");
+    return { res, text, ms: Date.now() - started };
+  } catch (err) {
+    // A dropped connection is data too: return it as a status-0 result so the caller records a real
+    // detail instead of throwing and losing the whole group.
+    return {
+      res: { ok: false, status: 0, statusText: String(err).slice(0, 60) },
+      text: String(err),
+      ms: Date.now() - started,
+    };
+  }
+}
+
+/**
+ * One retry with a short backoff.
+ *
+ * A 503 `upstream_timeout` or a dropped connection is not a regression. Reading a single blip as a
+ * failure is how a check earns a reputation for flapping, and a flapping check gets ignored on the day
+ * it is right. Client errors (400/402) are returned immediately — those are answers, not transport
+ * trouble.
+ */
 async function get(url, init = {}) {
   const started = Date.now();
-  const res = await fetch(url, {
-    ...init,
-    // Our own checks must never be counted as real callers. `/api/metrics` treats an
-    // unlabelled request as real, so omitting this inflated realCount24h.
-    headers: { "x-paystage-source": "test", ...(init.headers ?? {}) },
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  });
-  const text = await res.text().catch(() => "");
-  return { res, text, ms: Date.now() - started };
+  const first = await attempt(url, init, started);
+  if (first.res.ok || first.res.status === 400 || first.res.status === 402) return first;
+  await new Promise((r) => setTimeout(r, 1200));
+  return attempt(url, init, started);
 }
 
 async function checkSite() {
@@ -97,7 +124,13 @@ async function checkSite() {
     // which by setting `available: false`, so treat that as a documented degradation
     // rather than a failure — otherwise the check goes red every time the Worker's shared
     // egress IP is rate limited, and a permanently red check teaches people to ignore it.
-    const unavailable = cadence.releases?.available === false || cadence.checks?.available === false;
+    // GitHub rate-limiting the Worker's shared egress shows up as a missing sub-object as often as an
+    // explicit `available: false`. Both mean "we could not read", which is not "the cadence is wrong".
+    const unavailable =
+      !cadence.releases ||
+      !cadence.checks ||
+      cadence.releases.available === false ||
+      cadence.checks.available === false;
     const shapeOk = typeof cadence.releases?.count === "number" && Array.isArray(cadence.checks?.recent_runs);
     record("cadence: releases and checks reported",
       shapeOk || unavailable,
@@ -245,6 +278,29 @@ async function checkUnpaidChallenge() {
   );
 }
 
+/**
+ * The probe fixtures are code, and they rot when the schema moves.
+ *
+ * On 2026-11-12 this kit failed with `HTTP 400 evaluation_failed` — the check looked broken, but the
+ * fixture was: `REAL_POLICY` no longer matched the policy schema. Validating locally turns that into
+ * "fixture invalid: allowed_assets" before a single request leaves the machine.
+ */
+function checkFixtures() {
+  try {
+    // Static ESM import at the top of the file; a bare `require` here would be a syntax-level lie in a
+    // module and only fail at runtime.
+    parsePolicy(REAL_POLICY);
+    record("fixtures: probe policy still valid against the schema", true, "parses");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    record(
+      "fixtures: probe policy still valid against the schema",
+      false,
+      `the kit's own fixture is stale — fix REAL_POLICY, not the endpoint: ${message.slice(0, 120)}`,
+    );
+  }
+}
+
 async function checkDocsNotLying() {
   // The site claims fail-closed. Verify the cheapest instance of that claim:
   // a malformed body must not come back as a success.
@@ -301,6 +357,7 @@ const groups = [
   ["unpaid challenge", checkUnpaidChallenge],
   ["fail-closed", checkDocsNotLying],
   ["tool parity", checkToolParity],
+  ["fixtures", checkFixtures],
 ];
 
 for (const [name, run] of groups) {
