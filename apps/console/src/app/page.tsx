@@ -491,6 +491,14 @@ export default function LandingPage() {
                   Publishing. Verify with <code>npm audit signatures</code>.
                 </p>
               </a>
+              <a className="lp-card" href="/ai-sdk">
+                <span className="lp-card-tag">@paystage/ai-sdk</span>
+                <h3>Works with the Vercel AI SDK</h3>
+                <p>
+                  Decides whether a payment may be signed, inside the same loop that would sign it.
+                  Read-only — the tool that decides is not the tool that spends.
+                </p>
+              </a>
               <a
                 className="lp-card"
                 href="https://github.com/base-buzz/paystage/blob/main/CHANGELOG.md"
