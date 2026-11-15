@@ -612,6 +612,21 @@ export default function LandingPage() {
                 A read-only seatbelt for agents that spend.
               </div>
             </div>
+            <nav className="lp-footer-nav" aria-label="Listed on">
+              {/* The listings we are actually on, linked from the page that claims them. */}
+              <a href="https://www.x402scan.com/server/71d358eb-0ef8-4d6d-8356-91c5bc237fb0" rel="noopener">
+                x402scan
+              </a>
+              <a href="https://glama.ai/mcp/servers/base-buzz/paystage" rel="noopener">
+                Glama
+              </a>
+              <a
+                href="https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz"
+                rel="noopener"
+              >
+                MCP registry
+              </a>
+            </nav>
             <nav className="lp-footer-nav" aria-label="Footer">
               {SOCIALS.map((social) => (
                 <a key={social.label} href={social.url} rel="me noopener">

@@ -149,6 +149,30 @@ for (const surface of (fromInventory.length > 0 ? fromInventory : SURFACES)) {
   });
 }
 
+// The lander check: every surface marked `surfaceOnLander` must be discoverable from paystage.xyz.
+//
+// It exists because the AI SDK shipped as a package with a docs page and the lander never mentioned
+// it — zero references. A listing nobody can find from our own front page is a listing for people who
+// were already looking.
+let landerReport = null;
+if (process.argv.includes("--lander") || true) {
+  const landerUrl = process.env.PAYSTAGE_LANDER ?? "https://paystage.xyz";
+  const surfaces = (loadInventory() ?? []).filter((x) => x.surfaceOnLander);
+  if (surfaces.length > 0) {
+    try {
+      const res = await fetch(landerUrl, { signal: AbortSignal.timeout(20_000) });
+      const html = await res.text();
+      const missing = surfaces.filter((x) => {
+        const host = new URL(x.url).host.replace(/^www\./, "");
+        return !html.includes(host);
+      });
+      landerReport = { checked: surfaces.length, missing: missing.map((x) => x.name) };
+    } catch (err) {
+      landerReport = { checked: surfaces.length, missing: [], error: String(err).slice(0, 60) };
+    }
+  }
+}
+
 const stale = rows.filter((r) => r.found !== null && r.found < tools.length);
 const payload = { tools: tools.length, at: new Date().toISOString(), stale: stale.length, rows };
 
@@ -160,6 +184,17 @@ if (process.argv.includes("--json")) {
     console.log(`${mark.padEnd(6)} ${r.name.padEnd(28)} ${r.found ?? "-"}/${tools.length}  ${r.note}`);
     if (r.found !== null && r.found < tools.length) console.log(`       → ${r.owner}`);
   }
+  if (landerReport) {
+    if (landerReport.error) {
+      console.log(`\nlander: unreadable (${landerReport.error})`);
+    } else if (landerReport.missing.length === 0) {
+      console.log(`\nlander: all ${landerReport.checked} recorded surfaces are linked from paystage.xyz`);
+    } else {
+      console.log(`\nlander: ${landerReport.missing.length} of ${landerReport.checked} recorded surfaces are NOT linked from paystage.xyz:`);
+      for (const name of landerReport.missing) console.log(`  - ${name}`);
+    }
+  }
   console.log(`\n${stale.length} stale of ${rows.length} readable surfaces (${tools.length} tools expected)`);
 }
-process.exit(stale.length === 0 ? 0 : 1);
+const landerOk = !landerReport || landerReport.missing.length === 0;
+process.exit(stale.length === 0 && landerOk ? 0 : 1);

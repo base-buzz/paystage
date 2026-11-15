@@ -22,6 +22,8 @@ const REPO = "base-buzz/paystage";
  * said in the caption rather than subtracted, because hiding a real number is its own
  * kind of dishonesty.
  */
+// Every published package. The list used to hold six of ten, so the total understated our own
+// published surface while the label said "all time".
 const NPM_PACKAGES = [
   "@paystage/mcp",
   "@paystage/preflight",
@@ -29,6 +31,10 @@ const NPM_PACKAGES = [
   "@paystage/velocity",
   "@paystage/auth-watch",
   "@paystage/trade-preflight",
+  "@paystage/x402-guard",
+  "@paystage/x-evm",
+  "@paystage/skill",
+  "@paystage/ai-sdk",
 ];
 
 /**
@@ -135,8 +141,8 @@ export async function AliveStrip() {
   const items = [
     { value: fmt(stats.commits30d), label: "commits, last 30 days" },
     { value: fmt(stats.tags), label: "tagged releases" },
-    { value: fmt(downloads.week), label: "npm installs this week" },
-    { value: fmt(downloads.total), label: "npm installs all time" },
+    { value: fmt(downloads.week), label: "npm installs this week, includes CI" },
+    { value: fmt(downloads.total), label: "npm installs all time, includes CI" },
     { value: stats.lastTag ?? "—", label: "latest tag" },
   ];
 
