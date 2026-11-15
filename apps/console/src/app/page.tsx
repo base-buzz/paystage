@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./landing.css";
 import { AliveStrip } from "@/components/AliveStrip";
+import { ChartStrip } from "@/components/ChartStrip";
 import { CopyCommand } from "@/components/CopyCommand";
 import { LogoBanner } from "@/components/LogoBanner";
 import { AgentPrompt } from "@/components/AgentPrompt";
@@ -239,6 +240,8 @@ export default function LandingPage() {
         <LiveFeed />
 
         <LogoBanner />
+
+        <ChartStrip />
 
         <AliveStrip />
 
