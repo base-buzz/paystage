@@ -118,3 +118,19 @@ const server = new x402ResourceServer(createFacilitatorConfig(PAYAI_URL))
 
 A refused payment aborts in `beforeVerify`, so the facilitator is never asked to verify or settle it.
 That ordering is the point, and there is a test asserting the facilitator's methods are never called.
+
+## Keep the verdict
+
+A refusal that leaves no trace is a refusal nobody can debug. Two opt-in seams:
+
+```ts
+guardFetch(fetch, {
+  policy,
+  onVerdict: (v) => log.info(v),                       // your logger
+  telemetryUrl: "https://api.paystage.xyz/v1/guard-verdict", // or the hosted collector
+})
+```
+
+The record is `{ verdict, reasonCodes, payTo, at }` — **no wallet address, no signature, no request
+body.** Telemetry is fire-and-forget and never on the payment path: a failed POST cannot fail the call,
+and a throwing logger cannot change whether a payment is allowed.

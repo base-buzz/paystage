@@ -40,12 +40,38 @@ export interface GuardOptions {
    * drives, never on ones we merely observe.
    */
   builderCode?: string;
+  /**
+   * Called with every decision, before the request proceeds or is refused.
+   *
+   * The guard cannot persist anything itself: it runs inside the caller's process and has no business
+   * writing to a database or calling a network it was not given. This is the seam — wire it to your
+   * logger, your telemetry table, or the hosted endpoint via `telemetryUrl`.
+   */
+  onVerdict?: (verdict: GuardVerdict) => void;
+  /**
+   * POST each verdict to a collector, e.g. `https://api.paystage.xyz/v1/guard-verdict`.
+   *
+   * **Opt-in and fire-and-forget.** The payload is the verdict, the reason codes, the payee and a
+   * timestamp — no wallet address, no signature, no body of the request being made. A refusal you
+   * cannot audit afterwards is the thing this exists to fix; a silent phone-home would be a worse
+   * problem than the one it solves.
+   */
+  telemetryUrl?: string;
+  /** Source label sent with the telemetry row; defaults to `test` so our own runs are never counted as callers. */
+  telemetrySource?: "real" | "synthetic" | "test";
   /** Injected for tests; defaults to `x402-fetch`'s wrapFetchWithPayment. */
   wrap?: (
     fetchImpl: typeof fetch,
     walletClient: unknown,
     maxValue?: bigint,
   ) => (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+}
+
+export interface GuardVerdict {
+  verdict: Verdict;
+  reasonCodes: string[];
+  payTo?: string;
+  at: string;
 }
 
 export interface GuardResult {
@@ -105,6 +131,27 @@ export function guardFetch(fetchImpl: typeof fetch, options: GuardOptions) {
     }
   }
 
+  const announce = (verdict: Verdict, reasonCodes: string[], payTo?: string) => {
+    const record: GuardVerdict = { verdict, reasonCodes, payTo, at: new Date().toISOString() };
+    try {
+      options.onVerdict?.(record);
+    } catch {
+      // A caller's logger must never change whether a payment is allowed.
+    }
+    if (options.telemetryUrl) {
+      void fetchImpl(options.telemetryUrl, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-paystage-source": options.telemetrySource ?? "test",
+        },
+        body: JSON.stringify(record),
+      }).catch(() => {
+        // Telemetry is not on the payment path; a failed POST must not fail the call.
+      });
+    }
+  };
+
   const onReview = options.onReview ?? "pay";
   const lastResult: { current: GuardResult | null } = { current: null };
 
@@ -116,6 +163,7 @@ export function guardFetch(fetchImpl: typeof fetch, options: GuardOptions) {
       // rather than claiming a payment was approved.
       if (first.status !== 402) {
         lastResult.current = { response: first, verdict: "pay", reasonCodes: ["no_payment_required"] };
+        announce("pay", ["no_payment_required"]);
         return withVerdict(first, "pay", ["no_payment_required"]);
       }
 
@@ -126,10 +174,16 @@ export function guardFetch(fetchImpl: typeof fetch, options: GuardOptions) {
           verdict: "review",
           reasonCodes: ["unreadable_challenge"],
         };
+        announce("review", ["unreadable_challenge"]);
         return withVerdict(first, "review", ["unreadable_challenge"]);
       }
 
-      let decision: { decision: string; reasonCodes?: string[]; matchedRule?: string };
+      // The payee is on the challenge; keep it for the verdict record so a denial names who it was
+      // about. Absent is fine — a challenge with no payee is its own finding.
+      const payTo =
+        (challenge as { accepts?: Array<{ payTo?: string }> })?.accepts?.[0]?.payTo ?? undefined;
+
+      let decision: { decision: string; reasonCodes?: string[]; reasons?: string[]; matchedRule?: string };
       try {
         const normalized = normalizePaymentRequired(challenge as never);
         decision = evaluatePayment(normalized, policy as never) as never;
@@ -137,14 +191,22 @@ export function guardFetch(fetchImpl: typeof fetch, options: GuardOptions) {
         // If the challenge cannot be evaluated, refuse rather than guess. An agent that
         // pays what it could not parse is the failure this package exists to prevent.
         lastResult.current = { response: first, verdict: "do_not_pay", reasonCodes: ["evaluation_failed"] };
+      announce("do_not_pay", ["evaluation_failed"]);
         return withVerdict(first, "do_not_pay", ["evaluation_failed"]);
       }
 
       const verdict = normalizeVerdict(decision.decision, onReview);
-      const codes = decision.reasonCodes ?? (decision.matchedRule ? [decision.matchedRule] : []);
+      // The evaluator reports `reasons`; this wrapper historically looked for `reasonCodes` and so
+      // dropped them on every refusal — the header said do_not_pay with no reason attached, which is
+      // exactly the thing a caller needs to fix their policy. Read all three spellings.
+      const codes =
+        decision.reasonCodes ??
+        (decision as { reasons?: string[] }).reasons ??
+        (decision.matchedRule ? [decision.matchedRule] : []);
 
       if (verdict !== "pay") {
         lastResult.current = { response: first, verdict, reasonCodes: codes };
+        announce(verdict, codes, payTo);
         return withVerdict(first, verdict, codes);
       }
 
@@ -156,6 +218,7 @@ export function guardFetch(fetchImpl: typeof fetch, options: GuardOptions) {
       }
       const paid = await wrap(fetchImpl, options.walletClient, options.maxValue)(input, init);
       lastResult.current = { response: paid, verdict, reasonCodes: codes };
+      announce(verdict, codes, payTo);
       return withVerdict(paid, verdict, codes);
     },
     { lastResult },

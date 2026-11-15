@@ -110,3 +110,47 @@ describe("composition with a third-party facilitator", () => {
     expect(calls).toEqual([]);
   });
 });
+
+describe("verdict persistence", () => {
+  it("records a refusal with its reason codes, not just a header", async () => {
+    const seen: Array<{ verdict: string; reasonCodes: string[]; payTo?: string }> = [];
+    const guarded = guardFetch(
+      async () =>
+        new Response(JSON.stringify({}), {
+          status: 402,
+          headers: { "payment-required": Buffer.from(JSON.stringify({ x402Version: 2, accepts: [{ scheme: "exact", network: "eip155:8453", amount: "1000000", asset: USDC, payTo: "0xc64a71e150cd21ebc4b12695850bed6b067743bc", maxTimeoutSeconds: 300 }] })).toString("base64") },
+        }),
+      { policy, onVerdict: (v) => seen.push(v) },
+    );
+
+    await guarded("https://api.example.com/paid");
+    expect(seen).toHaveLength(1);
+    expect(seen[0].verdict).toBe("do_not_pay");
+    expect(seen[0].reasonCodes.join(" ")).toMatch(/exceeds max_amount/);
+    expect(seen[0].payTo).toBe("0xc64a71e150cd21ebc4b12695850bed6b067743bc");
+  });
+
+  it("posts the verdict when a telemetry url is configured, and never blocks the call", async () => {
+    const posts: Array<{ url: string; body: string }> = [];
+    const fetchImpl = async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes("/guard-verdict")) {
+        posts.push({ url: String(input), body: String(init?.body) });
+        return new Response("{}", { status: 202 });
+      }
+      return new Response("{}", {
+        status: 402,
+        headers: { "payment-required": Buffer.from(JSON.stringify({ x402Version: 2, accepts: [{ scheme: "exact", network: "eip155:8453", amount: "1000000", asset: USDC, payTo: "0xc64a71e150cd21ebc4b12695850bed6b067743bc", maxTimeoutSeconds: 300 }] })).toString("base64") },
+      });
+    };
+
+    const guarded = guardFetch(fetchImpl as typeof fetch, {
+      policy,
+      telemetryUrl: "https://api.paystage.xyz/v1/guard-verdict",
+    });
+    await guarded("https://api.example.com/paid");
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(posts).toHaveLength(1);
+    expect(JSON.parse(posts[0].body)).toMatchObject({ verdict: "do_not_pay" });
+  });
+});
