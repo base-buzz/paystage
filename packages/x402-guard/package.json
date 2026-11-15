@@ -1,6 +1,6 @@
 {
   "name": "@paystage/x402-guard",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Preflight policy gate for x402-fetch: evaluate the payment before the wallet signs, and refuse the ones your policy denies",
   "repository": {
     "type": "git",

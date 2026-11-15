@@ -6,6 +6,7 @@ import { publicStatusRoutes } from "./routes/public-status.js";
 import { receiptKeyRoutes } from "./routes/receipt-key.js";
 import { publicChainRoutes } from "./routes/public-chain.js";
 import { wellKnownRoutes } from "./routes/well-known.js";
+import { guardVerdictRoutes } from "./routes/guard-verdict.js";
 import { openapiRoutes } from "./routes/openapi.js";
 import { recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { freeTierMiddleware } from "./free-tier.js";
@@ -301,6 +302,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   app.route("/", receiptKeyRoutes);
   app.route("/", publicChainRoutes);
   app.route("/", wellKnownRoutes);
+  app.route("/", guardVerdictRoutes);
   app.route("/", openapiRoutes);
 
   const protect = opts.protect ?? true;
