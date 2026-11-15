@@ -8,7 +8,7 @@
  */
 import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
 import { registerAllTools, SERVER_CAPABILITIES } from "@paystage/mcp/tools";
-import { parsePolicy } from "@paystage/policy";
+import { parsePolicyCached } from "./policy-cache.js";
 import { publicKeyJwk } from "./receipt.js";
 import { recordEvent, sourceFromHeaders, type TelemetrySource } from "./telemetry.js";
 
@@ -32,7 +32,7 @@ function buildServer(env: Env, source: TelemetrySource): McpServer {
           "policy is required on the hosted endpoint — send the policy object; `policy_path` only works in the stdio package",
         );
       }
-      return parsePolicy(input.policy as never);
+      return parsePolicyCached(input.policy);
     },
     version: SERVICE_VERSION,
     // The Worker cannot fetch its own origin to read the published key — that subrequest returned

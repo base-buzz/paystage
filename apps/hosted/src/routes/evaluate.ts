@@ -4,7 +4,7 @@ import {
   evaluatePayment,
   normalizePaymentRequired,
 } from "@paystage/preflight";
-import { parsePolicy } from "@paystage/policy";
+import { parsePolicyCached } from "../policy-cache.js";
 import {
   listOutstandingAuths,
   evaluateOutstandingAuths,
@@ -30,7 +30,7 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
   }
   try {
     const normalized = normalizePaymentRequired(b.payment_required as never);
-    const policy = parsePolicy(b.policy as never);
+    const policy = parsePolicyCached(b.policy);
     // Without this the hosted API could not reach per-agent budgets at all: the policy
     // declares them, the packages enforce them, and the endpoint silently judged every
     // caller against the loosest rules in the file.
@@ -77,7 +77,7 @@ evaluateRoutes.post("/v1/evaluate_outstanding_auths", async (c) => {
     return c.json({ error: "missing_wallet" }, 400);
   }
   try {
-    const policy = parsePolicy(b.policy as never);
+    const policy = parsePolicyCached(b.policy);
     const network =
       typeof b.network === "string" ? b.network : "eip155:84532";
     const rpc = createRpcClient(
