@@ -135,7 +135,7 @@ export default function LandingPage() {
             <aside className="lp-gate" aria-label="Example evaluation">
               <div className="lp-gate-head">
                 <span>one evaluation</span>
-                <span>~40 ms</span>
+                <span>p50 185 ms</span>
               </div>
               <div className="lp-gate-row">
                 <span aria-hidden="true">→</span>

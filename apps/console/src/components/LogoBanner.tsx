@@ -24,7 +24,7 @@ const CALLABLE = [
   { label: "Glama", note: "listed · claimed", href: "https://glama.ai/mcp/servers/base-buzz/paystage" },
   { label: "mcp.so", note: "listed", href: "https://mcp.so/servers/paystage-6d8a8f" },
   { label: "Arcade", note: "callable · worker", href: "https://arcade.dev" },
-  { label: "npm", note: "7 packages · provenance", href: "https://www.npmjs.com/package/@paystage/mcp" },
+  { label: "npm", note: "10 packages · provenance", href: "https://www.npmjs.com/package/@paystage/mcp" },
   { label: "GitHub", note: "MIT · public CI", href: "https://github.com/base-buzz/paystage" },
 ];
 
