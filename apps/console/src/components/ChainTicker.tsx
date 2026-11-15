@@ -13,6 +13,9 @@ import { useEffect, useState } from "react";
  */
 type Snapshot = { block: number | null; gasGwei: number | null; ok: boolean; note?: string };
 
+const CHAIN_ENDPOINT =
+  process.env.NEXT_PUBLIC_CHAIN_ENDPOINT ?? "https://api.paystage.xyz/v1/public/chain.json";
+
 export function ChainTicker() {
   const [snap, setSnap] = useState<Snapshot | null>(null);
   const [failed, setFailed] = useState(false);
@@ -22,7 +25,10 @@ export function ChainTicker() {
 
     async function tick() {
       try {
-        const res = await fetch("/v1/public/chain.json", { cache: "no-store" });
+        // The endpoint lives on the API host, not the site host. Calling the relative path asked the
+        // console Worker for a route it does not have, so the strip read "unreachable" on a page that
+        // was working perfectly — a wrong URL that looked exactly like an outage.
+        const res = await fetch(CHAIN_ENDPOINT, { cache: "no-store" });
         if (!res.ok) throw new Error(String(res.status));
         const body = (await res.json()) as Snapshot;
         if (alive) {
