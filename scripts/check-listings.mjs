@@ -13,6 +13,7 @@
  * "stale" and "fixable by us" are different facts and conflating them wastes a cycle.
  */
 import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -25,6 +26,24 @@ function expectedTools() {
 }
 
 const tools = expectedTools();
+
+/**
+ * The inventory is the source of truth: `ops/docs/state/distribution.json`.
+ *
+ * A hardcoded list here meant the checker and the record could disagree — the checker would pass
+ * while a surface we had forgotten about stayed stale. It now reads the inventory, so adding a
+ * surface is a data edit and forgetting one shows up as a missing row rather than as silence.
+ */
+const INVENTORY = process.env.PAYSTAGE_DISTRIBUTION ?? '/work/ops/docs/state/distribution.json';
+
+function loadInventory() {
+  try {
+    const raw = readFileSync(INVENTORY, 'utf8');
+    return JSON.parse(raw).surfaces ?? [];
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Surfaces we can read anonymously.
@@ -52,13 +71,53 @@ async function fetchText(url) {
   }
 }
 
+const inventory = loadInventory();
+const fromInventory = (inventory ?? [])
+  .filter((s) => s.probe && s.probe.type !== "none" && s.url)
+  .map((s) => ({
+    name: s.name,
+    url: s.url,
+    mode:
+      s.probe.type === "names" ? "names"
+      : s.probe.type === "npm-version" ? "json-version"
+      : s.probe.type === "pr" ? "pr"
+      : "http",
+    pr: s.probe.type === "pr" ? s.probe : undefined,
+    owner: s.owner === "us" ? "us" : s.owner === "operator" ? "the operator" : "them",
+    state: s.state,
+  }));
+
 const rows = [];
-for (const surface of SURFACES) {
+for (const surface of (fromInventory.length > 0 ? fromInventory : SURFACES)) {
   const { text, status } = await fetchText(surface.url);
   if (text === null) {
     rows.push({ ...surface, found: null, status, note: "unreadable" });
     continue;
   }
+  if (surface.mode === "pr") {
+    // A pull request is not a listing: grepping its page for tool names measured the wrong thing and
+    // reported twelve stale rows that were simply open PRs awaiting review. The meaningful state is
+    // whether it is still open.
+    let state = null;
+    try {
+      const out = execFileSync("gh", ["api", `repos/${surface.pr.repo}/pulls/${surface.pr.number}`, "--jq", ".state"], {
+        encoding: "utf8", timeout: 30_000,
+      }).trim();
+      state = out;
+    } catch (err) {
+      rows.push({ ...surface, found: null, status: "unreadable", note: String(err).slice(0, 60) });
+      continue;
+    }
+    const merged = state === "closed" ? "closed-or-merged" : state.toLowerCase();
+    rows.push({
+      ...surface,
+      found: state === "open" ? tools.length : 0,
+      status: state,
+      note: `PR ${merged} (#${surface.pr.number})`,
+    });
+    continue;
+  }
+
   if (surface.mode === "json-version") {
     // Version alignment only: these payloads do not carry tool names, so a name count here would be
     // measuring the wrong thing and reporting a false failure.
