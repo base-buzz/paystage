@@ -74,6 +74,12 @@ npx -y mcporter list https://api.paystage.xyz/mcp
 Prefer it local? `npx -y -p @paystage/mcp paystage-mcp` runs the same nine tools over stdio and reads a
 policy file from disk.
 
+## What it does not catch
+
+A gate that claims to stop every bad payment is the thing this project argues against. [LIMITS.md](LIMITS.md)
+is the honest boundary — settlements that already happened, payees that look legitimate and do not
+deliver, payments made outside the wrapper, and eight more. Read it before you trust the gate with money.
+
 ## Four ways in
 
 | You want | Use |
