@@ -36,6 +36,10 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           node apps/hosted/scripts/conformance.mjs >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
           echo '```' >> "$GITHUB_STEP_SUMMARY"
+      - name: Published artifacts match the repo
+        # A hand publish, a failed tag step, or a registry lag can leave npm behind the repo. This is
+        # the check that would have caught the five-tool package before mcp.so did.
+        run: node scripts/assert-artifact.mjs @paystage/mcp --latest
       - name: Listing freshness
         # Informational: most surfaces are third parties we cannot push, so a stale listing is a
         # report, not a build failure. The conformance kit is what fails the job.

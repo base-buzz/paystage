@@ -134,6 +134,19 @@ jobs:
   # clients actually resolve against. It was two releases behind because nothing did
   # this automatically. Auth is GitHub OIDC: no token to rotate, nothing that can
   # publish outside CI.
+      # The artifact people install has to be the artifact in the repo. mcp.so showed five tools and
+      # was right: @paystage/mcp@0.3.5 on npm registered five while the repo registered nine, and no
+      # check had ever opened the tarball. This opens it.
+      - name: Assert the published artifacts match the repo
+        if: github.ref_type == 'tag'
+        run: |
+          set -euo pipefail
+          PKGS="policy preflight x402-guard x-evm auth-watch velocity trade-preflight skill mcp ai-sdk"
+          for pkg in $PKGS; do
+            echo "--- @paystage/$pkg"
+            node scripts/assert-artifact.mjs "@paystage/$pkg" --latest --wait 420
+          done
+
   registry:
     needs: publish
     # Only a stable tag publishes to the MCP registry; canary builds must not move what
