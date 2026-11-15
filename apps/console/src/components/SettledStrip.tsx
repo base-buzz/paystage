@@ -1,25 +1,27 @@
-import { selectRows, isSupabaseConfigured } from "@/lib/supabase";
+"use client";
+
+import { useEffect, useState } from "react";
 
 /**
  * What has actually settled on this endpoint — including the uncomfortable part.
  *
- * Today the answer is "four calls, all ours". That is shown rather than hidden: a number that only
- * moves when money moves is worth more than a busy-looking widget, and the age counting *up* is the
- * most honest thing on the page when nobody is paying.
+ * Client-side on purpose. Rendered as an async server component it added incremental regeneration to
+ * the lander, and a static page with ISR needs a cache binding the console Worker does not have — which
+ * produced a 500 on the apex in production and a clean 200 locally. Fetching from the browser keeps the
+ * page fully static, and the worst case is a missing strip rather than a dead homepage.
  *
- * Server-side, with the service key, on a 30-second revalidate. The public browser key cannot read
- * this table (see supabase/migrations/20261114050000_events_private.sql).
+ * Today the numbers read "all ours". That is shown rather than hidden: a figure that only moves when
+ * money moves is worth more than a busy-looking widget.
  */
-type SettledRow = { amount_usdc: number | string | null; ts: string; source: string };
-
-async function loadSettled() {
-  if (!isSupabaseConfigured()) return null;
-  const rows = await selectRows<SettledRow>(
-    "events",
-    "select=amount_usdc,ts,source&decision=eq.settled&order=ts.desc&limit=500",
-  );
-  return rows;
-}
+type Totals = {
+  configured?: boolean;
+  settled?: number;
+  totalUsdc?: number;
+  external?: number;
+  ours?: number;
+  last?: string | null;
+  error?: string;
+};
 
 function ago(iso: string): string {
   const ms = Date.now() - Date.parse(iso);
@@ -32,31 +34,41 @@ function ago(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-export async function SettledStrip() {
-  const rows = await loadSettled();
+export function SettledStrip() {
+  const [data, setData] = useState<Totals | null>(null);
 
-  const settled = rows ?? [];
-  const total = settled.reduce((sum, r) => sum + Number(r.amount_usdc ?? 0), 0);
-  const external = settled.filter((r) => r.source === "real").length;
-  const ours = settled.length - external;
-  const last = settled[0]?.ts;
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/settled", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => alive && setData(j))
+      .catch(() => alive && setData({ error: "unreachable" }));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Nothing until there is something true to say.
+  if (!data || data.configured === false || data.error || typeof data.settled !== "number") return null;
+
+  const external = data.external ?? 0;
 
   return (
     <div className="lp-settled">
       <span className="lp-settled-item">
-        settled on this endpoint <strong>{settled.length}</strong>
+        settled on this endpoint <strong>{data.settled}</strong>
       </span>
       <span className="lp-settled-item">
-        <strong>{total.toFixed(3)}</strong> USDC
+        <strong>{(data.totalUsdc ?? 0).toFixed(3)}</strong> USDC
       </span>
       <span className="lp-settled-item">
         from outside <strong>{external}</strong>
       </span>
       <span className="lp-settled-item">
-        <strong>{ours}</strong> ours
+        <strong>{data.ours ?? 0}</strong> ours
       </span>
-      {last && <span className="lp-settled-item">last {ago(last)}</span>}
-      {/* The label does the work that a spinner cannot: it says whose money this is. */}
+      {data.last && <span className="lp-settled-item">last {ago(data.last)}</span>}
+      {/* The label does the work a spinner cannot: it says whose money this is. */}
       <span className="lp-settled-note">
         {external === 0
           ? "no external payer yet — every settlement above is our own test traffic"
