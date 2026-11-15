@@ -9,6 +9,7 @@ import { CadencePanel } from "@/components/CadencePanel";
 import { LiveFeed } from "@/components/LiveFeed";
 import { ChainTicker } from "@/components/ChainTicker";
 import { SettledStrip } from "@/components/SettledStrip";
+import { FunnelPanel } from "@/components/FunnelPanel";
 import { SOCIALS } from "@/lib/agent-manifest";
 import { TOOL_COUNT, TOOL_COUNT_WORD } from "@/lib/tools";
 
@@ -232,6 +233,7 @@ export default function LandingPage() {
         <section className="lp-wrap" aria-label="Live activity">
           <ChainTicker />
           <SettledStrip />
+          <FunnelPanel />
         </section>
 
         <LiveFeed />

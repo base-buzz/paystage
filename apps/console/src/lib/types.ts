@@ -4,4 +4,4 @@ export interface Incident { id: string; created_at: string; title: string; sever
 export interface StatusFlag { id: string; label: string; severity: "info" | "minor" | "major" | "critical"; active: boolean; detail?: string | null; }
 export interface PublicStatus { ok: boolean; uptime_pct: number | null; flags: StatusFlag[]; updated_at: string | null; }
 export interface VolumePoint { bucket: string; real: number; synthetic: number; }
-export interface MetricsSummary { configured: boolean; realCount24h: number; uniquePayers24h: number; syntheticCount24h: number; testCount24h: number; issuesOpen: number; uptimePct: number | null; flags: StatusFlag[]; volume: VolumePoint[]; events: TelemetryEvent[]; incidents: Incident[]; generatedAt: string; note?: string; }
+export interface MetricsSummary { configured: boolean; funnel?: { challenges: number; evaluations: number; settles: number }; realCount24h: number; uniquePayers24h: number; syntheticCount24h: number; testCount24h: number; issuesOpen: number; uptimePct: number | null; flags: StatusFlag[]; volume: VolumePoint[]; events: TelemetryEvent[]; incidents: Incident[]; generatedAt: string; note?: string; }
