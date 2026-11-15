@@ -29,7 +29,7 @@ Add to `claude_desktop_config.json`:
   "mcpServers": {
     "paystage-preflight": {
       "command": "npx",
-      "args": ["-y", "@paystage/preflight"],
+      "args": ["-y", "-p", "@paystage/preflight", "-p", "@modelcontextprotocol/server", "paystage-preflight-mcp"],
       "env": {
         "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json"
       }
@@ -47,7 +47,7 @@ Add to `.cursor/mcp.json`:
   "mcpServers": {
     "paystage-preflight": {
       "command": "npx",
-      "args": ["-y", "@paystage/preflight"],
+      "args": ["-y", "-p", "@paystage/preflight", "-p", "@modelcontextprotocol/server", "paystage-preflight-mcp"],
       "env": {
         "PAYSTAGE_POLICY_PATH": "/absolute/path/to/policy.json"
       }
