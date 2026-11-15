@@ -8,6 +8,7 @@ import { AgentPrompt } from "@/components/AgentPrompt";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { CadencePanel } from "@/components/CadencePanel";
 import { LiveFeed } from "@/components/LiveFeed";
+import { LatencyBadge } from "@/components/LatencyBadge";
 import { ChainTicker } from "@/components/ChainTicker";
 import { SettledStrip } from "@/components/SettledStrip";
 import { FunnelPanel } from "@/components/FunnelPanel";
@@ -135,7 +136,7 @@ export default function LandingPage() {
             <aside className="lp-gate" aria-label="Example evaluation">
               <div className="lp-gate-head">
                 <span>one evaluation</span>
-                <span>p50 185 ms</span>
+                <LatencyBadge />
               </div>
               <div className="lp-gate-row">
                 <span aria-hidden="true">→</span>

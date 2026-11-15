@@ -81,6 +81,45 @@ for (const file of files) {
   }
 }
 
+
+/**
+ * Package-count claims.
+ *
+ * The adversarial review found "npm 7 packages" on the live site when there were ten — a claim that was
+ * true when written and rotted as packages were published. Nothing counted. This does.
+ */
+function checkPackageCounts() {
+  const published = readdirSync(join(ROOT, "packages"))
+    .map((dir) => {
+      try {
+        const pkg = JSON.parse(readFileSync(join(ROOT, "packages", dir, "package.json"), "utf8"));
+        return pkg.private === true ? null : pkg.name;
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+
+  const SCAN = ["apps/console/src", "README.md", "llms-install.md"];
+  const files = SCAN.flatMap((p) => walk(p));
+  for (const file of files) {
+    const text = readFileSync(join(ROOT, file), "utf8");
+    // Only the shapes that assert something about *our* catalogue. A "three packages" in a sentence about
+    // something else is not a claim about it, and a tolerance band was worse than useless: it skipped the
+    // real drift (7 against 10) while still matching prose.
+    for (const match of text.matchAll(/(\d+)\s+(?:published\s+)?packages\s*(?:·|,|\s+with\s+provenance)/gi)) {
+      const claimed = Number(match[1]);
+      if (claimed !== published.length) {
+        const line = text.slice(0, match.index).split("\n").length;
+        problems.push(`${file}:${line} says "${match[0]}" but ${published.length} packages are published`);
+      }
+    }
+  }
+  ok.push(`package count consistent (${published.length} published)`);
+}
+
+checkPackageCounts();
+
 const payload = { ok: problems.length === 0, tools: tools.length, passed: ok, problems };
 if (process.argv.includes('--json')) {
   console.log(JSON.stringify(payload, null, 2));
