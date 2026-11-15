@@ -297,6 +297,21 @@ export async function getMetrics(): Promise<MetricsSummary> {
       else if (event.source === "test") testCount24h += 1;
     }
 
+    // The funnel, in the order a stranger experiences it:
+    //   saw a 402 challenge  →  asked for a verdict  →  settled
+    // Counted from the same 24h window as everything else, and each stage is a subset of the one
+    // before it in intent, not in data — an agent can settle without ever calling the evaluator, so
+    // these are three observations rather than a strict chain. The renderer says so.
+    let challenges = 0;
+    let evaluations = 0;
+    let settles = 0;
+    for (const event of events) {
+      if (event.status === "402") challenges += 1;
+      else if (event.status === "pay" || event.status === "review" || event.status === "do_not_pay") {
+        evaluations += 1;
+      } else if (event.status === "settled") settles += 1;
+    }
+
     const flags = deriveFlags(events);
     const issuesOpen = flags.length + incidents.filter((i) => i.status === "open").length;
 
@@ -315,6 +330,7 @@ export async function getMetrics(): Promise<MetricsSummary> {
       issuesOpen,
       uptimePct: Math.round(uptimePct * 100) / 100,
       flags,
+      funnel: { challenges, evaluations, settles },
       volume,
       events,
       incidents,

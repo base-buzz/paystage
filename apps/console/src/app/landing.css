@@ -1531,3 +1531,80 @@ body {
   font-size: 11.5px;
   max-width: 52ch;
 }
+
+/* Funnel — three bars, because the gap between stages is the finding. */
+.lp-funnel {
+  border-top: 1px solid var(--lp-line-soft);
+  border-bottom: 1px solid var(--lp-line-soft);
+  padding: 14px 0;
+  display: grid;
+  gap: 10px;
+}
+
+.lp-funnel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.lp-funnel-note {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11px;
+  max-width: 46ch;
+  text-align: right;
+}
+
+.lp-funnel-bars {
+  display: grid;
+  gap: 8px;
+}
+
+.lp-funnel-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(120px, 2fr) 56px;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.lp-funnel-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  color: var(--lp-dim);
+}
+
+.lp-funnel-hint {
+  font-size: 11px;
+  color: var(--lp-faint);
+}
+
+.lp-funnel-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--lp-line-soft);
+  overflow: hidden;
+}
+
+.lp-funnel-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--lp-mint);
+}
+
+/* Our own traffic is not demand: the stages we drive ourselves render grey. */
+.lp-funnel-settles {
+  background: var(--lp-faint);
+}
+
+.lp-funnel-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-fg);
+}
