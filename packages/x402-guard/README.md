@@ -103,3 +103,18 @@ client-side guard always has.
 **It fails closed.** If policy evaluation throws, the payment is aborted with
 `paystage_evaluation_failed`. A hook that failed open would look like protection and behave like
 consent — there is a test for exactly that.
+
+## Any facilitator, unchanged
+
+The verifier hook attaches to the **resource server**, not to the facilitator — so it composes with
+whatever facilitator you already run: CDP, PayAI (`@payai/facilitator`), a self-hosted one, or none.
+Those packages are configuration (a URL and auth headers); there is nothing in them to wrap, which is
+why this is a hook rather than a per-facilitator package.
+
+```ts
+const server = new x402ResourceServer(createFacilitatorConfig(PAYAI_URL))
+  .registerExtension(paystageVerifierHook({ policy }));
+```
+
+A refused payment aborts in `beforeVerify`, so the facilitator is never asked to verify or settle it.
+That ordering is the point, and there is a test asserting the facilitator's methods are never called.

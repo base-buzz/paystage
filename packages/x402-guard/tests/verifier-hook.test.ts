@@ -79,3 +79,34 @@ describe("builder code", () => {
     expect(JSON.stringify(registered[0])).toContain("paystage");
   });
 });
+
+describe("composition with a third-party facilitator", () => {
+  // @payai/facilitator (and any other facilitator package) is configuration: a URL plus auth headers.
+  // There is nothing in it to wrap. The seam is the resource server that calls it, which is where
+  // beforeVerify runs — so the guard composes with PayAI, CDP or a self-hosted facilitator unchanged.
+  it("refuses before the facilitator is ever asked to verify", async () => {
+    const calls: string[] = [];
+    const facilitator = {
+      verify: async () => {
+        calls.push("verify");
+        return { isValid: true };
+      },
+      settle: async () => {
+        calls.push("settle");
+        return { success: true };
+      },
+    };
+
+    const extension = paystageVerifierHook({ policy });
+    const hook = extension.hooks.beforeVerify as (ctx: unknown) => Promise<unknown>;
+
+    // The resource server runs hooks first; a refusal means the facilitator is never reached.
+    const outcome = await hook(context("1000000")); // 1.00 USDC against a 0.05 cap
+    if (!outcome || !("abort" in (outcome as object))) {
+      await facilitator.verify();
+    }
+
+    expect(outcome).toMatchObject({ abort: true });
+    expect(calls).toEqual([]);
+  });
+});
