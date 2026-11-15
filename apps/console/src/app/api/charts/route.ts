@@ -112,12 +112,28 @@ async function requestsDaily(): Promise<Array<{ day: string; real: number; synth
   return days;
 }
 
+/**
+ * Measured latency, not a claimed one.
+ *
+ * The page said "~40 ms" while the real p50 was 185 ms. A number nobody re-measures is eventually false,
+ * so the page reads this instead of asserting it — and says how many calls it is based on.
+ */
+async function latency(): Promise<{ n: number; p50: number; p90: number } | null> {
+  if (!isSupabaseConfigured()) return null;
+  const rows = await selectRows<{ n: number; p50: number; p90: number }>(
+    "events_latency_7d",
+    "select=n,p50,p90&limit=1",
+  );
+  return rows && rows.length > 0 ? rows[0] : null;
+}
+
 export async function GET() {
-  const [weekly, daily] = await Promise.all([npmWeekly(), requestsDaily()]);
+  const [weekly, daily, lat] = await Promise.all([npmWeekly(), requestsDaily(), latency()]);
   return NextResponse.json(
     {
       npm: weekly,
       requests: daily,
+      latency: lat,
       note: "npm installs include our own CI and mirrors; requests are labelled by the caller.",
     },
     { headers: { "cache-control": "no-store" } },
