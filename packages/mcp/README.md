@@ -188,3 +188,11 @@ signer, which is the entire product.
 | `decode_payment_required` | what does this base64 402 header actually say |
 | `validate_policy` | is this policy document valid, and if not why |
 
+## Check a policy file before you run anything
+
+```bash
+npx -y -p @paystage/mcp paystage-policy check policy.json
+```
+
+Exit `0` valid, `1` invalid (one line per offending field), `2` unreadable. Offline, no key, no signup —
+the same schema the evaluator enforces, so a file that passes here is a file that will load there.
