@@ -6,6 +6,7 @@ import {
   type Asset,
 } from "@paystage/policy";
 import { isKnownDrainer } from "./known-drainers.js";
+import { SANCTIONED_ADDRESSES } from "./sanctioned-addresses.js";
 
 export interface AcceptOption {
   scheme: string;
@@ -127,6 +128,14 @@ function evaluateAccept(accept: AcceptOption, policy: Policy): AcceptResult {
   // Rule 7a: known drainers — hard deny before unknown_payee review
   if (isKnownDrainer(accept.payTo)) {
     reasons.push("known drainer");
+    return { accept, status: "do_not_pay", reasons };
+  }
+
+  // Rule 7b: OFAC sanctions. Separate from the drainer list because the reason for refusing is different —
+  // a drainer takes your funds, a sanctioned address may make paying *you* the violation. Both are hard
+  // denies, and the reason code says which list fired so a human can check the citation.
+  if (SANCTIONED_ADDRESSES.has(String(accept.payTo).toLowerCase())) {
+    reasons.push("sanctioned address (OFAC SDN)");
     return { accept, status: "do_not_pay", reasons };
   }
 
