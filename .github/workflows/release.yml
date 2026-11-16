@@ -30,6 +30,13 @@ permissions:
   contents: read
   id-token: write
 
+# Publishing is not parallel-safe: two tag pushes a minute apart had both workflows attempt the same version,
+# and npm answered 409 "cannot publish over previously staged version". Serialising tag runs makes the second
+# a no-op instead of a failure.
+concurrency:
+  group: release-${{ github.ref_type == 'tag' && 'stable' || github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -83,8 +90,20 @@ jobs:
               VERSION=$(node -p "require('./packages/$pkg/package.json').version")
               if npm view "@paystage/$pkg@$VERSION" version >/dev/null 2>&1; then
                 echo "@paystage/$pkg@$VERSION already on npm; skipping."
-              else
-                npm publish -w "@paystage/$pkg" --access public --provenance
+                continue
+              fi
+              # 409 on a concurrent/retried publish means the version exists — but only believe that if npm
+              # now reports exactly the version we tried. Anything else is a real failure and must stay red.
+              if ! npm publish -w "@paystage/$pkg" --access public --provenance 2>/tmp/pub.err; then
+                if grep -qE "409|EPUBLISHCONFLICT|cannot publish over" /tmp/pub.err; then
+                  sleep 5
+                  if [ "$(npm view "@paystage/$pkg@$VERSION" version 2>/dev/null)" = "$VERSION" ]; then
+                    echo "@paystage/$pkg@$VERSION landed despite the conflict — treating as published."
+                    continue
+                  fi
+                fi
+                cat /tmp/pub.err
+                exit 1
               fi
             done
             exit 0

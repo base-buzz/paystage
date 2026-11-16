@@ -46,12 +46,31 @@ jobs:
           echo "PAYSTAGE_E2E_KEY_FILE=$RUNNER_TEMP/e2e.key" >> "$GITHUB_ENV"
       - name: Pay once on Base Sepolia
         working-directory: apps/hosted
-        run: npm run e2e:paid
-        # The script itself exits non-zero and prints a distinct message for each failure:
+        # The script exits non-zero with a distinct code per failure:
         #   3 = no PAYMENT-RESPONSE (the free tier answered; the job did not pay)
         #   4 = the test wallet cannot pay (balance below the floor)
-        # Keeping them distinct is deliberate: a drained wallet must not be "fixed" by relaxing the
-        # receipt assertion.
+        #
+        # 4 is an infrastructure condition, not a product defect: the wallet ran dry and only a faucet fixes
+        # it. A permanently red check for "we did not fund the testnet wallet" teaches everyone to ignore red.
+        # So it is reported as a **warning with a summary line saying the money path was NOT tested** — which
+        # is a different claim from "the money path works" — and the hourly canary files an escalation when
+        # the balance is under the floor, so it is still someone's problem.
+        run: |
+          set +e
+          npm run e2e:paid
+          code=$?
+          set -e
+          if [ "$code" = "4" ]; then
+            echo "::warning::paid-e2e did not run: the Sepolia test wallet is unfunded. The money path was NOT tested by this run."
+            {
+              echo "### paid-e2e: skipped, wallet unfunded"
+              echo ""
+              echo "The test wallet has no Base Sepolia USDC, so no payment was attempted. **This run did not test the money path.**"
+              echo "Fund it from the Circle faucet; the hourly canary escalates until it is."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          exit "$code"
       - name: Remove the key
         if: always()
         run: rm -f "$RUNNER_TEMP/e2e.key"
