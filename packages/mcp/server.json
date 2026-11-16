@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.base-buzz/mcp",
   "title": "PayStage \u2014 x402 payment safety",
-  "description": "x402 payment safety: stop your agent paying a drainer and limit agent spending before the wallet signs.",
+  "description": "x402 payment safety: stop your agent paying a drainer before the wallet signs.",
   "version": "0.8.4",
   "websiteUrl": "https://paystage.xyz",
   "repository": {
