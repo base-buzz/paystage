@@ -103,16 +103,48 @@ npx -y @paystage/trade-preflight
 The policy is passed as a tool argument; no extra environment variables are required for
 this tool.
 
+### `evaluate_velocity` — Available now
+
+Is this spend a burst, a spike, or a runaway cadence? Takes the recent action history and a
+`policy.velocity` block, and returns `pay` | `review` | `do_not_pay` with the window that was breached.
+
+### `verify_receipt` — Available now
+
+Checks a receipt against the published signing key and returns the verdict it attests to, or why it
+cannot be trusted. `VALID`, `INVALID` (altered), `EXPIRED` (past its own lifetime), `payment-mismatch`
+(genuine, but about a different payment), or `UNVERIFIABLE` — which is a refusal, not a pass.
+
+### `decode_payment_required` — Available now
+
+Decodes a base64 `payment-required` header from a 402 response into the JSON challenge: scheme,
+network, asset, atomic amount, payee, resource and timeout. Pure decoding — no network call, no
+verdict. Use `evaluate_mcp_payment` when you want a decision.
+
+### `validate_policy` — Available now
+
+Checks a policy document without evaluating a payment, and returns the exact field and message when
+it is wrong. Worth running in CI on the policy an agent ships with: an invalid policy makes every
+evaluation refuse, which looks like a product bug and is not one.
+
+### `evaluate_batch` — Available now
+
+The same question for several payments at once, one verdict each in input order — so an agent settling
+a batch stops at the first refusal instead of discovering it after three payments.
+
+
+
 ## Packages
 
-| Package | Version | Purpose |
-| --- | --- | --- |
-| `@paystage/mcp` | Umbrella server (9 tools) |
+| Package | Purpose |
+| --- | --- |
+| `@paystage/mcp` | Umbrella MCP server — nine tools, start here |
 | `@paystage/preflight` | x402 payment preflight |
 | `@paystage/auth-watch` | Outstanding-auth tools |
 | `@paystage/trade-preflight` | HIP-3 / trade.xyz trade preflight |
 | `@paystage/velocity` | Rate / spend-pattern checks |
 | `@paystage/policy` | Shared policy schema + loader |
+| `@paystage/x402-guard` | Policy gate for `x402-fetch` and `@x402/core` clients |
+| `@paystage/ai-sdk` | The same gate as AI SDK tools |
 
 ## Verify a receipt
 

@@ -120,6 +120,7 @@ function checkPackageCounts() {
 
 checkPackageCounts();
 checkMcpCards();
+checkToolDocs();
 
 
 /**
@@ -139,6 +140,30 @@ function checkMcpCards() {
     problems.push("mcp.json keywords lost the words an agent searches with");
   }
   ok.push("mcp.json card consistent");
+}
+
+
+/**
+ * Every README that lists tools must list all of them.
+ *
+ * The npm page for @paystage/mcp documented five of nine for weeks while the endpoint served nine and the
+ * registry said nine — the same divergence as mcp.so, except ours to fix. Counting here means a new tool
+ * cannot ship undocumented in the place most readers arrive.
+ */
+function checkToolDocs() {
+  const toolsSrc = readFileSync(join(ROOT, "packages/mcp/src/tools.ts"), "utf8");
+  const names = [...toolsSrc.matchAll(/registerTool\(\s*"([a-z0-9_]+)"/g)].map((m) => m[1]);
+  const unique = [...new Set(names)];
+  for (const file of ["README.md", "packages/mcp/README.md"]) {
+    const text = readFileSync(join(ROOT, file), "utf8");
+    // Word boundaries: `includes("evaluate_batch")` matched `evaluate_batch_removed`, so the guard passed
+    // while the tool was gone. Proven by renaming it and watching the check stay green.
+    const missing = unique.filter((t) => !new RegExp(`\\b${t}\\b`).test(text));
+    if (missing.length > 0) {
+      problems.push(`${file} documents ${unique.length - missing.length}/${unique.length} tools — missing: ${missing.join(", ")}`);
+    }
+  }
+  ok.push(`tool docs complete (${unique.length} tools in both READMEs)`);
 }
 
 const payload = { ok: problems.length === 0, tools: tools.length, passed: ok, problems };
