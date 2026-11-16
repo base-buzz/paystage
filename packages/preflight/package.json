@@ -1,7 +1,7 @@
 {
   "name": "@paystage/preflight",
-  "version": "0.4.0",
-  "description": "Evaluate x402 PaymentRequired against a local spending policy before an agent pays",
+  "version": "0.4.1",
+  "description": "Stop your agent paying a drainer: check the x402 payment before the wallet signs. Returns pay / review / do_not_pay from a local policy, with the rule that fired. No keys, no signing.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -29,13 +29,21 @@
     "node": ">=20"
   },
   "keywords": [
-    "mcp",
+    "payment-safety",
     "x402",
     "agent-payments",
+    "spend-limits",
+    "drainer",
+    "firewall",
+    "allowlist",
+    "blocklist",
+    "scam-prevention",
     "usdc",
     "base",
+    "mcp",
     "preflight",
-    "policy"
+    "policy",
+    "evaluation"
   ],
   "homepage": "https://paystage.xyz",
   "repository": {
