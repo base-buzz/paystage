@@ -3,7 +3,7 @@
   "name": "io.github.base-buzz/mcp",
   "title": "PayStage \u2014 x402 payment safety",
   "description": "x402 payment safety: stop your agent paying a drainer before the wallet signs. pay / review / do_not_pay with the rule that fired.",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "websiteUrl": "https://paystage.xyz",
   "repository": {
     "url": "https://github.com/base-buzz/paystage",
@@ -15,7 +15,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@paystage/mcp",
-      "version": "0.8.2",
+      "version": "0.8.3",
       "transport": {
         "type": "stdio"
       },
