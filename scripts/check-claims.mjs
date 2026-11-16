@@ -121,6 +121,7 @@ function checkPackageCounts() {
 checkPackageCounts();
 checkMcpCards();
 checkToolDocs();
+checkToolAnnotations();
 
 
 /**
@@ -181,6 +182,35 @@ function checkToolDocs() {
     }
   }
   ok.push(`tool docs complete (${unique.length} tools in both READMEs)`);
+}
+
+
+/**
+ * Every tool needs the four annotation fields an MCP host uses as trust badges, and `openWorldHint` must be true only
+ * where the tool actually reaches the network — a "read-only" claim that hides a fetch is worse than no annotation.
+ */
+function checkToolAnnotations() {
+  const src = readFileSync(join(ROOT, "packages/mcp/src/tools.ts"), "utf8");
+  const NETWORK_TOOLS = new Set([
+    "list_outstanding_auths",
+    "evaluate_outstanding_auths",
+    "evaluate_hip3_trade",   // read-only market query
+    "verify_receipt",        // fetches the published key
+  ]);
+  for (const block of src.split("server.registerTool(").slice(1)) {
+    const name = /^\s*"([a-z0-9_]+)"/.exec(block)?.[1];
+    if (!name) continue;
+    const ann = block.slice(block.indexOf("annotations"), block.indexOf("inputSchema"));
+    for (const field of ["title", "readOnlyHint", "destructiveHint", "openWorldHint"]) {
+      if (!new RegExp(`${field}:`).test(ann)) problems.push(`${name}: annotation "${field}" missing`);
+    }
+    const openWorld = /openWorldHint:\s*(true|false)/.exec(ann)?.[1];
+    const shouldBeOpen = NETWORK_TOOLS.has(name) ? "true" : "false";
+    if (openWorld !== shouldBeOpen) {
+      problems.push(`${name}: openWorldHint is ${openWorld}, expected ${shouldBeOpen}${NETWORK_TOOLS.has(name) ? " (it reaches the network)" : ""}`);
+    }
+  }
+  ok.push("tool annotations complete and honest");
 }
 
 const payload = { ok: problems.length === 0, tools: tools.length, passed: ok, problems };
