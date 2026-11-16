@@ -1685,3 +1685,67 @@ body {
   color: var(--lp-faint);
   font-variant-numeric: tabular-nums;
 }
+
+/* Real-money control: harder to press than everything above it, on purpose. */
+.lp-paid-mainnet {
+  border: 1px solid var(--lp-line-soft);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+  max-width: 640px;
+}
+
+.lp-paid-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.lp-paid-head span {
+  font-size: 12px;
+  color: var(--lp-faint);
+}
+
+.lp-paid-ack {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 12.5px;
+  color: var(--lp-dim);
+  line-height: 1.45;
+}
+
+.lp-paid-button {
+  justify-self: start;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--lp-mint);
+  background: transparent;
+  color: var(--lp-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.lp-paid-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: var(--lp-line-soft);
+}
+
+.lp-paid-msg {
+  font-size: 12.5px;
+  color: var(--lp-dim);
+  margin: 0;
+}
+
+.lp-paid-msg.is-error { color: var(--lp-warn, #d08a5a); }
+.lp-paid-msg.is-done { color: var(--lp-mint); }
+
+.lp-paid-note {
+  font-size: 11px;
+  color: var(--lp-faint);
+  margin: 0;
+}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { TryConsole } from "./TryConsole";
+import { PaidMainnet } from "@/components/PaidMainnet";
 
 export const metadata: Metadata = {
   title: "Try the gate — PayStage",
@@ -24,6 +25,7 @@ export default function TryPage() {
       </p>
 
       <TryConsole />
+      <PaidMainnet />
 
       <section style={{ marginTop: 48, maxWidth: 720 }}>
         <h2 style={{ fontSize: 20, marginBottom: 8 }}>What you are looking at</h2>
