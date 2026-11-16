@@ -26,7 +26,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const START = "<!-- tools:table:start -->";
 const END = "<!-- tools:table:end -->";
-const FILES = ["README.md", "packages/mcp/README.md"];
+const FILES = ["README.md", "packages/mcp/README.md", "README.zh-CN.md"];
 
 /**
  * One line per tool, maintained here rather than in four files.
@@ -46,14 +46,29 @@ const SUMMARY = {
   validate_policy: "is this policy document valid, and if not which field",
 };
 
+/** Chinese one-liners, same rows, same order — the translation is a summary, not a second product claim. */
+const SUMMARY_ZH = {
+  evaluate_mcp_payment: "这笔 x402 支付该不该签？→ `pay` · `review` · `do_not_pay`",
+  evaluate_batch: "同一问题，批量评估多笔支付，每笔一个判定",
+  list_outstanding_auths: "还有哪些 ERC-20 / Permit2 / EIP-3009 授权尚未结清",
+  evaluate_outstanding_auths: "哪些授权需要在下一笔支付前处理",
+  evaluate_hip3_trade: "这笔 HIP-3 / trade.xyz 订单该不该下？→ `allow` · `review` · `do_not_trade`",
+  evaluate_velocity: "这次消费是短时爆发、尖峰，还是失控的节奏",
+  verify_receipt: "这张回执是不是我们签发的——是否针对这笔支付、是否仍在有效期内",
+  decode_payment_required: "这个 base64 的 402 头到底说了什么",
+  validate_policy: "这份策略文档是否合法，问题出在哪个字段",
+};
+
 function registeredTools() {
   const src = readFileSync(join(ROOT, "packages/mcp/src/tools.ts"), "utf8");
   return [...new Set([...src.matchAll(/registerTool\(\s*"([a-z0-9_]+)"/g)].map((m) => m[1]))];
 }
 
-function table(tools) {
-  const rows = tools.map((t) => `| \`${t}\` | ${SUMMARY[t]} |`);
-  return ["| tool | what it answers |", "|---|---|", ...rows].join("\n");
+function table(tools, zh = false) {
+  const dict = zh ? SUMMARY_ZH : SUMMARY;
+  const rows = tools.map((t) => `| \`${t}\` | ${dict[t] ?? SUMMARY[t]} |`);
+  const head = zh ? "| 工具 | 它回答什么 |" : "| tool | what it answers |";
+  return [head, "|---|---|", ...rows].join("\n");
 }
 
 const write = process.argv.includes("--write");
@@ -77,6 +92,7 @@ for (const file of FILES) {
     continue;
   }
 
+  const generated = table(tools, file.endsWith("zh-CN.md"));
   const before = text.slice(0, text.indexOf(START) + START.length);
   const after = text.slice(text.indexOf(END));
   const next = `${before}\n${generated}\n${after}`;
