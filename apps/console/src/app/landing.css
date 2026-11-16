@@ -1809,9 +1809,17 @@ html:not([data-theme]) .lp-hero::before {
 
 /* Dark mode uses the aurora as scene lighting. On a pale canvas the same gradients are a grey veil — measured 199,202,210
    in the corners against 249 in the centre, which reads as a dirty band across the top rather than a lighting effect. */
+/* The aurora keeps its motion in light mode — it was the dark *veil* that looked wrong, not the movement. At low opacity
+   the same orbs read as a pastel wash on white, and the drift is what makes the page feel alive. */
 html[data-theme="light"] .lp-aurora,
 .lp[data-theme="light"] .lp-aurora {
-  display: none;
+  opacity: 0.34;
+}
+
+html[data-theme="light"] .lp-aurora span,
+.lp[data-theme="light"] .lp-aurora span {
+  opacity: 0.5;
+  filter: blur(90px) saturate(0.85);
 }
 
 /* System default when the visitor has not chosen. */
@@ -1832,7 +1840,11 @@ html[data-theme="light"] .lp-aurora,
     --lp-fg: var(--lp-text);
   }
   html:not([data-theme]) .lp-aurora {
-    display: none;
+    opacity: 0.34;
+  }
+  html:not([data-theme]) .lp-aurora span {
+    opacity: 0.5;
+    filter: blur(90px) saturate(0.85);
   }
 }
 
