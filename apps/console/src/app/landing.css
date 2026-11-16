@@ -1571,10 +1571,25 @@ body {
 
 .lp-funnel-row {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(120px, 2fr) 56px;
+  /* The old minimums (180 + 120 + 56 + gaps) needed 380px and pushed the page wider than a 390px phone. */
+  grid-template-columns: minmax(0, 1fr) minmax(64px, 1.4fr) 48px;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   font-size: 13px;
+}
+
+@media (max-width: 560px) {
+  /* On a phone the label needs the width more than the bar does: put the bar on its own row. */
+  .lp-funnel-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "label value"
+      "bar   bar";
+    row-gap: 6px;
+  }
+  .lp-funnel-label { grid-area: label; }
+  .lp-funnel-value { grid-area: value; }
+  .lp-funnel-track { grid-area: bar; }
 }
 
 .lp-funnel-label {
