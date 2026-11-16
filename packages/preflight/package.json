@@ -1,7 +1,7 @@
 {
   "name": "@paystage/preflight",
-  "version": "0.4.2",
-  "description": "x402 payment safety: stop your agent paying a drainer before the wallet signs. Returns pay / review / do_not_pay from a local policy, with the rule that fired. No keys, no signing.",
+  "version": "0.4.3",
+  "description": "agent spend policy enforcement: stop your agent paying a drainer before the wallet signs. Returns pay / review / do_not_pay from a local policy, with the rule that fired. No keys, no signing.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

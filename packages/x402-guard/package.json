@@ -1,7 +1,7 @@
 {
   "name": "@paystage/x402-guard",
-  "version": "0.4.2",
-  "description": "x402 payment safety for x402 clients: a policy gate that runs before the wallet signs. Blocks over-cap payments, unknown payees and OFAC-sanctioned addresses, and names the rule that fired.",
+  "version": "0.4.3",
+  "description": "a payment firewall for x402 clients and mcp payment firewall for x402-fetch: stop your agent paying a drainer before it signs. Blocks over-cap payments, unknown payees and OFAC-sanctioned addresses, and names the rule that fired.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/base-buzz/paystage.git",
