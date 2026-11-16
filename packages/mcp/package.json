@@ -1,6 +1,6 @@
 {
   "name": "@paystage/mcp",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "x402 payment safety and agent spend limits: nine MCP tools that check an x402 payment before your wallet signs. pay / review / do_not_pay, with the rule that fired. Read-only \u2014 holds no keys.",
   "license": "MIT",
   "type": "module",
