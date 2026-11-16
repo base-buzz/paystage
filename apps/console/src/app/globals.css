@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 :root {
+  /* The landing palette lives in landing.css on :root; html paints the canvas from it so light mode has a light page,
+     not just a light header. */
+  background: var(--lp-bg, #07080b);
   --bg: #0a0b0e;
   --panel: #111318;
   --panel-2: #161922;
