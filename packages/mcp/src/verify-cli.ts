@@ -20,6 +20,10 @@ const EXIT: Record<VerifyVerdict["status"], number> = {
   // New and deliberately distinct: "the receipt is genuine but does not cover the inputs
   // you gave me" is not "this receipt is forged". A script needs to tell those apart.
   "inputs-mismatch": 4,
+  // "Genuine but too old to act on" and "genuine but about a different payment" are both distinct from a
+  // forgery, and both need their own exit code so a script can retry rather than alarm.
+  expired: 5,
+  "payment-mismatch": 6,
   // Genuine and coverable, but older than the bound the caller set. A third fact again:
   // "forged" (1), "could not check" (3), and "true but expired" (5).
   stale: 5,
@@ -40,11 +44,15 @@ function usage(): string {
     "  --request <f>  check the receipt covers this request JSON",
     "  --policy <f>   check the receipt covers this policy JSON",
     "  --max-age <s>  reject a receipt older than this many seconds",
+    "  --payment <f>  check the receipt was issued for this payment JSON",
     "",
     "Exit codes:",
     "  0 valid · 1 invalid · 2 unsigned · 3 unverifiable · 4 inputs-mismatch · 5 stale",
+    "  6 payment-mismatch · 7 expired",
     "  4 means the receipt is genuine but does not cover the inputs you supplied",
     "  5 means the receipt is genuine but older than --max-age allows",
+    "  6 means the receipt is genuine but was issued for a different payment",
+    "  7 means the receipt is genuine but its own expires_at has passed",
   ].join("\n");
 }
 
@@ -66,6 +74,7 @@ async function main(argv: string[]): Promise<number> {
   let keyUrl: string | undefined;
   let asJson = false;
   let requestPath: string | undefined;
+  let paymentPath: string | undefined;
   let policyPath: string | undefined;
   let maxAgeRaw: string | undefined;
 
@@ -76,6 +85,7 @@ async function main(argv: string[]): Promise<number> {
     const arg = args[i];
     if (arg === "--json") asJson = true;
     else if (arg === "--request") requestPath = args[++i];
+    else if (arg === "--payment") paymentPath = args[++i];
     else if (arg === "--policy") policyPath = args[++i];
     else if (arg === "--key") keyPath = args[++i];
     else if (arg === "--key-url") keyUrl = args[++i];
@@ -132,6 +142,12 @@ async function main(argv: string[]): Promise<number> {
     }
   };
   if (requestPath !== undefined) options.expectedRequest = await readJson(requestPath);
+  if (paymentPath !== undefined) {
+    const payment = (await readJson(paymentPath)) as { payment?: Record<string, unknown> } & Record<string, unknown>;
+    // Accept either a bare payment object or an evaluate-style body with a `payment` key, so a caller can
+    // pipe the same file they sent to the endpoint.
+    options.payment = (payment.payment ?? payment) as typeof options.payment;
+  }
   if (policyPath !== undefined) options.expectedPolicy = await readJson(policyPath);
   if (maxAgeRaw !== undefined) {
     const seconds = Number(maxAgeRaw);

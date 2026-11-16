@@ -142,7 +142,7 @@ describe("CLI argument parsing", () => {
 });
 
 describe("--max-age", () => {
-  async function signedAt(issued: string) {
+  async function signedAt(issued: string, ttlSeconds = 0) {
     const pair = (await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"])) as CryptoKeyPair;
     const pkcs8 = (await crypto.subtle.exportKey("pkcs8", pair.privateKey)) as ArrayBuffer;
     const b64 = Buffer.from(new Uint8Array(pkcs8)).toString("base64");
@@ -153,6 +153,9 @@ describe("--max-age", () => {
       policy: {},
       signingKeyPkcs8B64: b64,
       now: new Date(issued),
+      // These tests are about the --max-age bound, so the receipt's own lifetime is disabled here. Expiry has
+      // its own tests below; mixing the two would make a failure ambiguous.
+      ttlSeconds,
     });
     return { receipt, jwk };
   }

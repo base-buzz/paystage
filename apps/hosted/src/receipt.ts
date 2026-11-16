@@ -47,15 +47,39 @@ function base64Url(bytes: ArrayBuffer): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/**
+ * The payment a receipt is about.
+ *
+ * A receipt used to say "a verdict was issued over this request digest". That is true and it is weaker than
+ * it sounds: it cannot be shown to refer to *the* payment in front of you, and it never expires. Binding the
+ * decision to the concrete payment terms — and giving it a lifetime — is what makes it checkable by someone
+ * who was not there.
+ */
+export interface ReceiptPayment {
+  scheme: string;
+  network: string;
+  asset: string;
+  /** Atomic units as a string: 1000000 is 1.00 USDC at 6 decimals. */
+  amount: string;
+  payee: string;
+}
+
 export interface ReceiptPayload {
   v: number;
   issuer: string;
   issued_at: string;
+  /** When this decision should no longer be acted on. Absent on receipts issued before v2. */
+  expires_at?: string;
   service: { name: string; version: string };
   verdict: { decision: string; reasons: string[]; summary?: string };
+  /** The payment terms this verdict was issued for. Absent on receipts issued before v2. */
+  payment?: ReceiptPayment;
   request_sha256: string;
   policy_sha256: string;
 }
+
+/** Default lifetime: long enough for an agent to act, short enough that a stale allow is not a licence. */
+export const RECEIPT_TTL_SECONDS = 300;
 
 export interface Receipt extends ReceiptPayload {
   signed: boolean;
@@ -68,6 +92,10 @@ export interface BuildReceiptInput {
   decision: { decision: string; reasons?: string[]; summary?: string };
   request: unknown;
   policy: unknown;
+  /** The payment terms, when the caller knows them. Omitted receipts stay valid, just unbound. */
+  payment?: ReceiptPayment;
+  /** Override the default lifetime. Zero or negative disables the expiry stamp entirely. */
+  ttlSeconds?: number;
   signingKeyPkcs8B64?: string | undefined;
   now?: Date;
   serviceVersion?: string;
@@ -100,10 +128,16 @@ async function signingKey(pkcs8B64: string): Promise<CryptoKey | undefined> {
  * because of an accounting problem.
  */
 export async function buildReceipt(input: BuildReceiptInput): Promise<Receipt> {
+  const issued = input.now ?? new Date();
+  const ttl = input.ttlSeconds ?? RECEIPT_TTL_SECONDS;
+  const expires = ttl > 0 ? new Date(issued.getTime() + ttl * 1000).toISOString() : undefined;
+
   const payload: ReceiptPayload = {
     v: RECEIPT_VERSION,
     issuer: "paystage",
-    issued_at: (input.now ?? new Date()).toISOString(),
+    issued_at: issued.toISOString(),
+    ...(expires === undefined ? {} : { expires_at: expires }),
+    ...(input.payment === undefined ? {} : { payment: input.payment }),
     service: { name: "@paystage/hosted", version: input.serviceVersion ?? "unknown" },
     verdict: {
       decision: input.decision.decision,
