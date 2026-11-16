@@ -1,7 +1,7 @@
 {
   "name": "@paystage/mcp",
-  "version": "0.8.1",
-  "description": "Stop your agent paying a drainer: nine MCP tools that check an x402 payment before your wallet signs. Pay / review / do_not_pay, with the rule that fired. Read-only \u2014 holds no keys.",
+  "version": "0.8.2",
+  "description": "x402 payment safety and agent spend limits: nine MCP tools that check an x402 payment before your wallet signs. pay / review / do_not_pay, with the rule that fired. Read-only \u2014 holds no keys.",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
@@ -53,7 +53,11 @@
     "policy",
     "velocity",
     "receipt",
-    "verification"
+    "verification",
+    "payment safety",
+    "spend limit",
+    "spend limits",
+    "agent payment safety"
   ],
   "homepage": "https://paystage.xyz",
   "repository": {

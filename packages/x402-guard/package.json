@@ -1,7 +1,7 @@
 {
   "name": "@paystage/x402-guard",
-  "version": "0.4.1",
-  "description": "Stop your agent paying a drainer: a policy gate for x402 clients that runs before the wallet signs. Blocks over-cap payments, unknown payees and sanctioned addresses, and says which rule fired.",
+  "version": "0.4.2",
+  "description": "x402 payment safety for x402 clients: a policy gate that runs before the wallet signs. Blocks over-cap payments, unknown payees and OFAC-sanctioned addresses, and names the rule that fired.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/base-buzz/paystage.git",
@@ -44,7 +44,11 @@
     "sanctioned",
     "ofac",
     "wallet",
-    "guard"
+    "guard",
+    "payment safety",
+    "spend limit",
+    "spend limits",
+    "agent payment safety"
   ],
   "dependencies": {
     "@paystage/policy": "0.2.1",
