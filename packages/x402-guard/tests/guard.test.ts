@@ -92,6 +92,35 @@ describe("guardFetch", () => {
     expect(wrap).not.toHaveBeenCalled();
   });
 
+
+  it("honours onReview: refuse, because the README promises it blocks", async () => {
+    // Regression: normalizeVerdict returned "review" from both branches, so this option refused nothing while the README
+    // and llms.txt said it did. The verdict stays `review`; the payment must not happen.
+    const wrap = vi.fn(() => async () => paidOk());
+    const guarded = guardFetch(
+      async () => new Response("nonsense", { status: 402, headers: { "payment-required": "!!!not-base64!!!" } }) as never,
+      { policy, wrap: wrap as never, onReview: "refuse" },
+    );
+    const res = await guarded("https://api.example.com/paid");
+    expect(res.headers.get("x-paystage-verdict")).toBe("review");
+    expect(wrap).not.toHaveBeenCalled();
+  });
+
+  it("honours onReview: pay, which treats a review as permission", async () => {
+    // A genuine review: an unknown payee under a policy that says review rather than deny. An unreadable challenge is a
+    // hard do_not_pay, which is a different path and would have made this test pass for the wrong reason.
+    const reviewPolicy = { ...policy, allowed_pay_to: [OTHER_PAY_TO], unknown_payee: "review" };
+    const wrap = vi.fn(() => async () => paidOk());
+    const guarded = guardFetch(
+      async () => challenge("10000", PAY_TO) as never,
+      { policy: reviewPolicy, wrap: wrap as never, onReview: "pay" },
+    );
+    const res = await guarded("https://api.example.com/paid");
+    // The verdict is still reported honestly as `review`; only the decision to pay changes.
+    expect(res.headers.get("x-paystage-verdict")).toBe("review");
+    expect(wrap).toHaveBeenCalled();
+  });
+
   it("rejects an invalid policy at construction rather than at payment time", () => {
     expect(() => guardFetch(async () => new Response(), { policy: { nonsense: true } })).toThrow(/invalid policy/);
   });
