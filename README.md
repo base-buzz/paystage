@@ -28,18 +28,7 @@ the callers this is built for.
 Every one is read-only. None of them signs, holds a key, or moves money — the agent stays the only
 signer, which is the entire product.
 
-| tool | what it answers |
-|---|---|
-| `evaluate_mcp_payment` | should this x402 payment be signed? → `pay` · `review` · `do_not_pay` |
-| `evaluate_batch` | the same question for several payments at once, one verdict each |
-| `list_outstanding_auths` | which ERC-20 / Permit2 / EIP-3009 authorisations are still outstanding |
-| `evaluate_outstanding_auths` | which of those need attention before the next payment |
-| `evaluate_hip3_trade` | should this HIP-3 / trade.xyz order be placed? → `allow` · `review` · `do_not_trade` |
-| `evaluate_velocity` | is this spend a burst, a spike, or a runaway cadence |
-| `verify_receipt` | is this receipt really ours, checked against the published key |
-| `decode_payment_required` | what does this base64 402 header actually say |
-| `validate_policy` | is this policy document valid, and if not why |
-
+_All nine are listed with what each answers in [Tools](#tools)._
 ## Quick start
 
 ```bash
@@ -187,17 +176,19 @@ addresses and amounts, and point `PAYSTAGE_POLICY_PATH` at it. Each is schema-ex
 
 ## Tools
 
-| Tool | Status | What it does |
-| --- | --- | --- |
-| `evaluate_mcp_payment` | Available now | Evaluates a proposed x402 payment against the local policy and returns `pay`, `review`, or `do_not_pay`. |
-| `list_outstanding_auths` | Available now | Lists payments that are authorized but not yet settled. |
-| `evaluate_outstanding_auths` | Available now | Evaluates outstanding authorizations and flags double-pay or limbo risk. |
-| `evaluate_hip3_trade` | Available now | Evaluates a proposed HIP-3 / trade.xyz order against a local TradePolicy (`allow` \| `review` \| `do_not_trade`). Not financial advice — local policy gate only. |
-| `evaluate_velocity` | Available now | Rate and spend-pattern velocity checks against the local policy. |
-| `verify_receipt` | Available now | Checks a signed receipt against the published key: `VALID`, `INVALID`, `EXPIRED`, `payment-mismatch`, or `UNVERIFIABLE`. |
-| `decode_payment_required` | Available now | Decodes a base64 `payment-required` header into the JSON challenge — no network call, no verdict. |
-| `validate_policy` | Available now | Validates a policy document and names the exact field when it is wrong. Run it in CI on the policy you ship. |
-| `evaluate_batch` | Available now | The same verdict for several payments at once, one per input — stop at the first refusal. |
+<!-- tools:table:start -->
+| tool | what it answers |
+|---|---|
+| `evaluate_mcp_payment` | should this x402 payment be signed? → `pay` · `review` · `do_not_pay` |
+| `list_outstanding_auths` | which ERC-20 / Permit2 / EIP-3009 authorisations are still outstanding |
+| `evaluate_outstanding_auths` | which of those need attention before the next payment |
+| `evaluate_hip3_trade` | should this HIP-3 / trade.xyz order be placed? → `allow` · `review` · `do_not_trade` |
+| `evaluate_velocity` | is this spend a burst, a spike, or a runaway cadence |
+| `verify_receipt` | is this receipt really ours — and is it about *this* payment, still in date |
+| `decode_payment_required` | what does this base64 402 header actually say |
+| `validate_policy` | is this policy document valid, and if not which field |
+| `evaluate_batch` | the same question for several payments, one verdict each |
+<!-- tools:table:end -->
 
 ## Packages
 

@@ -20,6 +20,7 @@ jobs:
       # and a dead listing link or a stale version is invisible to every other test.
       - run: node scripts/check-copy.mjs --network
       - run: node scripts/check-claims.mjs
+      - run: node scripts/sync-tool-docs.mjs --check
       # Starts the published server over stdio and asserts five tools answer. The install
       # command in every README was wrong for three releases and nothing caught it.
       - run: node scripts/mcp-handshake.mjs
