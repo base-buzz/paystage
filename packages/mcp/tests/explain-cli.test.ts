@@ -59,3 +59,18 @@ describe("paystage-explain", () => {
     expect(r.out).toContain("some future rule nobody has written yet");
   });
 });
+
+describe("paystage-explain remedies", () => {
+  it("tells the holder what to do about an over-cap refusal, without suggesting a bypass", () => {
+    const r = run(receipt());
+    expect(r.out).toContain("→");
+    expect(r.out).toMatch(/raise max_amount above 1 USDC|do not pay/);
+    expect(r.out).not.toMatch(/disable|bypass|ignore the policy/i);
+  });
+
+  it("offers no remedy for a reason it does not understand", () => {
+    const r = run(receipt({ verdict: { decision: "do_not_pay", reasons: ["some future rule"], summary: "" } }));
+    expect(r.out).toContain("some future rule");
+    expect(r.out).not.toContain("→");
+  });
+});

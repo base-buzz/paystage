@@ -38,6 +38,16 @@ pass \`agent_id\`:
 Missing or unknown \`agent_id\` is \`do_not_pay\` — never a fallback to the loosest rules.
 Overrides that widen (raise a ceiling, add a payee) are rejected when the policy loads.
 
+## Verdict vocabulary
+
+Three states. Other gates use their own three words for the same intent, so if you run more than one:
+
+  pay         within policy, sign and send       (ELIGIBLE / GO / authorize)
+  review      a human should look first         (STEP_UP / HOLD / challenge)
+  do_not_pay  refused, with the rule that fired  (DENY / STOP / deny)
+
+"review" is a policy instruction rather than an oversight: onReview decides whether it pays or refuses.
+
 ## Verify a receipt
 
 \`\`\`
