@@ -208,6 +208,9 @@ addresses and amounts, and point `PAYSTAGE_POLICY_PATH` at it. Each is schema-ex
 
 ## Packages
 
+Ten packages. Only `@paystage/mcp` exposes **nine MCP tools**; the rest are the evaluator, guards for other
+frameworks, a policy schema and a skill — hence ten packages and nine tools in the same breath.
+
 <!-- packages:table:start -->
 | Package | Role | Links |
 | --- | --- | --- |
