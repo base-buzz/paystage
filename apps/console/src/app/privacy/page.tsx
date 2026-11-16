@@ -19,8 +19,11 @@ export default function PrivacyPage() {
     <main className="lp-wrap lp-prose">
       <h1>Privacy</h1>
       <p className="lp-lead">
-        PayStage is a payment-safety tool used by agents. It has no accounts, no sign-up, no cookies and no
-        tracking pixels. This page states exactly what one evaluation records, in the same terms the code uses.
+        PayStage is a payment-safety tool used by agents. Nothing here requires an account: every tool, the free tier, the
+        paid path and every receipt work signed out. There are no cookies and no tracking pixels.
+
+        Signing in is optional and exists for one reason — to remember your theme and language on another device. This
+        page states exactly what a call records and exactly what an account would store.
       </p>
 
       <h2>What a call records</h2>
@@ -66,7 +69,8 @@ export default function PrivacyPage() {
           count lives in the Worker's memory and is never written to the database.
         </li>
         <li>
-          <strong>No accounts, email addresses, names or passwords.</strong> There is nothing to sign up to.
+          <strong>No email address, name or password.</strong> Account creation is optional and uses a wallet signature,
+          so there is nothing to leak and nothing to reset.
         </li>
         <li>
           <strong>No cookies or device identifiers</strong> on this site.
@@ -79,6 +83,22 @@ export default function PrivacyPage() {
           <strong>No private keys.</strong> PayStage never holds one and cannot sign.
         </li>
       </ul>
+
+      <h2>If you choose to sign in</h2>
+      <p>
+        Optional, and only to carry your preferences between devices. The record is a wallet address and two settings:
+      </p>
+      <ul>
+        <li><strong>wallet address</strong> — the one that signed the message; it is already public on chain</li>
+        <li><strong>theme</strong> — <code>system</code>, <code>light</code> or <code>dark</code></li>
+        <li><strong>language</strong> — the locale you picked</li>
+        <li><strong>updated_at</strong> — when you last changed them</li>
+      </ul>
+      <p>
+        Nothing else is stored, no session cookie identifies you across the site, and <strong>no feature requires it</strong>
+        — signing out loses nothing except cross-device sync. Agents are never asked to sign in; the MCP server does not
+        read this at all.
+      </p>
 
       <h2>On-chain data is public</h2>
       <p>
