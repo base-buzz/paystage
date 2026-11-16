@@ -1,7 +1,7 @@
 {
   "name": "@paystage/x402-guard",
-  "version": "0.4.0",
-  "description": "Preflight policy gate for x402-fetch: evaluate the payment before the wallet signs, and refuse the ones your policy denies",
+  "version": "0.4.1",
+  "description": "Stop your agent paying a drainer: a policy gate for x402 clients that runs before the wallet signs. Blocks over-cap payments, unknown payees and sanctioned addresses, and says which rule fired.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/base-buzz/paystage.git",
@@ -26,12 +26,25 @@
     "node": ">=20"
   },
   "keywords": [
+    "payment-safety",
     "x402",
-    "x402-fetch",
     "agent-payments",
-    "payment-policy",
     "spend-limits",
-    "base"
+    "drainer",
+    "firewall",
+    "allowlist",
+    "blocklist",
+    "scam-prevention",
+    "usdc",
+    "base",
+    "mcp",
+    "preflight",
+    "x402-fetch",
+    "payment-policy",
+    "sanctioned",
+    "ofac",
+    "wallet",
+    "guard"
   ],
   "dependencies": {
     "@paystage/policy": "0.2.1",

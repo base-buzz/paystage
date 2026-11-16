@@ -1,7 +1,7 @@
 {
   "name": "@paystage/ai-sdk",
-  "version": "0.1.1",
-  "description": "PayStage preflight as AI SDK tools: pay / review / do_not_pay before an agent signs an x402 payment",
+  "version": "0.1.2",
+  "description": "Stop your agent paying a drainer: PayStage preflight as AI SDK tools, so the payment is checked inside the same loop that would sign it. pay / review / do_not_pay.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -18,13 +18,25 @@
     "README.md"
   ],
   "keywords": [
+    "payment-safety",
+    "x402",
+    "agent-payments",
+    "spend-limits",
+    "drainer",
+    "firewall",
+    "allowlist",
+    "blocklist",
+    "scam-prevention",
+    "usdc",
+    "base",
+    "mcp",
+    "preflight",
     "ai-sdk",
     "vercel",
-    "x402",
     "payments",
     "agents",
-    "preflight",
-    "mcp"
+    "vercel-ai",
+    "tools"
   ],
   "repository": {
     "type": "git",
