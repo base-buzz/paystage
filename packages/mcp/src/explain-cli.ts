@@ -35,6 +35,43 @@ try {
  * is printed as-is rather than paraphrased, because guessing at a refusal's meaning is worse than
  * quoting it.
  */
+/**
+ * What to do about it.
+ *
+ * The rule that fired is a diagnosis; a person holding a refused receipt needs the next move. Competitors
+ * ship "remediation guidance" and it is the right instinct: a refusal that only says no is a support ticket.
+ * Every phrase here is an action the caller can take themselves — none of them suggest bypassing the gate.
+ */
+function remedy(reason: string): string | null {
+  let m: RegExpMatchArray | null;
+
+  if ((m = reason.match(/^amount (\S+) (\w+) exceeds max_amount (\S+) (\w+)$/))) {
+    return `If this payment is legitimate, raise max_amount above ${m[1]} ${m[2]}; if it is not, do not pay.`;
+  }
+  if ((m = reason.match(/^network (\S+) not in allowed_networks$/))) {
+    return `Add ${m[1]} to allowed_networks only if you intend to transact there.`;
+  }
+  if ((m = reason.match(/^asset (\S+) on (\S+) not in allowed_assets$/))) {
+    return `Verify the token address against the issuer before adding it to allowed_assets — lookalike assets are the usual cause.`;
+  }
+  if ((m = reason.match(/^payTo (\S+) not in allowed_pay_to \(deny\)$/))) {
+    return "Check the payee against the seller's published address, then add it to allowed_pay_to if it is right.";
+  }
+  if ((m = reason.match(/^payTo (\S+) not in allowed_pay_to \(review\)$/))) {
+    return "Review the payee before paying; the policy is asking for a human, not refusing outright.";
+  }
+  if (reason === "known drainer") {
+    return "Do not pay this address. If you believe it is a false positive, the list carries a citation per entry — check it.";
+  }
+  if ((m = reason.match(/^maxTimeoutSeconds (\d+) exceeds policy max_timeout_seconds (\d+)$/))) {
+    return `Ask the seller for a shorter window, or raise max_timeout_seconds above ${m[1]} if you accept the risk.`;
+  }
+  if ((m = reason.match(/^invalid atomic amount/))) {
+    return "The challenge is malformed; treat it as a broken seller and do not retry with the same payload.";
+  }
+  return null;
+}
+
 function humanise(reason: string): string {
   let m: RegExpMatchArray | null;
 
@@ -77,7 +114,19 @@ const decision = receipt.verdict?.decision ?? "unknown";
 const reasons = receipt.verdict?.reasons ?? [];
 
 if (asJson) {
-  console.log(JSON.stringify({ decision, reasons, sentences: reasons.map(humanise), verification: verdict }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        decision,
+        reasons,
+        sentences: reasons.map(humanise),
+        remedies: reasons.map(remedy),
+        verification: verdict,
+      },
+      null,
+      2,
+    ),
+  );
   process.exit(0);
 }
 
@@ -96,7 +145,13 @@ console.log("");
 if (reasons.length === 0) {
   console.log("  No rules fired.");
 } else {
-  for (const r of reasons) console.log(`  · ${humanise(r)}`);
+  for (const r of reasons) {
+    console.log(`  · ${humanise(r)}`);
+    const action = remedy(r);
+    // The action is indented under the diagnosis, and omitted when we do not know one — an invented remedy
+    // is worse than none, because someone will follow it.
+    if (action) console.log(`    → ${action}`);
+  }
 }
 
 if (receipt.verdict?.summary) console.log(`\n  Summary: ${receipt.verdict.summary}`);

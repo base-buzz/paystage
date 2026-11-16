@@ -80,6 +80,20 @@ A gate that claims to stop every bad payment is the thing this project argues ag
 is the honest boundary — settlements that already happened, payees that look legitimate and do not
 deliver, payments made outside the wrapper, and eight more. Read it before you trust the gate with money.
 
+## Verdict vocabulary
+
+Three states, and every project in this space picked its own three words. If you run more than one of these
+gates, here is the mapping — the semantics line up more closely than the names suggest.
+
+| PayStage | Meaning | Same intent elsewhere |
+|---|---|---|
+| `pay` | within policy — sign and send | DingDawg `ELIGIBLE` · Black_Wall `GO` · MandatePay `authorize` |
+| `review` | a human should look before paying | DingDawg `STEP_UP` · Black_Wall `HOLD` · MandatePay `challenge` |
+| `do_not_pay` | refuse — a rule fired, and it is named | DingDawg `DENY` · Black_Wall `STOP` · MandatePay `deny` |
+
+One difference worth knowing: `review` is a **policy instruction**, not an oversight. `onReview: "pay"` treats
+it as permission, `"refuse"` treats it as a block — the gate never decides that for you.
+
 ## Four ways in
 
 | You want | Use |
