@@ -45,6 +45,11 @@ if ! node examples/run.mjs >/tmp/prepush-examples.txt 2>&1; then
 fi
 
 # The privacy page must describe the telemetry we actually write; understating collection is a lie with a footer link.
+if ! node scripts/sync-glossary.mjs --check >/tmp/prepush-glossary.txt 2>&1; then
+  note "the glossary's generated copy is stale — run: node scripts/sync-glossary.mjs --write"
+  fail=1
+fi
+
 if ! node scripts/check-privacy.mjs >/tmp/prepush-privacy.txt 2>&1; then
   note "the privacy page no longer matches telemetry — read /tmp/prepush-privacy.txt"
   grep DRIFT /tmp/prepush-privacy.txt | sed 's/^/    /'
