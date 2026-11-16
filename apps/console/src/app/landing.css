@@ -1800,6 +1800,13 @@ html:not([data-theme]) .lp-hero {
   background: none;
 }
 
+/* The scrim exists to protect hero contrast against a bright aurora. Light mode has no aurora, so the scrim is a dark
+   veil — and it extends 64px above the hero on purpose, which put it *behind the transparent nav*. */
+html[data-theme="light"] .lp-hero::before,
+html:not([data-theme]) .lp-hero::before {
+  background: none;
+}
+
 /* Dark mode uses the aurora as scene lighting. On a pale canvas the same gradients are a grey veil — measured 199,202,210
    in the corners against 249 in the centre, which reads as a dirty band across the top rather than a lighting effect. */
 html[data-theme="light"] .lp-aurora,
