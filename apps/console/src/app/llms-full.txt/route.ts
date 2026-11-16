@@ -49,8 +49,10 @@ re-running the evaluation.
 ${tools}
 ## Policy
 
-A single JSON document, read from the tool's \`policy_path\` argument, else
-\`PAYSTAGE_POLICY_PATH\`, else \`./policy.json\`. It is never written to.
+A single JSON document, supplied either **inline** as the \`policy\` argument or as a
+path in \`policy_path\`; when neither is given it falls back to \`PAYSTAGE_POLICY_PATH\`,
+then \`./policy.json\`. It is never written to. Inline is the right choice for an agent
+that already knows its budget; a path is right when several calls share one file.
 
 \`\`\`json
 {
@@ -91,6 +93,34 @@ payment.
 \`\`\`sh
 npx -y -p @paystage/mcp paystage-mcp
 npm audit signatures
+\`\`\`
+
+Then one call, over stdio. Two JSON-RPC lines are enough — this is the whole
+protocol surface you need:
+
+\`\`\`jsonc
+// request
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"evaluate_mcp_payment","arguments":{
+  "payment_required":{"x402Version":2,"accepts":[{"scheme":"exact","network":"eip155:8453",
+    "amount":"12500000","asset":"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo":"0x6160a0d8a3a1f8b0c4e2d1f7b3a9c6e5d4f23757e","maxTimeoutSeconds":300}]},
+  "policy":{"version":1,"max_amount":{"value":"0.05","asset":"USDC","decimals":6},
+    "allowed_assets":[{"symbol":"USDC","decimals":6,
+      "address":"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913","network":"eip155:8453"}],
+    "allowed_networks":["eip155:8453"],
+    "allowed_pay_to":["0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE"],
+    "max_timeout_seconds":300,"unknown_payee":"deny"}}}}
+
+// response (the verdict is JSON inside content[0].text)
+{"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":
+  "{\"decision\":\"do_not_pay\",\"reasons\":[\"amount 12.5 USDC exceeds max_amount 0.05 USDC\"]}"}]}}
+\`\`\`
+
+The same call against the hosted API, if you would rather not run a process:
+
+\`\`\`sh
+curl -s -X POST ${m.hosted_api.mainnet}/v1/evaluate_mcp_payment -H 'content-type: application/json' \\
+  -d '{"payment_required":{...},"policy":{...}}'
 \`\`\`
 
 Provenance is published from GitHub Actions via npm Trusted Publishing (OIDC).
