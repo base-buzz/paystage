@@ -28,6 +28,15 @@ fi
 
 # The same claim written in three places (README, lander, inventory) drifted within a week: four
 # destinations in one, six in another, and one badge claiming a listing nothing had verified.
+# Tool tables are generated from packages/mcp/src/tools.ts. Hand-written tables drifted three times this
+# week (five of nine, four of nine, and one stale table above a correct one), so the table is no longer
+# hand-written at all.
+if ! node scripts/sync-tool-docs.mjs --check >/tmp/prepush-tools.txt 2>&1; then
+  note "a tool table is stale — run: node scripts/sync-tool-docs.mjs --write"
+  grep DRIFT /tmp/prepush-tools.txt | sed 's/^/    /'
+  fail=1
+fi
+
 if ! node scripts/check-listing-copy.mjs >/tmp/prepush-listings.txt 2>&1; then
   note "where-we-are-listed drifted — README and the lander name different destinations"
   grep "DRIFT" /tmp/prepush-listings.txt | sed 's/^/    /'
