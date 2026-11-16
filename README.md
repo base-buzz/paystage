@@ -94,10 +94,12 @@ deliver, payments made outside the wrapper, and eight more. Read it before you t
 
 ## Listed on
 
-- [mcp.so](https://mcp.so/servers/paystage-6d8a8f)
+- [x402scan](https://www.x402scan.com/server/71d358eb-0ef8-4d6d-8356-91c5bc237fb0) — a directory of paid x402 endpoints
 - [Official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz)
+- [Glama](https://glama.ai/mcp/servers/base-buzz/paystage)
 - [npm](https://www.npmjs.com/package/@paystage/mcp)
 - [GitHub](https://github.com/base-buzz/paystage)
+- [mcp.so](https://mcp.so/servers/paystage-6d8a8f) — lists an older tool count; the endpoint and npm are authoritative
 
 ## Configure
 
