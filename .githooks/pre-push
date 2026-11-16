@@ -44,6 +44,13 @@ if ! node examples/run.mjs >/tmp/prepush-examples.txt 2>&1; then
   fail=1
 fi
 
+# The privacy page must describe the telemetry we actually write; understating collection is a lie with a footer link.
+if ! node scripts/check-privacy.mjs >/tmp/prepush-privacy.txt 2>&1; then
+  note "the privacy page no longer matches telemetry — read /tmp/prepush-privacy.txt"
+  grep DRIFT /tmp/prepush-privacy.txt | sed 's/^/    /'
+  fail=1
+fi
+
 if ! node scripts/check-listing-copy.mjs >/tmp/prepush-listings.txt 2>&1; then
   note "where-we-are-listed drifted — README and the lander name different destinations"
   grep "DRIFT" /tmp/prepush-listings.txt | sed 's/^/    /'
