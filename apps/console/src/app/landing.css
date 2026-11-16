@@ -1825,11 +1825,13 @@ html[data-theme="light"] .lp-aurora,
 .site-header-inner {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 22px;
   width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 10px 20px;
+  /* No max-width: the bar's content runs edge to edge with padding, which is what makes it read as a full-width nav.
+     The page content keeps its 1180 column; the header is chrome, not prose. */
+  max-width: none;
+  margin: 0;
+  padding: 10px clamp(14px, 2.4vw, 34px);
 }
 
 .site-brand {
