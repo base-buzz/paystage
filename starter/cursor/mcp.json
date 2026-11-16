@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "paystage": {
+      "url": "https://api.paystage.xyz/mcp"
+    }
+  }
+}

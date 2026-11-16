@@ -23,6 +23,7 @@ jobs:
       - run: node scripts/sync-tool-docs.mjs --check
       - run: node scripts/check-privacy.mjs
       - run: node scripts/check-contrast.mjs
+      - run: node starter/check.mjs
       - run: node scripts/sync-glossary.mjs --check
       - run: node examples/run.mjs
       # Starts the published server over stdio and asserts five tools answer. The install
