@@ -56,32 +56,7 @@ const TOOLS = [
 export default function LandingPage() {
   return (
     <div className="lp">
-      <header className="lp-header">
-        <div className="lp-wrap lp-header-inner">
-          <a className="lp-brand" href="/" aria-label="PayStage home">
-            <svg className="lp-brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-              <rect width="32" height="32" rx="7" fill="#0a0b0e" />
-              <rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#232733" strokeWidth="1" />
-              <path
-                d="M11 8h6.2c3.1 0 5.3 2 5.3 5s-2.2 5-5.3 5H14v6h-3V8zm3 2.6v4.8h3c1.5 0 2.4-.9 2.4-2.4s-.9-2.4-2.4-2.4h-3z"
-                fill="#6ee7b7"
-              />
-              <circle cx="23.5" cy="23.5" r="2.5" fill="#34d399" />
-            </svg>
-            <span>PayStage</span>
-          </a>
-          <nav className="lp-nav" aria-label="Primary">
-            <a href="#how">How it works</a>
-            <a href="#why">Why now</a>
-            <a href="#agents">For agents</a>
-            <a href="#evidence">Safety</a>
-            <a href="/console">Console</a>
-            <a className="lp-nav-cta" href="https://www.npmjs.com/package/@paystage/mcp" rel="noopener">
-              Install
-            </a>
-          </nav>
-        </div>
-      </header>
+
 
       <main>
       {/* Atmospheric background: three drifting colour fields plus a grain overlay. Fixed,

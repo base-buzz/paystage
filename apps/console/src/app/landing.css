@@ -1758,8 +1758,9 @@ body {
  * Every token is re-pointed rather than re-styled: the page has no colour decisions outside this block, so light mode
  * is thirteen values. Contrast is checked numerically (scripts/check-contrast.mjs) rather than by eye — the accents have
  * to be darker on a pale canvas, because mint on white is unreadable and mint on black is fine. */
-@media (prefers-color-scheme: light) {
-  .lp {
+/* Explicit choice wins; the media query below stays as the system default. Both selectors must stay in sync, and
+ * scripts/check-contrast.mjs reads both. */
+.lp[data-theme="light"], html[data-theme="light"] .lp {
     --lp-bg: #f7f8fa;
     --lp-panel: #ffffff;
     --lp-panel-2: #f1f3f7;
@@ -1775,9 +1776,201 @@ body {
     --lp-fg: var(--lp-text);
   }
 
-  /* The aurora is dark-scene lighting; on a pale canvas it has to become a tint, not a glow. */
-  .lp-aurora {
+/* The aurora is dark-scene lighting; on a pale canvas it has to become a tint, not a glow. */
+html[data-theme="light"] .lp-aurora,
+.lp[data-theme="light"] .lp-aurora {
+  opacity: 0.35;
+  filter: saturate(0.7) brightness(1.6);
+}
+
+/* System default when the visitor has not chosen. */
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) .lp {
+    --lp-bg: #f7f8fa;
+    --lp-panel: #ffffff;
+    --lp-panel-2: #f1f3f7;
+    --lp-line: #d8dde6;
+    --lp-line-soft: #e8ebf1;
+    --lp-text: #12151c;
+    --lp-dim: #495260;
+    --lp-faint: #6b7280;
+    --lp-mint: #047857;
+    --lp-mint-dim: #065f46;
+    --lp-amber: #b45309;
+    --lp-red: #b91c1c;
+    --lp-fg: var(--lp-text);
+  }
+  html:not([data-theme]) .lp-aurora {
     opacity: 0.35;
     filter: saturate(0.7) brightness(1.6);
+  }
+}
+
+/* Shared site header — full width on every route. */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  width: 100%;
+  border-bottom: 1px solid var(--lp-line-soft);
+  background: color-mix(in srgb, var(--lp-bg) 82%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 10px 20px;
+}
+
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--lp-text);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.site-brand-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+}
+
+.site-nav {
+  display: flex;
+  gap: 18px;
+  margin-left: 8px;
+  font-size: 13.5px;
+  flex-wrap: wrap;
+}
+
+.site-nav a {
+  color: var(--lp-dim);
+  text-decoration: none;
+}
+
+.site-nav a:hover {
+  color: var(--lp-text);
+}
+
+.site-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.site-icon-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--lp-line);
+  background: transparent;
+  color: var(--lp-dim);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.site-icon-button:hover {
+  color: var(--lp-text);
+  border-color: var(--lp-fg);
+}
+
+.site-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 210px;
+  padding: 8px;
+  border: 1px solid var(--lp-line);
+  border-radius: 10px;
+  background: var(--lp-panel);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 28%);
+  display: grid;
+  gap: 4px;
+}
+
+.site-menu-group {
+  display: grid;
+  gap: 2px;
+  padding: 6px 4px 8px;
+  border-bottom: 1px solid var(--lp-line-soft);
+}
+
+.site-menu-group:last-child {
+  border-bottom: 0;
+}
+
+.site-menu-label {
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+  padding: 0 6px 4px;
+}
+
+.site-menu a,
+.site-menu button {
+  text-align: left;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--lp-dim);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.site-menu a:hover,
+.site-menu button:hover {
+  background: var(--lp-panel-2);
+  color: var(--lp-text);
+}
+
+.site-menu .is-active {
+  color: var(--lp-mint);
+}
+
+.site-connect {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--lp-mint-dim);
+  background: color-mix(in srgb, var(--lp-mint) 12%, transparent);
+  color: var(--lp-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.site-connect:hover {
+  background: color-mix(in srgb, var(--lp-mint) 20%, transparent);
+}
+
+@media (max-width: 720px) {
+  .site-nav {
+    display: none; /* the ⋯ menu carries the same destinations on a phone */
+  }
+}
+
+/* The bar hides its nav on a phone; the menu carries the same destinations, so nothing is lost. */
+.site-menu-mobile-nav {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .site-menu-mobile-nav {
+    display: grid;
   }
 }
