@@ -45,6 +45,21 @@ for (const field of fields) {
   }
 }
 
+
+// ---- glossary ----
+{
+  const site = readFileSync(join(ROOT, "apps/console/src/app/page.tsx"), "utf8");
+  const glossary = readFileSync(join(ROOT, "docs/glossary.md"), "utf8");
+  // The words a stranger meets without explanation. Kept here so adding one to the site without defining it fails.
+  const REQUIRED = [
+    "x402", "facilitator", "settlement", "EIP-3009", "PAYMENT-REQUIRED", "CAIP-2", "atomic units", "payTo",
+    "drainer", "sanctions", "allowlist", "policy", "velocity", "receipt", "provenance", "MCP", "HIP-3", "Permit2",
+  ];
+  const missing = REQUIRED.filter((t) => !new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i").test(glossary));
+  if (missing.length > 0) problems.push(`glossary is missing: ${missing.join(", ")}`);
+  if (!site.includes("/glossary")) problems.push("the site footer does not link /glossary");
+}
+
 if (problems.length > 0) {
   for (const p of problems) console.log(`  DRIFT ${p}`);
   console.log("privacy: page does not match telemetry");

@@ -79,6 +79,8 @@ A gate that claims to stop every bad payment is the thing this project argues ag
 is the honest boundary — settlements that already happened, payees that look legitimate and do not
 deliver, payments made outside the wrapper, and eight more. Read it before you trust the gate with money.
 
+[Every term this project uses](docs/glossary.md) — x402, facilitator, settlement, EIP-3009, HIP-3, CAIP-2 and the rest — is defined in one page.
+
 ## Verdict vocabulary
 
 Three states, and every project in this space picked its own three words. If you run more than one of these
