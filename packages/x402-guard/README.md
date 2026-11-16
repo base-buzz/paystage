@@ -104,6 +104,22 @@ client-side guard always has.
 `paystage_evaluation_failed`. A hook that failed open would look like protection and behave like
 consent — there is a test for exactly that.
 
+## On the SDK directly: one hook
+
+`guardFetch` covers anyone paying through `x402-fetch`. If you drive `@x402/core` yourself, core exposes
+`onBeforePaymentCreation` — which runs before a payment payload exists and can abort with a reason:
+
+```ts
+import { x402Client } from "@x402/core/client";
+import { paystageClientHook } from "@paystage/x402-guard";
+
+const client = x402Client.fromConfig({ schemes: [/* … */] });
+client.onBeforePaymentCreation(paystageClientHook({ policy }));
+```
+
+Same policy, same verdicts, same reason codes as every other surface. A refusal aborts payload creation, so
+nothing is signed and the reason travels with it.
+
 ## Any facilitator, unchanged
 
 The verifier hook attaches to the **resource server**, not to the facilitator — so it composes with

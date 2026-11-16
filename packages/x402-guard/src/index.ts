@@ -264,3 +264,5 @@ export {
   type PaymentRequirementsLike,
   type HookOutcome,
 } from "./verifier-hook.js";
+
+export { paystageClientHook, evaluateBeforeCreation, type ClientHookOptions, type PaymentCreationContextLike } from "./client-hook.js";
