@@ -37,12 +37,21 @@ export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>("system");
   const [address, setAddress] = useState<string | null>(null);
+  const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const stored = (localStorage.getItem(THEME_KEY) as Theme | null) ?? "system";
     setTheme(stored);
     applyTheme(stored);
+  }, []);
+
+  // Transparent over the hero, solid once content slides under it — otherwise the links sit on top of body copy.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // Escape closes the menu; clicking outside does too. A menu that traps focus without a way out is worse than no menu.
@@ -79,7 +88,7 @@ export function SiteHeader() {
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : null;
 
   return (
-    <header className="site-header">
+    <header className="site-header" data-scrolled={scrolled ? "true" : "false"}>
       <div className="site-header-inner">
         <Link className="site-brand" href={lang === "zh" ? "/zh" : "/"} aria-label="PayStage">
           <PpMark />

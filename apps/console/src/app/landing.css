@@ -1831,9 +1831,18 @@ html[data-theme="light"] .lp-aurora,
   /* Plain 100%: body is unpadded, and `100vw` includes the scrollbar, which shifted the bar 7.5px off the left edge. */
   width: 100%;
   box-sizing: border-box;
-  border-bottom: 1px solid var(--lp-line-soft);
-  background: color-mix(in srgb, var(--lp-bg) 82%, transparent);
+  /* Transparent at the top so the hero background flows behind it, like the reference. A solid bar over a full-bleed
+     gradient reads as a boxed header, which is what this is not. */
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+
+/* Once content scrolls under it, the bar needs a surface again or the links sit on top of body copy. */
+.site-header[data-scrolled="true"] {
+  background: color-mix(in srgb, var(--lp-bg) 84%, transparent);
   backdrop-filter: blur(10px);
+  border-bottom-color: var(--lp-line-soft);
 }
 
 .site-header-inner {
