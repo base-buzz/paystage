@@ -1,6 +1,6 @@
 {
   "name": "@paystage/x-evm",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "PayStage guard for @x402/evm \u2014 evaluate the payment requirements before the EVM scheme signs",
   "license": "MIT",
   "type": "module",
@@ -41,7 +41,7 @@
     }
   },
   "dependencies": {
-    "@paystage/preflight": "0.2.3",
+    "@paystage/preflight": "0.5.0",
     "@paystage/policy": "0.3.0"
   },
   "devDependencies": {
