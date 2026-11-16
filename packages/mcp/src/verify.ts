@@ -81,6 +81,10 @@ export interface ReceiptLike {
   v?: number;
   issuer?: string;
   issued_at?: string;
+  /** Packets issued from v2 onward carry a lifetime; older ones simply never expire. */
+  expires_at?: string;
+  /** The payment terms this verdict was issued for, from v2 onward. */
+  payment?: { scheme?: string; network?: string; asset?: string; amount?: string; payee?: string };
   service?: { name?: string; version?: string };
   verdict?: { decision?: string; reasons?: string[]; summary?: string };
   request_sha256?: string;
@@ -119,6 +123,14 @@ export interface VerifyOptions {
   maxAgeSeconds?: number;
   /** Injectable clock, so freshness tests do not depend on wall time. */
   now?: Date;
+  /**
+   * The payment this receipt is being checked against.
+   *
+   * A receipt carries the terms it was issued for. Supplying the payment in front of you turns "a verdict
+   * exists for this request" into "this verdict is about *this* payment" — the difference between a record and
+   * an authorisation.
+   */
+  payment?: { scheme?: string; network?: string; asset?: string; amount?: string; payee?: string };
   /** Override for tests and for point-in-time checks. */
   keyUrl?: string;
   fetchImpl?: typeof fetch;
@@ -133,6 +145,20 @@ export interface VerifyOptions {
 export type KeySource = "published" | "supplied";
 
 export type VerifyVerdict =
+  | {
+      ok: false;
+      status: "expired";
+      reason: string;
+      expires_at: string;
+      expired_by_seconds: number;
+    }
+  | {
+      ok: false;
+      status: "payment-mismatch";
+      reason: string;
+      /** Which terms disagreed, so a caller can see whether it is the amount, the payee, or everything. */
+      mismatched: string[];
+    }
   | {
       ok: false;
       status: "stale";
@@ -321,6 +347,56 @@ export async function verifyReceipt(
         reason: `signature is valid but the receipt does not cover the supplied ${mismatched.join(" and ")} input`,
         mismatched,
       };
+    }
+
+    // A signed receipt carries its own lifetime. Expiry is checked after the signature because an unsigned
+    // receipt is already not trusted; an expired *signed* one is the case that matters.
+    if (receipt.expires_at !== undefined) {
+      const expiresAt = Date.parse(receipt.expires_at);
+      const now = options.now ?? new Date();
+      if (Number.isNaN(expiresAt)) {
+        return {
+          ok: false,
+          status: "invalid",
+          reason: `expires_at is not a parseable timestamp: ${JSON.stringify(receipt.expires_at)}`,
+        };
+      }
+      if (now.getTime() > expiresAt) {
+        const expiredBy = Math.round((now.getTime() - expiresAt) / 1000);
+        return {
+          ok: false,
+          status: "expired",
+          reason: `this decision expired ${expiredBy}s ago (${receipt.expires_at}); ask for a fresh evaluation`,
+          expires_at: receipt.expires_at,
+          expired_by_seconds: expiredBy,
+        };
+      }
+    }
+
+    if (options.payment !== undefined) {
+      const bound = receipt.payment;
+      if (bound === undefined) {
+        // An unbound receipt cannot be shown to be about this payment. That is not the same as wrong — say
+        // which it is rather than letting it pass as a match.
+        return {
+          ok: false,
+          status: "payment-mismatch",
+          reason: "this receipt predates payment binding, so it cannot be shown to be about the supplied payment",
+          mismatched: ["binding"],
+        };
+      }
+      const mismatched = (["scheme", "network", "asset", "amount", "payee"] as const).filter((field) => {
+        const wanted = options.payment?.[field];
+        return wanted !== undefined && String(wanted) !== String(bound[field]);
+      });
+      if (mismatched.length > 0) {
+        return {
+          ok: false,
+          status: "payment-mismatch",
+          reason: `signature is valid but the receipt covers a different payment (${mismatched.join(", ")})`,
+          mismatched,
+        };
+      }
     }
 
     if (options.maxAgeSeconds !== undefined) {

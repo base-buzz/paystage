@@ -39,10 +39,26 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
     });
     // Additive: the receipt binds the verdict to these exact inputs. It never
     // changes the decision, and degrades to signed:false when no key is set.
+    // Bind the receipt to the payment it is about, so a verifier holding both can tell whether the decision
+    // refers to *this* payment rather than merely to a request that hashed the same.
+    const chosen = normalized.accepts?.[0] as
+      | { scheme?: string; network?: string; asset?: string; amount?: string; maxAmountRequired?: string; payTo?: string }
+      | undefined;
     const receipt = await buildReceipt({
       decision,
       request: normalized,
       policy,
+      ...(chosen
+        ? {
+            payment: {
+              scheme: chosen.scheme ?? "exact",
+              network: chosen.network ?? "",
+              asset: chosen.asset ?? "",
+              amount: chosen.amount ?? chosen.maxAmountRequired ?? "",
+              payee: chosen.payTo ?? "",
+            },
+          }
+        : {}),
       signingKeyPkcs8B64: (c.env as { RECEIPT_SIGNING_KEY_PKCS8?: string } | undefined)?.RECEIPT_SIGNING_KEY_PKCS8,
       // Which build produced this verdict. Unset means the receipt says "unknown" rather
       // than advertising a placeholder version as provenance.
