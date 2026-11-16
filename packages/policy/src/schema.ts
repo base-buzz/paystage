@@ -31,6 +31,15 @@ const velocityAmountSchema = z.object({
   asset: z.string().min(1).optional(),
 });
 
+const timeWindowSchema = z
+  .object({
+    allowed_hours_utc: z.tuple([z.number().int().min(0).max(23), z.number().int().min(0).max(23)]).optional(),
+    blocked_hours_utc: z.tuple([z.number().int().min(0).max(23), z.number().int().min(0).max(23)]).optional(),
+  })
+  .refine((w) => (w.allowed_hours_utc === undefined) !== (w.blocked_hours_utc === undefined), {
+    message: "time_window needs exactly one of allowed_hours_utc or blocked_hours_utc",
+  });
+
 const velocityWindowSchema = z.object({
   window_seconds: z.number().int().positive(),
   max_count: z.number().int().nonnegative().optional(),
@@ -63,6 +72,13 @@ const BasePolicySchema = z.object({
     .array(z.string().regex(/^eip155:\d+$/))
     .min(1),
   max_timeout_seconds: z.number().int().positive(),
+  /**
+   * When an agent may pay, in UTC.
+   *
+   * `allowed_hours_utc: [9, 17]` permits 09:00–17:00 UTC; `[22, 6]` wraps midnight. Half-open: [start, end), so a
+   * window of [9, 9] is empty rather than all day — an ambiguous rule should refuse, not permit.
+   */
+  time_window: timeWindowSchema.optional(),
   require_human_above: amountSpecSchema.optional(),
   unknown_payee: z.enum(["review", "deny"]),
   max_auth_validity_seconds: z.number().int().positive().optional(),

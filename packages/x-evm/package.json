@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@paystage/preflight": "0.2.3",
-    "@paystage/policy": "0.2.1"
+    "@paystage/policy": "0.3.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

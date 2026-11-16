@@ -204,6 +204,8 @@ export interface EvaluateOptions {
    * a policy with agents must never fall back to the loosest rules in the file.
    */
   agentId?: string;
+  /** Injectable clock, so a time-window test does not depend on when it runs. */
+  now?: Date;
 }
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -228,6 +230,29 @@ export function evaluatePayment(
   }
   const effective = resolution.policy;
   const agent = options.agentId;
+  // Rule 0.5: time windows. Policy-wide, not per-accept — the hour does not depend on which payment you choose.
+  const window = (effective as { time_window?: { allowed_hours_utc?: [number, number]; blocked_hours_utc?: [number, number] } })
+    .time_window;
+  if (window) {
+    const hour = (options.now ?? new Date()).getUTCHours();
+    // Half-open, and wrapping when end <= start: [22, 6] means 22:00–05:59 UTC.
+    const inRange = ([startH, endH]: [number, number]): boolean =>
+      startH <= endH ? hour >= startH && hour < endH : hour >= startH || hour < endH;
+    const denied =
+      (window.allowed_hours_utc !== undefined && !inRange(window.allowed_hours_utc)) ||
+      (window.blocked_hours_utc !== undefined && inRange(window.blocked_hours_utc));
+    if (denied) {
+      const [startH, endH] = (window.allowed_hours_utc ?? window.blocked_hours_utc) as [number, number];
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return {
+        decision: "do_not_pay",
+        acceptResults: [],
+        reasons: [`outside allowed hours: policy permits ${pad(startH)}:00–${pad(endH)}:00 UTC, now ${pad(hour)}:00 UTC`],
+        summary: "Payment refused: outside the policy's time window.",
+      };
+    }
+  }
+
   // Rule 1: malformed
   if (!pr || pr.x402Version !== 2) {
     return {
