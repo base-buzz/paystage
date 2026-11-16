@@ -1813,9 +1813,8 @@ html[data-theme="light"] .lp-aurora,
   position: sticky;
   top: 0;
   z-index: 40;
-  /* Full viewport width, including the scrollbar gutter, so the bar never stops short of the edge. */
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
+  /* Plain 100%: body is unpadded, and `100vw` includes the scrollbar, which shifted the bar 7.5px off the left edge. */
+  width: 100%;
   box-sizing: border-box;
   border-bottom: 1px solid var(--lp-line-soft);
   background: color-mix(in srgb, var(--lp-bg) 82%, transparent);
