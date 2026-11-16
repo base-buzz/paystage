@@ -119,6 +119,27 @@ function checkPackageCounts() {
 }
 
 checkPackageCounts();
+checkMcpCards();
+
+
+/**
+ * Two copies of the server card.
+ *
+ * The Worker answers `/.well-known/mcp.json` for agents talking to api.paystage.xyz; the site serves a static
+ * copy for crawlers that only look at the apex. Same fact in two files, so it is checked rather than trusted.
+ */
+function checkMcpCards() {
+  const worker = readFileSync(join(ROOT, "apps/hosted/src/routes/well-known-mcp.ts"), "utf8");
+  const statik = JSON.parse(readFileSync(join(ROOT, "apps/console/public/.well-known/mcp.json"), "utf8"));
+  const name = /name:\s*"([^"]+)"/.exec(worker)?.[1];
+  if (name !== statik.name) {
+    problems.push(`mcp.json name differs: worker "${name}" vs site "${statik.name}"`);
+  }
+  if (!statik.keywords?.includes("x402")) {
+    problems.push("mcp.json keywords lost the words an agent searches with");
+  }
+  ok.push("mcp.json card consistent");
+}
 
 const payload = { ok: problems.length === 0, tools: tools.length, passed: ok, problems };
 if (process.argv.includes('--json')) {
