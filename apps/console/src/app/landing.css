@@ -1793,11 +1793,11 @@ html[data-theme="light"] {
     --lp-fg: var(--lp-text);
   }
 
-/* The aurora is dark-scene lighting; on a pale canvas it has to become a tint, not a glow. */
+/* Dark mode uses the aurora as scene lighting. On a pale canvas the same gradients are a grey veil — measured 199,202,210
+   in the corners against 249 in the centre, which reads as a dirty band across the top rather than a lighting effect. */
 html[data-theme="light"] .lp-aurora,
 .lp[data-theme="light"] .lp-aurora {
-  opacity: 0.35;
-  filter: saturate(0.7) brightness(1.6);
+  display: none;
 }
 
 /* System default when the visitor has not chosen. */
@@ -1818,8 +1818,7 @@ html[data-theme="light"] .lp-aurora,
     --lp-fg: var(--lp-text);
   }
   html:not([data-theme]) .lp-aurora {
-    opacity: 0.35;
-    filter: saturate(0.7) brightness(1.6);
+    display: none;
   }
 }
 
