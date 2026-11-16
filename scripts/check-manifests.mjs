@@ -47,6 +47,23 @@ for (const dir of dirs) {
   }
 }
 
+/**
+ * The MCP Registry rejects a `description` over 100 characters with a 422 — found by a release failing on it.
+ * A schema rule belongs in the local check, not in the deploy log.
+ */
+for (const dir of dirs) {
+  const serverPath = `${ROOT}packages/${dir}/server.json`;
+  if (!existsSync(serverPath)) continue;
+  const server = JSON.parse(readFileSync(serverPath, "utf8"));
+  const desc = server.description ?? "";
+  if (desc.length > 100) {
+    problems.push(`packages/${dir}/server.json: registry description is ${desc.length} chars (limit 100)`);
+  }
+  if (desc.length === 0) {
+    problems.push(`packages/${dir}/server.json: registry description is empty`);
+  }
+}
+
 if (problems.length === 0) {
   console.log(`manifests ok: ${checked.length} packages declare what they ship`);
   process.exit(0);
