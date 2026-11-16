@@ -19,7 +19,9 @@
 
 html,
 body {
-  background: var(--bg);
+  /* Transparent: html paints the canvas from `--lp-bg`, so the theme applies to the whole viewport. A body background
+     here sat on top of it and showed as a dark band above the hero in light mode. */
+  background: transparent;
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
