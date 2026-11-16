@@ -1,3 +1,18 @@
+:root {
+  --lp-bg: #07080b;
+  --lp-panel: #0e1015;
+  --lp-line: #1e222c;
+  --lp-line-soft: #171a22;
+  --lp-text: #eceef4;
+  --lp-dim: #9aa0b0;
+  --lp-faint: #7c8496;
+  --lp-mint: #6ee7b7;
+  --lp-mint-dim: #34d399;
+  --lp-amber: #f5b544;
+  --lp-red: #f06a6a;
+  --lp-fg: var(--lp-text);
+}
+
 /* Landing page — scoped to .lp so the console's dashboard styles stay untouched. */
 
 .lp {
@@ -1760,7 +1775,7 @@ body {
  * to be darker on a pale canvas, because mint on white is unreadable and mint on black is fine. */
 /* Explicit choice wins; the media query below stays as the system default. Both selectors must stay in sync, and
  * scripts/check-contrast.mjs reads both. */
-.lp[data-theme="light"], html[data-theme="light"] .lp {
+:root[data-theme="light"], html[data-theme="light"] .lp, .lp[data-theme="light"] {
     --lp-bg: #f7f8fa;
     --lp-panel: #ffffff;
     --lp-panel-2: #f1f3f7;
@@ -1785,7 +1800,8 @@ html[data-theme="light"] .lp-aurora,
 
 /* System default when the visitor has not chosen. */
 @media (prefers-color-scheme: light) {
-  html:not([data-theme]) .lp {
+  :root:not([data-theme]) .lp,
+  :root:not([data-theme]) .site-header {
     --lp-bg: #f7f8fa;
     --lp-panel: #ffffff;
     --lp-panel-2: #f1f3f7;
@@ -1811,7 +1827,10 @@ html[data-theme="light"] .lp-aurora,
   position: sticky;
   top: 0;
   z-index: 40;
-  width: 100%;
+  /* Full viewport width, including the scrollbar gutter, so the bar never stops short of the edge. */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  box-sizing: border-box;
   border-bottom: 1px solid var(--lp-line-soft);
   background: color-mix(in srgb, var(--lp-bg) 82%, transparent);
   backdrop-filter: blur(10px);
