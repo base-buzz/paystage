@@ -16,7 +16,6 @@
 /* Landing page — scoped to .lp so the console's dashboard styles stay untouched. */
 
 .lp {
-  --lp-panel-2: #12151c;
   /* Used by the newer panels but never defined, so `color-mix()` against it produced an invalid value and their
      borders silently did not render. An alias is the whole fix. */
   /* The canvas colour lives on html; body stays transparent so the fixed aurora (z-index -1)
@@ -262,7 +261,7 @@
   padding: 11px 12px;
   border: 1px solid var(--lp-line);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.015);
+  background: color-mix(in srgb, var(--lp-fg) 3%, transparent);
   font-size: 13px;
 }
 
