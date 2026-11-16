@@ -8,11 +8,14 @@
   --lp-line-soft: #171a22;
   --lp-text: #eceef4;
   --lp-dim: #9aa0b0;
-  --lp-faint: #6b7280;
+  --lp-faint: #7c8496;
   --lp-mint: #6ee7b7;
   --lp-mint-dim: #34d399;
   --lp-amber: #f5b544;
   --lp-red: #f06a6a;
+  /* Used by the newer panels but never defined, so `color-mix()` against it produced an invalid value and their
+     borders silently did not render. An alias is the whole fix. */
+  --lp-fg: var(--lp-text);
   /* The canvas colour lives on html; body stays transparent so the fixed aurora (z-index -1)
      is visible between the canvas and the content. */
   color: var(--lp-text);
@@ -1748,4 +1751,33 @@ body {
   font-size: 11px;
   color: var(--lp-faint);
   margin: 0;
+}
+
+/* Light theme.
+ *
+ * Every token is re-pointed rather than re-styled: the page has no colour decisions outside this block, so light mode
+ * is thirteen values. Contrast is checked numerically (scripts/check-contrast.mjs) rather than by eye — the accents have
+ * to be darker on a pale canvas, because mint on white is unreadable and mint on black is fine. */
+@media (prefers-color-scheme: light) {
+  .lp {
+    --lp-bg: #f7f8fa;
+    --lp-panel: #ffffff;
+    --lp-panel-2: #f1f3f7;
+    --lp-line: #d8dde6;
+    --lp-line-soft: #e8ebf1;
+    --lp-text: #12151c;
+    --lp-dim: #495260;
+    --lp-faint: #6b7280;
+    --lp-mint: #047857;
+    --lp-mint-dim: #065f46;
+    --lp-amber: #b45309;
+    --lp-red: #b91c1c;
+    --lp-fg: var(--lp-text);
+  }
+
+  /* The aurora is dark-scene lighting; on a pale canvas it has to become a tint, not a glow. */
+  .lp-aurora {
+    opacity: 0.35;
+    filter: saturate(0.7) brightness(1.6);
+  }
 }

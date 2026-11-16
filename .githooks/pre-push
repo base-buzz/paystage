@@ -45,6 +45,12 @@ if ! node examples/run.mjs >/tmp/prepush-examples.txt 2>&1; then
 fi
 
 # The privacy page must describe the telemetry we actually write; understating collection is a lie with a footer link.
+if ! node scripts/check-contrast.mjs >/tmp/prepush-contrast.txt 2>&1; then
+  note "a text token fails WCAG AA — read /tmp/prepush-contrast.txt"
+  grep FAIL /tmp/prepush-contrast.txt | sed 's/^/    /'
+  fail=1
+fi
+
 if ! node scripts/sync-glossary.mjs --check >/tmp/prepush-glossary.txt 2>&1; then
   note "the glossary's generated copy is stale — run: node scripts/sync-glossary.mjs --write"
   fail=1
