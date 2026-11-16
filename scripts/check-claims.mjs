@@ -162,6 +162,23 @@ function checkToolDocs() {
     if (missing.length > 0) {
       problems.push(`${file} documents ${unique.length - missing.length}/${unique.length} tools — missing: ${missing.join(", ")}`);
     }
+
+    // A mention anywhere is not a tool list. The repo README had a nine-tool section *and* a stale five-row
+    // table that a reader hits first; counting the table is the only version of this check that would have
+    // caught it.
+    const tableStart = text.indexOf("| Tool | Status |");
+    if (tableStart !== -1) {
+      const tableLines = text.slice(tableStart).split("\n");
+      const tableRows = [];
+      // Walk until the table ends: the first non-table line after at least one row.
+      for (const line of tableLines.slice(1)) {
+        if (line.startsWith("| `")) tableRows.push(line);
+        else if (tableRows.length > 0) break;
+      }
+      if (tableRows.length !== unique.length) {
+        problems.push(`${file}: the "Tools" table lists ${tableRows.length} rows, the server registers ${unique.length}`);
+      }
+    }
   }
   ok.push(`tool docs complete (${unique.length} tools in both READMEs)`);
 }
