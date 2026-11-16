@@ -94,6 +94,11 @@ gates, here is the mapping — the semantics line up more closely than the names
 One difference worth knowing: `review` is a **policy instruction**, not an oversight. `onReview: "pay"` treats
 it as permission, `"refuse"` treats it as a block — the gate never decides that for you.
 
+## Start here if you are paying a seller
+
+[Burn five minutes before your agent pays anything](docs/seller-protection.md) — get the seller's challenge,
+write one policy file, ask for a verdict, and keep the receipt. `curl` and `node`, nothing to install.
+
 ## Four ways in
 
 | You want | Use |
