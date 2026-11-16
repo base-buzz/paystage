@@ -1,6 +1,6 @@
 {
   "name": "@paystage/mcp",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "description": "x402 payment safety, agent spend policy and a payment firewall for autonomous agents: nine MCP tools that stop your agent paying a drainer and limit agent spending before the wallet signs. pay / review / do_not_pay, with the rule that fired. Read-only \u2014 holds no keys, never signs.",
   "license": "MIT",
   "type": "module",

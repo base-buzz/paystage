@@ -135,7 +135,9 @@ for (const file of FILES) {
   const after = text.slice(text.indexOf(END));
   const next = `${before}\n${generated}\n${after}`;
 
-  if (file === "README.md" && text.includes(PKG_START)) {
+  // Any README that declares the markers gets the generated table — the npm page renders packages/mcp/README.md, so a
+  // fix that only touched the repo README left npm showing a five-row list for a day.
+  if (text.includes(PKG_START)) {
     const pkgBefore = next.slice(0, next.indexOf(PKG_START) + PKG_START.length);
     const pkgAfter = next.slice(next.indexOf(PKG_END));
     const withPkgs = `${pkgBefore}\n${packagesTable()}\n${pkgAfter}`;
