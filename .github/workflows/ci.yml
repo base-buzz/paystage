@@ -22,6 +22,7 @@ jobs:
       - run: node scripts/check-claims.mjs
       - run: node scripts/sync-tool-docs.mjs --check
       - run: node scripts/check-privacy.mjs
+      - run: node scripts/sync-glossary.mjs --check
       - run: node examples/run.mjs
       # Starts the published server over stdio and asserts five tools answer. The install
       # command in every README was wrong for three releases and nothing caught it.

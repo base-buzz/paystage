@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { GLOSSARY_MARKDOWN } from "@/lib/glossary.generated";
 
 /**
- * The glossary, rendered from `docs/glossary.md` rather than duplicated here.
+ * The glossary, rendered from `docs/glossary.md`.
  *
- * One source, two surfaces: the repository file is what a contributor edits, and this page is what a stranger reads.
- * A glossary maintained twice is a glossary that disagrees with itself within a month.
+ * One source, two surfaces: the repository file is what a contributor edits, this page is what a stranger reads. The
+ * markdown is compiled in by `scripts/sync-glossary.mjs` — reading it from disk worked locally and 500'd in production,
+ * where the console deploys without the repository.
  */
 export const metadata: Metadata = {
   title: "Glossary — PayStage",
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default function GlossaryPage() {
-  const markdown = readFileSync(join(process.cwd(), "../../docs/glossary.md"), "utf8");
+  const markdown = GLOSSARY_MARKDOWN;
   const sections = markdown.split(/\n## /).slice(1);
   return (
     <main className="lp-wrap lp-prose">
