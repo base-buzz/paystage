@@ -29,6 +29,14 @@ interface StatusResponse {
    * discover as a 429. Stating it here means an integrator can plan around it before hitting it.
    */
   paid_quota?: { daily_limit: number; per: "payer" };
+  /**
+   * The free tier, stated with its real weakness.
+   *
+   * The counter lives in isolate memory, so the allowance is per instance rather than global — in practice a caller can
+   * exceed the nominal number by however many instances they reach. Publishing "1,000/day" without that would be the
+   * kind of half-true number this project keeps removing.
+   */
+  free_tier?: { daily_limit: number; enforcement: "per-instance"; note: string };
   flags: IssueFlag[];
   incidents: Incident[];
   generated_at: string;
@@ -113,6 +121,11 @@ publicStatusRoutes.get("/v1/public/status", async (c) => {
     incidents: safeIncidents,
     generated_at,
     paid_quota: { daily_limit: paidQuotaState.limit, per: "payer" },
+    free_tier: {
+      daily_limit: Number((c.env as { FREE_TIER_DAILY_LIMIT?: string } | undefined)?.FREE_TIER_DAILY_LIMIT ?? 1000),
+      enforcement: "per-instance",
+      note: "counted in Worker isolate memory; the effective allowance scales with instance count, not globally",
+    },
   };
   return c.json(body);
 });
