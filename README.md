@@ -81,6 +81,8 @@ deliver, payments made outside the wrapper, and eight more. Read it before you t
 
 [Every term this project uses](docs/glossary.md) — x402, facilitator, settlement, EIP-3009, HIP-3, CAIP-2 and the rest — is defined in one page.
 
+[State of x402 — issue 1](https://paystage.xyz/state-of-x402): the registry counted, with its method.
+
 ## Verdict vocabulary
 
 Three states, and every project in this space picked its own three words. If you run more than one of these
