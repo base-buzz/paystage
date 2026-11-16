@@ -19,7 +19,7 @@
  *
  * Anything tool-shaped *outside* a marked block is reported too: that is how a second, stale table survived.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -47,6 +47,44 @@ const SUMMARY = {
 };
 
 /** Chinese one-liners, same rows, same order — the translation is a summary, not a second product claim. */
+/** Roles, in the order a reader meets them. A package without a role here fails the check rather than vanishing from the table. */
+const PACKAGE_ROLES = {
+  "@paystage/mcp": "umbrella MCP server — start here",
+  "@paystage/preflight": "x402 payment preflight (the evaluator)",
+  "@paystage/x402-guard": "policy gate for x402 clients, before the wallet signs",
+  "@paystage/ai-sdk": "the same gate as Vercel AI SDK tools",
+  "@paystage/auth-watch": "outstanding ERC-20 / Permit2 / EIP-3009 authorisations",
+  "@paystage/velocity": "rate and spend-pattern checks",
+  "@paystage/trade-preflight": "HIP-3 / trade.xyz order preflight",
+  "@paystage/policy": "policy schema and loader",
+  "@paystage/skill": "agent skill manifest",
+  "@paystage/x-evm": "chain-agnostic EVM helpers",
+};
+
+const PKG_START = "<!-- packages:table:start -->";
+const PKG_END = "<!-- packages:table:end -->";
+
+function packagesTable() {
+  const dirs = readdirSync(join(ROOT, "packages"), { withFileTypes: true }).filter((d) => d.isDirectory());
+  const rows = [];
+  for (const dir of dirs) {
+    const manifest = JSON.parse(readFileSync(join(ROOT, "packages", dir.name, "package.json"), "utf8"));
+    if (manifest.private) continue;
+    const role = PACKAGE_ROLES[manifest.name];
+    if (!role) {
+      problems.push(`package ${manifest.name} has no role in PACKAGE_ROLES — add one`);
+      continue;
+    }
+    rows.push(`| \`${manifest.name}\` | ${role} | [npm](https://www.npmjs.com/package/${manifest.name}) |`);
+  }
+  // Umbrella first, then the gate, then the rest alphabetically — the order a reader needs them in.
+  rows.sort((a, b) => {
+    const rank = (r) => (r.includes("@paystage/mcp") ? 0 : r.includes("x402-guard") ? 1 : 2);
+    return rank(a) - rank(b) || a.localeCompare(b);
+  });
+  return ["| Package | Role | Links |", "| --- | --- | --- |", ...rows].join("\n");
+}
+
 const SUMMARY_ZH = {
   evaluate_mcp_payment: "这笔 x402 支付该不该签？→ `pay` · `review` · `do_not_pay`",
   evaluate_batch: "同一问题，批量评估多笔支付，每笔一个判定",
@@ -96,6 +134,17 @@ for (const file of FILES) {
   const before = text.slice(0, text.indexOf(START) + START.length);
   const after = text.slice(text.indexOf(END));
   const next = `${before}\n${generated}\n${after}`;
+
+  if (file === "README.md" && text.includes(PKG_START)) {
+    const pkgBefore = next.slice(0, next.indexOf(PKG_START) + PKG_START.length);
+    const pkgAfter = next.slice(next.indexOf(PKG_END));
+    const withPkgs = `${pkgBefore}\n${packagesTable()}\n${pkgAfter}`;
+    if (write) {
+      if (withPkgs !== readFileSync(path, "utf8")) writeFileSync(path, withPkgs);
+    } else if (withPkgs !== text) {
+      problems.push(`${file}: packages table is stale — run --write`);
+    }
+  }
 
   if (write) {
     if (next !== text) writeFileSync(path, next);
