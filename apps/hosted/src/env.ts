@@ -8,6 +8,9 @@ export interface Bindings {
   PAYSTAGE_SERVICE_VERSION?: string;
   FREE_TIER_ENABLED?: string;
   FREE_TIER_DAILY_LIMIT?: string;
+  /** Per-payer daily cap on the paid path. Generous by design: it stops a runaway agent, not a customer. */
+  PAID_QUOTA_DAILY_LIMIT?: string;
+  PAID_QUOTA_ENABLED?: string;
   FACILITATOR_URL?: string;
   CDP_API_KEY_ID?: string;
   CDP_API_KEY_SECRET?: string;

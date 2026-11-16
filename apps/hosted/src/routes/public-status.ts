@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { paidQuotaState } from "../paid-quota.js";
 
 export const publicStatusRoutes = new Hono();
 
@@ -21,6 +22,13 @@ interface Incident {
 
 interface StatusResponse {
   status: "ok" | "degraded" | "outage";
+  /**
+   * The paid-path quota, published rather than buried.
+   *
+   * The free tier has always said its daily number in the open; a limit customers cannot see is a limit they
+   * discover as a 429. Stating it here means an integrator can plan around it before hitting it.
+   */
+  paid_quota?: { daily_limit: number; per: "payer" };
   flags: IssueFlag[];
   incidents: Incident[];
   generated_at: string;
@@ -104,6 +112,7 @@ publicStatusRoutes.get("/v1/public/status", async (c) => {
     flags: safeFlags,
     incidents: safeIncidents,
     generated_at,
+    paid_quota: { daily_limit: paidQuotaState.limit, per: "payer" },
   };
   return c.json(body);
 });

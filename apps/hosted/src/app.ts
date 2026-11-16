@@ -10,6 +10,7 @@ import { guardVerdictRoutes } from "./routes/guard-verdict.js";
 import { openapiRoutes } from "./routes/openapi.js";
 import { recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { freeTierMiddleware } from "./free-tier.js";
+import { paidQuotaMiddleware, paidQuotaState } from "./paid-quota.js";
 import { settlementCaptureMiddleware } from "./settlement.js";
 import { mcpHandler } from "./mcp.js";
 import { CORS_ORIGINS } from "./cors-origins.js";
@@ -25,6 +26,8 @@ export interface AppEnv {
   PAYSTAGE_PRICE?: string;
   PAYSTAGE_NETWORK?: string;
   FACILITATOR_URL?: string;
+  PAID_QUOTA_ENABLED?: string;
+  PAID_QUOTA_DAILY_LIMIT?: string;
   CDP_API_KEY_ID?: string;
   CDP_API_KEY_SECRET?: string;
   SUPABASE_URL?: string;
@@ -342,6 +345,13 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
     app.use("*", freeTierMiddleware({
       enabled: env.FREE_TIER_ENABLED !== "false",
       dailyLimit: Number(env.FREE_TIER_DAILY_LIMIT ?? 1000),
+    }));
+
+    // Before the payment middleware, because the quota must answer before any money moves. A limit that
+    // fires after settlement would take the payment and refuse the work.
+    app.use("*", paidQuotaMiddleware({
+      enabled: env.PAID_QUOTA_ENABLED !== "false",
+      dailyLimit: Number(env.PAID_QUOTA_DAILY_LIMIT ?? 5000),
     }));
 
     // The capture has to WRAP the payment middleware, not sit inside it. Registered after, it runs
