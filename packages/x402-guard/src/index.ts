@@ -204,7 +204,12 @@ export function guardFetch(fetchImpl: typeof fetch, options: GuardOptions) {
         (decision as { reasons?: string[] }).reasons ??
         (decision.matchedRule ? [decision.matchedRule] : []);
 
-      if (verdict !== "pay") {
+      // `review` is a policy instruction, not an oversight: onReview decides whether it pays or refuses. The previous
+      // code returned "review" from both branches of normalizeVerdict, so `onReview: "refuse"` refused nothing — while the
+      // README and llms.txt promised it did. The verdict is still reported as `review` either way; only the decision to
+      // pay changes.
+      const blocked = verdict === "do_not_pay" || (verdict === "review" && onReview === "refuse");
+      if (blocked) {
         lastResult.current = { response: first, verdict, reasonCodes: codes };
         announce(verdict, codes, payTo);
         return withVerdict(first, verdict, codes);
@@ -225,9 +230,11 @@ export function guardFetch(fetchImpl: typeof fetch, options: GuardOptions) {
   );
 }
 
-function normalizeVerdict(decision: string, onReview: "pay" | "refuse"): Verdict {
+function normalizeVerdict(decision: string, _onReview: "pay" | "refuse"): Verdict {
+  // The onReview decision moved to the call site: the verdict reported to the caller is what the evaluator said, and
+  // whether that verdict blocks the payment is a separate question.
   if (decision === "pay") return "pay";
-  if (decision === "review") return onReview === "pay" ? "review" : "review";
+  if (decision === "review") return "review";
   return "do_not_pay";
 }
 
