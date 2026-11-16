@@ -1793,6 +1793,13 @@ html[data-theme="light"] {
     --lp-fg: var(--lp-text);
   }
 
+/* In light mode the hero's two radial gradients sit behind the transparent header and read as a grey/green wash across the
+   top of the page — measured 202,208,215 against a 246 page. On a pale canvas they add nothing a clean surface does not. */
+html[data-theme="light"] .lp-hero,
+html:not([data-theme]) .lp-hero {
+  background: none;
+}
+
 /* Dark mode uses the aurora as scene lighting. On a pale canvas the same gradients are a grey veil — measured 199,202,210
    in the corners against 249 in the centre, which reads as a dirty band across the top rather than a lighting effect. */
 html[data-theme="light"] .lp-aurora,
