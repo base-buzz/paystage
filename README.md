@@ -29,6 +29,8 @@ Every one is read-only. None of them signs, holds a key, or moves money — the 
 signer, which is the entire product.
 
 _All nine are listed with what each answers in [Tools](#tools)._
+语言 / Language: **English** · [简体中文](README.zh-CN.md)
+
 ## Quick start
 
 ```bash
