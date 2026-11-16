@@ -26,7 +26,7 @@ You now have the seller's terms: scheme, network, asset, **atomic amount**, paye
     "network": "eip155:8453",
     "amount": "12500000",
     "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    "payTo": "0x6160a0d8a3a1f8b0c4e2d1f7b3a9c6e5d4f23757e",
+    "payTo": "0x6160a0d8a3a1f8b0c4e2d1f7b3a9c6e5d4f23757",
     "maxTimeoutSeconds": 300
   }]
 }

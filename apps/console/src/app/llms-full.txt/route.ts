@@ -103,7 +103,7 @@ protocol surface you need:
 {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"evaluate_mcp_payment","arguments":{
   "payment_required":{"x402Version":2,"accepts":[{"scheme":"exact","network":"eip155:8453",
     "amount":"12500000","asset":"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    "payTo":"0x6160a0d8a3a1f8b0c4e2d1f7b3a9c6e5d4f23757e","maxTimeoutSeconds":300}]},
+    "payTo":"0x6160a0d8a3a1f8b0c4e2d1f7b3a9c6e5d4f23757","maxTimeoutSeconds":300}]},
   "policy":{"version":1,"max_amount":{"value":"0.05","asset":"USDC","decimals":6},
     "allowed_assets":[{"symbol":"USDC","decimals":6,
       "address":"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913","network":"eip155:8453"}],

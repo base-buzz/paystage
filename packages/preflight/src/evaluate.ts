@@ -125,6 +125,18 @@ function evaluateAccept(accept: AcceptOption, policy: Policy): AcceptResult {
     return { accept, status: "do_not_pay", reasons };
   }
 
+  // Rule 1.5: the payee must be a 20-byte hex address.
+  //
+  // An external trading agent found this on our own example: `0x6160…3757e` has 41 hex characters, and the
+  // evaluator answered `pay` because the string matched the allow-list as text. A malformed address is either a
+  // typo or a swap, and money sent to it is unrecoverable — so it is a refusal with a named reason, not a match.
+  if (!ADDRESS_RE.test(String(accept.payTo ?? ""))) {
+    reasons.push(
+      `invalid payTo address: expected 0x plus 40 hex characters, got ${String(accept.payTo ?? "").length - 2}`,
+    );
+    return { accept, status: "do_not_pay", reasons };
+  }
+
   // Rule 7a: known drainers — hard deny before unknown_payee review
   if (isKnownDrainer(accept.payTo)) {
     reasons.push("known drainer");
@@ -193,6 +205,8 @@ export interface EvaluateOptions {
    */
   agentId?: string;
 }
+
+const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
 export function evaluatePayment(
   pr: PaymentRequest,
