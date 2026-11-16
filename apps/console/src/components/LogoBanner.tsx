@@ -22,8 +22,9 @@ const BUILT_ON = [
 const CALLABLE = [
   { label: "MCP Registry", note: "listed · remote entry", href: "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz" },
   { label: "Glama", note: "listed · claimed", href: "https://glama.ai/mcp/servers/base-buzz/paystage" },
-  { label: "mcp.so", note: "listed", href: "https://mcp.so/servers/paystage-6d8a8f" },
-  { label: "Arcade", note: "callable · worker", href: "https://arcade.dev" },
+  { label: "x402scan", note: "listed · paid endpoint", href: "https://www.x402scan.com/server/71d358eb-0ef8-4d6d-8356-91c5bc237fb0" },
+  { label: "mcp.so", note: "listed · older tool count", href: "https://mcp.so/servers/paystage-6d8a8f" },
+  { label: "Arcade", note: "worker deployed · not listed", href: "https://arcade.dev" },
   { label: "npm", note: "10 packages · provenance", href: "https://www.npmjs.com/package/@paystage/mcp" },
   { label: "GitHub", note: "MIT · public CI", href: "https://github.com/base-buzz/paystage" },
 ];

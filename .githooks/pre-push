@@ -26,6 +26,14 @@ if ! node scripts/check-claims.mjs >/tmp/prepush-claims.txt 2>&1; then
   exit 1
 fi
 
+# The same claim written in three places (README, lander, inventory) drifted within a week: four
+# destinations in one, six in another, and one badge claiming a listing nothing had verified.
+if ! node scripts/check-listing-copy.mjs >/tmp/prepush-listings.txt 2>&1; then
+  note "where-we-are-listed drifted — README and the lander name different destinations"
+  grep "DRIFT" /tmp/prepush-listings.txt | sed 's/^/    /'
+  fail=1
+fi
+
 if ! node scripts/check-copy.mjs >/tmp/prepush-copy.txt 2>&1; then
   note "copy check failed — a README names a stale version or a dead link"
   tail -6 /tmp/prepush-copy.txt | sed 's/^/    /'
