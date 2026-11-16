@@ -37,6 +37,13 @@ if ! node scripts/sync-tool-docs.mjs --check >/tmp/prepush-tools.txt 2>&1; then
   fail=1
 fi
 
+# The runnable example asserts the four verdicts; if behaviour moves, this fails before the demo misleads anyone.
+if ! node examples/run.mjs >/tmp/prepush-examples.txt 2>&1; then
+  note "examples/run.mjs no longer matches the product — read /tmp/prepush-examples.txt"
+  tail -6 /tmp/prepush-examples.txt | sed 's/^/    /'
+  fail=1
+fi
+
 if ! node scripts/check-listing-copy.mjs >/tmp/prepush-listings.txt 2>&1; then
   note "where-we-are-listed drifted — README and the lander name different destinations"
   grep "DRIFT" /tmp/prepush-listings.txt | sed 's/^/    /'

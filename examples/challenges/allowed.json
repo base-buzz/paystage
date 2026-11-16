@@ -1,0 +1,11 @@
+{
+  "x402Version": 2,
+  "accepts": [{
+    "scheme": "exact",
+    "network": "eip155:8453",
+    "amount": "2000",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE",
+    "maxTimeoutSeconds": 300
+  }]
+}

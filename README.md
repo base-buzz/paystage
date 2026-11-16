@@ -31,6 +31,14 @@ signer, which is the entire product.
 _All nine are listed with what each answers in [Tools](#tools)._
 语言 / Language: **English** · [简体中文](README.zh-CN.md)
 
+## See it work
+
+```bash
+npm run build -w @paystage/preflight && node examples/run.mjs
+```
+
+Four challenges against one policy, four verdicts with reasons — no network, no keys. See [examples/](examples/).
+
 ## Quick start
 
 ```bash
