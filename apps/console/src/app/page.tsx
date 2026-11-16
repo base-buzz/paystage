@@ -140,7 +140,7 @@ export default function LandingPage() {
               </div>
               <div className="lp-gate-row">
                 <span aria-hidden="true">→</span>
-                <code>payTo 0x6160…3757e · 12.50 USDC</code>
+                <code>payTo 0x6160…3757 · 12.50 USDC</code>
               </div>
               <div className="lp-gate-arrow" aria-hidden="true">
                 ↓
@@ -156,7 +156,7 @@ export default function LandingPage() {
                 <div className="lp-gate-verdict-label">verdict</div>
                 <div className="lp-gate-verdict-value">do_not_pay</div>
                 <p className="lp-gate-verdict-why">
-                  known drainer — 0x6160…3757e is on the curated deny list, cited from an
+                  known drainer — 0x6160…3757 is on the curated deny list, cited from an
                   approval-drain advisory. The agent never signs.
                 </p>
               </div>
