@@ -194,6 +194,10 @@ addresses and amounts, and point `PAYSTAGE_POLICY_PATH` at it. Each is schema-ex
 | `evaluate_outstanding_auths` | Available now | Evaluates outstanding authorizations and flags double-pay or limbo risk. |
 | `evaluate_hip3_trade` | Available now | Evaluates a proposed HIP-3 / trade.xyz order against a local TradePolicy (`allow` \| `review` \| `do_not_trade`). Not financial advice — local policy gate only. |
 | `evaluate_velocity` | Available now | Rate and spend-pattern velocity checks against the local policy. |
+| `verify_receipt` | Available now | Checks a signed receipt against the published key: `VALID`, `INVALID`, `EXPIRED`, `payment-mismatch`, or `UNVERIFIABLE`. |
+| `decode_payment_required` | Available now | Decodes a base64 `payment-required` header into the JSON challenge — no network call, no verdict. |
+| `validate_policy` | Available now | Validates a policy document and names the exact field when it is wrong. Run it in CI on the policy you ship. |
+| `evaluate_batch` | Available now | The same verdict for several payments at once, one per input — stop at the first refusal. |
 
 ## Packages
 
