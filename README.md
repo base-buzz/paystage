@@ -48,24 +48,20 @@ audit itself. The rule that fires travels in `x-paystage-reason-codes`.
 ### What decides
 
 ```mermaid
+%% tight ranks: this is read at a glance, not studied
+%%{init: {"flowchart": {"nodeSpacing": 26, "rankSpacing": 30}}}%%
 flowchart TD
-    C[402 challenge] --> A{agent budget resolvable?}
-    A -- no --> DN[do_not_pay]
-    A -- yes --> T{inside the policy time window?}
-    T -- no --> DN
-    T -- yes --> V{x402Version 2, accepts present?}
-    V -- no --> DN
-    V -- yes --> E[evaluateAccept, every accept]
+    C[402 challenge] --> E["evaluatePayment<br/>guards: agent budget, time window,<br/>x402Version 2, accepts present"]
     E --> P{any accept judged pay?}
     P -- yes --> PAY[pay, cheapest accept]
     P -- no --> R{any accept judged review?}
     R -- yes --> REV[review]
-    R -- no --> DN
+    R -- no --> DN[do_not_pay]
     REV --> O{onReview}
     O -- pay --> SIGN[x402-fetch signs, request retries]
-    O -- refuse --> STOP[refused, 402 returned unsigned]
+    O -- refuse --> X[refused, 402 returned unsigned]
     PAY --> SIGN
-    DN --> STOP
+    DN --> X
 ```
 
 `do_not_pay` is a real refusal, not a warning: a payee on the known-drainer or OFAC list, an
