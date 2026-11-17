@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "../landing.css";
 import { TryConsole } from "./TryConsole";
 import { PaidMainnet } from "@/components/PaidMainnet";
 
