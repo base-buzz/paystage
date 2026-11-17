@@ -29,6 +29,7 @@ jobs:
       # Starts the published server over stdio and asserts five tools answer. The install
       # command in every README was wrong for three releases and nothing caught it.
       - run: node scripts/mcp-handshake.mjs
+      - run: node scripts/check-bins.mjs
       - run: node scripts/check-manifests.mjs
       - run: node scripts/check-manifest-packages.mjs
       - run: node scripts/check-dep-pins.mjs
