@@ -213,6 +213,64 @@ function checkToolAnnotations() {
   ok.push("tool annotations complete and honest");
 }
 
+/**
+ * A Mermaid block is a claim about behaviour, and GitHub renders it — nothing else in this repo
+ * checks it. #177 drew the pay / review / do_not_pay flow; if a verdict is renamed, the diagram would
+ * keep drawing the one the code no longer produces, which is worse than having no diagram.
+ *
+ * Two directions, because one alone is the failure this repo keeps paying for:
+ *   - no invented verdict: every `do_not_*` the diagram names must exist in an evaluator's Decision type
+ *   - no missing verdict: every verdict the payment evaluator declares must appear in a diagram
+ * A fixed allow-list would only prove the words we already thought of; `do_not_charge` would sail past
+ * it, which is exactly how the first version of this check passed while naming a verdict that does not
+ * exist.
+ */
+function checkMermaidVerdicts() {
+  const decisionOf = (file) => {
+    const src = readFileSync(join(ROOT, file), "utf8");
+    const decl = /export type Decision = ([^;]+);/.exec(src)?.[1];
+    return decl ? [...decl.matchAll(/"([a-z_]+)"/g)].map((m) => m[1]) : null;
+  };
+  const payment = decisionOf("packages/preflight/src/evaluate.ts");
+  const trade = decisionOf("packages/trade-preflight/src/types.ts");
+  if (!payment || !trade) {
+    problems.push("could not read a `Decision` type from the evaluators — cannot police the diagrams");
+    return;
+  }
+  const produced = new Set([...payment, ...trade]);
+
+  let readme;
+  try {
+    readme = readFileSync(join(ROOT, "README.md"), "utf8");
+  } catch {
+    ok.push("no README to police");
+    return;
+  }
+  const blocks = [...readme.matchAll(/```mermaid\n([\s\S]*?)```/g)].map((m) => m[1]);
+  if (blocks.length === 0) {
+    ok.push("no mermaid diagrams in the README");
+    return;
+  }
+  const diagram = blocks.join("\n");
+
+  // Direction 1: an invented verdict, whatever it is called.
+  const invented = new Set([...diagram.matchAll(/\bdo_not_[a-z_]+\b/g)].map((m) => m[0]).filter((v) => !produced.has(v)));
+  for (const verdict of invented) {
+    problems.push(`README mermaid names "${verdict}"; the evaluators produce only ${[...produced].join(", ")}`);
+  }
+
+  // Direction 2: a verdict the evaluator produces but the diagram does not show.
+  for (const verdict of payment) {
+    if (!new RegExp(`\\b${verdict}\\b`).test(diagram)) {
+      problems.push(`README mermaid never shows "${verdict}", which the payment evaluator produces`);
+    }
+  }
+
+  if (problems.length === 0) ok.push(`mermaid matches the evaluators (${blocks.length} block(s), shows ${payment.join(", ")})`);
+}
+
+checkMermaidVerdicts();
+
 const payload = { ok: problems.length === 0, tools: tools.length, passed: ok, problems };
 if (process.argv.includes('--json')) {
   console.log(JSON.stringify(payload, null, 2));
