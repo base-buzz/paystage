@@ -7,6 +7,10 @@
   --lp-dim: #9aa0b0;
   --lp-faint: #7c8496;
   --lp-mint: #6ee7b7;
+  /* Text on the mint fill. Dark ink on pale mint in dark mode; white on the deep green in light mode,
+     because #05100c on #047857 measures 3.53:1 — below AA, and the contrast checker never looked at
+     text-on-accent, only tokens on canvas and panel. */
+  --lp-on-mint: #05100c;
   --lp-mint-dim: #34d399;
   --lp-amber: #f5b544;
   --lp-red: #f06a6a;
@@ -191,40 +195,73 @@
   align-items: center;
 }
 
-.lp-btn {
+/* One geometry for every action: 40px tall, 8px radius, 13.5px/500. The old set was 32/36/44 tall with
+ * radii of 8, 9 and 10 in the same row, which reads as three products rather than one. Motion is colour
+ * only — a lift on hover is the 2021 tell, and it moves the target out from under a cursor mid-click. */
+.lp-btn,
+.site-connect {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  height: 44px;
-  padding: 0 18px;
-  border-radius: 9px;
-  font-size: 14px;
-  font-weight: 600;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
   border: 1px solid transparent;
-  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.lp-btn:focus-visible,
+.site-connect:focus-visible,
+.lp-copy-btn:focus-visible {
+  outline: 2px solid var(--lp-mint);
+  outline-offset: 2px;
+}
+
+.lp-btn:disabled,
+.site-connect:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .lp-btn-primary {
   background: var(--lp-mint);
-  color: #05100c;
+  color: var(--lp-on-mint);
+  border-color: transparent;
 }
 
-.lp-btn-primary:hover {
-  background: #8df0c6;
-  transform: translateY(-1px);
+.lp-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--lp-mint) 88%, #000);
+}
+
+.lp-btn-primary:active:not(:disabled) {
+  background: color-mix(in srgb, var(--lp-mint) 80%, #000);
+}
+
+/* Secondary is a surface with a hairline, not a tinted pill: the tint read as "already selected" on a
+   page where the only selected thing should be the primary action. */
+.lp-btn-ghost,
+.site-connect {
+  background: transparent;
+  border-color: var(--lp-line);
+  color: var(--lp-text);
 }
 
 .lp-btn-ghost {
-  border-color: var(--lp-line);
-  color: var(--lp-text);
-  background: var(--lp-panel);
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-  font-size: 13px;
+  font-size: 12.5px;
 }
 
-.lp-btn-ghost:hover {
-  border-color: #2c3342;
+.lp-btn-ghost:hover,
+.site-connect:hover:not(:disabled) {
   background: var(--lp-panel-2);
+  border-color: color-mix(in srgb, var(--lp-line) 60%, var(--lp-text));
 }
 
 .lp-hero-note {
@@ -1788,6 +1825,7 @@ html[data-theme="light"] {
     --lp-faint: #6b7280;
     --lp-mint: #047857;
     --lp-mint-dim: #065f46;
+    --lp-on-mint: #ffffff;
     --lp-amber: #b45309;
     --lp-red: #b91c1c;
     --lp-fg: var(--lp-text);
@@ -1835,6 +1873,7 @@ html[data-theme="light"] .lp-aurora span,
     --lp-faint: #6b7280;
     --lp-mint: #047857;
     --lp-mint-dim: #065f46;
+    --lp-on-mint: #ffffff;
     --lp-amber: #b45309;
     --lp-red: #b91c1c;
     --lp-fg: var(--lp-text);

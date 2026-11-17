@@ -5,6 +5,10 @@
  * Dark mode shipped with `--lp-faint` at 4.14:1, just under AA for normal text — invisible in a screenshot and obvious
  * to a calculator. This reads the token blocks out of landing.css and fails on any pair below 4.5:1.
  *
+ * Text on the mint **fill** was the gap: the primary button used `#05100c` on `#047857` in light mode, 3.53:1, and it
+ * shipped because this file only checked tokens against the canvas and the panel. A token named `--lp-on-<token>` is now
+ * text for a fill, checked against that fill instead of against the page — which is the pair a reader actually sees.
+ *
  *   node scripts/check-contrast.mjs
  */
 import { readFileSync } from "node:fs";
@@ -31,11 +35,21 @@ function tokens(block) {
   return out;
 }
 
-const darkBlock = css.slice(css.indexOf(".lp {"), css.indexOf("@media (prefers-color-scheme: light)"));
-const lightBlock = css.slice(css.indexOf("@media (prefers-color-scheme: light)"));
+const mediaLightStart = css.indexOf("@media (prefers-color-scheme: light)");
+const explicitLightStart = css.indexOf('html[data-theme="light"] {');
+// The dark block ends at whichever light block comes first. Slicing it to the media query swallowed the explicit light
+// block, so `tokens()` returned the light values under the name "dark" — the check was measuring one palette twice.
+const darkEnd = explicitLightStart >= 0 && explicitLightStart < mediaLightStart ? explicitLightStart : mediaLightStart;
+const darkBlock = css.slice(0, darkEnd); // the tokens live in `:root {` at the top of the file
+// Both light blocks must be read. The explicit choice and the system default are two copies of the same palette, and
+// checking only the second is how the first can carry a colour nobody measured.
+const lightBlocks =
+  explicitLightStart >= 0 && explicitLightStart < mediaLightStart
+    ? [["light (explicit)", css.slice(explicitLightStart, mediaLightStart)], ["light (system)", css.slice(mediaLightStart)]]
+    : [["light", css.slice(mediaLightStart)]];
 
 const problems = [];
-for (const [theme, block] of [["dark", darkBlock], ["light", lightBlock]]) {
+for (const [theme, block] of [["dark", darkBlock], ...lightBlocks]) {
   const t = tokens(block);
   if (!t.bg || !t.text) {
     problems.push(`${theme}: could not read --lp-bg / --lp-text from landing.css`);
@@ -45,6 +59,20 @@ for (const [theme, block] of [["dark", darkBlock], ["light", lightBlock]]) {
   // because cards and the canvas are both places text lands.
   for (const [name, fg] of Object.entries(t)) {
     if (["bg", "panel", "panel-2", "line", "line-soft"].includes(name)) continue;
+
+    // `--lp-on-<fill>` is text drawn on a filled surface, not on the page. Check it against its own fill; checking it
+    // against the canvas would fail a colour that is only ever seen inside a button.
+    if (name.startsWith("on-")) {
+      const fill = t[name.slice(3)];
+      if (!fill) {
+        problems.push(`${theme}: --lp-${name} names a fill (--lp-${name.slice(3)}) that does not exist`);
+        continue;
+      }
+      const r = ratio(fg, fill);
+      if (r < 4.5) problems.push(`${theme}: --lp-${name} on --lp-${name.slice(3)} is ${r.toFixed(2)}:1 (AA needs 4.5 for button text)`);
+      continue;
+    }
+
     for (const ground of ["bg", "panel"]) {
       if (!t[ground]) continue;
       const r = ratio(fg, t[ground]);
