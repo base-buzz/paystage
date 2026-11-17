@@ -11,6 +11,66 @@ to the caller: a wallet enforces signatures, not intent. `@paystage/x402-guard` 
 challenge before the wallet signs, so a wrong payee, an over-cap amount or an unknown asset
 never reaches the signing step at all.
 
+### Where the money does not move
+
+The design point is the arrow that is missing. The wallet signs only after the challenge has been
+judged; a refusal returns the seller's own 402 with a verdict header attached, so there is nothing to
+revoke afterwards.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as Agent
+    participant S as Seller
+    participant G as PayStage guardFetch
+    participant W as Wallet
+
+    A->>S: request the paid resource
+    S-->>A: 402 + payment-required challenge
+    A->>G: the same request, wrapped
+    G->>G: decode challenge, evaluatePayment(challenge, policy)
+    alt do_not_pay, or review with onReview refuse
+        G-->>A: original 402 + x-paystage-verdict
+        Note over G,W: nothing is signed
+    else pay, or review with onReview pay
+        G->>W: x402-fetch stages the payment
+        W-->>S: signed payment
+        S-->>G: 200 + resource
+        G-->>A: 200 + x-paystage-verdict
+    end
+```
+
+`review` is reported as `review` either way. When `onReview: "pay"` lets an ambiguous payment
+through, the header still says `review`, because the evaluator's finding and the caller's instruction
+to tolerate it are different facts — a caller that cannot tell "clean" from "warned but paid" cannot
+audit itself. The rule that fires travels in `x-paystage-reason-codes`.
+
+### What decides
+
+```mermaid
+%% tight ranks: this is read at a glance, not studied
+%%{init: {"flowchart": {"nodeSpacing": 26, "rankSpacing": 30}}}%%
+flowchart TD
+    C[402 challenge] --> E["evaluatePayment<br/>guards: agent budget, time window,<br/>x402Version 2, accepts present"]
+    E --> P{any accept judged pay?}
+    P -- yes --> PAY[pay, cheapest accept]
+    P -- no --> R{any accept judged review?}
+    R -- yes --> REV[review]
+    R -- no --> DN[do_not_pay]
+    REV --> O{onReview}
+    O -- pay --> SIGN[x402-fetch signs, request retries]
+    O -- refuse --> X[refused, 402 returned unsigned]
+    PAY --> SIGN
+    DN --> X
+```
+
+`do_not_pay` is a real refusal, not a warning: a payee on the known-drainer or OFAC list, an
+over-cap amount, a wrong network or asset, a policy that denies the payee, or a challenge that
+cannot be parsed. `review` is the narrow middle — a payee the policy has no opinion about, under a
+policy that chose `unknown_payee: "review"` over the stricter default. Both verdicts and the branch
+logic are in [packages/preflight/src/evaluate.ts](packages/preflight/src/evaluate.ts); the hook that
+uses them is [packages/x402-guard/src/index.ts](packages/x402-guard/src/index.ts).
+
 Try it without installing anything:
 
 ```bash
