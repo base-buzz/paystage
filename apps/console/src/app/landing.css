@@ -1076,8 +1076,8 @@ body {
   padding: 0 14px;
   border: 1px solid color-mix(in srgb, var(--lp-fg) 22%, transparent);
   border-left: 0;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
   background: color-mix(in srgb, var(--lp-fg) 6%, transparent);
   color: var(--lp-dim);
   cursor: pointer;
