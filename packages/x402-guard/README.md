@@ -17,7 +17,7 @@ Two lines, one call site. The `policy` below is configuration you write once; th
 changes how the request is made.
 
 ```sh
-npm install @paystage/x402-guard x402-fetch
+npm install @paystage/x402-guard x402-fetch   # v1, unscoped: takes a signer (see "two packages" below)
 ```
 
 > **Published with provenance.** Every version from `0.1.1` onward is built and signed by this
@@ -105,6 +105,13 @@ client-side guard always has.
 consent — there is a test for exactly that.
 
 ## On the SDK directly: one hook
+
+## Two packages, similar names
+
+`x402-fetch` (unscoped, 1.x) takes a **signer** and is what `guardFetch` wraps. `@x402/fetch` (scoped, 2.x) takes an
+**`x402Client`** and is the line this project itself uses elsewhere. They are not interchangeable: passing a v2 client
+to `walletClient` raises a named error rather than failing inside the peer with `createPaymentPayload is not a
+function`. On v2, register the hook below instead — the policy, verdicts and reason codes are identical.
 
 `guardFetch` covers anyone paying through `x402-fetch`. If you drive `@x402/core` yourself, core exposes
 `onBeforePaymentCreation` — which runs before a payment payload exists and can abort with a reason:
