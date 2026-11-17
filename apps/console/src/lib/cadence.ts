@@ -53,6 +53,15 @@ export interface CadenceData {
    */
   checksAvailable: boolean;
   releasesAvailable: boolean;
+  /**
+   * Current state, separate from history.
+   *
+   * The history count ("5 of 9 recent runs") is honest but useless as a status light: one bad night stays red for nine
+   * days after the cause is fixed, so the number punishes the past instead of describing the present. `latestOk` answers
+   * "is it green now" and `consecutive` answers "for how long" — the two questions a reader of a badge actually has.
+   */
+  latestOk: boolean | null;
+  consecutive: number;
 }
 
 function weekLabel(date: Date): string {
@@ -101,6 +110,13 @@ export async function getCadence(): Promise<CadenceData> {
     at: run.created_at.slice(0, 10),
   }));
 
+  const latestOk = checks.length > 0 ? checks[0].ok : null;
+  let consecutive = 0;
+  for (const run of checks) {
+    if (!run.ok) break;
+    consecutive += 1;
+  }
+
   return {
     weeks: buckets,
     releasesTotal,
@@ -108,5 +124,7 @@ export async function getCadence(): Promise<CadenceData> {
     checks,
     checksAvailable: runs !== null,
     releasesAvailable: commits !== null,
+    latestOk,
+    consecutive,
   };
 }
