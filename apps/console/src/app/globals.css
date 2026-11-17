@@ -8,8 +8,11 @@
   --panel: #111318;
   --panel-2: #161922;
   --border: #232733;
-  --text: #e6e8ee;
-  --muted: #8b90a0;
+  /* Follows the landing palette, which is the only one that switches themes. These were fixed light-on-dark
+     values, so every console page inherited near-white text on a light canvas — measured on /try in light mode:
+     #e6e8ee on #ffffff, with the page's own headings invisible. */
+  --text: var(--lp-text, #e6e8ee);
+  --muted: var(--lp-dim, #8b90a0);
   --accent: #5b8cff;
   --good: #3ecf8e;
   --warn: #f5a524;
