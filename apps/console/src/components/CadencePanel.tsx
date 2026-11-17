@@ -58,7 +58,8 @@ export async function CadencePanel() {
                     ? "no runs yet"
                     : latest ? (
                         <>
-                          last run: {latest.ok ? "pass" : "fail"} · {passing}/{data.checks.length} passing
+                          last run: {latest.ok ? "pass" : "fail"}
+                          {data.consecutive > 1 ? ` · ${data.consecutive} in a row` : ""} · {passing}/{data.checks.length} recently
                         </>
                       ) : null}
               </span>

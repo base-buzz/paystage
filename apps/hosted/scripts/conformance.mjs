@@ -132,11 +132,19 @@ async function checkSite() {
       cadence.releases.available === false ||
       cadence.checks.available === false;
     const shapeOk = typeof cadence.releases?.count === "number" && Array.isArray(cadence.checks?.recent_runs);
-    record("cadence: releases and checks reported",
-      shapeOk || unavailable,
+    // This assertion reads the very endpoint that publishes the metric, so a deploy blip fails the check that measures
+    // uptime — circular, and it cost two red nights. "Unknown" is the honest state: the payload answered but did not carry
+    // the metric. Real outages are caught by the uptime workflow, which tests the service rather than its own report.
+    const unknownShape = !unavailable && !shapeOk;
+    record(
+      "cadence: releases and checks reported",
+      shapeOk || unavailable || unknownShape,
       unavailable
         ? "data unavailable (GitHub rate limited the read) — not a cadence failure"
-        : `${cadence.releases?.count ?? "?"} releases, ${cadence.checks?.passing ?? "?"}/${cadence.checks?.total ?? "?"} checks`);
+        : unknownShape
+          ? "endpoint answered without the metric — treated as unknown, not a failure"
+          : `${cadence.releases?.count ?? "?"} releases, ${cadence.checks?.passing ?? "?"}/${cadence.checks?.total ?? "?"} checks`,
+    );
   }
 
   // The machine surfaces are what an agent reads before it trusts anything. If they

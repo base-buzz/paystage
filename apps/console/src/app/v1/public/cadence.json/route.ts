@@ -34,6 +34,10 @@ export async function GET() {
       recent_runs: data.checks,
       available: data.checksAvailable,
       passing: data.checksAvailable ? passing : null,
+      // Current state first; the 9-run history stays for anyone who wants the trend.
+      latest_ok: data.latestOk,
+      consecutive_passes: data.consecutive,
+      current: data.latestOk === true,
       total: data.checksAvailable ? data.checks.length : null,
       all_passing: data.checksAvailable ? data.checks.length > 0 && passing === data.checks.length : null,
     },
