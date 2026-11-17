@@ -34,6 +34,7 @@ export async function GET() {
   }
 
   const total = rows.reduce((sum, r) => sum + Number(r.amount_usdc ?? 0), 0);
+  const priced = rows.filter((r) => r.amount_usdc !== null && r.amount_usdc !== undefined).length;
   const external = rows.filter((r) => r.source === "real").length;
 
   return NextResponse.json(
@@ -41,6 +42,11 @@ export async function GET() {
       configured: true,
       settled: rows.length,
       totalUsdc: Number(total.toFixed(4)),
+      // Rows written before 2026-11-17 carry no amount (#131). Summing them as zero made "35 settled,
+      // 0.002 USDC" look like a measured total when it was one priced row and 34 unknowns — so the
+      // count of unpriced rows is part of the answer, not a footnote.
+      priced,
+      withoutAmount: rows.length - priced,
       external,
       ours: rows.length - external,
       last: rows[0]?.ts ?? null,
