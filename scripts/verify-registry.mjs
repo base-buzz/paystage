@@ -52,8 +52,12 @@ async function probeEntry(entry) {
     const res = await fetch(entry.url, {
       method,
       headers: { accept: "application/json", ...(method === "POST" ? { "content-type": "application/json" } : {}) },
+      // `{}` on purpose. A syntactically valid body that says nothing is enough to reach the paywall on an
+      // x402 endpoint; a *shaped* body with empty `accepts` gets rejected by validation before payment, which
+      // is correct behaviour for the endpoint and a false DEAD for the probe. Our own entry read DEAD for
+      // exactly that reason while every other entry passed.
       ...(method === "POST"
-        ? { body: JSON.stringify({ payment_required: { x402Version: 2, accepts: [] }, policy: {} }) }
+        ? { body: JSON.stringify({}) }
         : {}),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });

@@ -18,6 +18,7 @@
  * x402-fetch, and this only decides whether it is allowed to.
  */
 
+import { createRequire } from "node:module";
 import { evaluatePayment, normalizePaymentRequired } from "@paystage/preflight";
 import { BuilderCodeClientExtension } from "@x402/extensions";
 import { parsePolicy } from "@paystage/policy";
@@ -251,10 +252,18 @@ function withVerdict(response: Response, verdict: Verdict, codes: string[]): Res
   });
 }
 
+// Resolves peer dependencies from this module's own location, which is what a consumer's install tree expects.
+const requirePeer = createRequire(import.meta.url);
+
 function defaultWrap(): GuardOptions["wrap"] | undefined {
   try {
     // Optional peer: a caller that only wants the gate never loads x402-fetch.
-    const mod = require("x402-fetch") as {
+    //
+    // `createRequire`, not a bare `require`: this package is `"type": "module"`, where `require` is
+    // undefined. The bare call threw a ReferenceError that the `catch` below swallowed, so a caller with
+    // x402-fetch installed was told to install it — the documented path (`guardFetch(fetch, { policy })`
+    // with no `wrap`) was broken for every ESM consumer, and no test noticed because they all inject `wrap`.
+    const mod = requirePeer("x402-fetch") as {
       wrapFetchWithPayment: GuardOptions["wrap"];
     };
     return mod.wrapFetchWithPayment;
