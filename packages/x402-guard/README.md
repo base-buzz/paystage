@@ -150,3 +150,21 @@ guardFetch(fetch, {
 The record is `{ verdict, reasonCodes, payTo, at }` — **no wallet address, no signature, no request
 body.** Telemetry is fire-and-forget and never on the payment path: a failed POST cannot fail the call,
 and a throwing logger cannot change whether a payment is allowed.
+
+## Circle's batched client
+
+`@circle-fin/x402-batching` exposes the same `onBeforePaymentCreation` hook `@x402/core` does, so this is a registration and
+not an adapter — its context (`{ paymentRequired, selectedRequirements }` with `{ scheme, network, asset, amount, payTo,
+maxTimeoutSeconds }`) is the shape this package already reads:
+
+```ts
+import { GatewayClient } from "@circle-fin/x402-batching/client";
+import { paystageClientHook } from "@paystage/x402-guard";
+
+const client = new GatewayClient({ /* … */ });
+client.onBeforePaymentCreation(paystageClientHook({ policy }));
+```
+
+The hook runs before the payment payload exists, so a refusal aborts the batch before anything is signed. Verified against
+`@circle-fin/x402-batching@4.0.0` type definitions in `tests/circle-batching.test.ts` — if their context shape changes, that
+test fails here instead of in someone's signing loop.
