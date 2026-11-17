@@ -64,11 +64,24 @@ describe("@x402/core client hook adapter", () => {
   });
 
   it("refuses a known drainer even when the allow-list contains it", async () => {
-    const drainer = "0x000000000000000000000000000000000000dEaD";
+    // A cited entry from the curated list (0xCERT-2026-0230). The burn address used to be here and is now
+    // its own reason — see the next test, because "the right answer for the wrong reason" is a bug too.
+    const drainer = "0x0b5126e1bc27c0de77e02e97945760a674edb034";
     const permissive = { ...policy, allowed_pay_to: [drainer], unknown_payee: "review" };
     const out = await evaluateBeforeCreation(ctx("2000", drainer), { policy: permissive });
     expect(out).toMatchObject({ abort: true });
     if (out && "reason" in out) expect(out.reason).toBe("known drainer");
+  });
+
+  it("refuses a non-receivable sink and says so, rather than calling it a drainer", async () => {
+    const sink = "0x000000000000000000000000000000000000dEaD";
+    const permissive = { ...policy, allowed_pay_to: [sink], unknown_payee: "review" };
+    const out = await evaluateBeforeCreation(ctx("2000", sink), { policy: permissive });
+    expect(out).toMatchObject({ abort: true });
+    if (out && "reason" in out) {
+      expect(out.reason).toMatch(/non-receivable/i);
+      expect(out.reason).not.toMatch(/known drainer/i);
+    }
   });
 
   it("fails closed when the policy cannot be evaluated", async () => {

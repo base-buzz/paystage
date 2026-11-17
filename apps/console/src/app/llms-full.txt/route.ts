@@ -67,7 +67,9 @@ that already knows its budget; a path is right when several calls share one file
 The known-drainer list is a hard deny that runs before \`unknown_payee\`. It is
 curated and small: every entry has a public citation and a retrieval date in
 \`packages/preflight/KNOWN_DRAINERS.md\`. Precision over recall — a false positive
-blocks a legitimate payment.
+blocks a legitimate payment. Non-receivable sinks (the burn address, the zero
+address) are refused too, with their own reason, and are deliberately not listed
+as drainers.
 
 ## Access surface
 

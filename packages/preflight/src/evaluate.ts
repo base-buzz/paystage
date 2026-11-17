@@ -5,7 +5,7 @@ import {
   type Policy,
   type Asset,
 } from "@paystage/policy";
-import { isKnownDrainer } from "./known-drainers.js";
+import { isKnownDrainer, isNonReceivable } from "./known-drainers.js";
 import { SANCTIONED_ADDRESSES } from "./sanctioned-addresses.js";
 
 export interface AcceptOption {
@@ -140,6 +140,14 @@ function evaluateAccept(accept: AcceptOption, policy: Policy): AcceptResult {
   // Rule 7a: known drainers — hard deny before unknown_payee review
   if (isKnownDrainer(accept.payTo)) {
     reasons.push("known drainer");
+    return { accept, status: "do_not_pay", reasons };
+  }
+
+  // Rule 7a2: non-receivable sinks. Separate from the drainer list because the fact is different — paying
+  // 0x…dEaD destroys the funds, nobody steals them. Same verdict, truthful reason, and the published drainer
+  // list stops claiming a burn address is a thief.
+  if (isNonReceivable(accept.payTo)) {
+    reasons.push(`non-receivable payee ${accept.payTo} (funds are destroyed, not received)`);
     return { accept, status: "do_not_pay", reasons };
   }
 

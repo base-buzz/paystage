@@ -18,7 +18,7 @@ export const SCENARIOS: Scenario[] = [
     id: "known-drainer",
     label: "Known-drainer payee",
     tool: "preflight",
-    description: "payTo 0x…dEaD (curated list). Expect do_not_pay · known drainer.",
+    description: "payTo 0x0b51…b034 (0xCERT-2026-0230, curated list). Expect do_not_pay · known drainer.",
   },
   {
     id: "burst-velocity",
