@@ -1781,8 +1781,10 @@ body {
   margin-left: 6px;
   padding: 2px 7px;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--lp-on-mint) 14%, transparent);
-  color: var(--lp-on-mint);
+  /* `currentColor`, not the on-mint token: the paid button is a ghost surface, so text-on-mint ink landed
+     white on white and the price vanished. A price nobody can read is the one thing this tag exists to stop. */
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  color: inherit;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   font-size: 12px;
   letter-spacing: 0.02em;
