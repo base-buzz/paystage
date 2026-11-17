@@ -2,6 +2,18 @@
 
 ## 2026-11-17
 
+- `@paystage/x402-guard@0.4.7`: **the documented happy path works again.** `guardFetch(fetch, { policy })` with no
+  `wrap` called a bare `require("x402-fetch")` inside a `"type": "module"` package, where `require` is undefined. The
+  `ReferenceError` was swallowed by the `catch` that exists to make the peer optional, so a caller with `x402-fetch`
+  installed was told to install it. It now resolves the peer with `createRequire(import.meta.url)`.
+  - No test noticed because every test injected `wrap`; there is now one that exercises `defaultWrap` against a real
+    installed peer, plus a guard that fails on a bare `require(` in an ESM source file.
+- `registry/services.json`: `verify-registry.mjs` sends `{}` as its POST probe body. It used to send a shaped body with
+  empty `accepts`, which endpoints reject during validation before the paywall — so every entry read DEAD, including
+  our own. Refreshed: 14/14 live.
+
+## 2026-11-17
+
 - `@paystage/mcp@0.8.10`: **`npx -y @paystage/mcp` now works.** The package declares four binaries and none was named `mcp`, so npm could not pick one and every directory that generates a config from metadata died at startup — mcp.so reported `MCP error -32000: Connection closed` and fell back to a five-tool cache. Added an `mcp` alias bin alongside `paystage-mcp`, which is the bin npm looks for when a package has several (the name must match the package's unscoped name).
 - New `scripts/check-bins.mjs` in CI: a multi-binary package must expose a bin named after itself, or the one-liner everyone copies cannot launch it.
 - No tool, argument, policy or decision changes. Same nine tools.
