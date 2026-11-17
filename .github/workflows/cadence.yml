@@ -27,7 +27,9 @@ jobs:
         with:
           node-version: "24"
       - name: Run the conformance kit against production
-        run: node apps/hosted/scripts/conformance.mjs
+        # tee, so the assertions are in the run log rather than only in the step summary. A red run nobody can read is a
+        # red run that gets ignored — this one failed twice and its output was invisible.
+        run: node apps/hosted/scripts/conformance.mjs 2>&1 | tee /tmp/conformance.log
         continue-on-error: true
         id: conformance
       - name: Print the summary
