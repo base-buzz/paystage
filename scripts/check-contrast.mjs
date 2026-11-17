@@ -101,6 +101,22 @@ for (const rule of cssNoComments.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
   }
 }
 
+/**
+ * Console text tokens must follow the theme, not sit at fixed light-on-dark values.
+ *
+ * `globals.css` defines `--text: #e6e8ee` for the console. That is invisible in dark mode and invisible *as
+ * text* in light mode: every console page inherited near-white on a light canvas, measured as the `/try`
+ * headings disappearing (#e6e8ee on #ffffff). The landing palette is the one that switches, so the console
+ * owes it a `var(--lp-…)` reference — and this file can check a variable's shape even though it cannot paint.
+ */
+const globals = readFileSync(join(ROOT, "apps/console/src/app/globals.css"), "utf8");
+for (const token of ["text", "muted"]) {
+  const decl = new RegExp(`--${token}:\\s*([^;]+);`).exec(globals)?.[1]?.trim() ?? "";
+  if (!decl.startsWith("var(--lp-")) {
+    problems.push(`globals.css: --${token} is "${decl}" — a fixed colour, so it cannot follow the theme; use var(--lp-…)`);
+  }
+}
+
 if (problems.length > 0) {
   for (const p of problems) console.log(`  FAIL ${p}`);
   console.log("contrast: below AA");
