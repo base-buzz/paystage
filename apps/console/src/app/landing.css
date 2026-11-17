@@ -36,7 +36,11 @@
   background: rgba(110, 231, 183, 0.24);
 }
 
-.lp a {
+/* `:not(.lp-btn)` is load-bearing, not tidiness: `.lp a` is (0,1,1) and `.lp-btn-primary` is (0,1,0), so without
+   the exclusion every button that is an anchor inherits the body ink. That is how a dark-green button ended up
+   with near-black text in light mode, and the pale-mint one with the same ink in dark mode. Specificity, not the
+   colour values, was the defect — the tokens were right the whole time. */
+.lp a:not(.lp-btn) {
   color: inherit;
   text-decoration: none;
 }
