@@ -39,9 +39,11 @@ export async function GET() {
       consecutive_passes: data.consecutive,
       current: data.latestOk === true,
       total: data.checksAvailable ? data.checks.length : null,
-      // `all_passing` answers the badge question — did the latest run pass — because that is what a reader means by
-      // "is it green". The window is published separately as `all_recent_passing`, so neither meaning hides the other.
-      all_passing: data.checksAvailable ? data.latestOk === true : null,
+      // `all_passing` used to mean "the latest run passed", which is the opposite of what its name promises: a
+      // payload read `all_passing: true` beside `passing: 7, total: 12`. The name now matches the value (the
+      // whole window). `current` and `latest_ok` already carry the last-run answer, so nothing is lost.
+      // Kept under the old name for one release: consumers reading it get the stricter meaning, never a looser one.
+      all_passing: data.checksAvailable ? data.checks.length > 0 && passing === data.checks.length : null,
       all_recent_passing: data.checksAvailable ? data.checks.length > 0 && passing === data.checks.length : null,
     },
     note:
