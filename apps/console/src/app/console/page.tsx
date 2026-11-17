@@ -8,6 +8,7 @@ import { IncidentFeed } from "@/components/IncidentFeed";
 import { ScenarioRunner } from "@/components/ScenarioRunner";
 import { ProgressStrip } from "@/components/ProgressStrip";
 import { SiweStub } from "@/components/SiweStub";
+import { SyncPrefs } from "@/components/SyncPrefs";
 import { SyntheticWallets } from "@/components/SyntheticWallets";
 import { ConfidenceChecklist } from "@/components/ConfidenceChecklist";
 
@@ -107,6 +108,8 @@ export default async function Page() {
         <ConfidenceChecklist />
         <SyntheticWallets />
         <SiweStub />
+
+        <SyncPrefs />
       </main>
     </>
   );

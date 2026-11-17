@@ -37,3 +37,34 @@ export async function selectRows<T>(
     return null;
   }
 }
+
+/**
+ * Upsert one row, keyed by `conflictColumn`. Used by preferences (#173), the only table this site writes
+ * on a human's behalf — and only after they signed in for it.
+ */
+export async function upsertRow<T>(
+  table: string,
+  row: Record<string, unknown>,
+  conflictColumn: string,
+): Promise<T | null> {
+  if (!isSupabaseConfigured() || !SERVICE_KEY) return null;
+  const url = `${SUPABASE_URL.replace(/\/$/, "")}/rest/v1/${table}?on_conflict=${conflictColumn}`;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=representation",
+      },
+      body: JSON.stringify(row),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const rows = (await res.json()) as T[];
+    return rows[0] ?? null;
+  } catch {
+    return null;
+  }
+}
