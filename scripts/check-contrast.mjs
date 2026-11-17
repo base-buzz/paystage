@@ -81,6 +81,26 @@ for (const [theme, block] of [["dark", darkBlock], ...lightBlocks]) {
   }
 }
 
+/**
+ * A broad anchor colour rule outranks a single-class button modifier by specificity, so the button's own
+ * `color` never applies. That is how the primary button drew body ink on mint in both themes — the tokens were
+ * correct and the pair was unreadable, which this file could not see because it only compares token values.
+ * Cheap static guard: a rule that colours a bare `a` inside `.lp` must exclude the buttons.
+ */
+const cssNoComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
+for (const rule of cssNoComments.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+  if (!/color\s*:/.test(rule[2])) continue;
+  for (const raw of rule[1].split(",")) {
+    const selector = raw.trim();
+    if (!/^\.lp\b/.test(selector)) continue;
+    // Only the unscoped rule: `.lp a` or `.lp > a`. A rule scoped to one component (`.lp-faq a`) cannot
+    // reach a button in the page furniture and does not outrank anything globally.
+    if (!/^\.lp\s*(>\s*)?a$/.test(selector)) continue;
+    if (/\.lp-btn/.test(selector)) continue;
+    problems.push(`anchor colour rule "${selector}" must exclude .lp-btn — it outranks .lp-btn-primary by specificity`);
+  }
+}
+
 if (problems.length > 0) {
   for (const p of problems) console.log(`  FAIL ${p}`);
   console.log("contrast: below AA");
