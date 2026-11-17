@@ -22,7 +22,10 @@ const policy = read("policies/strict.json");
 const CASES = [
   ["over-cap", "challenges/over-cap.json", "do_not_pay", /exceeds max_amount/],
   ["unknown-payee", "challenges/unknown-payee.json", "do_not_pay", /not in allowed_pay_to/],
+  // A cited payee from the curated list (0xCERT-2026-0230). This case used to point at the burn address,
+  // which is not a drainer — it is a sink, and the next case is where that belongs.
   ["drainer", "challenges/drainer.json", "do_not_pay", /known drainer/],
+  ["non-receivable", "challenges/non-receivable.json", "do_not_pay", /non-receivable/],
   ["allowed", "challenges/allowed.json", "pay", null],
 ];
 
@@ -41,7 +44,7 @@ for (const [name, file, expected, pattern] of CASES) {
 
 console.log(
   failed === 0
-    ? "\n4/4 as expected. Nothing was signed, no key was used, no network call was made."
+    ? `\n${CASES.length}/${CASES.length} as expected. Nothing was signed, no key was used, no network call was made.`
     : `\n${failed} case(s) did not match.`,
 );
 process.exit(failed === 0 ? 0 : 1);
