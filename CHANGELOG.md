@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-17
+
+- `@paystage/mcp@0.8.10`: **`npx -y @paystage/mcp` now works.** The package declares four binaries and none was named `mcp`, so npm could not pick one and every directory that generates a config from metadata died at startup — mcp.so reported `MCP error -32000: Connection closed` and fell back to a five-tool cache. Added an `mcp` alias bin alongside `paystage-mcp`, which is the bin npm looks for when a package has several (the name must match the package's unscoped name).
+- New `scripts/check-bins.mjs` in CI: a multi-binary package must expose a bin named after itself, or the one-liner everyone copies cannot launch it.
+- No tool, argument, policy or decision changes. Same nine tools.
+
 ## 2026-11-09
 
 - `@paystage/preflight@0.2.1` + `@paystage/mcp@0.3.1`: known-drainer list refresh (+4 cited EVM addresses, 25 total).
