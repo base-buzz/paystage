@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { WalletChip } from "@/components/WalletChip";
 
 /**
  * One header for every route.
@@ -36,7 +37,6 @@ export function SiteHeader() {
   const lang: "en" | "zh" = pathname?.startsWith("/zh") ? "zh" : "en";
   const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>("system");
-  const [address, setAddress] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -68,24 +68,6 @@ export function SiteHeader() {
       document.removeEventListener("mousedown", onClick);
     };
   }, [menuOpen]);
-
-  async function connect() {
-    const eth = (window as unknown as { ethereum?: { request(args: { method: string }): Promise<unknown> } }).ethereum;
-    if (!eth) {
-      // No wallet is a normal state, not an error: everything works signed out.
-      setAddress(null);
-      alert("No browser wallet found. Everything here works without one — see /try for the paid path.");
-      return;
-    }
-    try {
-      const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
-      setAddress(accounts?.[0] ?? null);
-    } catch {
-      setAddress(null);
-    }
-  }
-
-  const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : null;
 
   return (
     <header className="site-header" data-scrolled={scrolled ? "true" : "false"}>
@@ -163,9 +145,7 @@ export function SiteHeader() {
             </div>
           )}
 
-          <button type="button" className="site-connect" onClick={connect}>
-            {short ?? (lang === "zh" ? "连接钱包" : "Connect wallet")}
-          </button>
+          <WalletChip />
         </div>
       </div>
     </header>
