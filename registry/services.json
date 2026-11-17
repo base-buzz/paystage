@@ -1,5 +1,16 @@
 [
   {
+    "name": "NullClear Token Security",
+    "url": "https://api.nullclear.dev/v1/bazaar/token-security",
+    "network": "eip155:8453",
+    "description": "Pre-trade Base ERC-20 token security, proxy resolution, liquidity, and honeypot audit for AI agents.",
+    "price": "$0.005 per call",
+    "asset": "USDC",
+    "payTo": "0xB586eFcCa41dF27ad3873BEcA54da0c30bf04d5c",
+    "x402_version": 2,
+    "verified_at": "2026-11-17"
+  },
+  {
     "name": "PayStage Evaluate",
     "url": "https://api.paystage.xyz/v1/evaluate_mcp_payment",
     "network": "eip155:8453",
@@ -37,7 +48,7 @@
     "name": "websearch.use.x402atlas.com",
     "url": "https://websearch.use.x402atlas.com/search",
     "network": "eip155:8453",
-    "description": "Real-time web search for AI agents \u2014 search the web and get ranked SERP-style results as clean JSON: title, URL, snippet, relevance score, optional LL.",
+    "description": "Real-time web search for AI agents — search the web and get ranked SERP-style results as clean JSON: title, URL, snippet, relevance score, optional LL.",
     "price": "0.01 USDC per call",
     "asset": "USDC",
     "payTo": "0xF752eEB75d3Bea24AA867ad93bfd8EF5a2F431B9",
@@ -70,7 +81,7 @@
     "name": "wiki.use.x402atlas.com",
     "url": "https://wiki.use.x402atlas.com/summary",
     "network": "eip155:8453",
-    "description": "Wikipedia article summary \u2014 plain-text and HTML extract, short description, thumbnail and Wikidata id for any title, in a clean normalized envelope wi.",
+    "description": "Wikipedia article summary — plain-text and HTML extract, short description, thumbnail and Wikidata id for any title, in a clean normalized envelope wi.",
     "price": "0.005 USDC per call",
     "asset": "USDC",
     "payTo": "0x6A706D6Fcf192C15fB592d7502258Ed41425DD36",
@@ -114,7 +125,7 @@
     "name": "api.chit402.com",
     "url": "https://api.chit402.com/v1/chat/completions",
     "network": "eip155:8453",
-    "description": "Signed spend receipts for agent x402 payments \u2014 who paid which call, verifiable by a third party.",
+    "description": "Signed spend receipts for agent x402 payments — who paid which call, verifiable by a third party.",
     "price": "0.002 USDC per call",
     "asset": "USDC",
     "payTo": "0x23f713411c30BBd9A989c9cbC22EB0b55F7f7334",
