@@ -1,31 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { signInWithWallet } from "@/lib/siwe/client";
 
 const SIWE_ENABLED = process.env.NEXT_PUBLIC_SIWE_ENABLED === "1";
-const CHAIN_ID = 8453;
-
-function buildSiweMessage(params: {
-  domain: string;
-  address: string;
-  uri: string;
-  nonce: string;
-  issuedAt: string;
-}): string {
-  const { domain, address, uri, nonce, issuedAt } = params;
-  return [
-    `${domain} wants you to sign in with your Ethereum account:`,
-    address,
-    "",
-    "Read-only PayStage scan of outstanding USDC approvals on Base.",
-    "",
-    `URI: ${uri}`,
-    "Version: 1",
-    `Chain ID: ${CHAIN_ID}`,
-    `Nonce: ${nonce}`,
-    `Issued At: ${issuedAt}`,
-  ].join("\n");
-}
 
 type EvalItem = {
   item?: {
@@ -69,71 +47,13 @@ export function SiweStub() {
     setItems(null);
     setNote(null);
     try {
-      const eth = (
-        window as unknown as {
-          ethereum?: {
-            request: (a: {
-              method: string;
-              params?: unknown[];
-            }) => Promise<unknown>;
-          };
-        }
-      ).ethereum;
-      if (!eth) throw new Error("No wallet detected.");
-
-      const accounts = (await eth.request({
-        method: "eth_requestAccounts",
-      })) as string[];
-      const addr = accounts?.[0];
-      if (!addr) throw new Error("No account returned.");
-
-      try {
-        await eth.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x2105" }],
-        });
-      } catch {
-        // user may already be on Base or reject — scan still uses server RPC
-      }
-
-      const nonceRes = await fetch("/api/siwe/nonce", {
-        method: "GET",
-        credentials: "include",
-      });
-      const nonceData = await nonceRes.json();
-      if (!nonceRes.ok) {
-        throw new Error(nonceData?.error || `nonce HTTP ${nonceRes.status}`);
-      }
-      const serverNonce = nonceData.nonce as string;
-      const domain = (nonceData.domain as string) || window.location.host;
-
-      const msg = buildSiweMessage({
-        domain,
-        address: addr,
-        uri: window.location.origin,
-        nonce: serverNonce,
-        issuedAt: new Date().toISOString(),
-      });
-      const sig = (await eth.request({
-        method: "personal_sign",
-        params: [msg, addr],
-      })) as string;
-
-      const verifyRes = await fetch("/api/siwe/verify", {
-        method: "POST",
-        credentials: "include",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ message: msg, signature: sig }),
-      });
-      const verifyData = await verifyRes.json();
-      if (!verifyRes.ok) {
-        throw new Error(verifyData?.error || `verify HTTP ${verifyRes.status}`);
-      }
-
-      const sessionAddress = (verifyData.address as string) || addr;
-      setAddress(sessionAddress);
-      setMessage(msg);
-      setSignature(sig);
+      // One sign-in implementation, shared with the preference sync (#174): connect, sign the
+      // server's nonce, exchange it for a session. A message that differs by a word between two flows
+      // is how one of them quietly stops verifying.
+      const result = await signInWithWallet("Read-only PayStage scan of outstanding USDC approvals on Base.");
+      setAddress(result.address);
+      setMessage(result.message);
+      setSignature(result.signature);
 
       const res = await fetch("/api/auth-scan", {
         method: "POST",
