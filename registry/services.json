@@ -1,5 +1,16 @@
 [
   {
+    "name": "AegisAudit",
+    "url": "https://aegisaudit.org/api/v1/token/audit/base/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "network": "eip155:8453",
+    "description": "Multi-oracle Base token security audit, honeypot swap simulation, DEX liquidity depth, and EIP-191 signed Proof-of-Execution receipt.",
+    "price": "0.01 USDC per call",
+    "asset": "USDC",
+    "payTo": "0x111ef680B6EFdd859FbEc473b907aCe95F0D1acB",
+    "x402_version": 2,
+    "verified_at": "2026-11-17"
+  },
+  {
     "name": "PayStage Evaluate",
     "url": "https://api.paystage.xyz/v1/evaluate_mcp_payment",
     "network": "eip155:8453",
