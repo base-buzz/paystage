@@ -30,10 +30,23 @@ try {
 
 /** Tags and their commit dates, from git — the tags are the record of what shipped. */
 function tags() {
-  const raw = execFileSync("git", ["for-each-ref", "--format=%(refname:short) %(creatordate:short)", "refs/tags"], {
-    cwd: ROOT,
-    encoding: "utf8",
-  });
+  // `git fetch --tags` first: CI checks out a single commit by default (`fetch-depth: 1`), which brings no tags,
+  // so the first run failed with "no versioned tags found". A shallow clone is not an empty changelog.
+  try {
+    execFileSync("git", ["fetch", "--tags", "--quiet", "--depth=1", "origin"], { cwd: ROOT, stdio: "ignore" });
+  } catch {
+    /* offline or no remote: fall back to whatever tags exist locally below */
+  }
+  let raw;
+  try {
+    raw = execFileSync("git", ["for-each-ref", "--format=%(refname:short) %(creatordate:short)", "refs/tags"], {
+      cwd: ROOT,
+      encoding: "utf8",
+    });
+  } catch (error) {
+    console.error(`changelog: cannot list tags (${error.message})`);
+    process.exit(2);
+  }
   return raw
     .split("\n")
     .filter(Boolean)
