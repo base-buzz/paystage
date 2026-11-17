@@ -19,11 +19,6 @@ export const SOURCES: readonly KnownDrainerSource[] = [
     retrieved: "2026-11-02",
   },
   {
-    name: "Ethereum burn / non-receivable sentinel 0x…dEaD",
-    url: "https://etherscan.io/address/0x000000000000000000000000000000000000dead",
-    retrieved: "2026-11-02",
-  },
-  {
     name: "0xCERT IOC address feed (Base incidents incl. 0xCERT-2026-0230)",
     url: "https://www.0xcert.com/iocs",
     retrieved: "2026-11-02",
@@ -69,8 +64,6 @@ export const SOURCES: readonly KnownDrainerSource[] = [
  * Small curated subset. Do not add addresses without a public citation.
  */
 export const KNOWN_DRAINERS: readonly string[] = Object.freeze([
-  // Canonical burn address — non-receivable sink (demo + sentinel).
-  "0x000000000000000000000000000000000000dead",
   // MEW darklist: "XRP phishing website (ripple.com.pt) this wallet collects funds…"
   "0x09750ad360fdb7a2ee23669c4503c974d86d8694",
   // MEW darklist: XRP phishing website (ripple.com.pt) via Coinswitch
@@ -133,6 +126,30 @@ export const KNOWN_DRAINERS: readonly string[] = Object.freeze([
   "0xd3565b191b28b49cc517189b984dacdb1ff05304",
   "0xc28cfeee046e1421e9dbfb2cf689074bf9f387e2",
 ]);
+
+/**
+ * Non-receivable sinks — **not** drainers, and deliberately not listed as such.
+ *
+ * `0x…dEaD` sat in the curated drainer list until 2026-11-17. It is not a drainer: nobody collects from
+ * it, funds sent to it are destroyed. The refusal was right and the reason was wrong, and a public list
+ * that calls a burn address a thief is a credibility problem rather than a coverage one.
+ *
+ * Kept separate so both facts survive: paying a sink is still `do_not_pay`, and the reason says "funds are
+ * destroyed", which is what actually happens. Anything test-only belongs in a fixture, never here.
+ */
+export const NON_RECEIVABLE: readonly string[] = Object.freeze([
+  // Canonical burn sentinel.
+  "0x000000000000000000000000000000000000dead",
+  // The zero address: also a sink, and what a payee field looks like when it was never filled in.
+  "0x0000000000000000000000000000000000000000",
+]);
+
+const NON_RECEIVABLE_SET: ReadonlySet<string> = new Set(NON_RECEIVABLE.map((a) => a.toLowerCase()));
+
+export function isNonReceivable(addr: string): boolean {
+  if (typeof addr !== "string" || addr.length === 0) return false;
+  return NON_RECEIVABLE_SET.has(addr.toLowerCase());
+}
 
 const SET: ReadonlySet<string> = new Set(
   KNOWN_DRAINERS.map((a) => a.toLowerCase()),

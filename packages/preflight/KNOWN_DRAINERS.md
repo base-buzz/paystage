@@ -4,6 +4,20 @@
 checks it **before** `unknown_payee` review so listed payees return
 `do_not_pay` with reason `known drainer`.
 
+## What is not on this list
+
+**Non-receivable sinks.** `0x…dEaD` and the zero address are refused — funds sent to them are destroyed —
+but they are not drainers, nobody collects from them, and listing them here made the refusal say "known
+drainer" about a placeholder. They live in `NON_RECEIVABLE` with their own reason (`non-receivable payee
+… funds are destroyed, not received`); the payment still returns `do_not_pay`.
+
+This was a published false claim, not a gap in coverage: `0x…dEaD` sat in `KNOWN_DRAINERS` until
+2026-11-17 and the demo described it as "curated list · known drainer".
+
+**Fixtures.** A test address belongs in a fixture. If one is ever needed in a list test, it must be a
+real, cited entry — the curation guard fails on any single-repeated-nibble address (`0x1111…`) in the
+published list, which is what a fixture looks like.
+
 ## Policy
 
 - Only include addresses with a **public citation** (MEW darklist, 0xCERT IOCs,
@@ -15,7 +29,6 @@ checks it **before** `unknown_payee` review so listed payees return
 
 - [MyEtherWallet ethereum-lists addresses-darklist.json](https://github.com/MyEtherWallet/ethereum-lists/blob/master/src/addresses/addresses-darklist.json)
 - [MetaMask eth-phishing-detect](https://github.com/MetaMask/eth-phishing-detect) (domain list; related ecosystem reference)
-- Burn sentinel `0x…dEaD` on [Etherscan](https://etherscan.io/address/0x000000000000000000000000000000000000dead)
 - [0xCERT IOC feeds](https://www.0xcert.com/iocs) — Base attacker EOA + exploit contract (`0xCERT-2026-0230`, GoPlus / PeckShield); corroborated Basescan phishing label
 - [CryptoTimes / Matcha Meta SwapNet advisory](https://www.cryptotimes.io/2026/01/26/security-alert-matcha-meta-flags-swapnet-bug-as-over-16-8m-is-drained/) — SwapNet router `0x6160…3757e` approval-drain (arbitrary call); Basescan Exploit label
 - [Chainabuse contract-exploit category](https://chainabuse.com/category/contract-exploit) — Base EIP-7702 drain (`0xc900…fb03`, forwarder `0x101a…b86a`, 2026-10-08); Bitget Swap2 drain receiver `0x9cc5…e3ad`
@@ -37,7 +50,8 @@ Reviewed but not added (precision over recall): single anonymous Chainabuse repo
 
 ## Updating
 
-1. Add lowercased address to `KNOWN_DRAINERS` with a comment citing source + date.
+1. Add lowercased address to `KNOWN_DRAINERS` with a comment citing source + date. The curation guard in
+   `tests/known-drainers.test.ts` fails an entry with no comment above it, a placeholder, or a duplicate.
 2. Update `SOURCES` if needed.
-3. Extend `tests/known-drainers.test.ts`.
+3. Extend `tests/known-drainers.test.ts` — and if the new entry changes a verdict, the reason text too.
 4. Bump `@paystage/preflight` (and `@paystage/mcp` if it should pick up the list), publish, redeploy hosted Workers that embed preflight.

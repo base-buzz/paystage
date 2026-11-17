@@ -13,7 +13,9 @@ const SEPOLIA = "eip155:84532";
 const SEPOLIA_USDC = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 const MAINNET_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const ALLOWED = "0x209693Bc6afc0C5328bA36FaF03C514EF312287C";
-const DRAINER = "0x000000000000000000000000000000000000dEaD";
+// A cited payee from the curated list (0xCERT-2026-0230 Base attacker EOA). It used to be the burn
+// address, which is not a drainer — it is a sink, and the demo should not teach the wrong reason.
+const DRAINER = "0x0b5126e1bc27c0de77e02e97945760a674edb034";
 const UNKNOWN = "0x1111111111111111111111111111111111111111";
 
 const DEMO_POLICY: Policy = {

@@ -8,9 +8,15 @@
  *
  *   node scripts/check-dep-pins.mjs
  *
- * Exit 0 clean · 1 any internal pin that is not the workspace version.
+ * ...and the pin is not the whole story. A **vendored copy** of a sibling inside a package's own
+ * `node_modules` shadows the workspace symlink, so a package's tests run against whatever version got
+ * copied there once. On 2026-11-17 `packages/x402-guard/node_modules/@paystage/preflight` held **0.3.0**
+ * while the pin said 0.5.0 — every guard test was asserting against an evaluator two minors behind, and
+ * the pin check passed. Same silent downgrade, one layer lower, so it gets the same treatment.
+ *
+ * Exit 0 clean · 1 a stale pin or a shadowing copy.
  */
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, lstatSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -25,6 +31,7 @@ for (const dir of readdirSync(PKGS, { withFileTypes: true })) {
 }
 
 const problems = [];
+const warnings = [];
 for (const [name, version] of versions) {
   const dir = readdirSync(PKGS, { withFileTypes: true }).find((d) => {
     const m = join(PKGS, d.name, "package.json");
@@ -41,10 +48,56 @@ for (const [name, version] of versions) {
   }
 }
 
+/**
+ * A sibling installed *inside* a package shadows the workspace link for that package only. Symlinks are
+ * what npm workspaces make; a real directory is a leftover, and it silently pins that package's tests.
+ */
+function checkShadowingCopies() {
+  const scopes = [];
+  for (const tree of ["packages", "apps"]) {
+    const base = join(ROOT, tree);
+    if (!existsSync(base)) continue;
+    for (const dir of readdirSync(base, { withFileTypes: true })) {
+      if (!dir.isDirectory()) continue;
+      scopes.push(join(base, dir.name, "node_modules", "@paystage"));
+    }
+  }
+  for (const scope of scopes) {
+    if (!existsSync(scope)) continue;
+    for (const entry of readdirSync(scope, { withFileTypes: true })) {
+      const path = join(scope, entry.name);
+      let stat;
+      try {
+        stat = lstatSync(path);
+      } catch {
+        continue;
+      }
+      if (stat.isSymbolicLink()) continue;
+      const name = `@paystage/${entry.name}`;
+      const expected = versions.get(name);
+      if (!expected) continue;
+      let installed = "unknown";
+      try {
+        installed = JSON.parse(readFileSync(join(path, "package.json"), "utf8")).version;
+      } catch {
+        /* a copy with no readable manifest is still a copy */
+      }
+      // A copy at the right version is untidy; a copy at a different version means this package's tests are
+      // asserting against something the pin does not describe, which is the failure the pin check exists for.
+      const shadowDesc = `${path.replace(ROOT, "")} is a vendored copy (${installed}), not a workspace link to ${expected}`;
+      if (installed !== expected) problems.push(`${shadowDesc} — this package's tests are asserting against the wrong sibling`);
+      else warnings.push(shadowDesc);
+    }
+  }
+}
+
+checkShadowingCopies();
+
+for (const w of warnings) console.warn(`  warn  ${w}`);
 if (problems.length === 0) {
-  console.log(`dep-pins: all ${versions.size} internal pins match the workspace`);
+  console.log(`dep-pins: all ${versions.size} internal pins match the workspace${warnings.length ? ` (${warnings.length} same-version copy/copies, harmless)` : ""}`);
   process.exit(0);
 }
-console.error(`dep-pins: ${problems.length} stale internal pin(s) — a published package would install an older sibling:`);
+console.error(`dep-pins: ${problems.length} problem(s) — a stale pin, or a vendored sibling that shadows the workspace (so tests assert against it):`);
 for (const p of problems) console.error(`  ${p}`);
 process.exit(1);
