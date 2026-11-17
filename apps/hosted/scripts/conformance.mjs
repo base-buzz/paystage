@@ -58,19 +58,26 @@ async function attempt(url, init, started) {
 }
 
 /**
- * One retry with a short backoff.
+ * Three attempts with a widening backoff.
  *
- * A 503 `upstream_timeout` or a dropped connection is not a regression. Reading a single blip as a
- * failure is how a check earns a reputation for flapping, and a flapping check gets ignored on the day
- * it is right. Client errors (400/402) are returned immediately — those are answers, not transport
- * trouble.
+ * A 503 `upstream_timeout` or a dropped connection is not a regression. Reading a single blip as a failure is how a check
+ * earns a reputation for flapping, and a flapping check gets ignored on the day it is right. Client errors (400/402) are
+ * returned immediately — those are answers, not transport trouble.
+ *
+ * Three, not one, because a Cloudflare deploy is a five-minute window in which our own endpoints return 5xx or a stale
+ * asset: a manual run started four minutes after a merge failed on exactly that. A persistent fault still fails all three
+ * attempts, so the extra two cost five seconds and buy a metric that means something.
  */
 async function get(url, init = {}) {
   const started = Date.now();
-  const first = await attempt(url, init, started);
-  if (first.res.ok || first.res.status === 400 || first.res.status === 402) return first;
-  await new Promise((r) => setTimeout(r, 1200));
-  return attempt(url, init, started);
+  const backoff = [1200, 4000];
+  let last = await attempt(url, init, started);
+  for (const wait of backoff) {
+    if (last.res.ok || last.res.status === 400 || last.res.status === 402) return last;
+    await new Promise((r) => setTimeout(r, wait));
+    last = await attempt(url, init, started);
+  }
+  return last;
 }
 
 async function checkSite() {
