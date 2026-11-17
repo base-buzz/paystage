@@ -67,3 +67,34 @@ describe("defaultWrap", () => {
     expect(source).not.toMatch(/(^|[^.\w])require\s*\(/m);
   });
 });
+
+/**
+ * v1 and v2 are different packages with different shapes: `x402-fetch` (unscoped, 1.x) takes a signer,
+ * `@402/fetch`… `@x402/fetch` (2.x) takes an `x402Client`. Passing the latter here used to fail inside the peer
+ * with `client.createPaymentPayload is not a function`, which reads like a library bug rather than a mismatch.
+ */
+describe("v1 signer vs v2 client", () => {
+  const challengeHeader = challenge("2000", PAY_TO);
+  const fetchImpl = (async () =>
+    new Response("{}", { status: 402, headers: { "payment-required": challengeHeader } })) as never;
+
+  it("names the mismatch instead of failing inside the peer", async () => {
+    const v2Client = { createPaymentPayload: async () => ({}) };
+    const guarded = guardFetch(fetchImpl, { policy: policy as never, walletClient: v2Client });
+
+    await expect(guarded("https://example.test/paid")).rejects.toThrow(/@x402\/fetch v2 client/);
+  });
+
+  it("does not trip on an ordinary signer", async () => {
+    const signer = { address: PAY_TO, signTypedData: async () => "0xdead" };
+    const wrapped = async () => new Response("ok", { status: 200 });
+    const guarded = guardFetch(fetchImpl, {
+      policy: policy as never,
+      walletClient: signer,
+      wrap: (() => wrapped) as never,
+    });
+
+    const res = await guarded("https://example.test/paid");
+    expect(res.status).toBe(200);
+  });
+});

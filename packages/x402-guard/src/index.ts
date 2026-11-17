@@ -26,13 +26,23 @@ import { parsePolicy } from "@paystage/policy";
 export type Verdict = "pay" | "review" | "do_not_pay";
 
 export interface GuardOptions {
-  /** The wallet client x402-fetch would use. Passed through untouched. */
+  /**
+   * The signer **`x402-fetch` (v1, unscoped)** takes — a viem `Signer`, passed through untouched.
+   *
+   * v2 lives in a different package with a different shape: `@x402/fetch@2` takes an `x402Client`, not a
+   * wallet, and `guardFetch` cannot drive it. Use `paystageClientHook` for that path rather than this option;
+   * passing a v2 client here now raises a named error instead of failing inside the peer with
+   * `createPaymentPayload is not a function`.
+   */
   walletClient?: unknown;
   /** Policy document (same schema as @paystage/policy) or a pre-parsed policy. */
   policy: unknown;
   /** `pay` (default) proceeds on an ambiguous payee; any other value refuses. */
   onReview?: "pay" | "refuse";
-  /** Maximum value in base units, passed to x402-fetch. */
+  /**
+   * Maximum value in base units, passed as `x402-fetch`'s third argument. **v1 only** — `@x402/fetch@2`
+   * removed the parameter, so on v2 this is dropped silently and the ceiling is the policy's job.
+   */
   maxValue?: bigint;
   /**
    * Base Builder Code (ERC-8021) for the payments this wrapper causes.
@@ -214,6 +224,18 @@ export function guardFetch(fetchImpl: typeof fetch, options: GuardOptions) {
         lastResult.current = { response: first, verdict, reasonCodes: codes };
         announce(verdict, codes, payTo);
         return withVerdict(first, verdict, codes);
+      }
+
+      // A v2 client is the right object for a different surface. Naming that here costs one check and saves the
+      // caller from `client.createPaymentPayload is not a function`, which reads like a broken library.
+      if (
+        options.walletClient &&
+        typeof options.walletClient === "object" &&
+        typeof (options.walletClient as { createPaymentPayload?: unknown }).createPaymentPayload === "function"
+      ) {
+        throw new Error(
+          "@paystage/x402-guard: that walletClient is an @x402/fetch v2 client, not a v1 signer. v2 drives payments through a client, not a wallet — register `paystageClientHook({ policy })` on it instead, or install the unscoped `x402-fetch` for this wrapper.",
+        );
       }
 
       const wrap = options.wrap ?? defaultWrap();
