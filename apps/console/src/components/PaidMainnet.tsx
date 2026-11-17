@@ -28,7 +28,7 @@ type Eth = { request(args: { method: string; params?: unknown[] }): Promise<unkn
 
 export function PaidMainnet() {
   const [ack, setAck] = useState(false);
-  const [status, setStatus] = useState<"idle" | "working" | "done" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "signing" | "settling" | "done" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [txUrl, setTxUrl] = useState<string | null>(null);
   const [decision, setDecision] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export function PaidMainnet() {
       setMessage("No browser wallet found. Install a wallet, or use the free evaluation above.");
       return;
     }
-    setStatus("working");
+    setStatus("signing");
     setMessage("Confirm in your wallet — this charges 0.002 USDC on Base.");
 
     try {
@@ -58,7 +58,19 @@ export function PaidMainnet() {
         await ensureWalletChain(provider, BASE_CHAIN_ID);
       }
 
-      const signer = createBrowserSigner(provider, address);
+      // Two waits, two sentences. The first is a person deciding in their wallet; the second is ~1.5s of
+    // facilitator verification where a frozen label reads as broken. Wrapping the signer is the seam — the
+    // handshake itself stays in the library.
+    const base = createBrowserSigner(provider, address);
+    const signer = {
+      address: base.address,
+      signTypedData: async (typedData: unknown) => {
+        const signature = await base.signTypedData(typedData);
+        setStatus("settling");
+        setMessage("Settling on Base…");
+        return signature;
+      },
+    };
       const body = PRESETS.small_pay?.body ?? PRESETS[Object.keys(PRESETS)[0]].body;
 
       const result = await runPaidEvaluate({
@@ -102,10 +114,22 @@ export function PaidMainnet() {
       <button
         className="lp-paid-button"
         onClick={pay}
-        disabled={!ack || status === "working"}
-        aria-disabled={!ack || status === "working"}
+        disabled={!ack || status === "signing" || status === "settling"}
+        aria-disabled={!ack || status === "signing" || status === "settling"}
       >
-        {status === "working" ? "Waiting for your wallet…" : `Pay 0.002 USDC on Base`}
+        {status === "signing" ? (
+          "Sign in wallet…"
+        ) : status === "settling" ? (
+          "Settling on Base…"
+        ) : status === "done" ? (
+          "Paid · unlocked"
+        ) : status === "error" ? (
+          "Retry"
+        ) : (
+          <>
+            Pay <span className="lp-price">0.002 USDC</span>
+          </>
+        )}
       </button>
 
       {message && <p className={`lp-paid-msg is-${status}`}>{message}</p>}

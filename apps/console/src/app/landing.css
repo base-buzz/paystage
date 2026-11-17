@@ -1775,6 +1775,19 @@ body {
   line-height: 1.45;
 }
 
+/* The price is part of the action, not a footnote: an x402 click is the whole checkout, so the amount and
+   the asset sit inside the button in mono — digits that line up with the receipt and the explorer. */
+.lp-price {
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--lp-on-mint) 14%, transparent);
+  color: var(--lp-on-mint);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
 .lp-paid-button {
   justify-self: start;
   padding: 10px 16px;
