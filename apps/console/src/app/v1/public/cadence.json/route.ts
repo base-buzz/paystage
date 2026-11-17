@@ -39,7 +39,10 @@ export async function GET() {
       consecutive_passes: data.consecutive,
       current: data.latestOk === true,
       total: data.checksAvailable ? data.checks.length : null,
-      all_passing: data.checksAvailable ? data.checks.length > 0 && passing === data.checks.length : null,
+      // `all_passing` answers the badge question — did the latest run pass — because that is what a reader means by
+      // "is it green". The window is published separately as `all_recent_passing`, so neither meaning hides the other.
+      all_passing: data.checksAvailable ? data.latestOk === true : null,
+      all_recent_passing: data.checksAvailable ? data.checks.length > 0 && passing === data.checks.length : null,
     },
     note:
       "Release counts come from commits whose message starts 'release:'; check results from the cadence workflow's run history. Cached hourly.",

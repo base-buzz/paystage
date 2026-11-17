@@ -30,4 +30,5 @@ jobs:
       # command in every README was wrong for three releases and nothing caught it.
       - run: node scripts/mcp-handshake.mjs
       - run: node scripts/check-manifests.mjs
+      - run: node scripts/check-manifest-packages.mjs
       - run: node scripts/check-dep-pins.mjs

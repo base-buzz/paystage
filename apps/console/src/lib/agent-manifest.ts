@@ -13,6 +13,11 @@ import policyPkg from "../../../../packages/policy/package.json";
 import preflightPkg from "../../../../packages/preflight/package.json";
 import tradePreflightPkg from "../../../../packages/trade-preflight/package.json";
 import velocityPkg from "../../../../packages/velocity/package.json";
+// The four that were missing: the manifest is the surface built for agents, and it could not name the guard.
+import x402GuardPkg from "../../../../packages/x402-guard/package.json";
+import xEvmPkg from "../../../../packages/x-evm/package.json";
+import skillPkg from "../../../../packages/skill/package.json";
+import aiSdkPkg from "../../../../packages/ai-sdk/package.json";
 
 export const PACKAGE_VERSIONS: Record<string, string> = {
   "@paystage/mcp": mcpPkg.version,
@@ -21,6 +26,10 @@ export const PACKAGE_VERSIONS: Record<string, string> = {
   "@paystage/auth-watch": authWatchPkg.version,
   "@paystage/trade-preflight": tradePreflightPkg.version,
   "@paystage/velocity": velocityPkg.version,
+  "@paystage/x402-guard": x402GuardPkg.version,
+  "@paystage/x-evm": xEvmPkg.version,
+  "@paystage/skill": skillPkg.version,
+  "@paystage/ai-sdk": aiSdkPkg.version,
 };
 
 /**
