@@ -42,6 +42,13 @@ jobs:
         # A hand publish, a failed tag step, or a registry lag can leave npm behind the repo. This is
         # the check that would have caught the five-tool package before mcp.so did.
         run: node scripts/assert-artifact.mjs @paystage/mcp --latest
+      - name: Every published version has a tarball
+        # `velocity@0.2.2` had a complete version document on npm and a 404 tarball, so every
+        # `npm install @paystage/mcp@0.8.8` failed while `npm view` reported the version happily. The
+        # release assert caught it only for the packages that release published, and only when a release
+        # happened; nothing watched the published set afterwards (#180). A version document is a claim,
+        # the tarball is the artifact.
+        run: node scripts/check-tarballs.mjs
       - name: Listing freshness
         # Informational: most surfaces are third parties we cannot push, so a stale listing is a
         # report, not a build failure. The conformance kit is what fails the job.
