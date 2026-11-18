@@ -2,6 +2,14 @@
 
 ## 2026-11-18
 
+- `@paystage/x402-guard@0.4.9`: **published to the MCP registry under a name containing "x402".** The registry's search
+  matches server *names* only — 100 of 100 results for "x402" have it in the name — and every entry we had was
+  `io.github.base-buzz/{mcp,preflight,...}`, so the one query that describes this product returned none of our packages.
+  The guard now publishes as `io.github.base-buzz/x402-guard`.
+
+
+## 2026-11-18
+
 - `@paystage/ai-sdk@0.1.5` and `@paystage/x-evm@0.1.4`: dependency pins move to `^0.5.2` of the evaluator. They pinned
   `0.5.0` exactly, so every user of either package silently got an evaluator two patches behind — including the
   non-receivable payee rule. Workspace pins are now ranges where the package is published, so a patch release of the
