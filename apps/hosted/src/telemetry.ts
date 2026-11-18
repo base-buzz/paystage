@@ -46,6 +46,9 @@ export interface TelemetryEvent {
   /** The address that paid, lowercased. Null when the settlement receipt did not carry one. */
   payer?: string | null;
   request_id?: string | null;
+  /** Which client package and version made the call (#52). Never an IP, never a person. */
+  client_package?: string | null;
+  client_version?: string | null;
   facilitator_status?: string | null;
   error_class?: string | null;
 }
@@ -68,6 +71,36 @@ function isValidSource(v: string | null | undefined): v is TelemetrySource {
  * Header `x-paystage-source` wins if it is one of the valid values,
  * otherwise defaults to `real`.
  */
+/**
+ * Which client package and version made this call (#52).
+ *
+ * The question npm cannot answer: a download is not a call, and a call is not a user. Recording the **SDK build** turns
+ * "4,139 weekly downloads" into "which installed version is actually being invoked", without recording an IP, a header
+ * that identifies a person, or anything that survives the request.
+ *
+ * Preferred header is `x-paystage-client: @paystage/mcp/0.8.10`. A `user-agent` is also parsed, because a client that
+ * forgets the header still usually sends one, and a half-answer beats none. Only `@paystage/*` packages are recorded:
+ * an arbitrary user agent is not ours to store.
+ */
+const CLIENT_PATTERN = /(@paystage\/[a-z0-9-]+)[/@](\d+\.\d+\.\d+(?:-[-.\w]+)?)/i;
+
+export interface ClientAttribution {
+  package: string | null;
+  version: string | null;
+}
+
+export function clientFromHeaders(req: { header(name: string): string | undefined }): ClientAttribution {
+  for (const name of ["x-paystage-client", "user-agent"]) {
+    const raw = req.header(name);
+    if (raw === undefined || raw === "") continue;
+    const match = CLIENT_PATTERN.exec(raw);
+    if (match?.[1] !== undefined && match[2] !== undefined) {
+      return { package: match[1].toLowerCase(), version: match[2] };
+    }
+  }
+  return { package: null, version: null };
+}
+
 export function sourceFromHeaders(req: {
   header(name: string): string | undefined;
 }): TelemetrySource {
@@ -113,6 +146,8 @@ export function recordEvent(
     tx_hash: event.tx_hash ?? null,
     payer: event.payer ?? null,
     request_id: event.request_id ?? null,
+    client_package: event.client_package ?? null,
+    client_version: event.client_version ?? null,
     facilitator_status: event.facilitator_status ?? null,
     error_class: event.error_class ?? null,
   };
