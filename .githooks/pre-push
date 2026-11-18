@@ -93,6 +93,12 @@ if ! node scripts/check-route-docs.mjs; then
   fail=1
 fi
 
+# 9. apps/hosted is outside the workspace: its file: deps must resolve and be in its own lockfile.
+if ! node scripts/check-hosted-deps.mjs; then
+  note "apps/hosted dependency drift — the deploy will fail on an unresolved import"
+  fail=1
+fi
+
 # 3. Any dependency added in this push gets scored before it lands.
 base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
 if [ -n "$base" ]; then

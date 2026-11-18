@@ -46,6 +46,7 @@ jobs:
       - run: node scripts/check-workflows.mjs
       - run: node scripts/check-script-bins.mjs
       - run: node scripts/check-route-docs.mjs
+      - run: node scripts/check-hosted-deps.mjs
       - run: node scripts/check-staged-secrets.mjs --all
       - run: node scripts/check-manifests.mjs
       - run: node scripts/check-manifest-packages.mjs
