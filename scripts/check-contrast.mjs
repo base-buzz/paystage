@@ -117,6 +117,36 @@ for (const token of ["text", "muted"]) {
   }
 }
 
+
+
+/**
+ * Text must not be dimmed with `opacity`.
+ *
+ * `.lp-paid-button:disabled` used `opacity: 0.45`, which measured **2.94:1** in light mode and 4.02:1 in dark on the
+ * deployed page — the "washed out" report on the paid card. Opacity is invisible to a token-level check: `--lp-fg` was
+ * perfectly readable, and the element still rendered at a third of its contrast.
+ *
+ * Cheap static guard: any rule that sets `opacity` below 1 alongside a `color`/`background` on the same selector is
+ * dimming text, and text should be dimmed with a colour instead.
+ */
+for (const rule of cssNoComments.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+  const opacity = /opacity\s*:\s*([\d.]+)/.exec(rule[2])?.[1];
+  if (opacity === undefined) continue;
+  if (Number(opacity) >= 1) continue;
+  if (/\bcolor\s*:/.test(rule[2]) === false) continue;
+  const selector = rule[1].trim();
+  // Disabled states are the common case: the text still has to be readable, so use a dim colour, not transparency.
+  problems.push(
+    `${selector} dims text with opacity: ${opacity} — a token check cannot see this and the rendered contrast drops below 4.5:1; use a dim colour instead`,
+  );
+}
+
+/**
+ * The paid card's own pairs, measured on the deployed page (2026-11-18): heading 17.2:1, sub-label 4.6:1 light / 5.3:1
+ * dark, consent 7.4:1. Those pass. The disabled button did not, and that is what this file now prevents by rule rather
+ * than by number.
+ */
+
 if (problems.length > 0) {
   for (const p of problems) console.log(`  FAIL ${p}`);
   console.log("contrast: below AA");
