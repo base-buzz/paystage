@@ -148,6 +148,26 @@ access table: ${m.repository}/blob/main/SECURITY.md.
 - \`/llms-full.txt\` — this file.
 - \`/.well-known/paystage.json\` — JSON manifest with versions and access facts.
 - MCP Registry: ${m.machine_surfaces.mcp_registry}
+## Questions an agent asks, and the call that answers each
+
+The shortest path from a question to a tool call. Every answer is a tool or endpoint that exists, with the argument
+that matters — not a link to prose.
+
+| question | call |
+|---|---|
+| "should this x402 payment be signed?" | \`evaluate_mcp_payment({ payment_required, policy, agent_id? })\` → \`pay\` / \`review\` / \`do_not_pay\` + the rule that fired |
+| "what is this 402 header actually asking for?" | \`decode_payment_required({ header })\` — pure decode, no network, no verdict |
+| "which approvals could still drain this wallet?" | \`list_outstanding_auths({ wallet })\` then \`evaluate_outstanding_auths({ auths, policy })\` |
+| "is this spend rate abnormal?" | \`evaluate_velocity({ history, proposed, policy })\` |
+| "is this HIP-3 / trade.xyz order inside my limits?" | \`evaluate_hip3_trade({ order, policy })\` |
+| "can I trust this receipt?" | \`verify_receipt({ receipt })\` — selects the signing key by the receipt's \`key_id\` |
+| "is my policy valid before I wire it in?" | \`validate_policy({ policy })\` — an invalid policy makes every evaluation refuse |
+| "I need testnet USDC to try this" | \`request_testnet_funds({ address })\` — 0.5 USDC per address per 24h |
+| "how do I call this over HTTP instead of stdio?" | \`POST https://api.paystage.xyz/v1/evaluate_mcp_payment\`, or the MCP endpoint at \`/mcp\` |
+| "why did it refuse?" | the response's \`reasons\` array, each a stable sentence naming the rule; \`fix\` says what to change |
+
+An agent that cannot answer a question from this table is looking at the wrong product.
+
 ## 中文（简体）说明
 
 PayStage 是面向 AI 智能体的 x402 支付安全层：在钱包签名之前评估这笔支付该不该付，返回

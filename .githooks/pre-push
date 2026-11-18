@@ -140,6 +140,12 @@ if ! node scripts/check-security.mjs; then
   fail=1
 fi
 
+# 13. An agent must be able to map its task to a call: question table, JSON-LD, and only real tool names.
+if ! node scripts/check-agent-discovery.mjs; then
+  note "agent discovery surfaces drifted"
+  fail=1
+fi
+
 # 3. Any dependency added in this push gets scored before it lands.
 base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
 if [ -n "$base" ]; then

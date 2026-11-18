@@ -53,11 +53,77 @@ const TOOLS = [
   ["validate_policy", "spending limits. check a policy document on its own — the question behind most support requests"],
 ] as const;
 
+/**
+ * Structured data, for the crawlers agents actually read (#discovery).
+ *
+ * An agent that reaches this page through a search result gets HTML, not our llms.txt. JSON-LD is what makes the page
+ * legible as a *tool* rather than as marketing: what it is, what it costs, that it needs no account, and the questions
+ * it answers. Google, Bing and the retrieval layers agents use all parse `application/ld+json`.
+ */
+const STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      name: "PayStage",
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "Any (MCP over stdio, HTTP)",
+      url: "https://paystage.xyz",
+      description:
+        "x402 payment safety for AI agents: evaluate a payment against your policy before the wallet signs. Returns pay, review or do_not_pay with the rule that fired. Read-only, holds no keys, never signs.",
+      offers: { "@type": "Offer", price: "0.002", priceCurrency: "USD", description: "Per hosted evaluation over x402; the packages are free and MIT licensed." },
+      isAccessibleForFree: true,
+      license: "https://github.com/base-buzz/paystage/blob/main/LICENSE",
+      featureList: [
+        "Preflight an x402 payment against a local policy before signing",
+        "Flag payees on a cited known-drainer list, and payees that are non-receivable",
+        "List and evaluate outstanding ERC-20, Permit2 and EIP-3009 authorisations",
+        "Evaluate spend velocity, HIP-3 order scope and batch payments",
+        "Verify a signed receipt against a published key set",
+      ],
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "How does an agent check an x402 payment before signing it?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Call the evaluate_mcp_payment tool with the decoded x402 challenge and a policy. It returns pay, review or do_not_pay with the rule that fired, and never signs or moves funds.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Does PayStage hold keys or sign transactions?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "No. It is read-only: no key custody, no shell, no telemetry. The agent remains the only signer, which is enforced by what the code does rather than by policy.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Can it be used without an account?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. There is no signup: the packages are MIT licensed and run locally, and the hosted API answers the first 1,000 evaluations per IP per day at no cost, then 0.002 USDC per call over x402.",
+          },
+        },
+      ],
+    },
+  ],
+};
+
 export default function LandingPage() {
   return (
     <div className="lp">
 
 
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+      />
       <main>
       {/* Atmospheric background: three drifting colour fields plus a grain overlay. Fixed,
           purely decorative, and disabled under prefers-reduced-motion. */}

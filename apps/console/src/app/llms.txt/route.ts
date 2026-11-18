@@ -86,6 +86,19 @@ machine surfaces distinct, health and Server-Timing on both networks, receipt ke
 endpoint, unpaid evaluation challenge-only, malformed input fails closed. Read-only,
 no payment, no key. Runs daily in CI; history at https://paystage.xyz.
 
+## Questions an agent asks
+
+| question | call |
+|---|---|
+| should this x402 payment be signed? | \`evaluate_mcp_payment\` |
+| what is this 402 header asking for? | \`decode_payment_required\` |
+| which approvals could drain this wallet? | \`list_outstanding_auths\` → \`evaluate_outstanding_auths\` |
+| is this spend rate abnormal? | \`evaluate_velocity\` |
+| can I trust this receipt? | \`verify_receipt\` |
+| is my policy valid? | \`validate_policy\` |
+| I need testnet USDC | \`request_testnet_funds\` |
+| why did it refuse? | the \`reasons\` array, one sentence per rule |
+
 ## Machine-readable
 
 - \`/.well-known/paystage.json\` — manifest: tools, verdicts, dependencies, env
