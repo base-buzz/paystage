@@ -19,6 +19,9 @@ export const VelocityActionInputSchema = z
     amount: z.string().optional(),
     decimals: z.number().int().nonnegative().optional(),
     asset: z.string().optional(),
+    // Needed for a per-payee ceiling (#39): without it a counterparty's total cannot be attributed, and the limit would
+    // silently never fire.
+    payee: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
   })
   .refine(
     (a) =>
@@ -60,6 +63,9 @@ function toAction(
     timestamp_ms: input.timestamp_ms,
     amount_atomic: toAtomic(input),
     asset: input.asset,
+    // Carried through so a per-payee ceiling can attribute the action (#39). Dropping it here would make the policy
+    // field look supported and silently never fire.
+    ...(input.payee !== undefined ? { payee: input.payee } : {}),
   };
 }
 

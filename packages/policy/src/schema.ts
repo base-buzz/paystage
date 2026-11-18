@@ -44,6 +44,14 @@ const velocityWindowSchema = z.object({
   window_seconds: z.number().int().positive(),
   max_count: z.number().int().nonnegative().optional(),
   max_amount: velocityAmountSchema.optional(),
+  /**
+   * A ceiling per payee inside this window (#39).
+   *
+   * The aggregate ceiling does not stop one compromised seller address: every payment can be small, spread across the
+   * day, and the daily total still looks normal. This bounds a single counterparty instead. Actions without a `payee`
+   * are counted toward the aggregate only, because attributing them to a payee would be inventing one.
+   */
+  per_payee_max_amount: velocityAmountSchema.optional(),
 });
 
 /**

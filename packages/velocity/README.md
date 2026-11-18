@@ -30,8 +30,25 @@ Add an optional `velocity` block to a `@paystage/policy` policy:
 }
 ```
 
-Each window may specify `max_count`, `max_amount`, or both. The `velocity`
-field is optional and does not affect policies that omit it.
+Each window may specify `max_count`, `max_amount`, `per_payee_max_amount`, or any
+combination. The `velocity` field is optional and does not affect policies that omit it.
+
+### Per-payee ceilings
+
+`per_payee_max_amount` bounds **one counterparty** inside the window, which the
+aggregate `max_amount` cannot do:
+
+```json
+{ "window_seconds": 3600,
+  "max_amount": { "value": "10.00", "decimals": 6 },
+  "per_payee_max_amount": { "value": "1.00", "decimals": 6 } }
+```
+
+The case it exists for: a compromised seller address that asks for small amounts,
+spread across the day. Every payment is under the aggregate ceiling and the daily
+total looks normal, while one payee quietly collects the whole allowance. Actions
+must carry a `payee` to be attributed; one without it counts toward the aggregate
+only, because guessing a counterparty would be inventing the thing being checked.
 
 ## API
 

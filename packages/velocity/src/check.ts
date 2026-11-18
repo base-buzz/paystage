@@ -57,7 +57,27 @@ export function checkVelocity(args: CheckVelocityArgs): VelocityResult {
     const amountOk =
       maxAmountAtomic === undefined ? true : amount <= maxAmountAtomic;
 
-    const passed = countOk && amountOk;
+    // Per-payee ceiling (#39): one address's total inside the window, plus the proposed payment when it goes there.
+    // Actions with no payee are not attributed to anyone — guessing a counterparty would be inventing the thing the
+    // limit exists to check.
+    const perPayeeAtomic =
+      window.per_payee_max_amount !== undefined
+        ? humanToAtomic(window.per_payee_max_amount.value, window.per_payee_max_amount.decimals)
+        : undefined;
+    let payeeAmount = 0n;
+    let payeeOk = true;
+    if (perPayeeAtomic !== undefined) {
+      const subject = proposed.payee?.toLowerCase();
+      payeeAmount = proposed.amount_atomic;
+      for (const action of history) {
+        if (action.timestamp_ms <= cutoff) continue;
+        if (subject === undefined || action.payee?.toLowerCase() !== subject) continue;
+        payeeAmount += action.amount_atomic;
+      }
+      payeeOk = subject === undefined ? true : payeeAmount <= perPayeeAtomic;
+    }
+
+    const passed = countOk && amountOk && payeeOk;
 
     if (!countOk) {
       reasons.push(
@@ -69,6 +89,11 @@ export function checkVelocity(args: CheckVelocityArgs): VelocityResult {
         `window ${window.window_seconds}s: amount ${amount.toString()} exceeds max_amount ${maxAmountAtomic!.toString()}`,
       );
     }
+    if (!payeeOk) {
+      reasons.push(
+        `window ${window.window_seconds}s: payee ${proposed.payee ?? "unknown"} total ${payeeAmount.toString()} exceeds per_payee_max_amount ${perPayeeAtomic!.toString()}`,
+      );
+    }
 
     windows_checked.push({
       window_seconds: window.window_seconds,
@@ -76,6 +101,13 @@ export function checkVelocity(args: CheckVelocityArgs): VelocityResult {
       amount_atomic: amount,
       max_count: window.max_count,
       max_amount_atomic: maxAmountAtomic,
+      ...(perPayeeAtomic !== undefined
+        ? {
+            payee_amount_atomic: payeeAmount,
+            per_payee_max_amount_atomic: perPayeeAtomic,
+            payee_ok: payeeOk,
+          }
+        : {}),
       count_ok: countOk,
       amount_ok: amountOk,
       passed,

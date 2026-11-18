@@ -76,7 +76,9 @@ const fromInventory = (inventory ?? [])
   .filter((s) => s.probe && s.probe.type !== "none" && s.url)
   .map((s) => ({
     name: s.name,
-    url: s.url,
+    // `probe.url` when the machine-readable endpoint differs from the page a reader should visit: npm's human page 403s a
+    // scraper, while the registry JSON answers — and the copy check compares the human URL against README and lander.
+    url: s.probe?.url ?? s.url,
     mode:
       s.probe.type === "names" ? "names"
       : s.probe.type === "npm-version" ? "json-version"

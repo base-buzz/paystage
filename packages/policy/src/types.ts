@@ -27,6 +27,11 @@ export interface VelocityWindow {
   max_count?: number;
   /** Max aggregate amount allowed in the window. */
   max_amount?: VelocityAmountSpec;
+  /**
+   * Max amount for a single payee inside the window (#39). The aggregate ceiling does not stop one compromised seller
+   * address whose payments are individually small and spread across the day.
+   */
+  per_payee_max_amount?: VelocityAmountSpec;
 }
 
 export interface Policy {
