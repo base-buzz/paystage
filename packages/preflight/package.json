@@ -1,6 +1,6 @@
 {
   "name": "@paystage/preflight",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "agent spend policy enforcement: stop your agent paying a drainer before the wallet signs. Returns pay / review / do_not_pay from a local policy, with the rule that fired. No keys, no signing.",
   "license": "MIT",
   "type": "module",

@@ -51,7 +51,7 @@ export type ToolName = (typeof TOOL_NAMES)[number];
  * `scripts/check-client-id.mjs` fails CI when the two disagree, which is the guard that makes a constant safe.
  */
 export const CLIENT_PACKAGE = "@paystage/mcp";
-export const CLIENT_ID = `${CLIENT_PACKAGE}/0.8.12`;
+export const CLIENT_ID = `${CLIENT_PACKAGE}/0.8.13`;
 
 const DEFAULT_NETWORK = "base";
 
