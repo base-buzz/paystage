@@ -81,7 +81,7 @@ callers that want the whole gate.
 node apps/hosted/scripts/conformance.mjs
 \`\`\`
 
-Checks the published surfaces against reality: manifest shape, nine tools listed,
+Checks the published surfaces against reality: manifest shape, ten tools listed,
 machine surfaces distinct, health and Server-Timing on both networks, receipt key
 endpoint, unpaid evaluation challenge-only, malformed input fails closed. Read-only,
 no payment, no key. Runs daily in CI; history at https://paystage.xyz.

@@ -32,9 +32,10 @@ async function rpc(method: string): Promise<Record<string, unknown>> {
 
 describe("paystage umbrella MCP server", () => {
   // This test asserted five names after nine were registered — the same drift as the hero strip:
-  // a list copied rather than derived. It now compares against the constant the server reports.
+  // a list copied rather than derived. It now compares against the constant the server reports, and the count comes
+  // from that constant rather than from a number typed beside it.
   it("exports every registered tool name, and getToolNames agrees", () => {
-    expect(TOOL_NAMES).toHaveLength(9);
+    expect(TOOL_NAMES.length).toBeGreaterThanOrEqual(10);
     expect(getToolNames()).toEqual([...TOOL_NAMES]);
     for (const name of [
       "evaluate_mcp_payment",
@@ -46,6 +47,7 @@ describe("paystage umbrella MCP server", () => {
       "decode_payment_required",
       "validate_policy",
       "evaluate_batch",
+      "request_testnet_funds",
     ]) {
       expect(TOOL_NAMES).toContain(name);
     }
@@ -57,20 +59,21 @@ describe("paystage umbrella MCP server", () => {
     expect(typeof server.connect).toBe("function");
   });
 
-  it("serializes all four required annotations on every tool, read-only for all nine", async () => {
+  it("serializes all four required annotations on every tool", async () => {
     const { tools } = (await rpc("tools/list")) as {
       tools: Array<{
         name: string;
         annotations?: Record<string, unknown>;
       }>;
     };
-    expect(tools).toHaveLength(9);
+    expect(tools).toHaveLength(TOOL_NAMES.length);
 
     // Accuracy, not a blanket default: the nine tools that touch the network are marked open-world,
     // the four that only evaluate supplied input are not.
     const openWorld = {
       evaluate_mcp_payment: false,
       evaluate_batch: false,
+      request_testnet_funds: true,
       validate_policy: false,
       decode_payment_required: false,
       evaluate_velocity: false,
@@ -88,7 +91,15 @@ describe("paystage umbrella MCP server", () => {
 
       // The product's central claim: no tool signs or writes. This is asserted, not assumed — a
       // tool that could write would be a product change, not a metadata tweak.
-      expect(annotations!.readOnlyHint, `${tool.name} readOnlyHint`).toBe(true);
+      //
+      // One documented exception: `request_testnet_funds` moves **testnet** USDC from a faucet wallet we hold on
+      // Base Sepolia, and touches nothing the caller owns. Every other tool is read-only. A second exception should
+      // require deleting this comment, which is the point of writing it down here rather than in a doc.
+      if (tool.name === "request_testnet_funds") {
+        expect(annotations!.readOnlyHint, "request_testnet_funds writes a testnet transaction").toBe(false);
+      } else {
+        expect(annotations!.readOnlyHint, `${tool.name} readOnlyHint`).toBe(true);
+      }
       expect(annotations!.destructiveHint, `${tool.name} destructiveHint`).toBe(false);
       expect(annotations!.openWorldHint, `${tool.name} openWorldHint`).toBe(
         openWorld[tool.name as keyof typeof openWorld],

@@ -35,7 +35,7 @@ shape:
 `do_not_pay` for anything it cannot judge, rather than guessing — a gate with no policy is
 not a permissive gate.
 
-## The nine tools
+## The ten tools
 
 | Tool | Answers |
 |---|---|
@@ -53,7 +53,7 @@ npx -y -p @paystage/mcp paystage-verify --help
 
 And to prove the server answers, send it a JSON-RPC `initialize` followed by `tools/list`
 over stdio. The repository ships `scripts/mcp-handshake.mjs`, which does exactly that and
-asserts nine tools come back.
+asserts ten tools come back.
 
 ## Without installing anything
 

@@ -83,12 +83,17 @@ The hosted endpoint serves a real verdict with no payment and no account for the
 per IP per day — an agent cannot fill in a signup form, so requiring one would exclude exactly
 the callers this is built for.
 
-## The nine tools
+## The ten tools
 
-Every one is read-only. None of them signs, holds a key, or moves money — the agent stays the only
-signer, which is the entire product.
+Nine are read-only. None of them signs, holds a key, or moves money — the agent stays the only signer,
+which is the entire product.
 
-_All nine are listed with what each answers in [Tools](#tools)._
+The tenth, `request_testnet_funds`, is the one deliberate exception and it is worth naming rather than
+hiding: it asks our Base Sepolia faucet for 0.5 test USDC so you can exercise the paid path before
+spending anything. It moves testnet funds from a wallet we hold, touches nothing you own, and cannot
+reach mainnet.
+
+_All ten are listed with what each answers in [Tools](#tools)._
 语言 / Language: **English** · [简体中文](README.zh-CN.md)
 
 ## See it work
@@ -112,7 +117,7 @@ npx paystage-mcp
 
 The server waits silently for an agent app to connect. That's normal; press Ctrl+C to exit. To try the tools without an app, run `npx @modelcontextprotocol/inspector npx -y -p @paystage/mcp paystage-mcp`.
 
-`@paystage/mcp` is the umbrella MCP server (**9 tools**, including `evaluate_hip3_trade` and `evaluate_velocity`). It exposes the PayStage tools over stdio and reads a local policy file. See [SECURITY.md](SECURITY.md) for exactly what it accesses and why.
+`@paystage/mcp` is the umbrella MCP server (**10 tools**, including `evaluate_hip3_trade` and `evaluate_velocity`). It exposes the PayStage tools over stdio and reads a local policy file. See [SECURITY.md](SECURITY.md) for exactly what it accesses and why.
 
 
 ## Connect in one command
@@ -130,7 +135,7 @@ claude mcp add --transport http paystage https://api.paystage.xyz/mcp
 npx -y mcporter list https://api.paystage.xyz/mcp
 ```
 
-Prefer it local? `npx -y -p @paystage/mcp paystage-mcp` runs the same nine tools over stdio and reads a
+Prefer it local? `npx -y -p @paystage/mcp paystage-mcp` runs the same ten tools over stdio and reads a
 policy file from disk.
 
 ## What it does not catch
@@ -228,7 +233,7 @@ answers an MCP handshake and lists its tools with nothing configured — the pol
 argument on each call, not as a file path. Verified:
 
 ```bash
-env -i npx -y -p @paystage/mcp paystage-mcp   # completes `initialize`, lists nine tools
+env -i npx -y -p @paystage/mcp paystage-mcp   # completes `initialize`, lists ten tools
 ```
 
 The two variables below are for the **stdio CLI path**, where a policy file is convenient. They are
@@ -264,12 +269,13 @@ addresses and amounts, and point `PAYSTAGE_POLICY_PATH` at it. Each is schema-ex
 | `decode_payment_required` | what does this base64 402 header actually say |
 | `validate_policy` | is this policy document valid, and if not which field |
 | `evaluate_batch` | the same question for several payments, one verdict each |
+| `request_testnet_funds` | can I get 0.5 Base Sepolia USDC to try this — and when may I ask again |
 <!-- tools:table:end -->
 
 ## Packages
 
-Ten packages. Only `@paystage/mcp` exposes **nine MCP tools**; the rest are the evaluator, guards for other
-frameworks, a policy schema and a skill — hence ten packages and nine tools in the same breath.
+Ten packages. Only `@paystage/mcp` exposes **ten MCP tools**; the rest are the evaluator, guards for other
+frameworks, a policy schema and a skill — hence ten packages and ten tools in the same breath.
 
 <!-- packages:table:start -->
 | Package | Role | Links |
@@ -295,7 +301,7 @@ you trust anything on the website:
 node apps/hosted/scripts/conformance.mjs
 ```
 
-It checks the published surfaces against reality — manifest shape, the nine tools
+It checks the published surfaces against reality — manifest shape, the ten tools
 being listed, machine surfaces being genuinely different from each other, health and
 timing headers on both networks, the receipt key endpoint, that an unpaid evaluation
 is challenge-only, and that malformed input fails closed. Read-only: no payment, no

@@ -6,5 +6,5 @@
  * wrong in five of them — so it lives here, and `scripts/check-claims.mjs` fails the build when the
  * value drifts from the package that actually registers the tools.
  */
-export const TOOL_COUNT = 9;
-export const TOOL_COUNT_WORD = "nine";
+export const TOOL_COUNT = 10;
+export const TOOL_COUNT_WORD = "ten";
