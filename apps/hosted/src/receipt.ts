@@ -97,6 +97,11 @@ export interface BuildReceiptInput {
   /** Override the default lifetime. Zero or negative disables the expiry stamp entirely. */
   ttlSeconds?: number;
   signingKeyPkcs8B64?: string | undefined;
+  /**
+   * Which signing key produced this receipt (#42). Rotation only works if each key stamps its own id: a receipt that
+   * always says `paystage-receipt-v1` cannot be selected from a key set, and a verifier has to guess.
+   */
+  keyId?: string;
   now?: Date;
   serviceVersion?: string;
 }
@@ -164,7 +169,7 @@ export async function buildReceipt(input: BuildReceiptInput): Promise<Receipt> {
       ...payload,
       signed: true,
       alg: RECEIPT_ALG,
-      key_id: RECEIPT_KEY_ID,
+      key_id: input.keyId ?? RECEIPT_KEY_ID,
       signature: base64Url(signature),
     };
   } catch {
