@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "../landing.css";
 import Link from "next/link";
 import { GLOSSARY_MARKDOWN } from "@/lib/glossary.generated";
 

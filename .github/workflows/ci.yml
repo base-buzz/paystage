@@ -32,6 +32,7 @@ jobs:
       - run: node scripts/check-bins.mjs
       - run: node scripts/check-registry-probe.mjs
       - run: node scripts/check-changelog.mjs
+      - run: node scripts/check-route-styles.mjs
       - run: node scripts/check-manifests.mjs
       - run: node scripts/check-manifest-packages.mjs
       - run: node scripts/check-dep-pins.mjs
