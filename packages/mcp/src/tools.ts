@@ -44,6 +44,15 @@ export const TOOL_NAMES = [
 
 export type ToolName = (typeof TOOL_NAMES)[number];
 
+/**
+ * `@paystage/mcp/<version>`, sent on every outbound call (#52).
+ *
+ * Derived from the package manifest at build time would be better; a constant beside the version field is one edit and
+ * `scripts/check-client-id.mjs` fails CI when the two disagree, which is the guard that makes a constant safe.
+ */
+export const CLIENT_PACKAGE = "@paystage/mcp";
+export const CLIENT_ID = `${CLIENT_PACKAGE}/0.8.10`;
+
 const DEFAULT_NETWORK = "base";
 
 /**
@@ -484,7 +493,9 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
       try {
         const res = await fetch(url, {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          // The client identifies its own build so calls can be attributed to an installed version (#52). It is the
+          // package version, not the caller: no IP, no id, nothing that survives the request.
+          headers: { "content-type": "application/json", "x-paystage-client": CLIENT_ID },
           body: JSON.stringify({ address }),
           signal: AbortSignal.timeout(60_000),
         });

@@ -40,6 +40,7 @@ jobs:
       - run: node scripts/check-provenance.mjs
       - run: node scripts/check-new-deps.mjs --base origin/main
       - run: node scripts/check-i18n-discovery.mjs
+      - run: node scripts/check-client-id.mjs
       - run: node scripts/check-manifests.mjs
       - run: node scripts/check-manifest-packages.mjs
       - run: node scripts/check-dep-pins.mjs

@@ -9,7 +9,7 @@ import { wellKnownRoutes } from "./routes/well-known.js";
 import { wellKnownMcpRoutes } from "./routes/well-known-mcp.js";
 import { guardVerdictRoutes } from "./routes/guard-verdict.js";
 import { openapiRoutes } from "./routes/openapi.js";
-import { recordEvent, sourceFromHeaders } from "./telemetry.js";
+import { clientFromHeaders, recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { freeTierMiddleware } from "./free-tier.js";
 import { paidQuotaMiddleware, paidQuotaState } from "./paid-quota.js";
 import { settlementCaptureMiddleware } from "./settlement.js";
@@ -193,6 +193,9 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
     const path = c.req.path;
     const tool = toolFromPath(path);
     const source = sourceFromHeaders(c.req);
+    // Attributed by SDK build, never by caller identity (#52): this is what turns npm download counts into "which
+    // installed version is actually being called".
+    const client = clientFromHeaders(c.req);
     const network = env.PAYSTAGE_NETWORK ?? "eip155:8453";
 
     console.log(
@@ -278,6 +281,8 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
             network,
             latency_ms: durationMs,
             request_id: requestId,
+            client_package: client.package,
+            client_version: client.version,
             facilitator_status,
             error_class,
           },

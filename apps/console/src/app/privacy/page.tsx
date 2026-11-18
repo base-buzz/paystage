@@ -38,7 +38,13 @@ export default function PrivacyPage() {
           labels it (unlabelled is recorded as <code>real</code>)
         </li>
         <li>
-          <strong>tool</strong> — which of the nine was called
+          <strong>tool</strong> — which of the tools was called
+        </li>
+        <li>
+          <strong>client package</strong> and <strong>client version</strong> — the SDK build that made the call, taken
+          from an <code>x-paystage-client</code> header or the user agent when it names one of our packages. This is the
+          build, not you: no IP address, no user-agent string, and nothing that identifies a person is stored. It exists
+          so a release can be checked against what is actually installed.
         </li>
         <li>
           <strong>decision</strong> and <strong>reason codes</strong> — for example <code>do_not_pay</code> with{" "}

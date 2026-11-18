@@ -34,6 +34,8 @@ for (const field of fields) {
     request_id: "request id",
     facilitator_status: "facilitator status",
     error_class: "error class",
+    client_package: "client package",
+    client_version: "client version",
     source: "source",
     tool: "tool",
     decision: "decision",
