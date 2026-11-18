@@ -159,6 +159,16 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           KEY: ${{ secrets.RECEIPT_SIGNING_KEY_PKCS8 }}
         run: printf '%s' "$KEY" | npx wrangler secret put RECEIPT_SIGNING_KEY_PKCS8 --env ""
+      # The faucet key goes only to the sepolia worker. Mainnet has no faucet: a faucet that drips real USDC is a
+      # different product, and the endpoint returns 503 when the binding is absent, which is the safe direction.
+      - name: Set faucet key (sepolia only)
+        if: env.KEY != ''
+        working-directory: apps/hosted
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          KEY: ${{ secrets.FAUCET_SEPOLIA_KEY }}
+        run: printf '%s' "$KEY" | npx wrangler secret put FAUCET_SEPOLIA_KEY --env sepolia
       - name: Set receipt signing key (sepolia)
         if: env.KEY != ''
         working-directory: apps/hosted

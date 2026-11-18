@@ -14,6 +14,9 @@ export interface Bindings {
   FACILITATOR_URL?: string;
   CDP_API_KEY_ID?: string;
   CDP_API_KEY_SECRET?: string;
+  /** Testnet faucet (#92). The key is a Wrangler secret; the address is derived from it, never stored. */
+  FAUCET_SEPOLIA_KEY?: string;
+  SEPOLIA_RPC_URL?: string;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
 }

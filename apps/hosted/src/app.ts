@@ -15,6 +15,7 @@ import { paidQuotaMiddleware, paidQuotaState } from "./paid-quota.js";
 import { settlementCaptureMiddleware } from "./settlement.js";
 import { mcpHandler } from "./mcp.js";
 import { CORS_ORIGINS } from "./cors-origins.js";
+import { DRIP_USDC, WINDOW_HOURS, handleFaucet } from "./faucet.js";
 import {
   buildPaymentMiddleware,
   type FacilitatorAuth,
@@ -341,6 +342,23 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
         if (timer !== undefined) clearTimeout(timer);
       }
     });
+    // The testnet faucet needs no payment and must not be behind the payment middleware: its whole purpose is to let
+    // someone try the paid path who has no testnet funds yet. Mounted before the free tier and quota so a faucet call
+    // does not consume an evaluation allowance (#92).
+    app.post("/faucet", async (c) => {
+      const result = await handleFaucet(c.req.raw, env);
+      return c.json(result.body, result.status as 200 | 400 | 429 | 502 | 503);
+    });
+    app.get("/faucet", (c) =>
+      c.json({
+        drip: { amountUsdc: DRIP_USDC, perAddressPerHours: WINDOW_HOURS },
+        method: "POST",
+        body: { address: "0x…" },
+        network: "eip155:84532 (Base Sepolia)",
+        note: "one drip per address per 24h; the response says when it resets",
+      }),
+    );
+
     // Free tier first: a caller without a payment signature may still be served, up to a
     // daily per-IP allowance. Marked on the context so the payment middleware steps aside
     // instead of answering 402 to a caller we already agreed to serve.
