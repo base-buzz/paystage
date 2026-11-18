@@ -7,18 +7,16 @@ export const dynamic = "force-dynamic";
 /**
  * /lab — the daily probe results.
  *
- * Unlinked and noindex: it is public because a trend anyone can check is worth more than a screenshot,
- * but it is not a marketing page and should not be in a sitemap or an agent-facing list.
+ * Unlinked and noindex: public because a trend anyone can check is worth more than a screenshot, but not a marketing page
+ * and not in any agent-facing list.
  *
- * Read path: SERVER ONLY. `probe_runs` has RLS on with no policy, so the anon key reads zero rows. Every
- * read below goes through `selectRows`, which uses the service key server-side; if this page is ever
- * converted to a client component or given an API route that uses the anon key, it will silently render
- * "never run" instead of failing. Keeping `payload` out of the props is deliberate for the same reason —
- * it is unbounded jsonb and nothing here needs it.
+ * Read path: SERVER ONLY. `probe_runs` has RLS on with no policy, so the anon key reads zero rows. Every read goes through
+ * `selectRowsStrict`, which uses the service key and reports *why* it could not read; a failure must never render as
+ * "never run", because that is a truthful-looking lie about a probe that may have run every day for a month.
  */
 export const metadata: Metadata = {
   title: "Lab — probe results",
-  description: "Daily probe results: how findable PayStage is, and what agents decide when asked to pay.",
+  description: "Daily probe results: how findable PayStage is, what agents decide when asked to pay, and outreach outcomes.",
   robots: { index: false, follow: false },
 };
 
@@ -29,33 +27,35 @@ type ProbeRow = {
   summary: Record<string, unknown> | null;
 };
 
-const PROBES: Array<{ id: string; label: string; question: string }> = [
+const PROBES: Array<{ id: string; label: string; question: string; higherIsBetter: boolean }> = [
   {
     id: "discovery",
     label: "Discovery",
     question: "Does an agent searching for the need — not our name — find us?",
+    higherIsBetter: true,
   },
   {
     id: "decision",
     label: "Decision",
     question: "Asked to pay a stranger's 402 challenge, what does each agent decide?",
+    higherIsBetter: true,
   },
   {
     id: "outreach",
     label: "Outreach",
-    // Aggregate only. The page is public: naming the repositories whose payment paths are unguarded would turn a
-    // measurement into a shaming list, and the point is the shape of the ecosystem, not any one project.
+    // Aggregate only: the page is public, and naming repositories whose payment paths are unguarded would turn a
+    // measurement into a shaming list.
     question: "How much of the x402 ecosystem pays without a gate — and is that measurement trustworthy?",
+    higherIsBetter: false,
   },
 ];
 
 /**
- * A number is only rendered when its control passed.
+ * A number only renders when its control passed.
  *
- * The outreach measurement published 19.5% before four controls caught what was wrong with it. A page that renders a
- * percentage whose control failed is a worse version of that mistake: it is the same error, made permanent and public.
- * So `controls_ok: false` renders as **controls failed** and no figure, and an absent flag — a row written before this
- * rule existed — is treated as failed, because unknown is not a licence to print a number.
+ * The outreach measurement published 19.5% before four controls caught what was wrong with it. A page that prints a figure
+ * whose control failed is that same mistake made permanent and public, so `controls_ok: false` renders as "controls
+ * failed" — and an absent flag counts as failed, because unknown is not a licence to print a number.
  */
 function headlineFor(probe: string, row: ProbeRow): string {
   const summary = (row.summary ?? {}) as Record<string, unknown>;
@@ -63,32 +63,149 @@ function headlineFor(probe: string, row: ProbeRow): string {
   return row.headline ?? "—";
 }
 
-function ago(iso: string): string {
-  const days = Math.floor((Date.now() - Date.parse(iso)) / 86_400_000);
-  if (days <= 0) return "today";
-  if (days === 1) return "yesterday";
-  return `${days} days ago`;
+/** "4/12" → 0.333. Null when the headline is not a ratio, so a non-numeric probe simply has no series. */
+function ratioOf(headline: string | null): number | null {
+  if (!headline) return null;
+  const m = /^(\d+)\s*\/\s*(\d+)$/.exec(headline.trim());
+  if (!m) return null;
+  const total = Number(m[2]);
+  if (!Number.isFinite(total) || total === 0) return null;
+  return Number(m[1]) / total;
+}
+
+const DAY = 86_400_000;
+
+/** One point per day: the last run of that day, so a day with three runs does not zig-zag the line. */
+function dailySeries(rows: ProbeRow[]): Array<{ day: string; value: number; headline: string }> {
+  const byDay = new Map<string, ProbeRow>();
+  for (const row of [...rows].sort((a, b) => Date.parse(a.run_at) - Date.parse(b.run_at))) {
+    byDay.set(row.run_at.slice(0, 10), row);
+  }
+  const out: Array<{ day: string; value: number; headline: string }> = [];
+  for (const [day, row] of byDay) {
+    const value = ratioOf(row.headline);
+    if (value !== null) out.push({ day, value, headline: row.headline ?? "" });
+  }
+  return out.sort((a, b) => a.day.localeCompare(b.day));
+}
+
+/** The most recent point at or before `daysAgo` days back — the honest comparison for a sparse series. */
+function valueAt(series: Array<{ day: string; value: number }>, daysAgo: number): number | null {
+  const cutoff = Date.now() - daysAgo * DAY;
+  let found: number | null = null;
+  for (const point of series) {
+    if (Date.parse(`${point.day}T00:00:00Z`) <= cutoff) found = point.value;
+  }
+  return found;
+}
+
+function pct(value: number): string {
+  return `${Math.round(value * 100)}%`;
+}
+
+function Delta({
+  series,
+  daysAgo,
+  label,
+  higherIsBetter,
+}: {
+  series: Array<{ day: string; value: number }>;
+  daysAgo: number;
+  label: string;
+  higherIsBetter: boolean;
+}) {
+  const latest = series.at(-1)?.value ?? null;
+  const before = valueAt(series, daysAgo);
+  if (latest === null || before === null) {
+    return (
+      <div style={{ minWidth: 108 }}>
+        <div style={{ fontSize: 11, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</div>
+        <div style={{ fontSize: 13, opacity: 0.5 }}>no data</div>
+      </div>
+    );
+  }
+  const diff = latest - before;
+  const better = higherIsBetter ? diff > 0 : diff < 0;
+  const colour = diff === 0 ? "var(--lp-dim, #8b90a0)" : better ? "var(--lp-mint, #047857)" : "var(--lp-red, #b91c1c)";
+  const arrow = diff === 0 ? "=" : diff > 0 ? "↑" : "↓";
+  return (
+    <div style={{ minWidth: 108 }}>
+      <div style={{ fontSize: 11, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</div>
+      <div style={{ fontSize: 13, color: colour, fontWeight: 600 }}>
+        {arrow} {diff === 0 ? "flat" : `${diff > 0 ? "+" : ""}${Math.round(diff * 100)}pp`}
+      </div>
+      <div style={{ fontSize: 11, opacity: 0.5 }}>vs {pct(before)}</div>
+    </div>
+  );
 }
 
 /**
- * Read failures are returned, not swallowed.
+ * A sparkline, drawn with the points that exist.
  *
- * The first version used `selectRows`, which collapses every failure to `null` — so a missing service key or a policy
- * rejection rendered as "Never run", which is a truthful-looking lie about a probe that may have run for a month. The
- * page now distinguishes "no rows" from "could not read", and says which.
+ * No chart library and no interpolation: a gap in the series is a gap in the line, because filling it would invent
+ * measurements for days the probe did not run — the same rule as "never run", applied to a chart.
  */
+function Sparkline({
+  series,
+  higherIsBetter,
+}: {
+  series: Array<{ day: string; value: number }>;
+  higherIsBetter: boolean;
+}) {
+  if (series.length === 0) return <div style={{ height: 64, opacity: 0.5, fontSize: 13 }}>No points yet.</div>;
+  const width = 640;
+  const height = 64;
+  const pad = 6;
+  const span = Math.max(1, series.length - 1);
+  const x = (i: number) => pad + (i / span) * (width - pad * 2);
+  const y = (v: number) => height - pad - v * (height - pad * 2);
+  const points = series.map((p, i) => `${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
+  const stroke = higherIsBetter ? "var(--lp-mint, #047857)" : "var(--lp-amber, #b45309)";
+
+  return (
+    <figure style={{ margin: "10px 0 0" }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} role="img" aria-label={`Trend over ${series.length} day(s)`}>
+        <line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" />
+        <line x1={pad} y1={pad} x2={width - pad} y2={pad} stroke="currentColor" strokeOpacity="0.08" strokeWidth="1" strokeDasharray="3 4" />
+        <polyline points={points} fill="none" stroke={stroke} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        {series.map((p, i) => (
+          <circle key={p.day} cx={x(i)} cy={y(p.value)} r={i === series.length - 1 ? 3.5 : 2.2} fill={stroke} />
+        ))}
+      </svg>
+      <figcaption style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
+        {series[0]?.day} → {series.at(-1)?.day} · {series.length} day(s) measured
+        {higherIsBetter ? " · higher is better" : " · lower is better"}
+      </figcaption>
+    </figure>
+  );
+}
+
+function Panel({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "warn" }) {
+  return (
+    <div
+      style={{
+        marginTop: 14,
+        padding: 14,
+        borderRadius: 10,
+        border: `1px ${tone === "warn" ? "solid var(--lp-amber, #b45309)" : "dashed var(--lp-line, #6b7280)"}`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 async function read(probe: string, limit: number) {
-  const result = await selectRowsStrict<ProbeRow>(
+  return selectRowsStrict<ProbeRow>(
     "probe_runs",
     `select=probe,run_at,headline,summary&probe=eq.${probe}&order=run_at.desc&limit=${limit}`,
   );
-  return result;
 }
 
 const REASON_TEXT: Record<string, string> = {
   not_configured: "Supabase is not configured in this environment. A configuration fault, not an empty trend.",
   no_service_key:
-    "SUPABASE_SERVICE_ROLE_KEY is not set. `probe_runs` has RLS on with no policy, so reading with the anon key returns zero rows — which would render as \"never run\" and be wrong.",
+    'SUPABASE_SERVICE_ROLE_KEY is not set. `probe_runs` has RLS on with no policy, so reading with the anon key returns zero rows — which would render as "never run" and be wrong.',
   forbidden: "The service key was refused for this table (401/403). The rows exist; this environment cannot read them.",
   unreachable: "The database could not be reached. No conclusion about the probes can be drawn from this page right now.",
 };
@@ -96,75 +213,208 @@ const REASON_TEXT: Record<string, string> = {
 export default async function LabPage() {
   const data = await Promise.all(
     PROBES.map(async (p) => {
-      const result = await read(p.id, 12);
+      const result = await read(p.id, 120);
+      const rows = result.ok ? result.rows : [];
       return {
         ...p,
         failure: result.ok ? null : result.reason,
         status: result.ok ? null : result.status ?? null,
-        rows: result.ok ? result.rows : [],
+        rows,
+        series: dailySeries(rows),
       };
     }),
   );
 
+  const today = new Date().toISOString().slice(0, 10);
+  const measured = data.filter((p) => p.series.length > 0);
+  const stale = measured.filter((p) => {
+    const last = p.series.at(-1)?.day;
+    return last !== undefined && Date.now() - Date.parse(`${last}T00:00:00Z`) > 2 * DAY;
+  });
+
   return (
     <main className="lp-shell" style={{ maxWidth: 980, margin: "0 auto", padding: "96px 24px 64px" }}>
-      <p style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", opacity: 0.6 }}>
-        Lab · unlisted
-      </p>
+      <p style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", opacity: 0.6 }}>Lab · unlisted</p>
       <h1 style={{ fontSize: 34, margin: "8px 0 12px" }}>Probe results</h1>
-      <p style={{ opacity: 0.75, maxWidth: 680, lineHeight: 1.6 }}>
-        Two questions asked every day, and the answers kept as they were given. A single day is trivia; the
-        movement is the point. Raw rows live in <code>probe_runs</code>.
+      <p style={{ opacity: 0.75, maxWidth: 720, lineHeight: 1.6 }}>
+        Three questions asked on a schedule, and the answers kept as they were given. The block below is the signal: each
+        probe&apos;s latest score and how it moved against the previous day, week, month and quarter. Where there is not
+        enough history for a comparison, it says so rather than drawing a flat line.
       </p>
 
+      {/* ---- the signal ---- */}
+      <section style={{ marginTop: 28, padding: 18, borderRadius: 12, border: "1px solid var(--lp-line, #6b7280)" }}>
+        <h2 style={{ fontSize: 15, margin: 0, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.65 }}>
+          Are we scoring better or worse?
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18, marginTop: 16 }}>
+          {data.map((p) => {
+            const latest = p.series.at(-1) ?? null;
+            return (
+              <div key={`signal-${p.id}`}>
+                <div style={{ fontSize: 13, opacity: 0.6 }}>{p.label}</div>
+                <div style={{ fontSize: 26, fontWeight: 600, lineHeight: 1.2 }}>
+                  {p.failure !== null ? "\u2014" : latest ? pct(latest.value) : "never run"}
+                </div>
+                <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>
+                  {latest
+                    ? `${latest.headline} \u00b7 ${latest.day}`
+                    : p.failure !== null
+                      ? "could not read"
+                      : "no measurement yet"}
+                </div>
+                <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                  <Delta series={p.series} daysAgo={1} label="day" higherIsBetter={p.higherIsBetter} />
+                  <Delta series={p.series} daysAgo={7} label="week" higherIsBetter={p.higherIsBetter} />
+                  <Delta series={p.series} daysAgo={30} label="month" higherIsBetter={p.higherIsBetter} />
+                  <Delta series={p.series} daysAgo={90} label="quarter" higherIsBetter={p.higherIsBetter} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {stale.length > 0 ? (
+          <p style={{ marginTop: 14, fontSize: 13, color: "var(--lp-amber, #b45309)" }}>
+            Stale: {stale.map((p) => p.label).join(", ")} — no run in the last 48 hours. The score above is the last
+            measurement, not today&apos;s.
+          </p>
+        ) : null}
+      </section>
 
-      {data.map((p) => (
-        <section key={p.id} style={{ marginTop: 40 }}>
-          <h2 style={{ fontSize: 22, marginBottom: 4 }}>{p.label}</h2>
-          <p style={{ opacity: 0.7, marginTop: 0, maxWidth: 680 }}>{p.question}</p>
+      {/* ---- per probe ---- */}
+      {data.map((p) => {
+        const latestRow = p.rows[0];
+        const summary = (latestRow?.summary ?? {}) as Record<string, unknown>;
+        const queries = Array.isArray(summary.queries) ? (summary.queries as Array<Record<string, unknown>>) : null;
+        const agents = Array.isArray(summary.agentsDetail) ? (summary.agentsDetail as Array<Record<string, unknown>>) : null;
 
-          {p.failure !== null ? (
-            <p style={{ marginTop: 12, padding: 14, border: "1px solid var(--lp-amber, #b45309)", borderRadius: 8 }}>
-              <strong>Could not read.</strong> {REASON_TEXT[p.failure]}
-              {p.status !== null ? ` (HTTP ${p.status})` : ""}
-            </p>
-          ) : p.rows.length === 0 ? (
-            <p style={{ marginTop: 12, padding: 14, border: "1px dashed var(--lp-line, #6b7280)", borderRadius: 8 }}>
-              <strong>Never run.</strong> No row exists for this probe, so there is no number to show — a zero
-              here would be an invented measurement.
-            </p>
-          ) : (
-            <>
-              <p style={{ marginTop: 12, fontSize: 18 }}>
-                <strong>{p.rows[0] ? headlineFor(p.id, p.rows[0]) : "—"}</strong>{" "}
-                <span style={{ opacity: 0.6, fontSize: 14 }}>
-                  latest run {new Date(p.rows[0]?.run_at ?? Date.now()).toISOString().slice(0, 10)} ({ago(p.rows[0]?.run_at ?? "")})
-                </span>
-              </p>
-              <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 10, fontSize: 14 }}>
-                <thead>
-                  <tr style={{ textAlign: "left", opacity: 0.6 }}>
-                    <th style={{ padding: "6px 8px" }}>run</th>
-                    <th style={{ padding: "6px 8px" }}>result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {p.rows.map((r) => (
-                    <tr key={r.run_at} style={{ borderTop: "1px solid rgba(128,128,128,0.25)" }}>
-                      <td style={{ padding: "6px 8px" }}>{new Date(r.run_at).toISOString().slice(0, 10)}</td>
-                      <td style={{ padding: "6px 8px" }}>{headlineFor(p.id, r)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </>
-          )}
-        </section>
-      ))}
+        return (
+          <section key={p.id} style={{ marginTop: 44 }}>
+            <h2 style={{ fontSize: 22, marginBottom: 4 }}>{p.label}</h2>
+            <p style={{ opacity: 0.7, marginTop: 0, maxWidth: 720 }}>{p.question}</p>
 
-      <p style={{ marginTop: 48, fontSize: 13, opacity: 0.55 }}>
-        Unlisted by design. Numbers are the probes&apos; own output; where a probe has not run, the page says so.
-      </p>
+            {p.failure !== null ? (
+              <Panel tone="warn">
+                <strong>Could not read.</strong> {REASON_TEXT[p.failure]}
+                {p.status !== null ? ` (HTTP ${p.status})` : ""}
+              </Panel>
+            ) : p.rows.length === 0 ? (
+              <Panel>
+                <strong>Never run.</strong> No row exists for this probe, so there is no number to show — a zero here would
+                be an invented measurement.
+              </Panel>
+            ) : (
+              <>
+                <Sparkline series={p.series} higherIsBetter={p.higherIsBetter} />
+
+                {latestRow ? (
+                  <p style={{ marginTop: 10, fontSize: 15 }}>
+                    <strong>{headlineFor(p.id, latestRow)}</strong>{" "}
+                    <span style={{ opacity: 0.6, fontSize: 13 }}>
+                      latest run {latestRow.run_at.slice(0, 10)} · {p.rows.length} run(s) stored
+                    </span>
+                  </p>
+                ) : null}
+
+                {queries !== null ? (
+                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, fontSize: 13.5 }}>
+                    <thead>
+                      <tr style={{ textAlign: "left", opacity: 0.6 }}>
+                        <th style={{ padding: "6px 8px" }}>channel</th>
+                        <th style={{ padding: "6px 8px" }}>query an agent might run</th>
+                        <th style={{ padding: "6px 8px" }}>found</th>
+                        <th style={{ padding: "6px 8px" }}>rank</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {queries.map((q, i) => (
+                        <tr
+                          key={`${String(q.channel)}-${String(q.query)}-${i}`}
+                          style={{ borderTop: "1px solid rgba(128,128,128,0.25)" }}
+                        >
+                          <td style={{ padding: "6px 8px", opacity: 0.75 }}>{String(q.channel)}</td>
+                          <td style={{ padding: "6px 8px" }}>{String(q.query)}</td>
+                          <td
+                            style={{
+                              padding: "6px 8px",
+                              color: q.present ? "var(--lp-mint, #047857)" : "var(--lp-red, #b91c1c)",
+                            }}
+                          >
+                            {q.present ? "yes" : "no"}
+                          </td>
+                          <td style={{ padding: "6px 8px", opacity: 0.75 }}>{q.rank === null ? "\u2014" : String(q.rank)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : null}
+
+                {agents !== null ? (
+                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, fontSize: 13.5 }}>
+                    <thead>
+                      <tr style={{ textAlign: "left", opacity: 0.6 }}>
+                        <th style={{ padding: "6px 8px" }}>agent</th>
+                        <th style={{ padding: "6px 8px" }}>state</th>
+                        <th style={{ padding: "6px 8px" }}>decision</th>
+                        <th style={{ padding: "6px 8px" }}>checks named</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {agents.map((a, i) => (
+                        <tr key={`${String(a.site)}-${i}`} style={{ borderTop: "1px solid rgba(128,128,128,0.25)" }}>
+                          <td style={{ padding: "6px 8px" }}>{String(a.site)}</td>
+                          <td style={{ padding: "6px 8px", opacity: 0.75 }}>{String(a.state)}</td>
+                          <td style={{ padding: "6px 8px" }}>{String(a.decision ?? "\u2014")}</td>
+                          <td style={{ padding: "6px 8px", opacity: 0.75 }}>{a.checks === null ? "\u2014" : String(a.checks)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : null}
+
+                {p.id === "outreach" ? (
+                  <p style={{ marginTop: 12, fontSize: 13, opacity: 0.75 }}>
+                    Sample {String(summary.sampled ?? "\u2014")} of {String(summary.universe ?? "\u2014")} · callers{" "}
+                    {String(summary.callers ?? "\u2014")} · controls {summary.controls_ok === true ? "passed" : "failed"} ·
+                    contacts filed {String(summary.contacts_filed ?? "0")}. Aggregate only: this page never names a
+                    repository whose payment path is unguarded.
+                  </p>
+                ) : null}
+              </>
+            )}
+          </section>
+        );
+      })}
+
+      {/* ---- how to read it ---- */}
+      <section style={{ marginTop: 48 }}>
+        <h2 style={{ fontSize: 15, margin: 0, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.65 }}>
+          Reading this page
+        </h2>
+        <ul style={{ marginTop: 12, fontSize: 13.5, lineHeight: 1.7, opacity: 0.8, paddingLeft: 20 }}>
+          <li>
+            <strong>Percentages are ratios of probes, not of users.</strong> &quot;3/10&quot; means three of ten searches
+            returned us; it says nothing about how many agents called.
+          </li>
+          <li>
+            <strong>A gap is not a zero.</strong> The line joins the days that ran; a missing day is a gap, and a probe
+            that never ran says so.
+          </li>
+          <li>
+            <strong>Each comparison uses the closest earlier point</strong> at or before that horizon, so a week delta with
+            four days of history borrows the oldest day it has — the &quot;vs&quot; figure under each delta shows what it
+            actually compared against.
+          </li>
+          <li>
+            <strong>Registry discovery is structurally zero.</strong> The MCP registry searches server names only and
+            truncates at 100 results, so ours cannot surface for a capability query however it is named. That is not a
+            regression, and nothing on this page will fix it.
+          </li>
+          <li>
+            <strong>Data as of {today}.</strong> Rows live in <code>probe_runs</code>, one per probe per run.
+          </li>
+        </ul>
+      </section>
     </main>
   );
 }
