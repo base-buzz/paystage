@@ -1,6 +1,6 @@
 {
   "name": "@paystage/ai-sdk",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Stop your agent paying a drainer: PayStage preflight as AI SDK tools, so the payment is checked inside the same loop that would sign it. pay / review / do_not_pay.",
   "license": "MIT",
   "type": "module",

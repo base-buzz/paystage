@@ -1,6 +1,6 @@
 {
   "name": "@paystage/x-evm",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "PayStage guard for @x402/evm \u2014 evaluate the payment requirements before the EVM scheme signs",
   "license": "MIT",
   "type": "module",

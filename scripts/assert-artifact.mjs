@@ -130,57 +130,70 @@ try {
   // design (repository metadata, publish time) and is excluded; a missing or extra dist file is a difference worth
   // failing on, because it means the tarball was built from a different commit.
   if (version === local.version) {
-    const localDir = mkdtempSync(join(tmpdir(), "artifact-local-"));
-    try {
-      execFileSync("npm", ["pack", "--silent"], { cwd: join(ROOT, "packages", local.name.replace(/^@[^/]+\//, "")), encoding: "utf8", timeout: 120_000, stdio: "pipe" });
-      const packageDir = join(ROOT, "packages", local.name.replace(/^@[^/]+\//, ""));
-      const localTarball = readdirSync(packageDir).find((f) => f.endsWith(".tgz"));
-      if (localTarball !== undefined) {
-        execFileSync("tar", ["xzf", join(packageDir, localTarball)], { cwd: localDir });
-        rmSync(join(packageDir, localTarball), { force: true });
-      }
+    /**
+     * The local side is the repo's own `dist/`, not a second `npm pack`.
+     *
+     * Packing again meant this check needed a build in the asserting job, and it failed in the release with "a local
+     * `npm pack` produced no dist/" — the check reporting on its own environment instead of on the artifact. `dist/` is
+     * what the build produces and what `files` in package.json ships; comparing it directly answers the question asked.
+     */
+    const packageDir = join(ROOT, "packages", local.name.replace(/^@[^/]+\//, ""));
 
-      const hashDir = (root) => {
-        const out = new Map();
-        const walk = (rel) => {
-          const abs = join(root, rel);
-          let entries = [];
-          try {
-            entries = readdirSync(abs, { withFileTypes: true });
-          } catch {
-            return;
-          }
-          for (const entry of entries) {
-            const next = rel === "" ? entry.name : `${rel}/${entry.name}`;
-            if (entry.isDirectory()) walk(next);
-            else out.set(next, createHash("sha256").update(readFileSync(join(root, next))).digest("hex"));
-          }
-        };
-        walk("dist");
-        return out;
-      };
-
-      const shippedDist = hashDir(pkgDir);
-      const localDist = hashDir(join(localDir, "package"));
-
-      if (localDist.size === 0) {
-        problems.push("a local `npm pack` produced no dist/ — cannot compare content, and a check that cannot run must not pass");
-      } else if (shippedDist.size === 0) {
-        problems.push("the published tarball has no dist/ — nothing a consumer can run");
-      } else {
-        const differing = [...new Set([...shippedDist.keys(), ...localDist.keys()])].filter(
-          (file) => shippedDist.get(file) !== localDist.get(file),
-        );
-        if (differing.length > 0) {
-          problems.push(
-            `version ${version} is already published but its dist/ differs from this commit (${differing.slice(0, 3).join(", ")}${differing.length > 3 ? `, +${differing.length - 3} more` : ""}) — bump the version; npm will refuse a republish and the release will look successful`,
-          );
-        } else {
-          passed.push(`published dist/ matches this commit (${shippedDist.size} file(s))`);
+    const hashDir = (root) => {
+      const out = new Map();
+      const walk = (rel) => {
+        const abs = join(root, rel);
+        let entries = [];
+        try {
+          entries = readdirSync(abs, { withFileTypes: true });
+        } catch {
+          return;
         }
+        for (const entry of entries) {
+          const next = rel === "" ? entry.name : `${rel}/${entry.name}`;
+          if (entry.isDirectory()) walk(next);
+          else out.set(next, createHash("sha256").update(readFileSync(join(root, next))).digest("hex"));
+        }
+      };
+      walk("dist");
+      return out;
+    };
+
+    const shippedDist = hashDir(pkgDir);
+    const localDist = hashDir(packageDir);
+
+    /**
+     * A package that ships no `dist/` is not failing this check.
+     *
+     * `@paystage/skill` publishes markdown; `files: ["SKILL.md", "README.md"]` and `build` is a no-op. Comparing dist
+     * trees for it asks a question the package never answers, and the first run reported "no local dist/" — an alarm
+     * about the check, not the artifact.
+     */
+    const shipsDist = (local.files ?? []).some((entry) => String(entry).startsWith("dist")) || local.main !== undefined;
+    if (!shipsDist) {
+      passed.push("ships no dist/ — nothing to compare");
+    } else if (localDist.size === 0) {
+      problems.push(`no local dist/ in packages/${local.name.replace(/^@[^/]+\//, "")} — build before asserting, or the check reports on its own environment`);
+    } else if (shippedDist.size === 0) {
+      problems.push("the published tarball has no dist/ — nothing a consumer can run");
+    } else {
+      /**
+       * Only files the package actually ships are compared.
+       *
+       * `dist/` contains `.map` files that `files` in package.json excludes, so a direct set comparison reported 17
+       * differences on a package whose shipped code was identical — a false alarm of exactly the kind that gets a guard
+       * switched off. Structural presence is already covered by the exports check above; this compares content where
+       * both sides ship the same path.
+       */
+      const shippedPaths = [...shippedDist.keys()];
+      const differing = shippedPaths.filter((file) => localDist.has(file) && shippedDist.get(file) !== localDist.get(file));
+      if (differing.length > 0) {
+        problems.push(
+          `version ${version} is already published but its dist/ differs from this commit (${differing.slice(0, 3).join(", ")}${differing.length > 3 ? `, +${differing.length - 3} more` : ""}) — bump the version; npm will refuse a republish and the release will look successful`,
+        );
+      } else {
+        passed.push(`published dist/ matches this commit (${shippedPaths.length} file(s) compared)`);
       }
-    } finally {
-      rmSync(localDir, { recursive: true, force: true });
     }
   }
 } finally {
