@@ -122,6 +122,10 @@ if (asJson) {
         sentences: reasons.map(humanise),
         remedies: reasons.map(remedy),
         verification: verdict,
+        // What the operator is being asked about (#163): the terms the receipt was issued against, not a summary of
+        // them. A verdict with no payment attached is a verdict about nothing a human can act on.
+        payment: receipt.payment ?? null,
+        verify_with: `npx -y -p @paystage/mcp paystage-verify ${file}`,
       },
       null,
       2,
@@ -138,6 +142,14 @@ const trust =
       : `CANNOT BE TRUSTED — ${verdict.reason ?? verdict.status}`;
 
 console.log(`Decision: ${decision}`);
+const payment = receipt.payment;
+if (payment !== undefined) {
+  const amount = payment.amount !== undefined ? payment.amount : "an unstated amount";
+  const asset = payment.asset ?? "an unstated asset";
+  const network = payment.network ?? "an unstated network";
+  console.log(`  asked for: ${amount} ${asset} on ${network}`);
+  if (payment.payee !== undefined) console.log(`  payee: ${payment.payee}`);
+}
 console.log(`  ${trust}`);
 if (receipt.issued_at) console.log(`  issued ${receipt.issued_at} by ${receipt.service?.name ?? "unknown"}`);
 console.log("");
@@ -155,4 +167,8 @@ if (reasons.length === 0) {
 }
 
 if (receipt.verdict?.summary) console.log(`\n  Summary: ${receipt.verdict.summary}`);
+// One command, not a paragraph about one. `paystage-verify` is what a human runs when they do not believe the line
+// above, and the receipt's own key id is what it will check against.
+console.log(`\n  Check it yourself: npx -y -p @paystage/mcp paystage-verify ${file}`);
+if (receipt.key_id !== undefined) console.log(`  signed with key: ${receipt.key_id}`);
 console.log("");
