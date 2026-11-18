@@ -21,35 +21,40 @@ export const metadata: Metadata = {
 export default function ZhHome() {
   return (
     <main className="lp">
-      <section className="lp-wrap" style={{ paddingTop: 40, paddingBottom: 40 }}>
+      {/* Same structure and same class names as the English hero. The page shipped with `lp-hero-title`,
+          `lp-hero-sub` and `lp-hero-cta` — three classes that do not exist in landing.css — so it rendered as
+          unstyled paragraphs under a styled header. A shared vocabulary is the fix, not new rules. */}
+      <section className="lp-hero">
+        <div className="lp-wrap" style={{ paddingTop: 40, paddingBottom: 40 }}>
         <p className="lp-eyebrow">X402 · MCP · BASE 上的 USDC</p>
-        <h1 className="lp-hero-title">在签名之前，拦下这笔支付。</h1>
-        <p className="lp-hero-sub">
+        <h1 className="lp-h1">在签名之前，拦下这笔支付。</h1>
+        <p className="lp-lede">
           智能体现在会自己付钱。钱包照着智能体的要求签名，却没有人检查它该不该付。PayStage 是钱包之外的一层
           只读安全带：按你写的本地策略评估待签名的支付，返回 <strong>pay</strong>、<strong>review</strong> 或{" "}
           <strong>do_not_pay</strong>，并给出触发的规则。
         </p>
-        <p>
-          <Link className="lp-hero-cta" href="/try">
+        <div className="lp-actions">
+          <Link className="lp-btn lp-btn-primary" href="/try">
             试用一次评估
-          </Link>{" "}
-          <Link className="lp-hero-secondary" href="/glossary">
-            术语表（中文与英文术语对照）
           </Link>
-        </p>
+          <Link className="lp-btn lp-btn-ghost" href="/glossary">
+            术语表
+          </Link>
+        </div>
 
-        <h2>它不能做什么</h2>
+        <h2 className="lp-h2">它不能做什么</h2>
         <p>
           已结算的支付无法追回；看起来正规但从不交付的商户不会被地址检查发现；绕开本层的直接签名不在覆盖范围内。
           全部边界见 <a href="https://github.com/base-buzz/paystage/blob/main/LIMITS.md">LIMITS.md</a>。
         </p>
 
-        <h2>英文版本</h2>
+        <h2 className="lp-h2">英文版本</h2>
         <p>
           <Link href="/">English landing page</Link> ·{" "}
           <a href="https://github.com/base-buzz/paystage/blob/main/README.zh-CN.md">中文 README</a> ·{" "}
           <Link href="/privacy">隐私</Link>
         </p>
+        </div>
       </section>
     </main>
   );
