@@ -80,6 +80,13 @@ if ! node scripts/check-doc-links.mjs; then
   fail=1
 fi
 
+# 7. One version, one number: server.json, package.json and the console's tool count must agree.
+if ! node scripts/check-version-parity.mjs >/tmp/prepush-parity.txt 2>&1; then
+  note "version parity failed — a manifest describes a version nobody can install"
+  tail -6 /tmp/prepush-parity.txt | sed 's/^/    /'
+  fail=1
+fi
+
 # 3. Any dependency added in this push gets scored before it lands.
 base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
 if [ -n "$base" ]; then
