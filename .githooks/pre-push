@@ -110,6 +110,12 @@ if ! node scripts/ci-local.mjs; then
   fail=1
 fi
 
+# 11. The OpenAPI document is a contract, not a summary: use/don't-use, formats, problem responses.
+if ! node scripts/check-openapi-contract.mjs; then
+  note "the agent-facing OpenAPI document lost its contract details"
+  fail=1
+fi
+
 # 3. Any dependency added in this push gets scored before it lands.
 base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
 if [ -n "$base" ]; then

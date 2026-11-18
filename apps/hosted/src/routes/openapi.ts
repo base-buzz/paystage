@@ -26,6 +26,48 @@ const PAYMENT_BODY = {
   },
 } as const;
 
+/**
+ * The error shape, as a schema — RFC 9457 plus the fields an agent needs to recover (#problem-details).
+ *
+ * Documented here rather than only implemented, because an agent reads this document before its first call: a 400 with
+ * no declared schema is a 400 the client library will surface as an opaque string.
+ */
+const PROBLEM_SCHEMA = {
+  type: "object",
+  required: ["type", "title", "status", "detail", "error", "is_retriable"],
+  properties: {
+    type: { type: "string", format: "uri", description: "A URL naming this error class, e.g. https://paystage.xyz/errors/invalid_json" },
+    title: { type: "string", description: "Short summary, safe to show a human" },
+    status: { type: "integer", description: "The HTTP status, repeated in the body" },
+    detail: { type: "string", description: "What went wrong, specific to this request" },
+    error: { type: "string", description: "Stable machine name for the error class; safe to switch on" },
+    is_retriable: {
+      type: "boolean",
+      description:
+        "Whether retrying the SAME request could ever succeed. False for wrong input — fix the field named below instead of retrying.",
+    },
+    retry_after_seconds: {
+      type: "integer",
+      description: "Present only when is_retriable is true. Wait this long, then retry.",
+    },
+    field: { type: "string", description: "The request parameter that caused the failure, when there is one" },
+    fix: { type: "string", description: "The change to make in the next call, in the imperative" },
+    instance: { type: "string", description: "The request id, so a report can be matched to a log line" },
+  },
+  examples: [
+    {
+      type: "https://paystage.xyz/errors/missing_payment_required",
+      title: "payment_required is required",
+      status: 400,
+      detail: "The body has no payment_required object, so there is no payment to judge.",
+      error: "missing_payment_required",
+      is_retriable: false,
+      field: "payment_required",
+      fix: "Pass the decoded x402 challenge: the object a server returned under `accepts` in its 402 response.",
+    },
+  ],
+} as const;
+
 const VERDICT_SCHEMA = {
   type: "object",
   properties: {
@@ -47,6 +89,19 @@ function paidOperation(summary: string, description: string, bodySchema: unknown
         content: { "application/json": { schema: bodySchema } },
       },
       responses: {
+        "400": {
+          description:
+            "The body or the policy was rejected. The cause is named in `field`; `is_retriable` is false because the same body will fail the same way.",
+          content: { "application/problem+json": { schema: PROBLEM_SCHEMA } },
+        },
+        "429": {
+          description: "Daily quota for this caller is spent. `retry_after_seconds` says when it resets.",
+          content: { "application/problem+json": { schema: PROBLEM_SCHEMA } },
+        },
+        "503": {
+          description: "The payment facilitator did not answer in time. Retriable after `retry_after_seconds`.",
+          content: { "application/problem+json": { schema: PROBLEM_SCHEMA } },
+        },
         "200": {
           description: "A verdict. Free-tier calls answer this without payment.",
           content: { "application/json": { schema: VERDICT_SCHEMA } },
@@ -86,13 +141,26 @@ export const OPENAPI_DOCUMENT = {
   servers: [{ url: "https://api.paystage.xyz" }],
   paths: {
     "/v1/evaluate_mcp_payment": paidOperation(
-      "Evaluate MCP payment",
-      "Judge one x402 payment against a spend policy before the agent signs it.",
+      "Evaluate one x402 payment against a spend policy",
+      "Use this immediately before signing any x402 payment: it returns pay, review or do_not_pay with the rule that " +
+        "fired. Do NOT use it to inspect outstanding allowances (use /v1/evaluate_outstanding_auths) or to verify a " +
+        "receipt (use verify_receipt in the MCP package). It never signs, never moves funds and has no side effects, so " +
+        "a refusal costs nothing. " +
+        "payment_required is the decoded x402 v2 challenge — the object the seller returned under `accepts`, with " +
+        "amount in ATOMIC units as a decimal string (12500000 = 12.5 USDC at 6 decimals). " +
+        "policy is a version 1 policy document; validate it first with validate_policy, because an invalid policy makes " +
+        "every evaluation refuse with a 400 and that looks like an outage. " +
+        "Order matters when the policy has per-agent budgets: pass agent_id, or the per-agent rules are unreachable.",
       PAYMENT_BODY,
     ),
     "/v1/evaluate_outstanding_auths": paidOperation(
-      "Evaluate outstanding auths",
-      "Judge outstanding EIP-3009 / Permit2 authorisations against a spend policy.",
+      "Judge outstanding ERC-20 / Permit2 / EIP-3009 authorisations",
+      "Use this when an agent already holds approvals and you need to know which are dangerous before the next payment " +
+        "— unlimited allowances, expired authorisations, spenders that are not on the allow-list. Do NOT use it to " +
+        "revoke anything: it reports, and revocation is a transaction the caller sends. " +
+        "auths is the array returned by list_outstanding_auths; passing a hand-built array works but must match that " +
+        "shape (spender, amount as an atomic decimal string, expiry as a unix timestamp in seconds). " +
+        "Call list_outstanding_auths first when the caller does not already hold that array.",
       {
         type: "object",
         required: ["auths", "policy"],
