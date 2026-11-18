@@ -116,6 +116,13 @@ if ! node scripts/check-openapi-contract.mjs; then
   fail=1
 fi
 
+# 12. Boundaries: credential-shaped files by path, write permissions on pull_request workflows, install scripts on
+#     published packages, and a lockfile that disagrees with its manifest.
+if ! node scripts/check-security.mjs; then
+  note "a security boundary is crossed — see above"
+  fail=1
+fi
+
 # 3. Any dependency added in this push gets scored before it lands.
 base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
 if [ -n "$base" ]; then

@@ -47,6 +47,7 @@ jobs:
       - run: node scripts/check-script-bins.mjs
       - run: node scripts/check-route-docs.mjs
       - run: node scripts/check-openapi-contract.mjs
+      - run: node scripts/check-security.mjs
       - run: node scripts/check-hosted-deps.mjs
       - run: node scripts/check-staged-secrets.mjs --all
       - run: node scripts/check-manifests.mjs
