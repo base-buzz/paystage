@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "../landing.css";
-import { isSupabaseConfigured, selectRows } from "@/lib/supabase";
+import { selectRowsStrict } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -49,29 +49,40 @@ function ago(iso: string): string {
   return `${days} days ago`;
 }
 
-async function latest(probe: string): Promise<ProbeRow | null> {
-  const rows = await selectRows<ProbeRow>(
-    "probe_runs",
-    `select=probe,run_at,headline,summary&probe=eq.${probe}&order=run_at.desc&limit=1`,
-  );
-  return rows?.[0] ?? null;
-}
-
-async function history(probe: string, limit = 30): Promise<ProbeRow[]> {
-  const rows = await selectRows<ProbeRow>(
+/**
+ * Read failures are returned, not swallowed.
+ *
+ * The first version used `selectRows`, which collapses every failure to `null` — so a missing service key or a policy
+ * rejection rendered as "Never run", which is a truthful-looking lie about a probe that may have run for a month. The
+ * page now distinguishes "no rows" from "could not read", and says which.
+ */
+async function read(probe: string, limit: number) {
+  const result = await selectRowsStrict<ProbeRow>(
     "probe_runs",
     `select=probe,run_at,headline,summary&probe=eq.${probe}&order=run_at.desc&limit=${limit}`,
   );
-  return rows ?? [];
+  return result;
 }
+
+const REASON_TEXT: Record<string, string> = {
+  not_configured: "Supabase is not configured in this environment. A configuration fault, not an empty trend.",
+  no_service_key:
+    "SUPABASE_SERVICE_ROLE_KEY is not set. `probe_runs` has RLS on with no policy, so reading with the anon key returns zero rows — which would render as \"never run\" and be wrong.",
+  forbidden: "The service key was refused for this table (401/403). The rows exist; this environment cannot read them.",
+  unreachable: "The database could not be reached. No conclusion about the probes can be drawn from this page right now.",
+};
 
 export default async function LabPage() {
   const data = await Promise.all(
-    PROBES.map(async (p) => ({
-      ...p,
-      newest: await latest(p.id),
-      rows: await history(p.id, 12),
-    })),
+    PROBES.map(async (p) => {
+      const result = await read(p.id, 12);
+      return {
+        ...p,
+        failure: result.ok ? null : result.reason,
+        status: result.ok ? null : result.status ?? null,
+        rows: result.ok ? result.rows : [],
+      };
+    }),
   );
 
   return (
@@ -85,29 +96,28 @@ export default async function LabPage() {
         movement is the point. Raw rows live in <code>probe_runs</code>.
       </p>
 
-      {!isSupabaseConfigured() ? (
-        <p style={{ marginTop: 24, padding: 14, border: "1px solid #b45309", borderRadius: 8 }}>
-          Supabase is not configured in this environment, so nothing can be read. This is a configuration
-          fault, not an empty trend.
-        </p>
-      ) : null}
 
       {data.map((p) => (
         <section key={p.id} style={{ marginTop: 40 }}>
           <h2 style={{ fontSize: 22, marginBottom: 4 }}>{p.label}</h2>
           <p style={{ opacity: 0.7, marginTop: 0, maxWidth: 680 }}>{p.question}</p>
 
-          {p.newest === null ? (
-            <p style={{ marginTop: 12, padding: 14, border: "1px dashed #6b7280", borderRadius: 8 }}>
+          {p.failure !== null ? (
+            <p style={{ marginTop: 12, padding: 14, border: "1px solid var(--lp-amber, #b45309)", borderRadius: 8 }}>
+              <strong>Could not read.</strong> {REASON_TEXT[p.failure]}
+              {p.status !== null ? ` (HTTP ${p.status})` : ""}
+            </p>
+          ) : p.rows.length === 0 ? (
+            <p style={{ marginTop: 12, padding: 14, border: "1px dashed var(--lp-line, #6b7280)", borderRadius: 8 }}>
               <strong>Never run.</strong> No row exists for this probe, so there is no number to show — a zero
               here would be an invented measurement.
             </p>
           ) : (
             <>
               <p style={{ marginTop: 12, fontSize: 18 }}>
-                <strong>{p.newest.headline ?? "—"}</strong>{" "}
+                <strong>{p.rows[0]?.headline ?? "—"}</strong>{" "}
                 <span style={{ opacity: 0.6, fontSize: 14 }}>
-                  latest run {new Date(p.newest.run_at).toISOString().slice(0, 10)} ({ago(p.newest.run_at)})
+                  latest run {new Date(p.rows[0]?.run_at ?? Date.now()).toISOString().slice(0, 10)} ({ago(p.rows[0]?.run_at ?? "")})
                 </span>
               </p>
               <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 10, fontSize: 14 }}>

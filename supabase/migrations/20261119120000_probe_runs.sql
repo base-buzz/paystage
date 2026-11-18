@@ -20,6 +20,11 @@ create table if not exists public.probe_runs (
 
 create index if not exists probe_runs_probe_run_at_idx on public.probe_runs (probe, run_at desc);
 
+-- Ingest upserts with `on_conflict=probe,run_at`, and Postgres requires a UNIQUE constraint for that, not an index.
+-- Without this the first ingest run failed every row with 42P10 ("no unique or exclusion constraint matching the
+-- ON CONFLICT specification") — the ingest could never have worked, and the failure only appears on a real write.
+create unique index if not exists probe_runs_probe_run_at_key on public.probe_runs (probe, run_at);
+
 -- Read path is SERVER ONLY. RLS is enabled with no policy on purpose: the anon key must read zero rows.
 -- The only permitted reader is `apps/console/src/app/lab/page.tsx`, through `@/lib/supabase#selectRows`,
 -- which uses SUPABASE_SERVICE_ROLE_KEY. If any client component or anon-key API route ever reads this
