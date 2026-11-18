@@ -153,5 +153,25 @@
     "payTo": "0x0E84dDEdAaE6A779c462C22a59F301EC31B6b808",
     "x402_version": 2,
     "verified_at": "2026-11-17"
+  },
+  {
+    "name": "NullClear Batch Token Firewall",
+    "url": "https://api.nullclear.dev/v1/bazaar/scan-batch",
+    "network": "eip155:8453",
+    "description": "Pre-swap batch token security firewall scanning up to 15 unique Base, Ethereum, or Solana tokens per call.",
+    "price": "$0.025 per call",
+    "asset": "USDC",
+    "payTo": "0xB586eFcCa41dF27ad3873BEcA54da0c30bf04d5c",
+    "x402_version": 2
+  },
+  {
+    "name": "NullClear Market Oracle",
+    "url": "https://api.nullclear.dev/v1/bazaar/market-oracle",
+    "network": "eip155:8453",
+    "description": "Live cross-verified spot price oracle (ETH, BTC, SOL, BASE tokens) with spread invariant verification.",
+    "price": "$0.005 per call",
+    "asset": "USDC",
+    "payTo": "0xB586eFcCa41dF27ad3873BEcA54da0c30bf04d5c",
+    "x402_version": 2
   }
 ]
