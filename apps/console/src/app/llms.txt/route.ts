@@ -91,6 +91,13 @@ no payment, no key. Runs daily in CI; history at https://paystage.xyz.
 - \`/.well-known/paystage.json\` — manifest: tools, verdicts, dependencies, env
   vars, endpoints, \`holds_keys\`, provenance and audit links.
 - \`/llms-full.txt\` — tool schemas, verdict semantics, policy schema, access surface.
+- \`/openapi.json\` — the OpenAPI 3.1 description of every hosted endpoint.
+- \`/health\`, \`/v1/public/status\` — liveness and the operational flags (failed settlements, facilitator errors).
+- \`/v1/public/chain.json\` — the on-chain settlement summary.
+- \`POST /v1/guard-verdict\` — turn a preflight verdict into a receipt-shaped response.
+- \`/v1/public/cadence.json\` — release and check history. Read \`current\` for "did the last run pass" and
+  \`all_recent_passing\` for the whole window; \`all_passing\` is the window and is kept only for one release under
+  its old name.
 
 ## Access surface (what it touches)
 

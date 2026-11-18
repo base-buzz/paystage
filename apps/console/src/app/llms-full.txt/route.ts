@@ -90,6 +90,19 @@ The hosted API runs the same evaluation code. Use it when you cannot run a local
 process; run locally when you can, because it removes the network hop before a
 payment.
 
+## Health and check history
+
+\`/v1/public/cadence.json\` reports releases and the daily check history. Two different questions, two fields:
+
+| field | answers |
+|---|---|
+| \`current\` | did the **last** run pass |
+| \`all_recent_passing\` | did every run in the window pass |
+
+\`all_passing\` carries the window as well — it used to mean "the latest run passed", which is the opposite of what
+its name promises (a payload read \`all_passing: true\` beside \`passing: 7, total: 12\`). It is kept under the old
+name for one release so a consumer reading it gets the stricter meaning, never a looser one.
+
 ## Install and verify
 
 \`\`\`sh
