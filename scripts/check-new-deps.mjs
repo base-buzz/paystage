@@ -77,6 +77,36 @@ for (const file of changed) {
   }
 }
 
+/**
+ * Declaring a package that was **already in the tree** is not adding a dependency.
+ *
+ * `typescript` was installed transitively (5.9.3) and undeclared; making it explicit is the fix for #135, not a new
+ * supply-chain decision. Scoring it as new would have failed the very change that closes a hole — so the test is
+ * "was this in the lockfile before?", which is what "new" actually means to a reader of this check.
+ */
+function wasAlreadyInstalled(names) {
+  const lockFile = join(ROOT, "package-lock.json");
+  if (!existsSync(lockFile)) return new Set();
+  const lock = JSON.parse(readFileSync(lockFile, "utf8"));
+  const packages = lock.packages ?? {};
+  const present = new Set();
+  for (const name of names) {
+    for (const key of Object.keys(packages)) {
+      if (key === `node_modules/${name}` || key.endsWith(`/node_modules/${name}`)) {
+        present.add(name);
+        break;
+      }
+    }
+  }
+  return present;
+}
+
+const alreadyPresent = wasAlreadyInstalled([...added.keys()]);
+for (const name of alreadyPresent) {
+  added.delete(name);
+  console.log(`  ${name.padEnd(32)} already in the tree — now declared, not added`);
+}
+
 if (added.size === 0) {
   console.log(`new-deps: ${changed.length} package.json file(s) changed, no dependency added`);
   process.exit(0);
