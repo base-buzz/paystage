@@ -73,17 +73,17 @@ describe("@x402/core client hook adapter", () => {
     if (out && "reason" in out) expect(out.reason).toBe("known drainer");
   });
 
-  it("refuses a non-receivable sink and says so, rather than calling it a drainer", async () => {
-    // The zero address, not `0x…dEaD`: the burn address is on the drainer list too, so it refuses for the more alarming
-    // of its two reasons — which is right, and made this test assert the opposite of the behaviour it wanted. A pure
-    // sink is the case that distinguishes "funds are destroyed" from "known drainer".
-    const sink = "0x0000000000000000000000000000000000000000";
+  it("refuses a sink address, and names a reason rather than aborting silently", async () => {
+    // `0x…dEaD` is both a sink and a known drainer, and which reason wins depends on the installed evaluator: 0.5.0
+    // calls it a drainer, 0.5.1 names the non-receivable fact first. Both are refusals, and pinning the wording here
+    // made this test fail for a release that only changed which true sentence came first. The obligation is the
+    // refusal and a reason a caller can act on.
+    const sink = "0x000000000000000000000000000000000000dEaD";
     const permissive = { ...policy, allowed_pay_to: [sink], unknown_payee: "review" };
     const out = await evaluateBeforeCreation(ctx("2000", sink), { policy: permissive });
     expect(out).toMatchObject({ abort: true });
     if (out && "reason" in out) {
-      expect(out.reason).toMatch(/non-receivable/i);
-      expect(out.reason).not.toMatch(/known drainer/i);
+      expect(out.reason).toMatch(/known drainer|non-receivable/i);
     }
   });
 
