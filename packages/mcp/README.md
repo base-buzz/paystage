@@ -226,7 +226,7 @@ signer, which is the entire product.
 | `verify_receipt` | is this receipt really ours — and is it about *this* payment, still in date |
 | `decode_payment_required` | what does this base64 402 header actually say |
 | `validate_policy` | is this policy document valid, and if not which field |
-| `request_testnet_funds` | undefined |
+| `request_testnet_funds` | 0.5 Base Sepolia USDC for testing — one drip per address per 24h, with the reset time |
 | `evaluate_batch` | the same question for several payments, one verdict each |
 <!-- tools:table:end -->
 
