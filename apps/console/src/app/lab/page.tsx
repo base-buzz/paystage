@@ -41,6 +41,12 @@ const PROBES: Array<{ id: string; label: string; question: string; higherIsBette
     higherIsBetter: true,
   },
   {
+    id: "clients",
+    label: "Client harness",
+    question: "100 independent clients, each with its own installed package, paying random counterparties — is it healthy?",
+    higherIsBetter: true,
+  },
+  {
     id: "outreach",
     label: "Outreach",
     // Aggregate only: the page is public, and naming repositories whose payment paths are unguarded would turn a
@@ -386,6 +392,64 @@ export default async function LabPage() {
                       ))}
                     </tbody>
                   </table>
+                  </>
+                ) : null}
+
+                {p.id === "clients" ? (
+                  <>
+                    <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginTop: 12, fontSize: 13.5 }}>
+                      {[
+                        ["sent", summary.sent, "var(--lp-mint, #047857)"],
+                        ["refused by policy", summary.refused, "var(--lp-dim, #8b90a0)"],
+                        ["failed", summary.failed, summary.failed ? "var(--lp-red, #b91c1c)" : "var(--lp-dim, #8b90a0)"],
+                        ["dry runs", summary.dry_runs, "var(--lp-dim, #8b90a0)"],
+                        ["wallets active", summary.wallets_active, undefined],
+                      ].map(([label, value, colour]) => (
+                        <div key={String(label)}>
+                          <div style={{ opacity: 0.55, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em" }}>{String(label)}</div>
+                          <div style={{ fontSize: 18, fontWeight: 600, color: (colour as string | undefined) ?? "inherit" }}>{String(value ?? 0)}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {summary.failure_classes && Object.keys(summary.failure_classes as Record<string, number>).length > 0 ? (
+                      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 14, fontSize: 13.5 }}>
+                        <thead>
+                          <tr style={{ textAlign: "left", opacity: 0.6 }}>
+                            <th style={{ padding: "6px 8px" }}>failure class</th>
+                            <th style={{ padding: "6px 8px" }}>count</th>
+                            <th style={{ padding: "6px 8px" }}>what it means</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(summary.failure_classes as Record<string, number>).map(([cls, count]) => (
+                            <tr key={cls} style={{ borderTop: "1px solid rgba(128,128,128,0.25)" }}>
+                              <td style={{ padding: "6px 8px", color: "var(--lp-red, #b91c1c)" }}>{cls}</td>
+                              <td style={{ padding: "6px 8px" }}>{count}</td>
+                              <td style={{ padding: "6px 8px", opacity: 0.75 }}>
+                                {{
+                                  "insufficient funds": "a wallet ran dry — funding, not a product defect",
+                                  "nonce too low": "two payments collided from one wallet — concurrency bug in the harness",
+                                  "RPC rate limit": "too many in flight — lower --concurrency",
+                                  "RPC timeout": "the endpoint did not answer — retry policy question",
+                                  "gas estimation": "the transfer would have reverted — balance or allowance",
+                                  network: "transport — endpoint or DNS",
+                                  other: "unnormalised; read the journal",
+                                }[cls] ?? "unnormalised"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <p style={{ marginTop: 12, fontSize: 13, opacity: 0.7 }}>No failures recorded.</p>
+                    )}
+
+                    <p style={{ marginTop: 10, fontSize: 12.5, opacity: 0.6 }}>
+                      versions producing traffic:{" "}
+                      {Object.entries((summary.versions ?? {}) as Record<string, number>).map(([v, n]) => `${v} ×${n}`).join(", ") || "none"} ·
+                      a refusal is the policy working, a failure is not
+                    </p>
                   </>
                 ) : null}
 
