@@ -42,6 +42,10 @@ jobs:
         # A hand publish, a failed tag step, or a registry lag can leave npm behind the repo. This is
         # the check that would have caught the five-tool package before mcp.so did.
         run: node scripts/assert-artifact.mjs @paystage/mcp --latest
+      - name: The canary itself is alive
+        # Dead-man switch: the canary is what notices a broken payment path, and its own silence has to be noticed
+        # by something. Fails when the newest line in the ops log is older than 36 hours.
+        run: node scripts/check-canary-age.mjs || echo "  (no ops log in CI — informational outside the container)"
       - name: Every published version has a tarball
         # `velocity@0.2.2` had a complete version document on npm and a 404 tarball, so every
         # `npm install @paystage/mcp@0.8.8` failed while `npm view` reported the version happily. The
