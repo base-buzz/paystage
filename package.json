@@ -9,5 +9,8 @@
     "test": "npm run test -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/velocity -w @paystage/x402-guard -w @paystage/trade-preflight -w @paystage/mcp",
     "typecheck": "npm run typecheck -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/velocity -w @paystage/trade-preflight -w @paystage/mcp -w paystage-hosted",
     "check:dep-pins": "node scripts/check-dep-pins.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
   }
 }

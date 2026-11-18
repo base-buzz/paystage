@@ -44,6 +44,8 @@ jobs:
       - run: node scripts/check-version-parity.mjs
       - run: node scripts/check-env-vars.mjs
       - run: node scripts/check-workflows.mjs
+      - run: node scripts/check-script-bins.mjs
+      - run: node scripts/check-staged-secrets.mjs --all
       - run: node scripts/check-manifests.mjs
       - run: node scripts/check-manifest-packages.mjs
       - run: node scripts/check-dep-pins.mjs
