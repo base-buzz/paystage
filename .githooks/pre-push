@@ -10,6 +10,23 @@ cd "$root" || exit 1
 fail=0
 note() { printf 'pre-push: %s\n' "$1"; }
 
+# 0. A force-push to the protected branch is the one destructive act this hook can still prevent.
+#
+# Git hands pre-push one line per ref on stdin: <local ref> <local sha> <remote ref> <remote sha>. A non-zero remote sha
+# with a local sha that does not contain it is a rewrite — and on `main` that discards history other clones already have.
+# A plain push is unaffected; this only fires when the remote commit would be orphaned.
+protected="refs/heads/main"
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$remote_ref" = "$protected" ] || continue
+  case "$local_sha" in 0000000000000000000000000000000000000000) continue ;; esac # deleting the branch
+  [ "$remote_sha" = "0000000000000000000000000000000000000000" ] && continue      # first push, nothing to lose
+  if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
+    note "this push would rewrite $protected (the remote commit is not an ancestor) — refusing"
+    note "  if that is intended, push with --no-verify and say why in the commit that replaces it"
+    exit 1
+  fi
+done
+
 # 1. Every package declares what it builds. @paystage/mcp shipped .d.ts files with no
 #    "types" field for three releases; nobody noticed because nobody imported it in TS.
 if ! node scripts/check-manifests.mjs; then

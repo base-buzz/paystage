@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# After a pull or merge, the lockfile may have moved under a tree that was installed hours ago.
+#
+# Every "green here, red on CI" failure this week had this shape: a local `node_modules` that no longer matched the
+# lockfile, so a build passed against stale packages and a fresh install failed. This warns instead of acting, because
+# an install from a hook would rewrite the tree while the operator is in the middle of something.
+set -u
+
+changed=$(git diff --name-only 'HEAD@{1}' HEAD -- package-lock.json 'packages/*/package.json' 'apps/*/package-lock.json' 2>/dev/null || true)
+[ -z "$changed" ] && exit 0
+
+echo "post-merge: dependencies moved since the last checkout:"
+printf '%s\n' "$changed" | sed 's/^/    /'
+echo "  run: npm ci --ignore-scripts && (cd apps/hosted && npm ci --ignore-scripts)"
+echo "  pre-push runs a clean-checkout build, which will catch it if you forget — this is the cheaper reminder."
+exit 0
