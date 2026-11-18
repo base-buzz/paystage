@@ -99,6 +99,17 @@ if ! node scripts/check-hosted-deps.mjs; then
   fail=1
 fi
 
+# 10. Run what CI runs: build, every test suite, and a clean-checkout pass when the push touches something that can
+#     only break on a fresh install (a lockfile, a manifest, a workflow, this hook).
+#
+#     This is the answer to "can it be checked before it hits GitHub". Every failure today was green locally and red on
+#     CI, because the local tree had been installed for hours: a workflow with no node_modules, a package built against
+#     stale dependencies, a test asserting a count that had moved. A working tree cannot see those; a clean checkout can.
+if ! node scripts/ci-local.mjs; then
+  note "CI would fail on this commit — see above"
+  fail=1
+fi
+
 # 3. Any dependency added in this push gets scored before it lands.
 base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
 if [ -n "$base" ]; then
