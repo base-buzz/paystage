@@ -76,6 +76,14 @@ function spendersForPolicy(policy: Policy): string[] {
   return spenders ?? [];
 }
 
+/**
+ * A raw shape, not a `ZodObject`.
+ *
+ * `inputSchema: z.object(authWatchShape)` looked equivalent and compiled against the locally installed SDK, but a fresh
+ * install resolves stricter types: `registerTool` wants `Record<string, ZodType>` and infers the callback's argument
+ * from it. The wrapper broke that inference, and the failure only appeared on a clean build — which would have broken
+ * the *next* release rather than the published one.
+ */
 const authWatchShape = {
   wallet: z.string(),
   network: z.string().optional(),
@@ -146,7 +154,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: z.object({
+      inputSchema: {
         payment_required: z.unknown(),
         policy_path: z.string().optional(),
         policy: z.unknown().optional(),
@@ -154,17 +162,14 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
           .string()
           .optional()
           .describe("Which agent is asking. Required to reach per-agent budgets in policy.agents."),
-      }),
+      },
     },
     async (input: {
       payment_required: unknown;
       policy_path?: string;
       policy?: unknown;
       agent_id?: string;
-    }): Promise<{
-      content: Array<{ type: "text"; text: string }>;
-      isError?: boolean;
-    }> => {
+    }) => {
       try {
         const policy = await deps.resolvePolicy(input);
         const pr = normalizePaymentRequired(input.payment_required);
@@ -174,13 +179,13 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
           input.agent_id !== undefined ? { agentId: input.agent_id } : {},
         );
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         return {
           isError: true,
-          content: [{ type: "text", text: `Error: ${message}` }],
+          content: [{ type: "text" as const, text: `Error: ${message}` }],
         };
       }
     },
@@ -197,7 +202,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         destructiveHint: false,
         openWorldHint: true,
       },
-      inputSchema: z.object(authWatchShape),
+      inputSchema: authWatchShape,
     },
     async (args: AuthWatchArgs) => {
       const policy = await deps.resolvePolicy(args);
@@ -221,7 +226,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
       return {
         content: [
           {
-            type: "text",
+            type: "text" as const,
             text: JSON.stringify({ items: serialized }, null, 2),
           },
         ],
@@ -240,7 +245,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         destructiveHint: false,
         openWorldHint: true,
       },
-      inputSchema: z.object(authWatchShape),
+      inputSchema: authWatchShape,
     },
     async (args: AuthWatchArgs) => {
       const policy = await deps.resolvePolicy(args);
@@ -266,7 +271,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
       return {
         content: [
           {
-            type: "text",
+            type: "text" as const,
             text: JSON.stringify({ results: serialized }, null, 2),
           },
         ],
@@ -285,12 +290,12 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         destructiveHint: false,
         openWorldHint: true,
       },
-      inputSchema: z.object({
+      inputSchema: {
         proposal: tradeProposalShape,
         policy: z.unknown().optional(),
         policy_path: z.string().optional(),
         snapshot: z.unknown().optional(),
-      }),
+      },
     },
     async (
       args: TradeToolArgs,
@@ -310,13 +315,13 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
           policy,
         );
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         return {
           isError: true,
-          content: [{ type: "text", text: `Error: ${message}` }],
+          content: [{ type: "text" as const, text: `Error: ${message}` }],
         };
       }
     },
@@ -333,13 +338,13 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: z.object({
+      inputSchema: {
         history: EvaluateVelocityInputSchema.shape.history,
         proposed: EvaluateVelocityInputSchema.shape.proposed,
         policy: z.unknown().optional(),
         policy_path: z.string().optional(),
         now_ms: z.number().int().nonnegative().optional(),
-      }),
+      },
     },
     async (input: {
       history?: unknown;
@@ -354,7 +359,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         return {
           content: [
             {
-              type: "text",
+              type: "text" as const,
               text: JSON.stringify(serializeVelocityResult(result), null, 2),
             },
           ],
@@ -363,7 +368,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         const message = error instanceof Error ? error.message : String(error);
         return {
           isError: true,
-          content: [{ type: "text", text: `Error: ${message}` }],
+          content: [{ type: "text" as const, text: `Error: ${message}` }],
         };
       }
     },
@@ -384,10 +389,10 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         destructiveHint: false,
         openWorldHint: true,
       },
-      inputSchema: z.object({
+      inputSchema: {
         receipt: z.unknown().describe("The receipt object as issued"),
         key_url: z.string().url().optional().describe("Override the published key location"),
-      }),
+      },
     },
     async ({ receipt, key_url }: { receipt: unknown; key_url?: string }) => {
       try {
@@ -421,9 +426,9 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: z.object({
+      inputSchema: {
         header: z.string().min(1).describe("The raw base64 value of the payment-required header"),
-      }),
+      },
     },
     async ({ header }: { header: string }) => {
       // Inline rather than importing @paystage/x402-guard: this is four lines and a dependency for
@@ -455,7 +460,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: z.object({ policy: z.unknown() }),
+      inputSchema: { policy: z.unknown() },
     },
     async ({ policy }: { policy: unknown }) => {
       try {
@@ -483,10 +488,10 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         destructiveHint: false,
         openWorldHint: true,
       },
-      inputSchema: z.object({
+      inputSchema: {
         address: z.string().regex(/^0x[0-9a-fA-F]{40}$/, "a 0x-prefixed 20-byte address"),
         faucetUrl: z.string().url().optional(),
-      }),
+      },
     },
     async ({ address, faucetUrl }: { address: string; faucetUrl?: string }) => {
       const url = faucetUrl ?? "https://sepolia.api.paystage.xyz/faucet";
@@ -527,10 +532,10 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         destructiveHint: false,
         openWorldHint: false,
       },
-      inputSchema: z.object({
+      inputSchema: {
         payments: z.array(z.unknown()).min(1).max(50),
         policy: z.unknown(),
-      }),
+      },
     },
     async ({ payments, policy }: { payments: unknown[]; policy: unknown }) => {
       const parsedPolicy = parsePolicy(policy as never);
