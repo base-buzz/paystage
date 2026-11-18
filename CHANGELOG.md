@@ -3,7 +3,7 @@
 ## 2026-11-18
 
 - `@paystage/x-evm@0.1.3` and `@paystage/ai-sdk@0.1.4`: **two published packages shipped without a `dist/`.** Their
-  `main` points at `./dist/index.js` and the tarball did not contain it, so every `import "@paystage/x-evm"` and every
+  `main` points at the package's own dist entry, and the tarball did not contain it, so every `import "@paystage/x-evm"` and every
   `import "@paystage/ai-sdk"` failed with `ERR_MODULE_NOT_FOUND` — while `npm view` reported the versions happily. The
   cause: the root `build` script listed seven packages and these two were not among them, so the release published what
   the workspace had never built. The script now builds every workspace package, and the artifact check compares the
