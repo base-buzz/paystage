@@ -4,6 +4,7 @@ import { healthRoutes } from "./routes/health.js";
 import { evaluateRoutes } from "./routes/evaluate.js";
 import { publicStatusRoutes } from "./routes/public-status.js";
 import { receiptKeyRoutes } from "./routes/receipt-key.js";
+import { PROBLEMS } from "./problem.js";
 import { publicChainRoutes } from "./routes/public-chain.js";
 import { wellKnownRoutes } from "./routes/well-known.js";
 import { wellKnownMcpRoutes } from "./routes/well-known-mcp.js";
@@ -341,7 +342,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
             "x-paystage-debug",
             `upstream_timeout source=${cache.supportedSource() ?? "none"} calls=${cache.supportedCallCount()} elapsed_ms=${elapsed.toFixed(0)}`,
           );
-          return c.json({ error: "upstream_timeout", retry_after_seconds: 5 }, 503);
+          return c.json(PROBLEMS.upstreamTimeout(), 503);
         }
       } finally {
         if (timer !== undefined) clearTimeout(timer);

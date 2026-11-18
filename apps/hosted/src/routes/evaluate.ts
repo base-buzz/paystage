@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { PROBLEMS } from "../problem.js";
 import { buildReceipt } from "../receipt.js";
 import {
   evaluatePayment,
@@ -19,14 +20,14 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
   try {
     body = await c.req.json();
   } catch {
-    return c.json({ error: "invalid_json" }, 400);
+    return c.json(PROBLEMS.invalidJson(), 400);
   }
   const b = body as { payment_required?: unknown; policy?: unknown; agent_id?: unknown };
   if (!b || typeof b !== "object" || b.payment_required == null) {
-    return c.json({ error: "missing_payment_required" }, 400);
+    return c.json(PROBLEMS.missingPaymentRequired(), 400);
   }
   if (b.agent_id !== undefined && typeof b.agent_id !== "string") {
-    return c.json({ error: "agent_id_must_be_a_string" }, 400);
+    return c.json(PROBLEMS.agentIdType(), 400);
   }
   try {
     const normalized = normalizePaymentRequired(b.payment_required as never);
@@ -67,7 +68,7 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
     return c.json({ ...decision, receipt });
   } catch (err) {
     return c.json(
-      { error: "evaluation_failed", message: (err as Error).message },
+      PROBLEMS.evaluationFailed((err as Error).message),
       400,
     );
   }
@@ -78,7 +79,7 @@ evaluateRoutes.post("/v1/evaluate_outstanding_auths", async (c) => {
   try {
     body = await c.req.json();
   } catch {
-    return c.json({ error: "invalid_json" }, 400);
+    return c.json(PROBLEMS.invalidJson(), 400);
   }
   const b = body as {
     wallet?: unknown;
@@ -90,7 +91,7 @@ evaluateRoutes.post("/v1/evaluate_outstanding_auths", async (c) => {
     rpc_url?: unknown;
   };
   if (!b || typeof b !== "object" || typeof b.wallet !== "string") {
-    return c.json({ error: "missing_wallet" }, 400);
+    return c.json(PROBLEMS.missingWallet(), 400);
   }
   try {
     const policy = parsePolicyCached(b.policy);
@@ -122,7 +123,7 @@ evaluateRoutes.post("/v1/evaluate_outstanding_auths", async (c) => {
     return c.json({ listed, evaluated });
   } catch (err) {
     return c.json(
-      { error: "evaluation_failed", message: (err as Error).message },
+      PROBLEMS.evaluationFailed((err as Error).message),
       400,
     );
   }

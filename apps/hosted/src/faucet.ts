@@ -2,6 +2,7 @@ import { createPublicClient, createWalletClient, http, parseUnits, erc20Abi, typ
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 import type { Bindings } from "./env.js";
+import { PROBLEMS } from "./problem.js";
 
 /**
  * The testnet faucet (#92).
@@ -115,7 +116,7 @@ export async function handleFaucet(
           ok: false,
           status: 429,
           body: {
-            error: "this address has already been funded in the last 24 hours",
+            ...PROBLEMS.faucetAlreadyFunded(resetAt, wait),
             address,
             alreadyFundedAt: previous,
             resetsAt: resetAt,
