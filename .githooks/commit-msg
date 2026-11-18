@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# A commit message is the only record of *why*, and "fix" / "wip" / "update" is a record of nothing.
+#
+# This project has spent a day reconstructing intent from diffs twice in one week — the receipt spec's placeholder that
+# read like provenance, and the 0.4.3 version reuse. Both were explained in a commit body; neither would have been
+# recoverable from a subject line.
+#
+# Shape: <type>(<scope>): <what changed>   then, for anything but a one-line fix, a body saying why.
+# Bypass once with `git commit --no-verify` and say why in the message.
+set -u
+
+msg_file="$1"
+subject=$(head -1 "$msg_file")
+
+# Merge and revert commits are generated; do not police them.
+case "$subject" in
+  Merge\ *|Revert\ *|"fixup!"*|"squash!"*) exit 0 ;;
+esac
+
+fail=0
+
+if ! printf '%s' "$subject" | grep -qE '^(release|feat|fix|docs|test|chore|refactor|perf|ci|build|ops|security)(\([a-z0-9./-]+\))?: .{8,}'; then
+  echo "commit-msg: the subject must be '<type>(<scope>): <what changed>' with at least 8 characters after the colon."
+  echo "  types: release feat fix docs test chore refactor perf ci build ops security"
+  echo "  got:   $subject"
+  fail=1
+fi
+
+if printf '%s' "$subject" | grep -qiE '\b(wip|tmp|temp|asdf|stuff|things|misc|update|changes)\b'; then
+  echo "commit-msg: '$subject' does not say what changed — say what changed."
+  fail=1
+fi
+
+# A body is required when the change is not self-evident: more than one file, or any source file.
+staged=$(git diff --cached --name-only | wc -l | tr -d ' ')
+body=$(tail -n +2 "$msg_file" | sed '/^#[0-9]/d' | grep -cv '^[[:space:]]*$' || true)
+if [ "${staged:-0}" -gt 1 ] && [ "${body:-0}" -lt 1 ]; then
+  echo "commit-msg: $staged files changed and there is no body — say why, not just what."
+  fail=1
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo "commit-msg: nothing committed."
+  exit 1
+fi
