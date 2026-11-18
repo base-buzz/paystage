@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createApp } from "../src/app.js";
+import { TOOL_NAMES } from "@paystage/mcp";
 
 /**
  * The remote MCP endpoint. The npm package is stdio-only, so before this every directory and
@@ -43,7 +44,7 @@ describe("/mcp", () => {
     expect(body).toContain("paystage");
   });
 
-  it("lists all nine tools, not the one it used to", async () => {
+  it("lists every tool the package registers, not the one it used to", async () => {
     // The site claimed nine while this endpoint served one. This assertion is the reason that cannot
     // happen quietly again: it fails on a count change in either direction.
     const app = createApp(env as never, { protect: false });
@@ -59,7 +60,7 @@ describe("/mcp", () => {
     const text = await res.text();
     const names = [...text.matchAll(/"name":"([a-z0-9_]+)"/g)].map((m) => m[1] ?? "");
     const set = new Set(names.filter((n): n is string => Boolean(n) && n.includes("_") && n !== "paystage"));
-    expect(set.size).toBe(9);
+    expect(set.size).toBe(TOOL_NAMES.length);
     for (const expected of [
       "evaluate_mcp_payment",
       "list_outstanding_auths",

@@ -21,6 +21,7 @@ function withLedger(rows: Array<{ created_at: string }>) {
 function bindings(fetchImpl: typeof fetch) {
   vi.stubGlobal("fetch", fetchImpl);
   return {
+    PAYSTAGE_PAYTO: "0x0000000000000000000000000000000000000001",
     SUPABASE_URL: "https://example.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "service-role",
     FAUCET_SEPOLIA_KEY: "0x" + "11".repeat(32),

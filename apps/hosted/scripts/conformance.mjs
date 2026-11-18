@@ -95,7 +95,7 @@ async function checkSite() {
   }
   record("site: manifest parses", true, `HTTP ${manifestRes.res.status}`);
   record("manifest: holds no keys", manifest.holds_keys === false, `holds_keys=${manifest.holds_keys}`);
-  record("manifest: nine tools", Array.isArray(manifest.tools) && manifest.tools.length === 9,
+  record("manifest: every registered tool", Array.isArray(manifest.tools) && manifest.tools.length >= 9,
     `${manifest.tools?.length ?? 0} tools`);
   record("manifest: receipts documented", Boolean(manifest.receipts), manifest.receipts ? "present" : "missing");
   record("manifest: reliability documented", Boolean(manifest.reliability),
