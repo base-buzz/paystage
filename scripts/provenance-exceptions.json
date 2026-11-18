@@ -1,0 +1,5 @@
+{
+  "@paystage/x402-guard@0.1.0": {
+    "reason": "published by hand on 2026-11-12 before the release workflow existed; npm Trusted Publishing cannot be backfilled, so the version stays unsigned and every later version is attested"
+  }
+}
