@@ -96,6 +96,26 @@ no payment, no key. Runs daily in CI; history at https://paystage.xyz.
 
 ${m.access.map((row) => `- ${row.kind}: ${row.detail}`).join("\n")}
 
+## 中文（简体）— 在签名之前，判断这笔支付该不该付
+
+PayStage 是面向 AI 智能体（AI agent）的 **x402 支付安全层**：在钱包签名之前，按你写的本地策略
+评估待签名的支付，返回 **pay**、**review** 或 **do_not_pay**，并给出触发的那条规则。只读，不持私钥，
+不签名，不移动资金。
+
+- **查什么**：收款地址（是否在已知盗币名单）、金额上限、允许的链与资产、授权（ERC-20 / Permit2 /
+  EIP-3009）、消费速率（突发、尖峰、失控节奏）、HIP-3 / trade.xyz 下单范围。
+- **给谁用**：让智能体自动付钱的开发者（x402 API、MCP 服务）、做钱包安全与风控的团队、需要给
+  子智能体设预算上限的编排框架（LangChain、ElizaOS、AgentKit、Vercel AI SDK）。
+- **怎么装**：\`npx -y -p @paystage/mcp paystage-mcp\`（MCP 服务），或直接用托管 API
+  \`https://api.paystage.xyz\`（Base 主网，每次调用 $0.002 USDC，走 x402）。
+- **测网免费**：\`POST https://sepolia.api.paystage.xyz/faucet\` 领取 0.5 Base Sepolia USDC
+  （每个地址每 24 小时一次），或调用 MCP 工具 \`request_testnet_funds\`。
+- **中文页面**：https://paystage.xyz/zh · 中文 README：
+  https://github.com/base-buzz/paystage/blob/main/README.zh-CN.md · 术语表：https://paystage.xyz/glossary
+
+关键词（供检索）：x402、支付安全、支付前校验、智能体支付、agent 支付拦截、盗币地址检查、钱包授权检查、
+消费限额、MCP 工具、USDC、Base。
+
 ## Links
 
 - Website: https://paystage.xyz

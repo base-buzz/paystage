@@ -113,6 +113,23 @@ export const PAYSTAGE_MANIFEST = {
   name: "PayStage",
   description:
     "A read-only payment-safety layer for AI agents: local-policy preflight that returns pay, review or do_not_pay with the rule that fired.",
+  // An agent answering a Chinese request for "x402 支付安全" needs a description it can match, in the language it
+  // searched in. The English field is the canonical one; this one exists so the discovery surfaces do not answer
+  // only in English.
+  description_zh:
+    "面向 AI 智能体的只读 x402 支付安全层：按本地策略在签名前预检，返回 pay、review 或 do_not_pay，并给出触发的那条规则。只读、不持私钥、不签名、不移动资金。",
+  keywords_zh: [
+    "x402",
+    "支付安全",
+    "支付前校验",
+    "智能体支付",
+    "agent 支付拦截",
+    "盗币地址检查",
+    "钱包授权检查",
+    "消费限额",
+    "MCP 工具",
+    "USDC",
+  ],
   version: PACKAGE_VERSIONS["@paystage/mcp"],
   license: "MIT",
   homepage: "https://paystage.xyz",
