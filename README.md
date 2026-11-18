@@ -13,7 +13,7 @@ never reaches the signing step at all.
 
 ### Where the money does not move
 
-The design point is the arrow that is missing. The wallet signs only after the challenge has been
+The design point is the arrow that is missing. The wallet *signs* only after the challenge has been
 judged; a refusal returns the seller's own 402 with a verdict header attached, so there is nothing to
 revoke afterwards.
 
