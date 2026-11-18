@@ -43,7 +43,23 @@ for (const [name, version] of versions) {
     for (const [dep, range] of Object.entries(pkg[field] ?? {})) {
       if (!versions.has(dep)) continue;
       const want = versions.get(dep);
-      if (range !== want) problems.push(`${name} → ${dep}: "${range}" but the workspace has ${want}`);
+      /**
+       * An exact pin must equal the workspace version; a caret or tilde may satisfy it.
+       *
+       * Strict equality on every range turned a patch bump of the evaluator into four package releases — the cascade
+       * that produced this very file's first two findings. A `^0.5.0` that the workspace satisfies is not drift; an
+       * exact `0.5.0` when the workspace is 0.5.2 is, because every user of that package gets the older evaluator.
+       */
+      const satisfied = (() => {
+        if (range === want) return true;
+        const m = /^[\^~](\d+)\.(\d+)\.(\d+)/.exec(range);
+        if (!m) return false;
+        const [maj, min, pat] = [Number(m[1]), Number(m[2]), Number(m[3])];
+        const [wmaj, wmin, wpat] = want.split(".").map(Number);
+        if (range.startsWith("^")) return wmaj === maj && (wmin > min || (wmin === min && wpat >= pat));
+        return wmaj === maj && wmin === min && wpat >= pat; // `~` allows patch-level
+      })();
+      if (!satisfied) problems.push(`${name} → ${dep}: "${range}" but the workspace has ${want}`);
     }
   }
 }
