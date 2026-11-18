@@ -64,7 +64,22 @@ if (version !== local.version) {
 
 const dir = mkdtempSync(join(tmpdir(), "artifact-"));
 try {
-  execFileSync("npm", ["pack", `${pkg}@${version}`, "--silent"], { cwd: dir, encoding: "utf8", timeout: 120_000 });
+  /**
+   * Retry the pack: the release publishes and then immediately asks npm for the artifact, and the registry is not one
+   * machine. The first run after publishing preflight@0.5.1 failed here with a bare `npm pack` exit 1 while the version
+   * was already visible a minute later — a race, not a defect. Three attempts, ten seconds apart, is enough for
+   * propagation and short enough that a genuinely missing tarball still fails the release.
+   */
+  let packed = false;
+  for (let attempt = 1; attempt <= 3 && !packed; attempt += 1) {
+    try {
+      execFileSync("npm", ["pack", `${pkg}@${version}`, "--silent"], { cwd: dir, encoding: "utf8", timeout: 120_000 });
+      packed = true;
+    } catch (error) {
+      if (attempt === 3) throw error;
+      await new Promise((resolveWait) => setTimeout(resolveWait, 10_000));
+    }
+  }
   const tarball = readdirSync(dir).find((f) => f.endsWith(".tgz"));
   if (!tarball) {
     console.error("assert-artifact: npm pack produced no tarball");
