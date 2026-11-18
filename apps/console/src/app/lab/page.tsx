@@ -40,7 +40,28 @@ const PROBES: Array<{ id: string; label: string; question: string }> = [
     label: "Decision",
     question: "Asked to pay a stranger's 402 challenge, what does each agent decide?",
   },
+  {
+    id: "outreach",
+    label: "Outreach",
+    // Aggregate only. The page is public: naming the repositories whose payment paths are unguarded would turn a
+    // measurement into a shaming list, and the point is the shape of the ecosystem, not any one project.
+    question: "How much of the x402 ecosystem pays without a gate — and is that measurement trustworthy?",
+  },
 ];
+
+/**
+ * A number is only rendered when its control passed.
+ *
+ * The outreach measurement published 19.5% before four controls caught what was wrong with it. A page that renders a
+ * percentage whose control failed is a worse version of that mistake: it is the same error, made permanent and public.
+ * So `controls_ok: false` renders as **controls failed** and no figure, and an absent flag — a row written before this
+ * rule existed — is treated as failed, because unknown is not a licence to print a number.
+ */
+function headlineFor(probe: string, row: ProbeRow): string {
+  const summary = (row.summary ?? {}) as Record<string, unknown>;
+  if (probe === "outreach" && summary.controls_ok !== true) return "controls failed — no figure";
+  return row.headline ?? "—";
+}
 
 function ago(iso: string): string {
   const days = Math.floor((Date.now() - Date.parse(iso)) / 86_400_000);
@@ -115,7 +136,7 @@ export default async function LabPage() {
           ) : (
             <>
               <p style={{ marginTop: 12, fontSize: 18 }}>
-                <strong>{p.rows[0]?.headline ?? "—"}</strong>{" "}
+                <strong>{p.rows[0] ? headlineFor(p.id, p.rows[0]) : "—"}</strong>{" "}
                 <span style={{ opacity: 0.6, fontSize: 14 }}>
                   latest run {new Date(p.rows[0]?.run_at ?? Date.now()).toISOString().slice(0, 10)} ({ago(p.rows[0]?.run_at ?? "")})
                 </span>
@@ -131,7 +152,7 @@ export default async function LabPage() {
                   {p.rows.map((r) => (
                     <tr key={r.run_at} style={{ borderTop: "1px solid rgba(128,128,128,0.25)" }}>
                       <td style={{ padding: "6px 8px" }}>{new Date(r.run_at).toISOString().slice(0, 10)}</td>
-                      <td style={{ padding: "6px 8px" }}>{r.headline ?? "—"}</td>
+                      <td style={{ padding: "6px 8px" }}>{headlineFor(p.id, r)}</td>
                     </tr>
                   ))}
                 </tbody>
