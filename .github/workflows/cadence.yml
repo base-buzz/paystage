@@ -66,18 +66,48 @@ jobs:
         # happened; nothing watched the published set afterwards (#180). A version document is a claim,
         # the tarball is the artifact.
         run: node scripts/check-tarballs.mjs
-      - name: Listing freshness
-        # Informational: most surfaces are third parties we cannot push, so a stale listing is a
-        # report, not a build failure. The conformance kit is what fails the job.
-        run: |
-          echo "### Listings" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          node scripts/check-listings.mjs >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          node scripts/check-listings.mjs || true
       - name: Fail if the kit failed
         if: steps.conformance.outcome == 'failure'
         run: exit 1
+
+  listings:
+    name: listings
+    # Listings are surfaces we cannot push: npm, the MCP registry, Glama, mcp.so. A stale listing is a report, not a
+    # product failure — and mixing the two is how "the nightly is red" stopped meaning "the product is broken" (#183).
+    # This job is never allowed to fail the run; it opens one issue and keeps the badge about the product.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Listing freshness
+        id: listings
+        continue-on-error: true
+        run: |
+          set +e
+          node scripts/check-listings.mjs > /tmp/listings.txt 2>&1
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+          tail -40 /tmp/listings.txt
+          echo "### Listings" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -40 /tmp/listings.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+      - name: Open or update one issue when a listing is stale
+        # One issue, updated in place: a daily job that opens a new issue every day trains people to close without
+        # reading, which is the same failure as a red badge nobody trusts.
+        if: steps.listings.outputs.exit != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="listings: a surface is stale or unreadable"
+          body=$(printf 'The daily listing check reported drift. This is **not** a product failure.\n\n```\n%s\n```\n' "$(tail -30 /tmp/listings.txt)")
+          existing=$(gh issue list --label listings --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --label listings --body "$body"
+          fi
 
   deps:
     name: dependencies
