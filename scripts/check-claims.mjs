@@ -196,6 +196,7 @@ function checkToolAnnotations() {
     "evaluate_outstanding_auths",
     "evaluate_hip3_trade",   // read-only market query
     "verify_receipt",        // fetches the published key
+    "request_testnet_funds", // POSTs to the sepia faucet, which sends a testnet transaction
   ]);
   for (const block of src.split("server.registerTool(").slice(1)) {
     const name = /^\s*"([a-z0-9_]+)"/.exec(block)?.[1];

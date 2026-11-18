@@ -378,7 +378,7 @@ export default function LandingPage() {
                   <td>
                     <code>/llms.txt</code>
                   </td>
-                  <td>Short map: what this is, the nine tools, install lines, endpoints.</td>
+                  <td>Short map: what this is, the ten tools, install lines, endpoints.</td>
                 </tr>
                 <tr>
                   <td>

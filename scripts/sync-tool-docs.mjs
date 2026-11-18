@@ -37,6 +37,7 @@ const FILES = ["README.md", "packages/mcp/README.md", "README.zh-CN.md"];
 const SUMMARY = {
   evaluate_mcp_payment: "should this x402 payment be signed? → `pay` · `review` · `do_not_pay`",
   evaluate_batch: "the same question for several payments, one verdict each",
+  request_testnet_funds: "0.5 Base Sepolia USDC for testing — one drip per address per 24h, with the reset time",
   list_outstanding_auths: "which ERC-20 / Permit2 / EIP-3009 authorisations are still outstanding",
   evaluate_outstanding_auths: "which of those need attention before the next payment",
   evaluate_hip3_trade: "should this HIP-3 / trade.xyz order be placed? → `allow` · `review` · `do_not_trade`",
@@ -88,6 +89,7 @@ function packagesTable() {
 const SUMMARY_ZH = {
   evaluate_mcp_payment: "这笔 x402 支付该不该签？→ `pay` · `review` · `do_not_pay`",
   evaluate_batch: "同一问题，批量评估多笔支付，每笔一个判定",
+  request_testnet_funds: "测试用的 0.5 Base Sepolia USDC —— 每个地址每 24 小时一次，并给出重置时间",
   list_outstanding_auths: "还有哪些 ERC-20 / Permit2 / EIP-3009 授权尚未结清",
   evaluate_outstanding_auths: "哪些授权需要在下一笔支付前处理",
   evaluate_hip3_trade: "这笔 HIP-3 / trade.xyz 订单该不该下？→ `allow` · `review` · `do_not_trade`",

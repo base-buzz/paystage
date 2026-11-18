@@ -39,6 +39,7 @@ export const TOOL_NAMES = [
   "decode_payment_required",
   "validate_policy",
   "evaluate_batch",
+  "request_testnet_funds",
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];
@@ -457,6 +458,48 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         const message = error instanceof Error ? error.message : String(error);
         return {
           content: [{ type: "text" as const, text: JSON.stringify({ valid: false, error: message }, null, 2) }],
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "request_testnet_funds",
+    {
+      description:
+        "test funds. Call this when you need Base Sepolia USDC to exercise the paid path end to end — one drip of 0.5 USDC per address per 24 hours, and the refusal tells you when it resets rather than just failing. Reads a public faucet: no key needed, no account, and it can only ever send testnet USDC. Use a throwaway address for anything automated; the cap is per address, so a script that generates a new address per call is not clever, it is why faucets get closed.",
+      annotations: {
+        title: "Request testnet funds (writes a testnet tx, never touches mainnet)",
+        readOnlyHint: false,
+        destructiveHint: false,
+        openWorldHint: true,
+      },
+      inputSchema: z.object({
+        address: z.string().regex(/^0x[0-9a-fA-F]{40}$/, "a 0x-prefixed 20-byte address"),
+        faucetUrl: z.string().url().optional(),
+      }),
+    },
+    async ({ address, faucetUrl }: { address: string; faucetUrl?: string }) => {
+      const url = faucetUrl ?? "https://sepolia.api.paystage.xyz/faucet";
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ address }),
+          signal: AbortSignal.timeout(60_000),
+        });
+        const body = (await res.json()) as Record<string, unknown>;
+        // A refusal is a result, not an error: an agent needs the reset time to decide what to do next, and an
+        // exception would throw that away.
+        return { content: [{ type: "text" as const, text: JSON.stringify({ status: res.status, ...body }, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ error: "faucet unreachable", detail: String(error).slice(0, 200) }, null, 2),
+            },
+          ],
         };
       }
     },

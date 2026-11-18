@@ -23,6 +23,7 @@ PayStage 在签名之前回答这三个问题，并把答案写在回执里。
 | `verify_receipt` | 这张回执是不是我们签发的——是否针对这笔支付、是否仍在有效期内 |
 | `decode_payment_required` | 这个 base64 的 402 头到底说了什么 |
 | `validate_policy` | 这份策略文档是否合法，问题出在哪个字段 |
+| `request_testnet_funds` | 测试用的 0.5 Base Sepolia USDC —— 每个地址每 24 小时一次，并给出重置时间 |
 | `evaluate_batch` | 同一问题，批量评估多笔支付，每笔一个判定 |
 <!-- tools:table:end -->
 
