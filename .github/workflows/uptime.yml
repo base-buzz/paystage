@@ -52,6 +52,30 @@ jobs:
           '
         continue-on-error: true
 
+      # Append one probe result to the SLO history (#58). Committed back to the repo so the error budget is computed
+      # from a record anyone can audit, not from a dashboard nobody can query later.
+      - name: Record the probe for the SLO budget
+        if: always()
+        run: |
+          node -e '
+            const fs = require("fs");
+            const path = "docs/state/uptime.json";
+            const d = JSON.parse(fs.readFileSync("probe.json", "utf8"));
+            const history = fs.existsSync(path) ? JSON.parse(fs.readFileSync(path, "utf8")) : [];
+            history.push({ at: d.checked_at, ok: d.failed.length === 0, checks: d.results.length, failed: d.failed });
+            // Keep 90 days: the SLO window is 30 and headroom costs nothing but a longer file.
+            const cutoff = Date.now() - 90 * 86400000;
+            fs.writeFileSync(path, JSON.stringify(history.filter((h) => new Date(h.at).getTime() >= cutoff), null, 1));
+          '
+          node scripts/check-slo.mjs
+      - name: Commit the history
+        if: always()
+        run: |
+          git config user.name "the project team"
+          git config user.email "ops@paystage"
+          git add docs/state/uptime.json
+          git diff --quiet --cached || git commit -m "ops: uptime probe recorded for the SLO budget [skip ci]"
+          git push || echo "history commit skipped (branch protection)"
       - name: Show the table
         run: cat body.md >> "$GITHUB_STEP_SUMMARY"
 
