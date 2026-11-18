@@ -3,7 +3,7 @@
   "name": "io.github.base-buzz/mcp",
   "title": "PayStage \u2014 x402 payment safety",
   "description": "x402 payment safety: stop your agent paying a drainer before the wallet signs.",
-  "version": "0.8.11",
+  "version": "0.8.12",
   "websiteUrl": "https://paystage.xyz",
   "repository": {
     "url": "https://github.com/base-buzz/paystage",

@@ -2,6 +2,13 @@
 
 ## 2026-11-18
 
+- `@paystage/mcp@0.8.12`: **the tools declare their schemas the way the SDK requires**, so a clean build no longer fails.
+  Ten tools passed `z.object({...})` where `registerTool` wants a raw shape; it compiled against a local SDK and broke on
+  a fresh install, which would have broken this release rather than the last one. Also: `paystage-explain` now prints the
+  payment terms and payee the verdict was about, with one command to check the receipt.
+
+## 2026-11-18
+
 - `@paystage/mcp@0.8.11`: **the tenth tool is in the published package.** `request_testnet_funds` lets an agent fund
   itself from the Base Sepolia faucet and finish the whole flow — faucet, pay, verify — with no human step. The faucet
   is rationed per address (0.5 USDC / 24h) and says when it resets. The published 0.8.10 still had nine tools, which
