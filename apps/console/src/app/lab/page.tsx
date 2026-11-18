@@ -27,34 +27,27 @@ type ProbeRow = {
   summary: Record<string, unknown> | null;
 };
 
-const PROBES: Array<{ id: string; label: string; question: string; higherIsBetter: boolean }> = [
-  {
-    id: "discovery",
-    label: "Discovery",
-    question: "Does an agent searching for the need — not our name — find us?",
-    higherIsBetter: true,
-  },
-  {
-    id: "decision",
-    label: "Decision",
-    question: "Asked to pay a stranger's 402 challenge, what does each agent decide?",
-    higherIsBetter: true,
-  },
-  {
-    id: "clients",
-    label: "Client harness",
-    question: "100 independent clients, each with its own installed package, paying random counterparties — is it healthy?",
-    higherIsBetter: true,
-  },
-  {
-    id: "outreach",
-    label: "Outreach",
-    // Aggregate only: the page is public, and naming repositories whose payment paths are unguarded would turn a
-    // measurement into a shaming list.
-    question: "How much of the x402 ecosystem pays without a gate — and is that measurement trustworthy?",
-    higherIsBetter: false,
-  },
+/**
+ * This file is public; how the probes work is not.
+ *
+ * The label and the question each probe asks arrive **in the row** (`summary.label`, `summary.question`), written by the
+ * ops-side ingest. Listing them here would publish our measurement method — which searches, which phrasing, which agents —
+ * to anyone reading the repository, and that is the one part of /lab that has no reason to be public. The page renders what
+ * the data says it is.
+ */
+const PROBES: Array<{ id: string; higherIsBetter: boolean }> = [
+  { id: "discovery", higherIsBetter: true },
+  { id: "decision", higherIsBetter: true },
+  { id: "clients", higherIsBetter: true },
+  // Aggregate only: the page is public, and naming repositories whose payment paths are unguarded would turn a measurement
+  // into a shaming list.
+  { id: "outreach", higherIsBetter: false },
 ];
+
+/** A neutral fallback for a probe whose row has not arrived with its wording yet. */
+function labelOf(id: string): string {
+  return id.charAt(0).toUpperCase() + id.slice(1);
+}
 
 /**
  * A number only renders when its control passed.
@@ -221,8 +214,11 @@ export default async function LabPage() {
     PROBES.map(async (p) => {
       const result = await read(p.id, 120);
       const rows = result.ok ? result.rows : [];
+      const meta = (rows[0]?.summary ?? {}) as Record<string, unknown>;
       return {
         ...p,
+        label: typeof meta.label === "string" ? meta.label : labelOf(p.id),
+        question: typeof meta.question === "string" ? meta.question : null,
         failure: result.ok ? null : result.reason,
         status: result.ok ? null : result.status ?? null,
         rows,
@@ -297,7 +293,7 @@ export default async function LabPage() {
         return (
           <section key={p.id} style={{ marginTop: 44 }}>
             <h2 style={{ fontSize: 22, marginBottom: 4 }}>{p.label}</h2>
-            <p style={{ opacity: 0.7, marginTop: 0, maxWidth: 720 }}>{p.question}</p>
+            {p.question !== null ? <p style={{ opacity: 0.7, marginTop: 0, maxWidth: 720 }}>{p.question}</p> : null}
 
             {p.failure !== null ? (
               <Panel tone="warn">

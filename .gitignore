@@ -4,3 +4,13 @@ dist
 coverage
 *.tsbuildinfo
 *.tgz
+
+# Harness and probe artefacts. The client harness runs from /work/clients (outside this repo) and keeps keys in the vault,
+# but a stray copy of its state must never be committable: a wallet address is fine, a journal of 100 addresses beside a
+# run log is a target list.
+clients/
+*.journal.jsonl
+journal.jsonl
+last-tick
+probe_runs.json
+apps/console/.lab-cache/
