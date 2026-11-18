@@ -42,18 +42,22 @@ export default function ZhHome() {
           </Link>
         </div>
 
+        <section className="lp-section" style={{ paddingTop: 8 }}>
         <h2 className="lp-h2">它不能做什么</h2>
         <p>
           已结算的支付无法追回；看起来正规但从不交付的商户不会被地址检查发现；绕开本层的直接签名不在覆盖范围内。
           全部边界见 <a href="https://github.com/base-buzz/paystage/blob/main/LIMITS.md">LIMITS.md</a>。
         </p>
+        </section>
 
+        <section className="lp-section" style={{ paddingTop: 8 }}>
         <h2 className="lp-h2">英文版本</h2>
         <p>
           <Link href="/">English landing page</Link> ·{" "}
           <a href="https://github.com/base-buzz/paystage/blob/main/README.zh-CN.md">中文 README</a> ·{" "}
           <Link href="/privacy">隐私</Link>
         </p>
+        </section>
         </div>
       </section>
     </main>
