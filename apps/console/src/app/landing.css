@@ -1805,10 +1805,16 @@ body {
   cursor: pointer;
 }
 
+/* Disabled is a colour state, not an opacity one.
+   `opacity: 0.45` on the button dimmed the label to **2.94:1** in light mode and 4.02:1 in dark — measured on the
+   deployed page, and both below 4.5. The label is the thing that says what the button costs and what it will do, so
+   making it unreadable is the opposite of the consent this card exists to collect. Dim the border and the cursor, keep
+   the text at full contrast. */
 .lp-paid-button:disabled {
-  opacity: 0.45;
   cursor: not-allowed;
-  border-color: var(--lp-line-soft);
+  border-color: var(--lp-line);
+  color: var(--lp-dim);
+  background: var(--lp-panel-2);
 }
 
 .lp-paid-msg {
