@@ -42,15 +42,15 @@ export const metadata: Metadata = {
 };
 
 const TOOLS = [
-  ["evaluate_mcp_payment", "x402 payment request vs. local policy → pay · review · do_not_pay"],
-  ["evaluate_batch", "several payments against one policy · one verdict each, in order"],
-  ["list_outstanding_auths", "ERC-20, Permit2 and EIP-3009 authorisations still outstanding"],
-  ["evaluate_outstanding_auths", "flags authorisations needing attention before the next payment"],
-  ["evaluate_hip3_trade", "HIP-3 / trade.xyz order vs. your TradePolicy → allow · review · do_not_trade"],
-  ["evaluate_velocity", "rolling rate and spend checks: bursts, spikes, runaway cadence"],
-  ["verify_receipt", "check a receipt against the published signing key"],
-  ["decode_payment_required", "turn a 402 header into the JSON challenge, so an agent can look before it leaps"],
-  ["validate_policy", "check a policy document on its own — the question behind most support requests"],
+  ["evaluate_mcp_payment", "verify the recipient. Call this BEFORE signing any x402 payment. Verdict is pay · review · do_not_pay"],
+  ["evaluate_batch", "transaction scope. several payments against one policy · one verdict each, in order"],
+  ["list_outstanding_auths", "spending limits. ERC-20, Permit2 and EIP-3009 authorisations still outstanding"],
+  ["evaluate_outstanding_auths", "spending limits. flags authorisations needing attention before the next payment"],
+  ["evaluate_hip3_trade", "transaction scope. HIP-3 / trade.xyz order vs. your TradePolicy → allow · review · do_not_trade"],
+  ["evaluate_velocity", "transparent risk assessments. rolling rate and spend checks: bursts, spikes, runaway cadence"],
+  ["verify_receipt", "verify the recipient. check a receipt against the published signing key"],
+  ["decode_payment_required", "verify the recipient. turn a 402 header into the JSON challenge, so an agent can look before it leaps"],
+  ["validate_policy", "spending limits. check a policy document on its own — the question behind most support requests"],
 ] as const;
 
 export default function LandingPage() {
