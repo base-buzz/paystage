@@ -75,7 +75,9 @@ let tools = [];
 try {
   tools = await mcpSession();
   console.log(`mcp:      ${tools.length} tools (${tools.slice(0, 3).join(", ")}…)`);
-  if (tools.length !== 9) problems.push(`expected 9 tools, got ${tools.length}`);
+  // Fourth place a tool count was typed beside the thing it counts. The floor, not an equality: this starter must work
+  // against a published package, and a package that adds a tool should not fail a reader's first run.
+  if (tools.length < 9) problems.push(`expected at least 9 tools, got ${tools.length}`);
 } catch (error) {
   problems.push(`mcp: ${error instanceof Error ? error.message : String(error)}`);
 }
@@ -92,4 +94,4 @@ if (problems.length > 0) {
   for (const p of problems) console.log(`  FAIL ${p}`);
   process.exit(1);
 }
-console.log("starter: endpoint answers, nine tools, one real verdict — no wallet needed for this much");
+console.log("starter: endpoint answers, ten tools, one real verdict — no wallet needed for this much");

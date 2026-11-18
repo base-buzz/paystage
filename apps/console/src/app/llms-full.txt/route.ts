@@ -135,6 +135,30 @@ access table: ${m.repository}/blob/main/SECURITY.md.
 - \`/llms-full.txt\` — this file.
 - \`/.well-known/paystage.json\` — JSON manifest with versions and access facts.
 - MCP Registry: ${m.machine_surfaces.mcp_registry}
+## 中文（简体）说明
+
+PayStage 是面向 AI 智能体的 x402 支付安全层：在钱包签名之前评估这笔支付该不该付，返回
+**pay**、**review** 或 **do_not_pay**，并给出触发的那条规则。只读、不持私钥、不签名、不移动资金。
+
+**它覆盖的检查**：收款地址是否在已知盗币名单（每条都有公开出处）、金额上限、允许的链与资产、
+ERC-20 / Permit2 / EIP-3009 授权是否仍然危险、消费速率是否异常、HIP-3 / trade.xyz 下单是否超出范围。
+
+**裁决语义**：\`pay\` 可以签；\`review\` 需要人看一眼（规则命中但不致命）；\`do_not_pay\` 不要签，
+响应里带稳定规则码，例如 \`amount 1.00 USDC exceeds max_amount 0.05 USDC\`。缺字段、未知字段、
+未知 \`agent_id\` 一律 \`do_not_pay\` —— 失败方向是拒绝，而不是放行。
+
+**安装**：\`npx -y -p @paystage/mcp paystage-mcp\`（MCP 服务，stdio），或托管 API
+\`https://api.paystage.xyz\`（Base 主网，$0.002 USDC / 次，x402 付费）。
+
+**测试网**：\`POST https://sepolia.api.paystage.xyz/faucet\`，body \`{"address":"0x…"}\`，每个地址每
+24 小时 0.5 USDC；被拒绝时返回重置时间。对应 MCP 工具 \`request_testnet_funds\`。
+
+**中文资源**：https://paystage.xyz/zh · https://github.com/base-buzz/paystage/blob/main/README.zh-CN.md ·
+https://paystage.xyz/glossary
+
+关键词：x402、支付安全、支付前校验、智能体支付、agent 支付拦截、盗币地址检查、钱包授权检查、消费限额、
+MCP 工具、USDC、Base。
+
 `;
 
   return new Response(body, {

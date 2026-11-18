@@ -74,3 +74,32 @@ first 1,000 calls per IP per day. A browser demo of the same call is at
 - does not see what happens after settlement; it decides before the signature exists
 
 Source, tests and the receipt format: <https://github.com/base-buzz/paystage>
+
+---
+
+## 中文（简体）
+
+面向 AI 智能体的 x402 支付安全层。在钱包签名之前，用你写的本地策略判断这笔支付该不该付，返回
+`pay`、`review` 或 `do_not_pay`，并给出触发的那条规则。只读，不持私钥，不签名，不移动资金。
+
+安装（MCP 服务）：
+
+```sh
+npx -y -p @paystage/mcp paystage-mcp
+```
+
+只装其中一个包也可以：
+
+```sh
+npm i @paystage/x402-guard    # x402 客户端在签名前的策略闸门
+npm i @paystage/preflight     # 评估器本体，无网络调用
+```
+
+托管 API（Base 主网，$0.002 USDC / 次，走 x402）：`https://api.paystage.xyz`
+
+测试网免费领取：`POST https://sepolia.api.paystage.xyz/faucet`，body `{"address":"0x…"}`，
+每个地址每 24 小时 0.5 USDC；被拒绝时会返回重置时间。对应 MCP 工具 `request_testnet_funds`。
+
+中文文档：https://paystage.xyz/zh · https://github.com/base-buzz/paystage/blob/main/README.zh-CN.md
+
+关键词：x402、支付安全、支付前校验、智能体支付、agent 支付拦截、盗币地址检查、消费限额、MCP 工具、USDC、Base。
