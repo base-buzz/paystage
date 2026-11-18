@@ -50,6 +50,21 @@ The **payload** — every field above except `signed`, `alg`, `key_id`, `signatu
 canonical form of the payload; verify against the same. `alg` is `ECDSA-P256-SHA256`, and
 the key is published at `https://api.paystage.xyz/.well-known/paystage-receipt-key.json`.
 
+### That document is a key SET, not a key
+
+```json
+{ "keys": [ { "kty": "EC", "crv": "P-256", "x": "…", "y": "…",
+              "kid": "paystage-receipt-v1", "use": "sig", "alg": "ES256" } ] }
+```
+
+`kid` is what a receipt's `key_id` refers to, and a verifier **selects by it** rather than assuming one key
+exists. Rotation is then additive: a new key is appended, old receipts keep verifying because they name the
+key that signed them, and a receipt naming a `kid` the issuer no longer publishes is `unverifiable` — a
+refusal, not a guess at which key was meant.
+
+The older single-key document at `/v1/public/receipt-key.json` still answers, and now carries `keys` as well,
+so a verifier written against it keeps working while it migrates.
+
 
 ### `service.version`, and a placeholder that read like provenance
 

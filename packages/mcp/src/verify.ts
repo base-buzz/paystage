@@ -274,15 +274,36 @@ export async function verifyReceipt(
       if (!res.ok) {
         return { ok: false, status: "unverifiable", reason: `key endpoint returned ${res.status}` };
       }
-      const body = (await res.json()) as { configured?: boolean; jwk?: JwkLike };
-      if (body.configured !== true || body.jwk === undefined) {
+      // Two shapes: a JWKS (`{ keys: [...] }`, each with a `kid`) or the original single key (`{ jwk }`). The set is
+      // what makes rotation additive — without it, publishing a new key silently invalidates every receipt signed by
+      // the old one. Selection is by the `key_id` the receipt already carries, and a set that does not contain it is
+      // `unverifiable` rather than a guess at which key was meant.
+      const body = (await res.json()) as {
+        configured?: boolean;
+        jwk?: JwkLike;
+        keys?: Array<JwkLike & { kid?: string }>;
+      };
+      const keys = body.keys ?? [];
+      if (keys.length > 0) {
+        const wanted = receipt.key_id;
+        const match = wanted === undefined ? keys[0] : keys.find((k) => k.kid === wanted);
+        if (match === undefined) {
+          return {
+            ok: false,
+            status: "unverifiable",
+            reason: `the published key set has no key with kid ${String(wanted)} — the receipt names a key this issuer does not publish`,
+          };
+        }
+        jwk = match;
+      } else if (body.configured !== true || body.jwk === undefined) {
         return {
           ok: false,
           status: "unverifiable",
           reason: "issuer has not published a signing key, so nothing can be checked",
         };
+      } else {
+        jwk = body.jwk;
       }
-      jwk = body.jwk;
     } catch (error) {
       return {
         ok: false,
