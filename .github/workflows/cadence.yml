@@ -26,6 +26,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+      # The kit imports `@paystage/policy` from the workspace. Without an install it died with
+      # ERR_MODULE_NOT_FOUND on 2 of the last 12 runs — the check was red because the checkout had no
+      # node_modules, not because production was wrong. Two of the twelve "failures" were this, and a daily job that
+      # cries wolf teaches everyone to ignore it.
+      - name: Install
+        # npm workspaces, matching `package-lock.json` — this repo does not use pnpm, and guessing a package manager
+        # here would fail in a way that looks like a broken workflow rather than a broken assumption.
+        run: npm ci
+      - name: Build the workspace packages the kit imports
+        # `@paystage/policy` resolves to dist/ through its package.json exports, so an install alone is not enough.
+        run: npm run build -w @paystage/policy -w @paystage/preflight
       - name: Run the conformance kit against production
         # tee, so the assertions are in the run log rather than only in the step summary. A red run nobody can read is a
         # red run that gets ignored — this one failed twice and its output was invisible.
@@ -33,10 +44,12 @@ jobs:
         continue-on-error: true
         id: conformance
       - name: Print the summary
+        # Reads the log the previous step wrote. This used to re-run the whole kit — a second pass of live network
+        # calls whose failure was swallowed by `|| true`, so the summary could show a different answer from the job.
         run: |
           echo "### Conformance" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-          node apps/hosted/scripts/conformance.mjs >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          tail -40 /tmp/conformance.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "(no output captured)" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
       - name: Published artifacts match the repo
         # A hand publish, a failed tag step, or a registry lag can leave npm behind the repo. This is
