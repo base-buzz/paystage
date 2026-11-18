@@ -9,6 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history: the dependency check diffs the PR against its base, and a shallow clone has no merge base —
+          # which failed the first run with "no merge base" rather than with a finding.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20

@@ -27,14 +27,26 @@ function git(args) {
   return execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim();
 }
 
-let changed;
-try {
-  changed = git(["diff", "--name-only", `${BASE}...HEAD`, "--", "*package.json"])
+function diffAgainst(base) {
+  return git(["diff", "--name-only", `${base}...HEAD`, "--", "*package.json"])
     .split("\n")
     .filter((f) => f && !f.includes("node_modules"));
-} catch (error) {
-  console.error(`new-deps: cannot diff against ${BASE} (${error.message})`);
-  process.exit(2);
+}
+
+let changed;
+try {
+  changed = diffAgainst(BASE);
+} catch {
+  // A shallow clone has no merge base. Fetch the base ref properly before giving up: failing here with "cannot diff"
+  // is a broken check, and a broken check that exits 0 is worse than none.
+  try {
+    git(["fetch", "--no-tags", "--depth=200", "origin", "+refs/heads/*:refs/remotes/origin/*"]);
+    changed = diffAgainst(BASE);
+  } catch (error) {
+    console.error(`new-deps: cannot diff against ${BASE} (${error.message})`);
+    console.error("  A shallow clone needs fetch-depth: 0, or the base ref fetched before this step runs.");
+    process.exit(2);
+  }
 }
 
 if (changed.length === 0) {
