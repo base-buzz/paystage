@@ -13,6 +13,7 @@
  * Exit 0 pass · 1 mismatch · 2 unable to check (which is not a pass)
  */
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
@@ -102,6 +103,69 @@ try {
       problems.push(`published package registers ${registered.length} tools; source declares ${expected.length} (missing ${missing.join(", ")})`);
     } else if (registered.length > 0) {
       passed.push(`published package registers all ${registered.length} tools`);
+    }
+  }
+  // 3. A reused version must carry the same CODE (#162).
+  //
+  // `@paystage/preflight@0.4.3` was published for a metadata change; the address fix then took the same version, npm
+  // refused to republish, and the release reported success. This guard compared version numbers — 0.4.3 on both sides —
+  // so the check that exists to catch "published ≠ repo" said everything was fine.
+  //
+  // The comparison is the `dist/` tree, hashed per file: that is what a consumer actually runs. package.json differs by
+  // design (repository metadata, publish time) and is excluded; a missing or extra dist file is a difference worth
+  // failing on, because it means the tarball was built from a different commit.
+  if (version === local.version) {
+    const localDir = mkdtempSync(join(tmpdir(), "artifact-local-"));
+    try {
+      execFileSync("npm", ["pack", "--silent"], { cwd: join(ROOT, "packages", local.name.replace(/^@[^/]+\//, "")), encoding: "utf8", timeout: 120_000, stdio: "pipe" });
+      const packageDir = join(ROOT, "packages", local.name.replace(/^@[^/]+\//, ""));
+      const localTarball = readdirSync(packageDir).find((f) => f.endsWith(".tgz"));
+      if (localTarball !== undefined) {
+        execFileSync("tar", ["xzf", join(packageDir, localTarball)], { cwd: localDir });
+        rmSync(join(packageDir, localTarball), { force: true });
+      }
+
+      const hashDir = (root) => {
+        const out = new Map();
+        const walk = (rel) => {
+          const abs = join(root, rel);
+          let entries = [];
+          try {
+            entries = readdirSync(abs, { withFileTypes: true });
+          } catch {
+            return;
+          }
+          for (const entry of entries) {
+            const next = rel === "" ? entry.name : `${rel}/${entry.name}`;
+            if (entry.isDirectory()) walk(next);
+            else out.set(next, createHash("sha256").update(readFileSync(join(root, next))).digest("hex"));
+          }
+        };
+        walk("dist");
+        return out;
+      };
+
+      const shippedDist = hashDir(pkgDir);
+      const localDist = hashDir(join(localDir, "package"));
+
+      if (localDist.size === 0) {
+        problems.push("a local `npm pack` produced no dist/ — cannot compare content, and a check that cannot run must not pass");
+      } else if (shippedDist.size === 0) {
+        problems.push("the published tarball has no dist/ — nothing a consumer can run");
+      } else {
+        const differing = [...new Set([...shippedDist.keys(), ...localDist.keys()])].filter(
+          (file) => shippedDist.get(file) !== localDist.get(file),
+        );
+        if (differing.length > 0) {
+          problems.push(
+            `version ${version} is already published but its dist/ differs from this commit (${differing.slice(0, 3).join(", ")}${differing.length > 3 ? `, +${differing.length - 3} more` : ""}) — bump the version; npm will refuse a republish and the release will look successful`,
+          );
+        } else {
+          passed.push(`published dist/ matches this commit (${shippedDist.size} file(s))`);
+        }
+      }
+    } finally {
+      rmSync(localDir, { recursive: true, force: true });
     }
   }
 } finally {
