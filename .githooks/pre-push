@@ -74,6 +74,12 @@ if ! node scripts/check-copy.mjs >/tmp/prepush-copy.txt 2>&1; then
   fail=1
 fi
 
+# 6. Internal doc links resolve (pre-push).
+if ! node scripts/check-doc-links.mjs; then
+  note "internal doc links are broken — see output above"
+  fail=1
+fi
+
 # 3. Any dependency added in this push gets scored before it lands.
 base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
 if [ -n "$base" ]; then

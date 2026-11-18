@@ -66,7 +66,7 @@ describe("paystage umbrella MCP server", () => {
     };
     expect(tools).toHaveLength(9);
 
-    // Accuracy, not a blanket default: the five tools that touch the network are marked open-world,
+    // Accuracy, not a blanket default: the nine tools that touch the network are marked open-world,
     // the four that only evaluate supplied input are not.
     const openWorld = {
       evaluate_mcp_payment: false,
