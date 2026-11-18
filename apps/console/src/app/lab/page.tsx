@@ -350,7 +350,15 @@ export default async function LabPage() {
                 ) : null}
 
                 {agents !== null ? (
-                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, fontSize: 13.5 }}>
+                  <>
+                  <p style={{ marginTop: 12, fontSize: 13, opacity: 0.75 }}>
+                    {(() => {
+                      const answered = agents.filter((a) => a.decision !== null && a.decision !== undefined).length;
+                      const silent = agents.length - answered;
+                      return `${answered} of ${agents.length} agents answered; ${silent} did not. A silent agent is a coverage gap, not a refusal — the count is not a safety score.`;
+                    })()}
+                  </p>
+                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 6, fontSize: 13.5 }}>
                     <thead>
                       <tr style={{ textAlign: "left", opacity: 0.6 }}>
                         <th style={{ padding: "6px 8px" }}>agent</th>
@@ -364,12 +372,21 @@ export default async function LabPage() {
                         <tr key={`${String(a.site)}-${i}`} style={{ borderTop: "1px solid rgba(128,128,128,0.25)" }}>
                           <td style={{ padding: "6px 8px" }}>{String(a.site)}</td>
                           <td style={{ padding: "6px 8px", opacity: 0.75 }}>{String(a.state)}</td>
-                          <td style={{ padding: "6px 8px" }}>{String(a.decision ?? "\u2014")}</td>
+                          <td style={{ padding: "6px 8px" }}>
+                            {a.decision === null || a.decision === undefined ? (
+                              // "2/6" is a coverage fact, not a refusal rate: four agents never answered, and a dash
+                              // invites the reader to assume they refused. Say what happened.
+                              <span style={{ opacity: 0.6 }}>did not answer ({String(a.state)})</span>
+                            ) : (
+                              String(a.decision)
+                            )}
+                          </td>
                           <td style={{ padding: "6px 8px", opacity: 0.75 }}>{a.checks === null ? "\u2014" : String(a.checks)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  </>
                 ) : null}
 
                 {p.id === "outreach" ? (
