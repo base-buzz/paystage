@@ -34,11 +34,12 @@ jobs:
         # npm workspaces, matching `package-lock.json` — this repo does not use pnpm, and guessing a package manager
         # here would fail in a way that looks like a broken workflow rather than a broken assumption.
         run: npm ci
-      - name: Build the workspace packages this job reads
-        # `@paystage/policy` resolves to dist/ through its package.json exports, so an install alone is not enough.
-        # `@paystage/mcp` is packed locally by the artifact check to compare content — without a build that comparison
-        # cannot run, and a check that cannot run must not report success.
-        run: npm run build -w @paystage/policy -w @paystage/preflight -w @paystage/mcp
+      - name: Build the workspace
+        # Two reasons, both learned the hard way in one hour: `@paystage/policy` resolves to dist/ through its
+        # package.json exports, and `@paystage/mcp` imports five sibling packages, so building a hand-picked subset
+        # fails on the first one it left out. `npm run build` at the root builds them in dependency order — the same
+        # thing a release does.
+        run: npm run build
       - name: Run the conformance kit against production
         # tee, so the assertions are in the run log rather than only in the step summary. A red run nobody can read is a
         # red run that gets ignored — this one failed twice and its output was invisible.
