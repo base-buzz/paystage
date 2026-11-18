@@ -268,8 +268,8 @@ addresses and amounts, and point `PAYSTAGE_POLICY_PATH` at it. Each is schema-ex
 | `verify_receipt` | is this receipt really ours — and is it about *this* payment, still in date |
 | `decode_payment_required` | what does this base64 402 header actually say |
 | `validate_policy` | is this policy document valid, and if not which field |
+| `request_testnet_funds` | undefined |
 | `evaluate_batch` | the same question for several payments, one verdict each |
-| `request_testnet_funds` | can I get 0.5 Base Sepolia USDC to try this — and when may I ask again |
 <!-- tools:table:end -->
 
 ## Packages
