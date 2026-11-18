@@ -94,4 +94,4 @@ if (problems.length > 0) {
   for (const p of problems) console.log(`  FAIL ${p}`);
   process.exit(1);
 }
-console.log("starter: endpoint answers, nine tools, one real verdict — no wallet needed for this much");
+console.log("starter: endpoint answers, ten tools, one real verdict — no wallet needed for this much");
