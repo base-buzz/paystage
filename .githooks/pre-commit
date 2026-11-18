@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# What has to be caught before the commit exists.
+#
+# Secrets are the one mistake a revert cannot fix: the blob stays in history and in every clone. Every other check in
+# this repo runs at pre-push, where the commit is already made and can still be amended; this one runs earlier because
+# `git commit --amend` is not the same as not committing.
+#
+# The JavaScript validity check lives here too, for the same reason: a `.mjs` with TypeScript syntax is a syntax error
+# that reads like ordinary code in a diff.
+set -u
+
+fail=0
+
+if ! node scripts/check-staged-secrets.mjs; then
+  fail=1
+fi
+
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(mjs|js)$' || true); do
+  [ -f "$f" ] || continue
+  if ! err=$(node --check "$f" 2>&1); then
+    echo "pre-commit: $f is not valid JavaScript"
+    echo "$err" | head -3 | sed 's/^/    /'
+    fail=1
+  fi
+done
+
+if [ "$fail" -ne 0 ]; then
+  echo "pre-commit: nothing committed."
+  exit 1
+fi
