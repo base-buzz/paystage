@@ -74,7 +74,10 @@ describe("@x402/core client hook adapter", () => {
   });
 
   it("refuses a non-receivable sink and says so, rather than calling it a drainer", async () => {
-    const sink = "0x000000000000000000000000000000000000dEaD";
+    // The zero address, not `0x…dEaD`: the burn address is on the drainer list too, so it refuses for the more alarming
+    // of its two reasons — which is right, and made this test assert the opposite of the behaviour it wanted. A pure
+    // sink is the case that distinguishes "funds are destroyed" from "known drainer".
+    const sink = "0x0000000000000000000000000000000000000000";
     const permissive = { ...policy, allowed_pay_to: [sink], unknown_payee: "review" };
     const out = await evaluateBeforeCreation(ctx("2000", sink), { policy: permissive });
     expect(out).toMatchObject({ abort: true });
