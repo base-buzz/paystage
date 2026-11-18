@@ -51,6 +51,7 @@ const TOOLS = [
   ["verify_receipt", "verify the recipient. check a receipt against the published signing key"],
   ["decode_payment_required", "verify the recipient. turn a 402 header into the JSON challenge, so an agent can look before it leaps"],
   ["validate_policy", "spending limits. check a policy document on its own — the question behind most support requests"],
+  ["request_testnet_funds", "test funds. 0.5 Base Sepolia USDC so an agent can try the paid path — one drip per address per 24h, and the refusal says when it resets"],
 ] as const;
 
 /**

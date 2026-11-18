@@ -138,6 +138,21 @@ for (const surface of (fromInventory.length > 0 ? fromInventory : SURFACES)) {
     continue;
   }
 
+  /**
+   * `http` mode asserts reachability, not tool names.
+   *
+   * It fell through to the name grep, so a surface declared `{type: "http", expect: 200}` was scored on how many tool
+   * identifiers appeared in its HTML — paystage.xyz reported 9/10 for exactly that reason. Reachability and content
+   * coverage are different questions; the lander's tool coverage is already checked by check-claims, which compares the
+   * page's list against the registry.
+   */
+  if (surface.mode === "http") {
+    const expected = surface.state === "live" ? 200 : null;
+    const ok = expected === null ? status < 400 : status === expected;
+    rows.push({ ...surface, found: ok ? tools.length : 0, status, note: ok ? `HTTP ${status}` : `HTTP ${status}, expected ${expected}` });
+    continue;
+  }
+
   const found = tools.filter((t) => text.includes(t));
   const missing = tools.filter((t) => !text.includes(t));
   rows.push({
