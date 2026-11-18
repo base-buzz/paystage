@@ -195,6 +195,13 @@ export const PAYSTAGE_MANIFEST = {
     manifest: "/.well-known/paystage.json",
     mcp_registry: "xyz.paystage/mcp",
     cadence: "/v1/public/cadence.json",
+    // Routes that existed and were served but appeared in no agent-facing document (#140). An endpoint an agent cannot
+    // find is an endpoint that does not exist for it.
+    openapi: "/openapi.json",
+    health: "/health",
+    status: "/v1/public/status",
+    chain: "/v1/public/chain.json",
+    guard_verdict: "POST /v1/guard-verdict — turn a preflight verdict into a receipt-shaped response",
   },
   not_advice: true,
 } as const;

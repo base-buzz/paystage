@@ -87,6 +87,12 @@ if ! node scripts/check-version-parity.mjs >/tmp/prepush-parity.txt 2>&1; then
   fail=1
 fi
 
+# 8. Every hosted route is in the agent-facing documents, and every documented endpoint exists.
+if ! node scripts/check-route-docs.mjs; then
+  note "route documentation drifted — an endpoint an agent cannot find does not exist for it"
+  fail=1
+fi
+
 # 3. Any dependency added in this push gets scored before it lands.
 base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
 if [ -n "$base" ]; then
