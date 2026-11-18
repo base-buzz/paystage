@@ -53,9 +53,25 @@ function classifyBins(name, bin) {
 }
 
 /** Check 1 — registry sellers whose live 402 contradicts their listing. Reuses the verified script. */
+/**
+ * A non-zero exit is a finding, not a crash.
+ *
+ * `execFile` rejects on a non-zero exit, and `verify-registry.mjs` exits 1 **while printing its full report** whenever
+ * an entry is dead — so the report was discarded exactly when it had something to say, and the run reported
+ * "registry FAILED" with no detail. Same class as reading a 403 as OPEN: an error path interpreted as a result. This
+ * keeps stdout from the rejected call and fails only when there is nothing parseable.
+ */
 async function checkRegistry() {
   try {
-    const { stdout } = await run("node", ["scripts/verify-registry.mjs", "--json"], { cwd: REPO, timeout: 240_000 });
+    let stdout = "";
+    try {
+      ({ stdout } = await run("node", ["scripts/verify-registry.mjs", "--json"], { cwd: REPO, timeout: 240_000 }));
+    } catch (error) {
+      const failed = error;
+      if (typeof failed?.stdout !== "string" || failed.stdout.trim() === "") throw failed;
+      stdout = failed.stdout;
+      process.stderr.write("scan-outbound: registry reported dead entries (exit 1); using its report\n");
+    }
     const report = JSON.parse(stdout);
     const mismatches = report.entries
       .filter((e) => !e.ok)
