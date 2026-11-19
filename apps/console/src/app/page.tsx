@@ -107,7 +107,7 @@ const STRUCTURED_DATA = {
           name: "Can it be used without an account?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes. There is no signup: the packages are MIT licensed and run locally, and the hosted API answers the first 1,000 evaluations per IP per day at no cost, then 0.002 USDC per call over x402.",
+            text: "Yes. There is no signup: the packages are MIT licensed and run locally, and the hosted API answers the first 1,000 evaluations a day at no cost — counted per Worker instance, so the effective allowance scales with instances rather than being a global cap — then 0.002 USDC per call over x402.",
           },
         },
       ],
@@ -642,7 +642,7 @@ export default function LandingPage() {
                 },
                 {
                   q: "What does a call cost?",
-                  a: "The first 1,000 evaluations per IP per day are free with no account. Beyond that the hosted API is $0.002 per call, paid over x402. The packages are free and MIT licensed.",
+                  a: "The first 1,000 evaluations a day are free with no account. The counter lives in Worker isolate memory, so the allowance is per instance rather than a global per-IP cap — the status endpoint publishes that caveat beside the number. Beyond it the hosted API is $0.002 per call, paid over x402. The packages are free and MIT licensed.",
                 },
               ].map((item) => (
                 <details className="lp-faq-item" key={item.q}>
