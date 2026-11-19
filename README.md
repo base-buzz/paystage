@@ -190,6 +190,11 @@ write one policy file, ask for a verdict, and keep the receipt. `curl` and `node
 - [GitHub](https://github.com/base-buzz/paystage)
 - [mcp.so](https://mcp.so/servers/paystage-6d8a8f) — lists an older tool count; the endpoint and npm are authoritative
 
+## Pairings
+
+- [PayMCP](docs/integrations/paymcp.md) — it prices the seller's tool, this gates the buyer's payment; documented as two examples, no
+  dependency either way
+
 ## Configure
 
 The same MCP config works for Claude Desktop (`claude_desktop_config.json`) and Cursor (`.cursor/mcp.json`).
