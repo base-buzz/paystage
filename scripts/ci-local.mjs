@@ -178,6 +178,7 @@ try {
     "check-network-claims.mjs",
     "check-sanctions-live.mjs",
     "check-receipt-live.mjs",
+    "check-repo-depth.mjs",
     "check-mcp-live.mjs",
     "check-manifests.mjs",
     "check-changelog.mjs",
