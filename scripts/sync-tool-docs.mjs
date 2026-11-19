@@ -64,6 +64,11 @@ const PACKAGE_ROLES = {
   "@paystage/eliza-plugin": "the gate as an elizaOS action",
 };
 
+/**
+ * Packages that exist in the repo but not yet on npm. Emptying this list is the publish step for #88 and #89.
+ */
+const PENDING_PUBLISH = new Set(["@paystage/n8n", "@paystage/eliza-plugin"]);
+
 const PKG_START = "<!-- packages:table:start -->";
 const PKG_END = "<!-- packages:table:end -->";
 
@@ -78,7 +83,14 @@ function packagesTable() {
       problems.push(`package ${manifest.name} has no role in PACKAGE_ROLES — add one`);
       continue;
     }
-    rows.push(`| \`${manifest.name}\` | ${role} | [npm](https://www.npmjs.com/package/${manifest.name}) |`);
+    /**
+     * A link to npm is a claim that the package is installable there.
+     *
+     * The two framework packages are built, tested and green but waiting on a Trusted Publisher entry, so an npm link in the README
+     * would 404 for anyone who followed it — the claim outrunning the artefact, which is the one thing this project refuses to ship.
+     */
+    const pending = PENDING_PUBLISH.has(manifest.name);
+    rows.push(`| \`${manifest.name}\` | ${role} | ${pending ? "in this repo — first publish pending" : `[npm](https://www.npmjs.com/package/${manifest.name})`} |`);
   }
   // Umbrella first, then the gate, then the rest alphabetically — the order a reader needs them in.
   rows.sort((a, b) => {
