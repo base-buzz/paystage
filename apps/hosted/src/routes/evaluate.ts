@@ -65,6 +65,20 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
         try {
           const host = new URL(resourceUrl).host;
           const reputation = await checkHostReputation(host);
+          /**
+           * The observation is returned whether or not it changes the verdict.
+           *
+           * A check that only speaks when it fires is indistinguishable from a check that never ran — the first live test of this
+           * returned `pay` and there was no way to tell whether the domain was old or the lookup had failed. Publishing the fact
+           * makes the difference visible to the caller and to us.
+           */
+          (decision as unknown as Record<string, unknown>).seller_reputation = {
+            host: reputation.host,
+            registered_at: reputation.registered_at,
+            domain_age_days: reputation.domain_age_days,
+            first_certificate_at: reputation.first_certificate_at,
+            ...(reputation.error ? { error: reputation.error } : {}),
+          };
           if (reputation.domain_age_days !== null && reputation.domain_age_days < YOUNG_DOMAIN_DAYS) {
             decision.decision = "review";
             decision.reasons = [
