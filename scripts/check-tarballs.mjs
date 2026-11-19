@@ -103,6 +103,37 @@ for (const pkg of packages) {
   }
 }
 
+/**
+ * `--install`: actually install the umbrella package and run it.
+ *
+ * A 200 on the tarball URL proves the file is served, not that it works — and this project has already shipped a version whose dist did not match its commit. Ten installs
+ * would be slow for every CI run, so this is opt-in and installs one package: `@paystage/mcp`, because it is the one a user types.
+ */
+if (process.argv.includes("--install")) {
+  const { mkdtempSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { execFileSync } = await import("node:child_process");
+  const dir = mkdtempSync(`${tmpdir()}/tarball-check-`);
+  try {
+    execFileSync("npm", ["init", "-y"], { cwd: dir, stdio: "ignore" });
+    execFileSync("npm", ["i", "@paystage/mcp", "--silent", "--no-audit", "--no-fund"], { cwd: dir, stdio: "ignore", timeout: 180_000 });
+    /**
+     * Import it rather than run `--version`: the CLI has no such flag, so the first version of this check passed while printing nothing at all — a test that cannot fail on
+     * the property it names. Importing asserts the package exposes the tools it advertises.
+     */
+    const out = execFileSync(
+      "node",
+      ["--input-type=module", "-e", 'import("@paystage/mcp").then(m => { const n = m.TOOL_NAMES ?? []; console.log(n.length, n[0] ?? "none"); })'],
+      { cwd: dir, encoding: "utf8", timeout: 60_000 },
+    ).trim();
+    const [count, first] = out.split(" ");
+    if (Number(count) < 10) throw new Error(`imported package exposes ${count} tool(s)`);
+    console.log(`  install: @paystage/mcp installed, imports, and exposes ${count} tools (first: ${first})`);
+  } catch (error) {
+    problems.push(`@paystage/mcp: installed tarball does not run — ${String(error).slice(0, 90)}`);
+  }
+}
+
 const payload = { ok: problems.length === 0, checked: rows.length, problems, rows };
 if (process.argv.includes("--json")) {
   console.log(JSON.stringify(payload, null, 2));
