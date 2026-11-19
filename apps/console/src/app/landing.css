@@ -52,6 +52,115 @@
   padding: 0 24px;
 }
 
+/* ---------- long-form prose (glossary, deny lists) ---------- */
+
+/* `.lp-prose` was referenced by two pages and defined by none, so both rendered as unstyled body text — headings the
+   size of paragraphs and tables with no rules. It exists here now, and the typography is defined once for every
+   long-form page rather than per page. */
+.lp-prose {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 128px 24px 72px;
+}
+
+.lp-prose h1 {
+  font-size: clamp(32px, 4.4vw, 46px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+}
+
+.lp-prose h2 {
+  font-size: clamp(22px, 2.4vw, 28px);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 44px 0 12px;
+  padding-top: 20px;
+  border-top: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+}
+
+.lp-prose h3 {
+  font-size: 18px;
+  line-height: 1.35;
+  margin: 28px 0 8px;
+}
+
+.lp-prose p,
+.lp-prose li {
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.lp-prose p {
+  margin: 0 0 14px;
+}
+
+.lp-prose ul {
+  margin: 0 0 18px;
+  padding-left: 22px;
+}
+
+.lp-prose li {
+  margin: 0 0 10px;
+}
+
+.lp-lead {
+  font-size: 18px;
+  line-height: 1.6;
+  opacity: 0.8;
+  margin: 0 0 28px;
+}
+
+.lp-prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: color-mix(in oklab, currentColor 8%, transparent);
+}
+
+.lp-prose a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Data tables: readable at 16px, ruled, and never wider than the column. A table of sources is the answer on the deny
+   lists page, so it is styled rather than left as markup. */
+.lp-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 22px;
+  font-size: 14.5px;
+}
+
+.lp-prose th,
+.lp-prose td {
+  text-align: left;
+  vertical-align: top;
+  padding: 9px 12px 9px 0;
+  border-bottom: 1px solid color-mix(in oklab, currentColor 12%, transparent);
+}
+
+.lp-prose th {
+  font-weight: 600;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.lp-prose thead th {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lp-prose-back {
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  font-size: 14px;
+  opacity: 0.75;
+}
+
 /* ---------- header ---------- */
 
 .lp-header {
