@@ -229,6 +229,8 @@ interface MarketDemandRow {
   size_p90_usdc: number | null;
   method: string;
   control_topic_filter: boolean | null;
+  payers: Array<{ transfers: number; transfers_per_hour: number; span_hours: number; value_usdc: number; class: string }> | null;
+  likely_test_payers: number | null;
 }
 
 async function readMarket<T>(table: "market_supply" | "market_demand"): Promise<{ row: T | null; reason: string | null }> {
@@ -394,6 +396,16 @@ export default async function LabPage() {
               {/* The method travels with the number, always: without it the count reads as revenue. */}
               {demandMarket.row.method}.
             </p>
+            {/*
+              A transfer count is not demand. Three wallets each spending the identical total in half an hour, and one paying every thirty-odd seconds for five hours, are a budget spend-down
+              and a loop — so the split is printed before anyone can read the number as adoption.
+            */}
+            {demandMarket.row.likely_test_payers !== null && demandMarket.row.likely_test_payers > 0 ? (
+              <p style={{ marginTop: 6, fontSize: 13 }}>
+                <strong>{demandMarket.row.likely_test_payers}</strong> of {demandMarket.row.distinct_payers} payer(s) look automated: more than ten transfers an hour, or a hundred or more
+                into one payee. <em>Likely-test</em> is not proof of a demo, and an unclassified payer is not proof of a customer.
+              </p>
+            ) : null}
             {demandMarket.row.control_topic_filter === false ? (
               <p style={{ marginTop: 6, fontSize: 13, color: "var(--lp-amber, #b45309)" }}>
                 The address filter could not find the busiest recipient in its own window, so this row&apos;s zero means &quot;the query is broken&quot;, not &quot;nobody paid&quot;. Do not read it
