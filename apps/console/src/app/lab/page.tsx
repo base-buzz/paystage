@@ -197,6 +197,46 @@ function Panel({ children, tone = "neutral" }: { children: React.ReactNode; tone
   );
 }
 
+/**
+ * The market half of the page: what sellers advertise, and what they actually receive.
+ *
+ * Two reads, not one, because they come from different sources and fail independently — a day can have a catalogue with no on-chain window, or the reverse, and the page must be able to
+ * say which half is missing rather than drawing a zero.
+ */
+interface MarketSupplyRow {
+  run_date: string;
+  resources: number;
+  accepts: number;
+  payees: number;
+  hosts: number;
+  median_price_usdc: number | null;
+  p90_price_usdc: number | null;
+  networks: Record<string, number>;
+}
+
+interface MarketDemandRow {
+  run_date: string;
+  window_blocks: number;
+  chain_usdc_transfers: number;
+  payee_transfers: number;
+  payee_transfers_value_usdc: number | null;
+  distinct_payees_paid: number;
+  distinct_payers: number;
+  repeat_payers: number;
+  payees_listed: number;
+  sampled_payees: number;
+  size_p50_usdc: number | null;
+  size_p90_usdc: number | null;
+  method: string;
+  control_topic_filter: boolean | null;
+}
+
+async function readMarket<T>(table: "market_supply" | "market_demand"): Promise<{ row: T | null; reason: string | null }> {
+  const result = await selectRowsStrict<T>(table, "select=*&order=run_date.desc&limit=1");
+  if (!result.ok) return { row: null, reason: REASON_TEXT[result.reason] ?? "unreadable" };
+  return { row: result.rows[0] ?? null, reason: null };
+}
+
 async function read(probe: string, limit: number) {
   return selectRowsStrict<ProbeRow>(
     "probe_runs",
@@ -229,6 +269,8 @@ export default async function LabPage() {
       };
     }),
   );
+
+  const [supplyMarket, demandMarket] = await Promise.all([readMarket<MarketSupplyRow>("market_supply"), readMarket<MarketDemandRow>("market_demand")]);
 
   const today = new Date().toISOString().slice(0, 10);
   const measured = data.filter((p) => p.series.length > 0);
@@ -306,6 +348,69 @@ export default async function LabPage() {
             measurement, not today&apos;s.
           </p>
         ) : null}
+      </section>
+
+      {/* ---- the market: supply and demand, from their own tables ---- */}
+      <section style={{ marginTop: 28, padding: 18, borderRadius: 12, border: "1px solid var(--lp-line, #6b7280)" }}>
+        <h2 style={{ fontSize: 15, margin: 0, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.65 }}>
+          What sellers advertise, and what they are paid
+        </h2>
+
+        {supplyMarket.row ? (
+          <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6 }}>
+            <strong>{Number(supplyMarket.row.resources).toLocaleString("en-US")}</strong> resources across{" "}
+            <strong>{Number(supplyMarket.row.accepts).toLocaleString("en-US")}</strong> accepts, from{" "}
+            <strong>{Number(supplyMarket.row.payees).toLocaleString("en-US")}</strong> distinct payees on{" "}
+            {Number(supplyMarket.row.hosts).toLocaleString("en-US")} hosts
+            {supplyMarket.row.median_price_usdc !== null ? (
+              <>
+                {" "}
+                · median ask <strong>{Number(supplyMarket.row.median_price_usdc).toLocaleString("en-US")} USDC</strong>, p90{" "}
+                {Number(supplyMarket.row.p90_price_usdc ?? 0).toLocaleString("en-US")}
+              </>
+            ) : null}
+            . Read {supplyMarket.row.run_date}. A catalogue entry is a seller&apos;s claim, not a probe of that seller — we have not paid these endpoints.
+          </p>
+        ) : (
+          <p style={{ marginTop: 12, fontSize: 14, opacity: 0.8 }}>
+            No catalogue reading stored{supplyMarket.reason ? ` — ${supplyMarket.reason}` : ""}. Half the market picture is missing; the demand block below is unaffected.
+          </p>
+        )}
+
+        {demandMarket.row ? (
+          <>
+            <p style={{ marginTop: 10, fontSize: 14, lineHeight: 1.6 }}>
+              In a <strong>{Number(demandMarket.row.window_blocks).toLocaleString("en-US")}</strong>-block window, Base carried{" "}
+              <strong>{Number(demandMarket.row.chain_usdc_transfers).toLocaleString("en-US")}</strong> USDC transfers in total. Of the{" "}
+              {Number(demandMarket.row.sampled_payees).toLocaleString("en-US")} busiest listed payees we watch,{" "}
+              <strong>{Number(demandMarket.row.distinct_payees_paid).toLocaleString("en-US")}</strong> received anything:{" "}
+              {Number(demandMarket.row.payee_transfers).toLocaleString("en-US")} transfer(s),{" "}
+              {Number(demandMarket.row.payee_transfers_value_usdc ?? 0).toLocaleString("en-US")} USDC, from{" "}
+              {Number(demandMarket.row.distinct_payers).toLocaleString("en-US")} payer(s)
+              {demandMarket.row.size_p50_usdc !== null ? ` · median ${Number(demandMarket.row.size_p50_usdc).toLocaleString("en-US")} USDC` : ""}
+              . Read {demandMarket.row.run_date}.
+            </p>
+            <p style={{ marginTop: 6, fontSize: 13, opacity: 0.8, fontStyle: "italic" }}>
+              {/* The method travels with the number, always: without it the count reads as revenue. */}
+              {demandMarket.row.method}.
+            </p>
+            {demandMarket.row.control_topic_filter === false ? (
+              <p style={{ marginTop: 6, fontSize: 13, color: "var(--lp-amber, #b45309)" }}>
+                The address filter could not find the busiest recipient in its own window, so this row&apos;s zero means &quot;the query is broken&quot;, not &quot;nobody paid&quot;. Do not read it
+                as demand.
+              </p>
+            ) : null}
+            <p style={{ marginTop: 6, fontSize: 12, opacity: 0.6 }}>
+              Chain-wide transfers are measured in the same window and stored in the same row, which is what makes a zero distinguishable from a failed query
+              {demandMarket.row.control_topic_filter === true ? " — and the filter found the window's busiest recipient, so this zero would be real" : ""}. Batched and channel settlement are
+              not visible to this method.
+            </p>
+          </>
+        ) : (
+          <p style={{ marginTop: 10, fontSize: 14, opacity: 0.8 }}>
+            No demand window stored{demandMarket.reason ? ` — ${demandMarket.reason}` : ""}. The catalogue reading above is unaffected.
+          </p>
+        )}
       </section>
 
       {/* ---- per probe ---- */}
