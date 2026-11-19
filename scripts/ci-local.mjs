@@ -166,6 +166,7 @@ try {
   // The checks CI runs as separate steps.
   for (const script of [
     "check-claims.mjs",
+    "gen-lists-manifest.mjs --check",
     "check-copy.mjs",
     "check-doc-links.mjs",
     "check-manifests.mjs",

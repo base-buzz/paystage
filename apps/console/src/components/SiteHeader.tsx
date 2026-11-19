@@ -81,6 +81,7 @@ export function SiteHeader() {
           <Link href={lang === "zh" ? "/zh#how" : "/#how"}>{lang === "zh" ? "工作原理" : "How it works"}</Link>
           <Link href={lang === "zh" ? "/zh#why" : "/#why"}>{lang === "zh" ? "为什么现在" : "Why now"}</Link>
           <Link href={lang === "zh" ? "/zh#agents" : "/#agents"}>{lang === "zh" ? "面向智能体" : "For agents"}</Link>
+          <Link href="/lists">{lang === "zh" ? "名单" : "Lists"}</Link>
           <Link href="/glossary">{lang === "zh" ? "术语表" : "Glossary"}</Link>
           <Link href="/console">{lang === "zh" ? "控制台" : "Console"}</Link>
         </nav>
@@ -139,6 +140,7 @@ export function SiteHeader() {
               <div className="site-menu-group">
                 <span className="site-menu-label">{lang === "zh" ? "文档" : "Docs"}</span>
                 <Link href="/privacy">{lang === "zh" ? "隐私" : "Privacy"}</Link>
+                <Link href="/lists">{lang === "zh" ? "名单" : "Lists"}</Link>
                 <Link href="/glossary">{lang === "zh" ? "术语表" : "Glossary"}</Link>
                 <a href="https://github.com/base-buzz/paystage/blob/main/LIMITS.md">LIMITS.md</a>
               </div>
