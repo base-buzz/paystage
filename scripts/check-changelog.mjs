@@ -33,7 +33,12 @@ function tags() {
   // `git fetch --tags` first: CI checks out a single commit by default (`fetch-depth: 1`), which brings no tags,
   // so the first run failed with "no versioned tags found". A shallow clone is not an empty changelog.
   try {
-    execFileSync("git", ["fetch", "--tags", "--quiet", "--depth=1", "origin"], { cwd: ROOT, stdio: "ignore" });
+    /**
+     * No `--depth` here. `--depth=1` makes a shallow clone out of the caller's checkout, and this script runs inside `ci-local` and the pre-push hook: twice on
+     * 2026-11-19 the repository became shallow again mid-session, which truncated the daily note's commit history (40 commits read as 2) and made a two-file commit
+     * appear to change 474 files. A check must not mutate the state it is checking.
+     */
+    execFileSync("git", ["fetch", "--tags", "--quiet", "origin"], { cwd: ROOT, stdio: "ignore" });
   } catch {
     /* offline or no remote: fall back to whatever tags exist locally below */
   }

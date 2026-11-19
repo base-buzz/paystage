@@ -40,7 +40,11 @@ try {
   // A shallow clone has no merge base. Fetch the base ref properly before giving up: failing here with "cannot diff"
   // is a broken check, and a broken check that exits 0 is worse than none.
   try {
-    git(["fetch", "--no-tags", "--depth=200", "origin", "+refs/heads/*:refs/remotes/origin/*"]);
+    /**
+     * Full fetch, no `--depth`. The fallback only needs the base ref, and `--depth=200` would re-shallow a checkout that the caller may have wanted complete — which is
+     * how this repository became shallow twice in one day and truncated the daily note's commit list.
+     */
+    git(["fetch", "--no-tags", "origin", "+refs/heads/*:refs/remotes/origin/*"]);
     changed = diffAgainst(BASE);
   } catch (error) {
     console.error(`new-deps: cannot diff against ${BASE} (${error.message})`);
