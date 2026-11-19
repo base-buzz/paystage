@@ -150,7 +150,11 @@ export const OPENAPI_DOCUMENT = {
         "Use it if you are a directory or crawler that discovers x402 endpoints by requiring a challenge: the canonical " +
         "path may answer 200 from the free tier, and an indexer that only indexes challenging endpoints would skip it. " +
         "Do NOT use it to avoid the free tier — the free tier exists so an agent can get a verdict without paying, and " +
-        "the canonical path is the one documented for agents.",
+        "the canonical path is the one documented for agents. " +
+        "The request body is the same as the canonical operation: payment_required is the decoded x402 v2 challenge with " +
+        "amount in ATOMIC units as a decimal string (12500000 = 12.5 USDC at 6 decimals), and policy is your policy document. " +
+        "Responses are JSON: decision is pay | review | do_not_pay, reasons[] carries one sentence per rule, and a receipt " +
+        "field is present when the deployment signs receipts.",
       PAYMENT_BODY,
     ),
     "/v1/evaluate_mcp_payment": paidOperation(
