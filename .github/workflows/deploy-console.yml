@@ -80,6 +80,10 @@ jobs:
 
       # Same gate as console-ci.yml: the agent-facing routes are generated from
       # one manifest, and a broken generator still compiles.
+      - name: Bake the build stamp
+        # Before the build, because the route imports a generated module; the Worker cannot read the environment that built it.
+        run: node ../../scripts/gen-build-info.mjs
+
       - name: Build
         run: npm run build
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { BUILD_INFO } from "@/lib/build-info.generated";
 
 export const dynamic = "force-static";
 
@@ -13,11 +14,7 @@ export const dynamic = "force-static";
  * worth knowing rather than hiding.
  */
 export async function GET() {
-  const sha = process.env.PAYSTAGE_BUILD_SHA ?? process.env.GITHUB_SHA ?? null;
-  return NextResponse.json({
-    sha,
-    // `CI` is set by GitHub Actions; it is a better provenance signal than the SHA alone being present.
-    source: process.env.CI === "true" || process.env.CI === "1" ? "ci" : "local",
-    built_at: process.env.PAYSTAGE_BUILD_AT ?? null,
-  });
+  // Read from the generated module rather than process.env: the Worker runs without the environment that built it, and a null SHA
+  // from CI was exactly that mistake.
+  return NextResponse.json(BUILD_INFO);
 }
