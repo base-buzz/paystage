@@ -26,6 +26,8 @@ const DECLARED = [
   { file: "packages/mcp/src/tools.ts", host: "api.paystage.xyz", what: "verify_receipt → receipt key" },
   { file: "packages/auth-watch/src/rpc.ts", host: "base.org", what: "auth-watch → JSON-RPC default" },
   { file: "packages/trade-preflight/src/hyperliquid.ts", host: "api.hyperliquid.xyz", what: "trade-preflight → market context" },
+  // A caller-supplied URL, so there is no literal host to match — declared because it exists.
+  { file: "packages/x402-guard/src/index.ts", host: null, what: "guard → optional telemetryUrl supplied by the caller" },
 ];
 
 const found = [];
@@ -65,8 +67,14 @@ const problems = [];
 for (const site of found) {
   const declaredHere = DECLARED.filter((d) => d.file === site.file);
   if (site.hosts.length === 0) {
-    // A fetch with no literal host in the file either uses a variable (documented by the call site) or is suspicious.
-    problems.push(`${site.file}: fetch() with no literal host — declare where it calls`);
+    /**
+     * A fetch to a caller-supplied URL — `@paystage/x402-guard`'s `telemetryUrl` — has no literal host to compare, so it is declared by hand here. Every other
+     * host-less fetch is a failure: an undeclared call is the thing this check exists for.
+     */
+    const declaredWithoutHost = DECLARED.filter((d) => d.file === site.file && d.host === null);
+    if (declaredWithoutHost.length === 0) {
+      problems.push(`${site.file}: fetch() with no literal host and no declaration — add one to DECLARED with host: null`);
+    }
     continue;
   }
   for (const host of site.hosts) {
