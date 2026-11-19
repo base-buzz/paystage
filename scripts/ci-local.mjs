@@ -175,6 +175,7 @@ try {
     "check-doc-links.mjs",
     "check-published-links.mjs",
     "check-badges.mjs",
+    "check-tarballs.mjs",
     "check-count-claims.mjs",
     "check-network-claims.mjs",
     "check-sanctions-live.mjs",

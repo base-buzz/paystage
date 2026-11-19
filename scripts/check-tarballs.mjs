@@ -60,6 +60,7 @@ if (packages.length === 0) {
 const rows = [];
 const problems = [];
 let unreadable = 0;
+const pending = [];
 
 for (const pkg of packages) {
   const encoded = pkg.name.replace("/", "%2F");
@@ -69,6 +70,15 @@ for (const pkg of packages) {
     if (!res.ok) throw new Error(`registry ${res.status}`);
     doc = await res.json();
   } catch (error) {
+    /**
+     * A 404 for a package that exists in this repo means it has never been published — `@paystage/n8n` and `@paystage/eliza-plugin` are exactly that, waiting on a
+     * Trusted Publisher entry. That is a pending first release, not a broken tarball, and treating it as a failure made the whole check unusable the moment those two
+     * packages landed. Any other error is still a problem.
+     */
+    if (/registry 404/.test(String(error.message))) {
+      pending.push(pkg.name);
+      continue;
+    }
     unreadable += 1;
     problems.push(`${pkg.name}: registry unreadable (${error.message}) — not a pass`);
     continue;
@@ -101,7 +111,7 @@ if (process.argv.includes("--json")) {
   for (const row of rows) console.log(`  ${row.name.padEnd(width)} ${String(row.version).padEnd(8)} tarball ${row.status}`);
   console.log(
     problems.length === 0
-      ? `\ncheck-tarballs: ${rows.length} publishable package(s), every latest tarball answers 200`
+      ? `\ncheck-tarballs: ${rows.length} publishable package(s), every latest tarball answers 200${pending.length ? ` · ${pending.length} pending first publish (${pending.join(", ")})` : ""}`
       : `\ncheck-tarballs: ${problems.length} problem(s)\n${problems.map((p) => `  ${p}`).join("\n")}`,
   );
 }
