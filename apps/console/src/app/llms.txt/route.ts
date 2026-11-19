@@ -66,8 +66,8 @@ npx -y -p @paystage/mcp paystage-mcp
 \`\`\`
 
 Each tool ships in its own package where one exists
-(${m.packages.map((p) => "`" + p + "`").join(", ")}); the umbrella bundles all nine for
-callers that want the whole gate.
+(${m.packages.map((p) => "`" + p + "`").join(", ")}); the umbrella bundles all
+${m.tools.length} for callers that want the whole gate.
 
 ## Hosted pay-per-call API
 
@@ -81,7 +81,7 @@ callers that want the whole gate.
 node apps/hosted/scripts/conformance.mjs
 \`\`\`
 
-Checks the published surfaces against reality: manifest shape, ten tools listed,
+Checks the published surfaces against reality: manifest shape, every tool listed,
 machine surfaces distinct, health and Server-Timing on both networks, receipt key
 endpoint, unpaid evaluation challenge-only, malformed input fails closed. Read-only,
 no payment, no key. Runs daily in CI; history at https://paystage.xyz.

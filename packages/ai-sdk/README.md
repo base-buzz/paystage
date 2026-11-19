@@ -51,5 +51,5 @@ them through with the reason attached.
 ## Related
 
 - [`@paystage/x402-guard`](https://www.npmjs.com/package/@paystage/x402-guard) — the same policy, wrapping `fetch` so a refusal never reaches the signer
-- [`@paystage/mcp`](https://www.npmjs.com/package/@paystage/mcp) — nine tools over MCP, for Claude, Cursor and anything else that speaks it
+- [`@paystage/mcp`](https://www.npmjs.com/package/@paystage/mcp) — ten tools over MCP, for Claude, Cursor and anything else that speaks it
 - Hosted, no install: `https://api.paystage.xyz/mcp`
