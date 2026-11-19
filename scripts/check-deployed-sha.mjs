@@ -42,7 +42,9 @@ try {
 
 let stamp;
 try {
-  const res = await fetch("https://paystage.xyz/api/build", { signal: AbortSignal.timeout(15_000) });
+  // Cache-buster: a stale edge copy of /api/build would report the previous commit and read as a failed deploy — the same trap that made a
+  // freshly-charted post look chartless for a minute.
+  const res = await fetch(`https://paystage.xyz/api/build?v=${Date.now()}`, { signal: AbortSignal.timeout(15_000) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   stamp = await res.json();
 } catch (error) {
