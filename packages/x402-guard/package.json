@@ -54,7 +54,11 @@
     "drainer-protection",
     "limit-agent-spending",
     "spending-cap",
-    "refuse-bad-payment"
+    "refuse-bad-payment",
+    "stop agent paying drainer",
+    "limit agent spending usdc",
+    "agent spending limits",
+    "budget"
   ],
   "dependencies": {
     "@paystage/policy": "0.3.0",

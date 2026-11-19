@@ -47,7 +47,11 @@
     "payment safety",
     "spend limit",
     "spend limits",
-    "agent payment safety"
+    "agent payment safety",
+    "stop agent paying drainer",
+    "limit agent spending usdc",
+    "agent spending limits",
+    "budget"
   ],
   "homepage": "https://paystage.xyz",
   "repository": {
