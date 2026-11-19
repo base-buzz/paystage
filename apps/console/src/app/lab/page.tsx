@@ -342,14 +342,14 @@ export default async function LabPage() {
                     changes the ratio, so it is printed beside it.
                     {(() => {
                       // A channel that cannot answer a phrase query is not a channel we lost on — say so where the ratio is read.
-                      const by = summary.by_channel as Record<string, { answered?: boolean; present?: number; planned?: number }> | undefined;
+                      const by = summary.by_channel as Record<string, { answered?: boolean; present?: number; planned?: number; measured?: number }> | undefined;
                       const npm = by?.npm;
                       const silent = Object.entries(by ?? {}).filter(([id, c]) => id !== "npm" && c.answered === false);
                       if (!npm || silent.length === 0) return null;
                       return (
                         <>
                           {" "}
-                          The ratio is <strong>{npm.present} of {npm.planned}</strong> on npm phrase searches; the{" "}
+                          The ratio is <strong>{npm.present} of {npm.measured ?? npm.planned}</strong> on npm phrase searches; the{" "}
                           {silent.map(([id]) => (id === "mcp-registry" ? "MCP Registry" : id)).join(", ")} matches names,
                           so a phrase query there returns nothing for anybody and its queries are not losses.
                         </>
