@@ -49,6 +49,30 @@ export function baseDomain(host: string): string | null {
   return base;
 }
 
+/** IANA's bootstrap file, cached for a day: where each TLD's RDAP server lives. */
+let BOOTSTRAP: { at: number; map: Map<string, string> } | null = null;
+
+async function rdapBaseFor(domain: string, doFetch: typeof fetch): Promise<string | null> {
+  const tld = domain.split(".").at(-1)?.toLowerCase() ?? "";
+  if (BOOTSTRAP && Date.now() - BOOTSTRAP.at < 86_400_000) return BOOTSTRAP.map.get(tld) ?? null;
+  try {
+    const res = await doFetch("https://data.iana.org/rdap/dns.json", {
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      headers: { "user-agent": "PayStage-host-reputation/1.0" },
+    });
+    if (!res.ok) throw new Error(`bootstrap HTTP ${res.status}`);
+    const doc = (await res.json()) as { services?: Array<[string[], string[]]> };
+    const map = new Map<string, string>();
+    for (const [tlds, urls] of doc.services ?? []) {
+      for (const t of tlds) if (urls[0]) map.set(t.toLowerCase(), urls[0]);
+    }
+    BOOTSTRAP = { at: Date.now(), map };
+    return map.get(tld) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function checkHostReputation(
   host: string,
   options: { fetchImpl?: typeof fetch; now?: number } = {},
@@ -71,8 +95,17 @@ export async function checkHostReputation(
     cached: false,
   };
 
+  /**
+   * Ask the TLD's own RDAP server, not an aggregator.
+   *
+   * `rdap.org` answers **403** to this Worker — verified live 2026-11-19, and it was silent because the failure was fail-soft. The
+   * IANA bootstrap publishes where each TLD actually lives, so the query goes to `rdap.centralnic.com` for `.xyz` and
+   * `rdap.verisign.com` for `.com` — both answer 200 from the same environment.
+   */
   try {
-    const res = await doFetch(`https://rdap.org/domain/${domain}`, {
+    const base = await rdapBaseFor(domain, doFetch);
+    if (!base) throw new Error("no RDAP server published for this TLD");
+    const res = await doFetch(`${base.replace(/\/$/, "")}/domain/${domain}`, {
       signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: { accept: "application/rdap+json", "user-agent": "PayStage-host-reputation/1.0" },
     });
