@@ -82,6 +82,20 @@ from somewhere it cannot forge. We do not do that today.
 `evaluate_velocity` sees the history you pass it. Two agents with separate histories can each stay under a
 limit while together exceeding it. Per-agent budgets narrow this; they do not close it.
 
+## 8b. How a refusal is worded, and why it is worded that way
+
+**Do not invent authority; fail closed when policy, identity, cost or evidence is missing.**
+
+That sentence is the whole posture, and it is worth writing down because a reviewer reads verdicts, not philosophy. In practice it means:
+
+- `do_not_pay` is returned when the **policy cannot be resolved** (an unknown agent id, a malformed file) rather than falling back to the loosest rules in it;
+- `review` is returned when a check **could not be run** — a bad signature, an unreadable key set, an unknown `kid` — so "we could not tell" never renders as "we checked";
+- a **missing field is a refusal, not a default**: no `payTo`, no `amount`, an unparsable `amount` are all `do_not_pay` with the field named;
+- **cost** that cannot be computed (unknown asset decimals) is a refusal, not an estimate;
+- **evidence** that cannot be verified (a receipt whose digest no longer matches its inputs) is `invalid`, never `valid with a note`.
+
+The inverse is the failure this project exists to argue against: an evaluator that answers `pay` because it had nothing to say.
+
 ## 9. What the receipt does not prove
 
 A receipt says *this decision was made, over these inputs, at this time*. It does not prove the payment
