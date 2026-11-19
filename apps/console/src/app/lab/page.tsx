@@ -76,15 +76,15 @@ function ratioOf(headline: string | null): number | null {
 const DAY = 86_400_000;
 
 /** One point per day: the last run of that day, so a day with three runs does not zig-zag the line. */
-function dailySeries(rows: ProbeRow[]): Array<{ day: string; value: number; headline: string }> {
+function dailySeries(rows: ProbeRow[]): Array<{ day: string; value: number; headline: string; summary?: Record<string, unknown> }> {
   const byDay = new Map<string, ProbeRow>();
   for (const row of [...rows].sort((a, b) => Date.parse(a.run_at) - Date.parse(b.run_at))) {
     byDay.set(row.run_at.slice(0, 10), row);
   }
-  const out: Array<{ day: string; value: number; headline: string }> = [];
+  const out: Array<{ day: string; value: number; headline: string; summary?: Record<string, unknown> }> = [];
   for (const [day, row] of byDay) {
     const value = ratioOf(row.headline);
-    if (value !== null) out.push({ day, value, headline: row.headline ?? "" });
+    if (value !== null) out.push({ day, value, headline: row.headline ?? "", summary: (row.summary ?? undefined) as Record<string, unknown> | undefined });
   }
   return out.sort((a, b) => a.day.localeCompare(b.day));
 }
@@ -272,11 +272,23 @@ export default async function LabPage() {
                             const [payees, accepts] = String(latest.headline).split("/");
                             return `${Number(payees).toLocaleString("en-US")} payees`;
                           })()
-                        : pct(latest.value)}
+                        : (() => {
+                            /**
+                             * Discovery's tile follows the sentence: the note says "4 of 6 npm phrase searches", so the tile is that ratio rather than the combined 4/12.
+                             */
+                            const npm = p.id === "discovery" ? (latest.summary?.by_channel as { npm?: { present?: number; measured?: number; planned?: number } } | undefined)?.npm : undefined;
+                            if (!npm || typeof npm.present !== "number") return pct(latest.value);
+                            return pct(npm.present / Math.max(1, npm.measured ?? npm.planned ?? 1));
+                          })()}
                 </div>
                 <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>
                   {latest
-                    ? `${latest.headline} \u00b7 ${latest.day}`
+                    ? (() => {
+                        const npm = p.id === "discovery" ? (latest.summary?.by_channel as { npm?: { present?: number; measured?: number; planned?: number } } | undefined)?.npm : undefined;
+                        return npm && typeof npm.present === "number"
+                          ? `${npm.present}/${npm.measured ?? npm.planned} npm · ${latest.day}`
+                          : `${latest.headline} \u00b7 ${latest.day}`;
+                      })()
                     : p.failure !== null
                       ? "could not read"
                       : "no measurement yet"}
