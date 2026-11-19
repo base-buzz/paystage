@@ -10,7 +10,8 @@ export interface Asset {
   symbol: string;
   decimals: number;
   address: string;
-  network: string;
+  /** Omitted means "this address on any network the policy allows" (#37). */
+  network?: string;
 }
 
 

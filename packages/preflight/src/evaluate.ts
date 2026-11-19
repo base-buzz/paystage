@@ -66,8 +66,12 @@ function findAsset(
   network: string,
   assetAddress: string,
 ): Asset | undefined {
+  // An entry with no `network` matches the address on any allowed network (#37); the network allow-list is what bounds which
+  // networks are reachable, so this cannot widen the policy beyond what the operator listed.
   return policy.allowed_assets.find(
-    (a) => eq(a.network, network) && eq(a.address, assetAddress),
+    (a) =>
+      (a.network === undefined || eq(a.network, network)) &&
+      eq(a.address, assetAddress),
   );
 }
 

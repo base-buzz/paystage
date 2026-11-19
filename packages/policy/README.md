@@ -16,15 +16,16 @@ import { parsePolicy, loadPolicy, humanToAtomic } from "@paystage/policy";
 // Parse an in-memory object (validates against the schema).
 const policy = parsePolicy({
   version: 1,
-  name: "standard",
+  // The ceiling is per asset, and every allowed asset must be capped unless allow_uncapped_assets says otherwise.
+  max_amount: { value: "1.00", asset: "USDC", decimals: 6 },
   allowed_networks: ["eip155:8453"],
-  allowed_assets: ["0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"],
+  // `network` is optional: an entry without one matches this address on any network the policy allows (#37).
+  allowed_assets: [
+    { symbol: "USDC", decimals: 6, address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
+  ],
   allowed_pay_to: ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
-  max_amount_per_call: "1.00",
-  max_amount_per_session: "10.00",
-  require_human_above: "0.50",
   max_timeout_seconds: 300,
-  default_verdict: "review",
+  unknown_payee: "review",
 });
 
 // Load and validate from disk.

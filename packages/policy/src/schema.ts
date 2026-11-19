@@ -17,9 +17,18 @@ const assetSchema = z.object({
   symbol: z.string().min(1),
   decimals: z.number().int().min(0),
   address: addressSchema,
+  /**
+   * Optional since #37: an asset can be named by address for any allowed network.
+   *
+   * USDC is the same contract story on every chain a policy allows, and requiring a policy to repeat the entry per network is
+   * how a stale duplicate gets missed. Omitting `network` means "this address, wherever `allowed_networks` permits" — the
+   * network allow-list still decides which chains are reachable, so this widens nothing beyond what the operator already
+   * listed.
+   */
   network: z
     .string()
     .regex(/^eip155:\d+$/, "Expected a network id like eip155:8453")
+    .optional()
 });
 
 
