@@ -5,8 +5,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @paystage/policy -w @paystage/preflight -w @paystage/x402-guard -w @paystage/x-evm -w @paystage/auth-watch -w @paystage/velocity -w @paystage/trade-preflight -w @paystage/ai-sdk -w @paystage/mcp",
-    "test": "npm run test -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/velocity -w @paystage/x402-guard -w @paystage/trade-preflight -w @paystage/mcp",
+    "build": "npm run build -w @paystage/policy -w @paystage/preflight -w @paystage/x402-guard -w @paystage/x-evm -w @paystage/auth-watch -w @paystage/velocity -w @paystage/trade-preflight -w @paystage/ai-sdk -w @paystage/mcp -w @paystage/n8n",
+    "test": "npm run test -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/velocity -w @paystage/x402-guard -w @paystage/trade-preflight -w @paystage/mcp -w @paystage/n8n",
     "typecheck": "npm run typecheck -w @paystage/policy -w @paystage/preflight -w @paystage/auth-watch -w @paystage/velocity -w @paystage/trade-preflight -w @paystage/mcp -w paystage-hosted",
     "check:dep-pins": "node scripts/check-dep-pins.mjs"
   },

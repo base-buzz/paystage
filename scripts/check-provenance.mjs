@@ -58,6 +58,18 @@ for (const name of packages()) {
   try {
     doc = await get(`${REGISTRY}/${encoded}`);
   } catch (error) {
+    /**
+     * A package that exists in the workspace but not yet on npm is not a provenance gap.
+     *
+     * `@paystage/n8n@0.1.0` is built and tested before its first publish, and the old behaviour failed CI on the 404 — which
+     * would have made "a new package" impossible to merge and the release that publishes it impossible to reach. Only HTTP 404
+     * is treated that way: any other failure is still a problem, because "not published yet" and "the registry is having a bad
+     * day" must not look the same.
+     */
+    if (/404/.test(String(error.message))) {
+      console.log(`  skip  ${name}: not published yet (first release pending)`);
+      continue;
+    }
     problems.push(`${name}: registry unreadable (${error.message})`);
     continue;
   }

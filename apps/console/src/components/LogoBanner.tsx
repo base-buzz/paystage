@@ -10,6 +10,16 @@
  * endorsement and neither company has endorsed anything.
  */
 
+import { PACKAGE_VERSIONS } from "@/lib/agent-manifest";
+
+/**
+ * The package count is derived from the manifest, not typed.
+ *
+ * This said "10 packages" while the workspace held eleven, which is the same drift the tool-count check exists to catch, one
+ * surface over — and the wall is the kind of page where a reader can check it in one click.
+ */
+const PACKAGE_COUNT = Object.keys(PACKAGE_VERSIONS).length;
+
 const BUILT_ON = [
   { label: "Base", note: "settlement network", href: "https://base.org" },
   { label: "x402", note: "the protocol we gate", href: "https://github.com/coinbase/x402" },
@@ -25,7 +35,9 @@ const CALLABLE = [
   { label: "x402scan", note: "listed · paid endpoint", href: "https://www.x402scan.com/server/71d358eb-0ef8-4d6d-8356-91c5bc237fb0" },
   { label: "mcp.so", note: "listed · older tool count", href: "https://mcp.so/servers/paystage-6d8a8f" },
   { label: "Arcade", note: "worker deployed · not listed", href: "https://arcade.dev" },
-  { label: "npm", note: "10 packages · provenance", href: "https://www.npmjs.com/package/@paystage/mcp" },
+  // The count is derived: a hardcoded number here said "10 packages" while the workspace held eleven, which is the same
+  // drift the tool-count check exists to catch, one surface over.
+  { label: "npm", note: `${PACKAGE_COUNT} packages · provenance`, href: "https://www.npmjs.com/package/@paystage/mcp" },
   { label: "GitHub", note: "MIT · public CI", href: "https://github.com/base-buzz/paystage" },
 ];
 

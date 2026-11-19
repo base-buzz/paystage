@@ -1,0 +1,45 @@
+{
+  "name": "@paystage/n8n",
+  "version": "0.1.0",
+  "description": "Payment firewall for n8n workflows: evaluate an x402 payment or verify a receipt before the wallet signs. pay / review / do_not_pay, with the rule that fired. No keys, no signing.",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "x402",
+    "payment-safety",
+    "agent-payments",
+    "spend-limits",
+    "firewall",
+    "usdc",
+    "base"
+  ],
+  "license": "MIT",
+  "homepage": "https://paystage.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/base-buzz/paystage.git",
+    "directory": "packages/n8n"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "n8n-workflow": "^1.0.0"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "nodes": [
+      "dist/nodes/PayStage/PayStage.node.js"
+    ]
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
