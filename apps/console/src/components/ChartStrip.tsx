@@ -51,7 +51,7 @@ function NpmChart({ weeks }: { weeks: NpmWeek[] }) {
     <figure className="lp-chart">
       <figcaption className="lp-chart-head">
         <span>npm installs, 12 weeks</span>
-        <span className="lp-chart-note">includes our own CI and mirrors · {total.toLocaleString()} total</span>
+        <span className="lp-chart-note">includes our own CI and mirrors · {total.toLocaleString("en-US")} total</span>
       </figcaption>
       <div className="lp-chart-bars" role="img" aria-label={`npm installs per week for 12 weeks, ${thisWeek} this week`}>
         {weeks.map((w, i) => (
@@ -59,13 +59,13 @@ function NpmChart({ weeks }: { weeks: NpmWeek[] }) {
             key={w.week}
             className={`lp-chart-bar${i === weeks.length - 1 ? " is-current" : ""}`}
             style={{ height: `${Math.max((w.installs / max) * 100, w.installs > 0 ? 3 : 1)}%` }}
-            title={`week ending ${w.week}: ${w.installs.toLocaleString()}`}
+            title={`week ending ${w.week}: ${w.installs.toLocaleString("en-US")}`}
           />
         ))}
       </div>
       <div className="lp-chart-axis">
         <span>{weeks[0]?.week.slice(5)}</span>
-        <span>this week: {thisWeek.toLocaleString()}</span>
+        <span>this week: {thisWeek.toLocaleString("en-US")}</span>
         <span>{weeks.at(-1)?.week.slice(5)}</span>
       </div>
     </figure>
@@ -81,7 +81,7 @@ function RequestChart({ days }: { days: RequestDay[] }) {
       <figcaption className="lp-chart-head">
         <span>requests per day, 30 days</span>
         <span className="lp-chart-note">
-          {realTotal.toLocaleString()} unlabelled · grey is our own synthetic and test traffic
+          {realTotal.toLocaleString("en-US")} unlabelled · grey is our own synthetic and test traffic
         </span>
       </figcaption>
       <div className="lp-chart-bars" role="img" aria-label={`requests per day for 30 days, ${realTotal} unlabelled`}>

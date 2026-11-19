@@ -57,7 +57,7 @@ export function FunnelPanel() {
               <span className="lp-funnel-track">
                 <span className={`lp-funnel-fill lp-funnel-${stage.key}`} style={{ width: `${Math.max(pct, value > 0 ? 2 : 0)}%` }} />
               </span>
-              <span className="lp-funnel-value">{value.toLocaleString()}</span>
+              <span className="lp-funnel-value">{value.toLocaleString("en-US")}</span>
             </div>
           );
         })}

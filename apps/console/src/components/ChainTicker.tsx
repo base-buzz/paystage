@@ -73,7 +73,7 @@ export function ChainTicker() {
     <div className="lp-chain" aria-live="polite">
       <span className="lp-chain-label">base mainnet</span>
       <span className="lp-chain-value">
-        block <strong>{snap.block?.toLocaleString() ?? "—"}</strong>
+        block <strong>{snap.block?.toLocaleString("en-US") ?? "—"}</strong>
       </span>
       <span className="lp-chain-value">
         gas <strong>{snap.gasGwei ?? "—"}</strong> gwei
