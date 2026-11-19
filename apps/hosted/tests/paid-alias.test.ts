@@ -20,6 +20,26 @@ describe("paid-only alias", () => {
     expect(JSON.stringify(alias?.extensions)).toContain("bazaar");
   });
 
+  /**
+   * #327 — the dedup logic shipped without telling buyers it exists.
+   *
+   * `evaluatePayment` has accepted a `paymentIdentifier` since 2026-11-19 and the challenge never advertised the extension, so no client had a reason to send one. This asserts the
+   * advertisement, on both the alias and the canonical route, because a buyer's first call goes to one of them and the retry to the other.
+   */
+  it("advertises payment-identifier, so a buyer knows a retry can be safe", () => {
+    const routes = buildRoutesConfig({
+      price: "$0.002",
+      network: "eip155:8453",
+      payTo: "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
+    } as never) as Record<string, { extensions?: Record<string, unknown> }>;
+
+    for (const path of [`POST ${PAID_ALIAS}`, "POST /v1/evaluate_mcp_payment"]) {
+      const route = routes[path];
+      expect(route, `expected ${path} in the paid route table`).toBeDefined();
+      expect(Object.keys(route?.extensions ?? {})).toContain("payment-identifier");
+    }
+  });
+
   it("is not in the free tier's path set", async () => {
     const { FREE_PATHS } = (await import("../src/free-tier.js")) as { FREE_PATHS?: Set<string> };
     // The set is module-private by design; if it ever becomes exported, this assertion must check it rather than trust the path.

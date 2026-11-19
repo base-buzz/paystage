@@ -97,6 +97,21 @@ function bazaarInfo(summary: string, bodySchema: Record<string, unknown>) {
         output: { type: "json" },
       },
     },
+    /**
+     * Idempotency, advertised so a buyer can actually use it.
+     *
+     * The dedup logic shipped on 2026-11-19 — `paymentIdentifier` in preflight, seven tests, LIMITS 6b — and no buyer could reach it, because a challenge that does not declare the
+     * extension tells a client not to bother sending an id. A capability nobody is told about is not a capability.
+     *
+     * The declaration follows the x402 payment-identifier extension: the server advertises support here, the client sends a stable id with the payload, and a repeat of an id we have
+     * already judged returns `review` rather than a second approval.
+     */
+    "payment-identifier": {
+      required: false,
+      description:
+        "Send a stable id with a payment and retries of it are deduplicated: a second verdict for the same id inside ten minutes is review, not a second pay.",
+      ttl_seconds: 600,
+    },
     // Human-readable summary shown by explorers that render it.
     summary,
   };
