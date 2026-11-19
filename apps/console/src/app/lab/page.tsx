@@ -417,8 +417,9 @@ export default async function LabPage() {
                 {p.id === "supply" ? (
                   <>
                     <p style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>
-                      {String(summary.payees ?? "?")} distinct payees across {String(summary.accepts ?? "?")} accepts, from{" "}
-                      {String(summary.advertised ?? "?")} advertised resources on {String(summary.networks ?? "?")} networks.{" "}
+                      {Number(summary.payees ?? 0).toLocaleString("en-US")} distinct payees across{" "}
+                      {Number(summary.accepts ?? 0).toLocaleString("en-US")} accepts, from{" "}
+                      {Number(summary.advertised ?? 0).toLocaleString("en-US")} advertised resources on {String(summary.networks ?? "?")} networks.{" "}
                       <strong style={{ color: summary.flagged ? "var(--lp-red, #b91c1c)" : "inherit" }}>
                         {String(summary.flagged ?? 0)} flagged by our lists
                       </strong>
