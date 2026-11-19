@@ -9,7 +9,7 @@
  *
  * Exit 0 every count matches · 10 one does not.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,11 +28,25 @@ const toolsSource = readFileSync(`${ROOT}/packages/mcp/src/tools.ts`, "utf8");
 const toolList = /export const TOOL_NAMES = \[([\s\S]*?)\];/.exec(toolsSource)?.[1] ?? "";
 const tools = new Set([...toolList.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1])).size;
 
+import { readdirSync } from "node:fs";
+
+/**
+ * Package descriptions are prose too, and npm shows them before anything else.
+ *
+ * `@paystage/mcp` said "nine MCP tools" for as long as it had ten — the count had been fixed in the README and the manifest, and the description, which is the one a
+ * searcher reads first, was never in the scan.
+ */
+const PACKAGE_DESCRIPTIONS = readdirSync(join(ROOT, "packages"), { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => `packages/${d.name}/package.json`)
+  .filter((f) => existsSync(join(ROOT, f)));
+
 const FILES = [
   "README.md",
   "apps/console/src/app/page.tsx",
   "apps/console/src/app/llms.txt/route.ts",
   "apps/console/src/app/llms-full.txt/route.ts",
+  ...PACKAGE_DESCRIPTIONS,
 ];
 
 const CLAIM = /\b(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen)\s+(MCP\s+)?(tools|packages)\b/gi;
