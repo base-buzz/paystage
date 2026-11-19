@@ -6,6 +6,7 @@ import {
   normalizePaymentRequired,
 } from "@paystage/preflight";
 import { parsePolicyCached } from "../policy-cache.js";
+import { checkAddressRisk } from "../address-risk.js";
 import {
   listOutstandingAuths,
   evaluateOutstandingAuths,
@@ -38,6 +39,35 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
     const decision = evaluatePayment(normalized, policy, {
       ...(typeof b.agent_id === "string" ? { agentId: b.agent_id } : {}),
     });
+
+    /**
+     * A second source, consulted only when the answer is `pay`.
+     *
+     * The order matters: our own lists and the caller's policy decide first, and the feed only gets a vote on a payment that
+     * would otherwise go through. A flag turns the verdict into `do_not_pay` naming the source; an *outage* turns it into
+     * `review`, because "we could not check" and "we checked and it is clean" must never produce the same answer.
+     */
+    const payee = (normalized.accepts?.[0] as { payTo?: string } | undefined)?.payTo;
+    if (decision.decision === "pay" && typeof payee === "string" && /^0x[a-fA-F0-9]{40}$/.test(payee)) {
+      const risk = await checkAddressRisk(payee, {
+        chainId: String((normalized.accepts?.[0] as { network?: string } | undefined)?.network ?? "").includes("84532")
+          ? "84532"
+          : "8453",
+      });
+      if (risk.flagged.length > 0) {
+        decision.decision = "do_not_pay";
+        decision.reasons = [
+          `payee flagged by the address-risk feed (gopluslabs): ${risk.flagged.join(", ")}`,
+          ...(decision.reasons ?? []),
+        ];
+      } else if (risk.error) {
+        decision.decision = "review";
+        decision.reasons = [
+          `address-risk check could not complete (gopluslabs): ${risk.error}`,
+          ...(decision.reasons ?? []),
+        ];
+      }
+    }
     // Additive: the receipt binds the verdict to these exact inputs. It never
     // changes the decision, and degrades to signed:false when no key is set.
     // Bind the receipt to the payment it is about, so a verifier holding both can tell whether the decision
