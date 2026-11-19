@@ -173,6 +173,7 @@ try {
     "gen-build-info.mjs --check",
     "check-copy.mjs",
     "check-doc-links.mjs",
+    "check-published-links.mjs",
     "check-manifests.mjs",
     "check-changelog.mjs",
     "check-version-parity.mjs",
