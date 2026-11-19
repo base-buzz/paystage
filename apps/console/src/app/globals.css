@@ -106,6 +106,26 @@ body {
   border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
+/**
+ * The shared header renders on every page, but its logo size lived only in `landing.css`, which is imported per page — so on /console, the one route that imports
+ * `globals.css` alone, the mark had no dimensions and the SVG filled half the viewport. Background is also set explicitly: `.site-header` on /console sits on the dark
+ * console panel, where the default link colour made the wordmark almost invisible.
+ */
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+.site-brand-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  flex: none;
+}
+
 .brand {
   font-weight: 700;
   letter-spacing: 0.02em;
