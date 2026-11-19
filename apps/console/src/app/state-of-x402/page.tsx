@@ -9,6 +9,22 @@ import Link from "next/link";
  * The liveness sample (#118) is deliberately **not** quoted: its own decision was to hold the claim until the series is
  * two or three months old, and a half-published number is exactly what this post exists to avoid.
  */
+/**
+ * The supply side, from the weekly inventory (`ops/docs/state/supply/YYYY-MM-DD.json`).
+ *
+ * Two different questions live on this page and must not blur: the registry tells you what *exists*, the catalogues tell you what is *for sale*. A catalogue
+ * entry is a seller's claim, not something we probed, and zero flagged out of 1,223 payees is the absence of a match against 23 cited addresses — not a
+ * clean bill of health.
+ */
+const SUPPLY = [
+  { value: "17,577", label: "resources advertised", note: "PayAI's public discovery endpoint" },
+  { value: "24,078", label: "accepts recorded", note: "one resource can offer several assets or networks" },
+  { value: "1,223", label: "distinct payees", note: "949 EVM, the rest Solana / Algorand / other" },
+  { value: "29", label: "CAIP-2 networks", note: "12,810 accepts on eip155:8453 (Base) alone" },
+  { value: "0", label: "flagged by our lists", note: "against 23 cited addresses — see the caveat below" },
+  { value: "6,742", label: "accepts on Solana", note: "outside what an EVM policy can express today" },
+];
+
 export const metadata: Metadata = {
   title: "State of x402 — November 2026",
   description:
@@ -43,7 +59,33 @@ export default function StateOfX402() {
         ))}
       </div>
 
+      <h2>What the catalogues list</h2>
+      <p>
+        The registry above counts what is <em>published</em>. This counts what is <em>for sale</em>: one walk of PayAI&apos;s
+        public discovery endpoint, screened against the same OFAC and drainer lists the evaluator ships.
+      </p>
+      <div className="sx-stats">
+        {SUPPLY.map((s) => (
+          <div className="sx-stat" key={s.label}>
+            <div className="sx-stat-value">{s.value}</div>
+            <div className="sx-stat-label">{s.label}</div>
+            <div className="sx-stat-note">{s.note}</div>
+          </div>
+        ))}
+      </div>
+      <p>
+        <strong>Zero flagged is not a clean bill of health.</strong> It means no payee in this catalogue matches one of 23 curated, cited
+        addresses — a 2% hit rate would be the surprising number. The finding worth carrying is the coverage one:{" "}
+        <strong>6,742 accepts are on Solana</strong> and 1,704 use a bare <code>base</code> label instead of a CAIP-2 identifier, so a
+        large share of this market sits outside what an EVM-and-CAIP-2 policy can express at all.
+      </p>
+
       <h2>Method</h2>
+      <p>
+        Supply figures: one complete walk of PayAI&apos;s discovery endpoint on <strong>2026-11-19</strong>, refreshed weekly, screened against the same lists
+        the evaluator ships. The inventory is a catalogue read, not a probe of each seller — a listing is a claim, and the payee registry only accepts hosts
+        whose 402 challenge we have read ourselves.
+      </p>
       <p>
         Source: the official MCP Registry, queried in full and deduplicated by server name — 683 rows collapse to 348
         distinct servers, because a publisher with twenty versions otherwise takes twenty slots. Snapshot taken{" "}
