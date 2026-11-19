@@ -19,6 +19,7 @@ import xEvmPkg from "../../../../packages/x-evm/package.json";
 import skillPkg from "../../../../packages/skill/package.json";
 import aiSdkPkg from "../../../../packages/ai-sdk/package.json";
 import n8nPkg from "../../../../packages/n8n/package.json";
+import elizaPluginPkg from "../../../../packages/eliza-plugin/package.json";
 
 export const PACKAGE_VERSIONS: Record<string, string> = {
   "@paystage/mcp": mcpPkg.version,
@@ -32,6 +33,7 @@ export const PACKAGE_VERSIONS: Record<string, string> = {
   "@paystage/skill": skillPkg.version,
   "@paystage/ai-sdk": aiSdkPkg.version,
   "@paystage/n8n": n8nPkg.version,
+  "@paystage/eliza-plugin": elizaPluginPkg.version,
 };
 
 /**

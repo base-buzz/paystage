@@ -61,6 +61,7 @@ const PACKAGE_ROLES = {
   "@paystage/skill": "agent skill manifest",
   "@paystage/x-evm": "chain-agnostic EVM helpers",
   "@paystage/n8n": "the gate as an n8n community node",
+  "@paystage/eliza-plugin": "the gate as an elizaOS action",
 };
 
 const PKG_START = "<!-- packages:table:start -->";

@@ -1,0 +1,41 @@
+{
+  "name": "@paystage/eliza-plugin",
+  "version": "0.1.0",
+  "description": "PayStage for elizaOS agents: one action that asks whether an x402 payment should be signed, returning pay, review or do_not_pay with the rule that fired. No keys, no signing.",
+  "keywords": [
+    "elizaos-plugin",
+    "eliza",
+    "elizaos",
+    "x402",
+    "payment-safety",
+    "agent-payments",
+    "spend-limits",
+    "firewall",
+    "usdc",
+    "base"
+  ],
+  "license": "MIT",
+  "homepage": "https://paystage.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/base-buzz/paystage.git",
+    "directory": "packages/eliza-plugin"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@paystage/preflight": "^0.5.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

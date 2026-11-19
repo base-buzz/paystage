@@ -145,6 +145,7 @@ frameworks, a policy schema and a skill — hence ten packages and ten tools in 
 | `@paystage/x402-guard` | policy gate for x402 clients, before the wallet signs | [npm](https://www.npmjs.com/package/@paystage/x402-guard) |
 | `@paystage/ai-sdk` | the same gate as Vercel AI SDK tools | [npm](https://www.npmjs.com/package/@paystage/ai-sdk) |
 | `@paystage/auth-watch` | outstanding ERC-20 / Permit2 / EIP-3009 authorisations | [npm](https://www.npmjs.com/package/@paystage/auth-watch) |
+| `@paystage/eliza-plugin` | the gate as an elizaOS action | [npm](https://www.npmjs.com/package/@paystage/eliza-plugin) |
 | `@paystage/n8n` | the gate as an n8n community node | [npm](https://www.npmjs.com/package/@paystage/n8n) |
 | `@paystage/policy` | policy schema and loader | [npm](https://www.npmjs.com/package/@paystage/policy) |
 | `@paystage/preflight` | x402 payment preflight (the evaluator) | [npm](https://www.npmjs.com/package/@paystage/preflight) |
