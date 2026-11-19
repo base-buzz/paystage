@@ -301,8 +301,22 @@ frameworks, a policy schema and a skill — hence twelve packages and ten tools,
 
 ## Verify it yourself
 
-Every claim this project makes about itself is reducible to a command. Run it before
-you trust anything on the website:
+Four claims are checked against **production**, not against the repo — run all of them with one command:
+
+```bash
+npm run check:live
+```
+
+| check | what it asks the deployed system |
+|---|---|
+| `check-deployed-sha` | is the site serving the newest deployable commit? |
+| `check-mcp-live` | does `/mcp` serve exactly the ten declared tools? |
+| `check-receipt-live` | does a real receipt verify — and does an altered one fail? |
+| `check-sanctions-live` | does the API refuse a sanctioned payee even when the policy allows it? |
+
+Each exits non-zero on failure, so they belong in a release, not in a badge.
+
+The wider conformance kit checks the published surfaces against reality:
 
 ```sh
 node apps/hosted/scripts/conformance.mjs
