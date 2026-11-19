@@ -208,6 +208,12 @@ export const PAYSTAGE_MANIFEST = {
     mainnet: "https://api.paystage.xyz",
     sepolia: "https://sepolia.api.paystage.xyz",
     price_usdc_per_call: "0.002",
+    /**
+     * The paid-only alias (#150). It exists so a directory or crawler that indexes only endpoints which answer a challenge can
+     * see us — the canonical path may answer 200 from the free tier, and an indexer that requires a 402 would skip it. Agents
+     * should use the canonical path; this one is for the crawlers.
+     */
+    paid_only_alias: "/v1/paid/evaluate_mcp_payment",
   },
   reliability: {
     slo_doc: "https://github.com/base-buzz/paystage/blob/main/apps/hosted/SLO.md",

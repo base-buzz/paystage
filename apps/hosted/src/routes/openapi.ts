@@ -140,6 +140,19 @@ export const OPENAPI_DOCUMENT = {
   },
   servers: [{ url: "https://api.paystage.xyz" }],
   paths: {
+    /**
+     * The paid-only alias (#150). It is documented as its own operation because its purpose is different — an indexer or
+     * crawler probing it must see a challenge, and a caller that needs the free tier should use the canonical path.
+     */
+    "/v1/paid/evaluate_mcp_payment": paidOperation(
+      "Paid-only alias of evaluate_mcp_payment",
+      "Identical evaluation to /v1/evaluate_mcp_payment, at a path that always answers 402 to an unpaid caller. " +
+        "Use it if you are a directory or crawler that discovers x402 endpoints by requiring a challenge: the canonical " +
+        "path may answer 200 from the free tier, and an indexer that only indexes challenging endpoints would skip it. " +
+        "Do NOT use it to avoid the free tier — the free tier exists so an agent can get a verdict without paying, and " +
+        "the canonical path is the one documented for agents.",
+      PAYMENT_BODY,
+    ),
     "/v1/evaluate_mcp_payment": paidOperation(
       "Evaluate one x402 payment against a spend policy",
       "Use this immediately before signing any x402 payment: it returns pay, review or do_not_pay with the rule that " +
