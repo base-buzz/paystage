@@ -39,6 +39,7 @@ const PROBES: Array<{ id: string; higherIsBetter: boolean }> = [
   { id: "discovery", higherIsBetter: true },
   { id: "decision", higherIsBetter: true },
   { id: "clients", higherIsBetter: true },
+  { id: "supply", higherIsBetter: true },
   // Aggregate only: the page is public, and naming repositories whose payment paths are unguarded would turn a measurement
   // into a shaming list.
   { id: "outreach", higherIsBetter: false },
@@ -397,6 +398,42 @@ export default async function LabPage() {
                       ))}
                     </tbody>
                   </table>
+                  </>
+                ) : null}
+
+                {p.id === "supply" ? (
+                  <>
+                    <p style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>
+                      {String(summary.payees ?? "?")} distinct payees across {String(summary.accepts ?? "?")} accepts, from{" "}
+                      {String(summary.advertised ?? "?")} advertised resources on {String(summary.networks ?? "?")} networks.{" "}
+                      <strong style={{ color: summary.flagged ? "var(--lp-red, #b91c1c)" : "inherit" }}>
+                        {String(summary.flagged ?? 0)} flagged by our lists
+                      </strong>
+                      . Aggregate only — this page never names a seller.
+                    </p>
+                    {Array.isArray(summary.top_networks) ? (
+                      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 8, fontSize: 13.5 }}>
+                        <thead>
+                          <tr style={{ textAlign: "left", opacity: 0.6 }}>
+                            <th style={{ padding: "6px 8px" }}>network</th>
+                            <th style={{ padding: "6px 8px" }}>accepts</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(summary.top_networks as Array<{ network: string; count: number }>).map((n) => (
+                            <tr key={n.network} style={{ borderTop: "1px solid rgba(128,128,128,0.25)" }}>
+                              <td style={{ padding: "6px 8px", fontFamily: "ui-monospace, monospace", fontSize: 12 }}>{n.network}</td>
+                              <td style={{ padding: "6px 8px" }}>{n.count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : null}
+                    <p style={{ marginTop: 8, fontSize: 12.5, opacity: 0.6 }}>
+                      Zero flagged is not a clean bill of health: our lists are 23 curated addresses against {String(summary.payees ?? "?")}{" "}
+                      payees. The coverage fact that matters is how much of this market a policy cannot express at all — Solana and bare
+                      network labels are counted here, not averaged away.
+                    </p>
                   </>
                 ) : null}
 
