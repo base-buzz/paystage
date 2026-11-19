@@ -13,7 +13,11 @@ behaving. Every number here is measured, dated, and reproducible with
 | Server time, unpaid 402 — warm isolate | p50 ≤ 10 ms, p95 ≤ 50 ms | **met** — p50 0 ms / p95 0 ms (2026-11-09, n=20) |
 | Server time, unpaid 402 — first request in a fresh isolate | p95 ≤ 400 ms | **~220-260 ms** (2026-11-09) |
 | Server time, paid evaluation | p50 ≤ 150 ms, p95 ≤ 500 ms | **not measured** — needs a funded wallet |
-| Time to first byte, external | p50 ≤ 150 ms from NZ | **met** — 18 ms wall (2026-11-09) |
+| Hosted path, tail | p90 < 1 s | **partly met** — unpaid wall p99 **287 ms** (n=40, 2026-11-19); the paid path is still unmeasured because it needs a funded wallet, and that is where the original 5 s p90 was seen |
+
+**Why the 5 s tail existed, and what fixed it (2026-11-09).** Facilitator discovery (`getSupported()`) stopped answering within the old five-second request guard, and because discovery ran before the challenge, every mainnet call became a `503 upstream_timeout` — including unpaid challenges that need no facilitator at all. Discovery now races a 2.5 s deadline and falls back to the static network/scheme we already know, so a slow facilitator cannot delay a challenge; `supportedSource()` reports which answer won. The unpaid tail measured above is the result.
+
+| Time to first byte, external | p50 ≤ 150 ms from NZ | **met** — 18 ms wall (2026-11-09); re-measured 2026-11-19: wall p50 19 ms, p95 234 ms (n=40, unpaid) |
 
 Availability targets are stated to be measured, not claimed. Until a rolling window
 exists, treat them as intent and use `/v1/public/status` for current incidents.
