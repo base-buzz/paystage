@@ -450,8 +450,8 @@ export default async function LabPage() {
                         {/* A cumulative count beside a rising total reads as "still failing": name the window. */}
                         Failures are cumulative: all{" "}
                         {String(summary.failed ?? 0)} so far happened between{" "}
-                        {String((summary.failure_window as { first: string }).first).slice(11, 16)}Z and{" "}
-                        {String((summary.failure_window as { last?: string }).last ?? (summary.failure_window as { first: string }).first).slice(11, 16)}Z
+                        {String((summary.failure_window as { first: string }).first).slice(11, 16) + "Z"} and{" "}
+                        {String((summary.failure_window as { last?: string }).last ?? (summary.failure_window as { first: string }).first).slice(11, 16) + "Z"}
                         {summary.last_tick_at ? `; the harness last ticked at ${String(summary.last_tick_at).slice(11, 16)}Z` : ""}.
                       </p>
                     ) : null}
