@@ -120,7 +120,9 @@ function Delta({
     return (
       <div style={{ minWidth: 108 }}>
         <div style={{ fontSize: 11, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</div>
-        <div style={{ fontSize: 13, opacity: 0.5 }}>no data</div>
+        <div style={{ fontSize: 13, opacity: 0.5 }} title={`no reading ${daysAgo === 1 ? "a day" : `${daysAgo} days`} ago yet — the series starts 2026-11-19`}>
+          no data
+        </div>
       </div>
     );
   }
