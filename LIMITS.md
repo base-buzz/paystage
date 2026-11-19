@@ -24,6 +24,13 @@ correct 402 challenge and no history passes every rule a policy can express.
 *What would be needed:* delivery history — the "did they actually return the data" question. That is a
 reputation system, and it is the reason several projects in this space exist.
 
+*Partly addressed, hosted only.* The hosted API adds `seller_reputation` — the registration date of the
+seller's domain (RDAP) and the date of its earliest certificate (crt.sh). A host under thirty days old
+turns `pay` into `review`. That is a proxy, not delivery history: a well-funded clone can be older than
+thirty days, and a legitimate new seller is punished for being new. The **local** evaluator runs offline
+and reports no reputation at all, so a caller using the MCP tool should not read silence as a clean
+record.
+
 ## 3. Anything promised off-chain
 
 The policy can require a payee, an asset, a network, an amount and a timeout. It cannot require an SLA, a
