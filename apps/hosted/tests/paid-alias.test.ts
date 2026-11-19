@@ -16,8 +16,8 @@ describe("paid-only alias", () => {
     } as never) as Record<string, { extensions?: unknown; accepts?: unknown[] }>;
     const alias = routes[`POST ${PAID_ALIAS}`];
     expect(alias, `expected POST ${PAID_ALIAS} in the paid route table`).toBeDefined();
-    expect(alias.accepts?.length).toBe(1);
-    expect(JSON.stringify(alias.extensions)).toContain("bazaar");
+    expect(alias?.accepts?.length).toBe(1);
+    expect(JSON.stringify(alias?.extensions)).toContain("bazaar");
   });
 
   it("is not in the free tier's path set", async () => {

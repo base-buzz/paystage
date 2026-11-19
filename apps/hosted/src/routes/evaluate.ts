@@ -7,6 +7,7 @@ import {
 } from "@paystage/preflight";
 import { parsePolicyCached } from "../policy-cache.js";
 import { checkAddressRisk } from "../address-risk.js";
+import { checkHostReputation, YOUNG_DOMAIN_DAYS } from "../host-reputation.js";
 import {
   listOutstandingAuths,
   evaluateOutstandingAuths,
@@ -54,6 +55,28 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
           ? "84532"
           : "8453",
       });
+      /**
+       * Reputation is the *other* half of the same question (#164): the payee registry speaks only about hosts we have probed, and
+       * for every other host the honest answer is silence. A domain registered last month has no history to lose, which is the
+       * shape of a clone — so it turns `pay` into `review`, and it never turns anything into a refusal.
+       */
+      const resourceUrl = (normalized.resource as { url?: string } | undefined)?.url;
+      if (resourceUrl) {
+        try {
+          const host = new URL(resourceUrl).host;
+          const reputation = await checkHostReputation(host);
+          if (reputation.domain_age_days !== null && reputation.domain_age_days < YOUNG_DOMAIN_DAYS) {
+            decision.decision = "review";
+            decision.reasons = [
+              `seller domain ${reputation.host} is ${reputation.domain_age_days} days old (registered ${reputation.registered_at?.slice(0, 10)}) — a young domain has no history to lose`,
+              ...(decision.reasons ?? []),
+            ];
+          }
+        } catch {
+          // A malformed resource URL is not a reputation finding; fall through with the verdict we already had.
+        }
+      }
+
       if (risk.flagged.length > 0) {
         decision.decision = "do_not_pay";
         decision.reasons = [
