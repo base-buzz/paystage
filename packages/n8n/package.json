@@ -31,7 +31,8 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "n8n-workflow": "^1.0.0"
+    "n8n-workflow": "^1.0.0",
+    "vitest": "^4.1.12"
   },
   "n8n": {
     "n8nNodesApiVersion": 1,
