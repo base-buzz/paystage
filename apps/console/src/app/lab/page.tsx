@@ -441,7 +441,8 @@ export default async function LabPage() {
                       {Number(summary.accepts ?? 0).toLocaleString("en-US")} accepts, from{" "}
                       {Number(summary.advertised ?? 0).toLocaleString("en-US")} advertised resources on {String(summary.networks ?? "?")} networks.{" "}
                       <strong style={{ color: summary.flagged ? "var(--lp-red, #b91c1c)" : "inherit" }}>
-                        {String(summary.flagged ?? 0)} flagged by our lists
+                        {/* Membership in a denial list is a lookup, not a judgement — the note says "on our denial lists" for the same reason. */}
+                        {String(summary.flagged ?? 0)} on our denial lists
                       </strong>
                       . Aggregate only — this page never names a seller. It is a catalogue read on the date shown, not a probe of each seller: a listing is a seller's claim.
                     </p>
