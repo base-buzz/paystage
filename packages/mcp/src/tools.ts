@@ -147,7 +147,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "evaluate_mcp_payment",
     {
       description:
-        "verify the recipient. Call this BEFORE signing any x402 payment. Verdict is pay | review | do_not_pay, each with stable reason codes (e.g. 'amount 1.00 USDC exceeds max_amount 0.05 USDC'). Returns the decision plus a signed receipt you can verify offline with verify_receipt. Read-only: holds no keys, never signs, never moves funds. A refusal costs nothing.",
+        "verify the recipient. Call this BEFORE signing any x402 payment. Verdict is pay | review | do_not_pay, each with stable reason codes (e.g. 'amount 1.00 USDC exceeds max_amount 0.05 USDC'). Returns the decision plus a signed receipt you can verify offline with verify_receipt. Read-only: holds no keys, never signs, never moves funds. A refusal costs nothing. This tool evaluates locally, so it makes no network calls and returns no seller reputation; the hosted HTTP API adds `seller_reputation` (domain and certificate age) because it can reach the network.",
       annotations: {
         title: "Evaluate an x402 payment (read-only, never signs)",
         readOnlyHint: true,
