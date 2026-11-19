@@ -189,6 +189,30 @@ export default function ListsPage() {
       </section>
 
       <section>
+        <h2>Checks that need the network</h2>
+        <p>
+          Two checks run only on the <strong>hosted</strong> API, because they call third parties and the local evaluator must work
+          offline. Both fail closed: an outage downgrades a verdict to <code>review</code>, never to <code>pay</code>.
+        </p>
+        <ul>
+          <li>
+            <strong>Address risk (GoPlus).</strong> A payee flagged for sanctions, laundering, phishing or theft turns{" "}
+            <code>pay</code> into <code>do_not_pay</code>, naming the source. It disagrees with our own list in both directions, which
+            is the argument for reading both.
+          </li>
+          <li>
+            <strong>Seller age (RDAP and certificate transparency).</strong> A seller host whose domain or first certificate is under
+            thirty days old turns <code>pay</code> into <code>review</code> — a host with no history has none to lose. RDAP refuses
+            this server, so the certificate date is usually the signal that answers.
+          </li>
+        </ul>
+        <p>
+          The observation is returned with the verdict (<code>seller_reputation</code>) whether or not it changes the answer, because a
+          check that only speaks when it fires cannot be told apart from one that never ran.
+        </p>
+      </section>
+
+      <section>
         <h2>What this does not do</h2>
         <p>
           Being specific about the limits is the point of the page. A tool that blocks addresses is trusted on the accuracy of
