@@ -27,6 +27,7 @@ jobs:
       - run: node scripts/check-client-manifests.mjs
       - run: node scripts/check-published-links.mjs
       - run: node scripts/check-count-claims.mjs
+      - run: node scripts/check-network-claims.mjs
       - run: node scripts/sync-tool-docs.mjs --check
       - run: node scripts/check-privacy.mjs
       - run: node scripts/check-contrast.mjs
