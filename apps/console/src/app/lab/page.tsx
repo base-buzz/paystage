@@ -425,7 +425,7 @@ export default async function LabPage() {
                       <strong style={{ color: summary.flagged ? "var(--lp-red, #b91c1c)" : "inherit" }}>
                         {String(summary.flagged ?? 0)} flagged by our lists
                       </strong>
-                      . Aggregate only — this page never names a seller.
+                      . Aggregate only — this page never names a seller. It is a catalogue read on the date shown, not a probe of each seller: a listing is a seller's claim.
                     </p>
                     {Array.isArray(summary.top_networks) ? (
                       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 8, fontSize: 13.5 }}>
