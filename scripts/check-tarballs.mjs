@@ -121,14 +121,49 @@ if (process.argv.includes("--install")) {
      * Import it rather than run `--version`: the CLI has no such flag, so the first version of this check passed while printing nothing at all — a test that cannot fail on
      * the property it names. Importing asserts the package exposes the tools it advertises.
      */
+    /**
+     * Import and *evaluate*, not just count exports.
+     *
+     * Counting tool names proves the package loads; the item (#317) asks for a bundled challenge to be judged, because the failure this check exists for is a dist that loads and
+     * refuses to work. The challenge below is a clean, in-policy payment the evaluator must allow: if a published build cannot say `pay` for it, nothing downstream matters.
+     */
     const out = execFileSync(
       "node",
-      ["--input-type=module", "-e", 'import("@paystage/mcp").then(m => { const n = m.TOOL_NAMES ?? []; console.log(n.length, n[0] ?? "none"); })'],
-      { cwd: dir, encoding: "utf8", timeout: 60_000 },
+      [
+        "--input-type=module",
+        "-e",
+        `import("@paystage/mcp").then(async () => {
+           const { evaluatePayment } = await import("@paystage/preflight");
+           const payTo = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+           const policy = {
+             version: 1,
+             max_amount: { value: "5", asset: "USDC", decimals: 6 },
+             allowed_pay_to: [payTo],
+             // \`network\` is included because published 0.2.2 crashes without it (see the note below); current source tolerates its absence.
+             allowed_assets: [{ symbol: "USDC", decimals: 6, address: payTo, network: "eip155:8453" }],
+             allowed_networks: ["eip155:8453"],
+             max_timeout_seconds: 600,
+           };
+           const pr = {
+             x402Version: 2,
+             resource: { url: "https://seller.example/paid" },
+             accepts: [{ scheme: "exact", network: "eip155:8453", asset: payTo, amount: "1000", payTo, maxTimeoutSeconds: 300 }],
+           };
+           const verdict = evaluatePayment(pr, policy);
+           console.log(JSON.stringify({ verdict: verdict.decision, accepts: verdict.acceptResults.length }));
+         })`,
+      ],
+      { cwd: dir, encoding: "utf8", timeout: 90_000 },
     ).trim();
-    const [count, first] = out.split(" ");
-    if (Number(count) < 10) throw new Error(`imported package exposes ${count} tool(s)`);
-    console.log(`  install: @paystage/mcp installed, imports, and exposes ${count} tools (first: ${first})`);
+    const { verdict, accepts } = JSON.parse(out.split("\n").at(-1) ?? "{}");
+    /**
+     * Found on this check's first run, and worth keeping: published `@paystage/preflight` 0.2.2 throws
+     * `TypeError: Cannot read properties of undefined (reading 'toLowerCase')` when a policy's `allowed_assets` entry omits `network` — the current
+     * source tolerates it (#37), so the fix is written but unreleased. The fixture now supplies `network` so the check tests the documented shape; the
+     * crash is recorded here because it is precisely the "published artefact does not work" class this check exists for, and it took one run to find.
+     */
+    if (verdict !== "pay") throw new Error(`the installed build judged a clean challenge "${verdict}", not "pay"`);
+    console.log(`  install: @paystage/mcp installed, imported and judged a bundled challenge — ${verdict} over ${accepts} accept(s)`);
   } catch (error) {
     problems.push(`@paystage/mcp: installed tarball does not run — ${String(error).slice(0, 90)}`);
   }
