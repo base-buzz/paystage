@@ -272,21 +272,18 @@ export default async function LabPage() {
                             const [payees, accepts] = String(latest.headline).split("/");
                             return `${Number(payees).toLocaleString("en-US")} payees`;
                           })()
-                        : (() => {
-                            /**
-                             * Discovery's tile follows the sentence: the note says "4 of 6 npm phrase searches", so the tile is that ratio rather than the combined 4/12.
-                             */
-                            const npm = p.id === "discovery" ? (latest.summary?.by_channel as { npm?: { present?: number; measured?: number; planned?: number } } | undefined)?.npm : undefined;
-                            if (!npm || typeof npm.present !== "number") return pct(latest.value);
-                            return pct(npm.present / Math.max(1, npm.measured ?? npm.planned ?? 1));
-                          })()}
+                        : pct(latest.value)}
                 </div>
                 <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>
                   {latest
                     ? (() => {
                         const npm = p.id === "discovery" ? (latest.summary?.by_channel as { npm?: { present?: number; measured?: number; planned?: number } } | undefined)?.npm : undefined;
+                        /**
+                         * The tile is a time series, so its percentage stays the stored ratio — a history that switches denominators halfway reads as a movement that did not happen.
+                         * The channel figure rides in the label, where the sentence beside it can explain it.
+                         */
                         return npm && typeof npm.present === "number"
-                          ? `${npm.present}/${npm.measured ?? npm.planned} npm · ${latest.day}`
+                          ? `${latest.headline} · ${npm.present}/${npm.measured ?? npm.planned} npm · ${latest.day}`
                           : `${latest.headline} \u00b7 ${latest.day}`;
                       })()
                     : p.failure !== null
