@@ -59,7 +59,8 @@ export async function CadencePanel() {
                     : latest ? (
                         <>
                           last run: {latest.ok ? "pass" : "fail"}
-                          {data.consecutive > 1 ? ` · ${data.consecutive} in a row` : ""} · {passing}/{data.checks.length} recently
+                          {data.consecutive > 1 ? ` · ${data.consecutive} in a row` : ""} · {passing}/{data.checks.length} of the latest
+                          workflow runs passed
                         </>
                       ) : null}
               </span>
