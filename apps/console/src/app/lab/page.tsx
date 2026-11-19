@@ -445,6 +445,17 @@ export default async function LabPage() {
                       <strong>Synthetic testnet traffic — not customers, not revenue.</strong> 100 independent wallets paying each
                       other with test USDC on Base Sepolia. It shows the harness works.
                     </p>
+                    {(summary.failure_window as { first?: string; last?: string } | null)?.first ? (
+                      <p style={{ marginTop: 8, marginBottom: 0, fontSize: 12.5, opacity: 0.7 }}>
+                        {/* A cumulative count beside a rising total reads as "still failing": name the window. */}
+                        Failures are cumulative: all{" "}
+                        {String(summary.failed ?? 0)} so far happened between{" "}
+                        {String((summary.failure_window as { first: string }).first).slice(11, 16)}Z and{" "}
+                        {String((summary.failure_window as { last?: string }).last ?? (summary.failure_window as { first: string }).first).slice(11, 16)}Z
+                        {summary.last_tick_at ? `; the harness last ticked at ${String(summary.last_tick_at).slice(11, 16)}Z` : ""}.
+                      </p>
+                    ) : null}
+
                     <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginTop: 12, fontSize: 13.5 }}>
                       {[
                         ["sent", summary.sent, "var(--lp-mint, #047857)"],
