@@ -52,6 +52,18 @@ export const VERIFIED_PAYEES: readonly VerifiedPayee[] = [
     "verified_at": "2026-11-17"
   },
   {
+    "host": "api.nullclear.dev",
+    "service": "NullClear Batch Token Firewall",
+    "payee": "0xb586efcca41df27ad3873beca54da0c30bf04d5c",
+    "verified_at": "2026-11-19"
+  },
+  {
+    "host": "api.nullclear.dev",
+    "service": "NullClear Market Oracle",
+    "payee": "0xb586efcca41df27ad3873beca54da0c30bf04d5c",
+    "verified_at": "2026-11-19"
+  },
+  {
     "host": "api.paystage.xyz",
     "service": "PayStage Evaluate",
     "payee": "0x1b2272a2ca1792e8497a8d45fd3eb8665ae88fae",
