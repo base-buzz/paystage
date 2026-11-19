@@ -439,6 +439,12 @@ export default async function LabPage() {
 
                 {p.id === "clients" ? (
                   <>
+                    {/* The label is not decoration: the note claims this traffic is labelled synthetic wherever it is quoted, and
+                        until this line existed /lab was a surface where it was not. */}
+                    <p style={{ marginTop: 10, marginBottom: 0, fontSize: 12.5, opacity: 0.7 }}>
+                      <strong>Synthetic testnet traffic — not customers, not revenue.</strong> 100 independent wallets paying each
+                      other with test USDC on Base Sepolia. It shows the harness works.
+                    </p>
                     <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginTop: 12, fontSize: 13.5 }}>
                       {[
                         ["sent", summary.sent, "var(--lp-mint, #047857)"],
