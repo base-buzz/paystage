@@ -104,6 +104,18 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
   }
 });
 
+/**
+ * The paid-only alias (#150) is the same evaluation, reachable at a path the free tier never answers.
+ *
+ * Implemented as a forward to the canonical path rather than a second copy of the handler: two copies of a payment evaluator
+ * drift, and the drift would be invisible until a caller got a different verdict from the alias.
+ */
+evaluateRoutes.post("/v1/paid/evaluate_mcp_payment", async (c) => {
+  const url = new URL(c.req.url);
+  url.pathname = "/v1/evaluate_mcp_payment";
+  return evaluateRoutes.fetch(new Request(url.toString(), c.req.raw));
+});
+
 evaluateRoutes.post("/v1/evaluate_outstanding_auths", async (c) => {
   let body: unknown;
   try {

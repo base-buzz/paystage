@@ -115,8 +115,30 @@ const PAYMENT_BODY_SCHEMA = {
   },
 };
 
+/**
+ * The paid-only alias (#150).
+ *
+ * Bazaar indexes an endpoint after it answers a *paid* call, and its crawler arrives with a fresh IP — which our free tier
+ * greets with 200. The alias is the same handler with no free path, so an unlabelled caller always gets a 402 and the crawler
+ * sees an x402 route. The free tier stays exactly as it is: it is the product, not the bug.
+ */
+export const PAID_ALIAS = "/v1/paid/evaluate_mcp_payment";
+
 export function buildRoutesConfig(cfg: X402Config) {
   return {
+    [`POST ${PAID_ALIAS}`]: {
+      accepts: [
+        {
+          scheme: "exact",
+          price: cfg.price,
+          network: cfg.network,
+          payTo: cfg.payTo,
+        },
+      ],
+      description: "Paid-only alias of evaluate_mcp_payment, for indexers and crawlers that require a challenge",
+      mimeType: "application/json",
+      extensions: bazaarInfo("Should this x402 payment be signed? (paid-only alias)", PAYMENT_BODY_SCHEMA),
+    },
     "POST /v1/evaluate_mcp_payment": {
       accepts: [
         {

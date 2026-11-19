@@ -91,6 +91,9 @@ const CORS_EXPOSE_HEADERS = [
 export function toolFromPath(path: string): string | null {
   switch (path) {
     case "/v1/evaluate_mcp_payment":
+    case "/v1/paid/evaluate_mcp_payment":
+      // The alias is telemetry's `evaluate_mcp_payment` too: a settled call there is the same product, and reporting it as a
+      // different tool would make the paid-only path look like a separate offering in every chart.
       return "evaluate_mcp_payment";
     case "/v1/evaluate_outstanding_auths":
       return "evaluate_outstanding_auths";
