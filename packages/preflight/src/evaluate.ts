@@ -7,6 +7,7 @@ import {
 } from "@paystage/policy";
 import { isKnownDrainer, isNonReceivable } from "./known-drainers.js";
 import { SANCTIONED_ADDRESSES } from "./sanctioned-addresses.js";
+import { verifiedPayeeFor } from "./verified-payees.js";
 
 export interface AcceptOption {
   scheme: string;
@@ -75,7 +76,7 @@ function findAsset(
   );
 }
 
-function evaluateAccept(accept: AcceptOption, policy: Policy): AcceptResult {
+function evaluateAccept(accept: AcceptOption, policy: Policy, resource?: PaymentResource): AcceptResult {
   const reasons: string[] = [];
 
   // Rule 2: network allowlist
@@ -172,6 +173,30 @@ function evaluateAccept(accept: AcceptOption, policy: Policy): AcceptResult {
     }
     reasons.push(`payTo ${accept.payTo} not in allowed_pay_to (review)`);
     return { accept, status: "review", reasons };
+  }
+
+  /**
+   * Rule 7c: the payee matches the host's verified record, when we have one (#133 → #164).
+   *
+   * A challenge names both `resource` and `payTo`, and nothing ties them together: an endpoint can put any host in `resource` and
+   * ask to be paid at an address it controls. When that host is one we have probed, a different payee is a fact worth stopping
+   * for — `review`, not `do_not_pay`, because a provider may legitimately rotate its payee and refusing on rotation would punish
+   * the honest case this registry exists to protect.
+   */
+  if (resource?.url) {
+    let host: string | undefined;
+    try {
+      host = new URL(resource.url).host.toLowerCase();
+    } catch {
+      host = undefined;
+    }
+    const verified = verifiedPayeeFor(host);
+    if (verified && verified.payee !== String(accept.payTo).toLowerCase()) {
+      reasons.push(
+        `payTo ${accept.payTo} differs from the verified address for ${verified.host} (${verified.payee}, verified ${verified.verified_at ?? "undated"}) — the endpoint may be a clone, or the provider rotated its payee`,
+      );
+      return { accept, status: "review", reasons };
+    }
   }
 
   // Rule 8: require_human_above
@@ -283,7 +308,7 @@ export function evaluatePayment(
     };
   }
 
-  const acceptResults = pr.accepts.map((a) => evaluateAccept(a, effective));
+  const acceptResults = pr.accepts.map((a) => evaluateAccept(a, effective, pr.resource));
 
   const payAccepts = acceptResults
     .filter((r) => r.status === "pay")
