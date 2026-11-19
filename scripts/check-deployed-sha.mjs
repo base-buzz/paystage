@@ -71,8 +71,33 @@ if (deployed !== expected) {
     );
     process.exit(0);
   }
+  /**
+   * A deploy in flight is not a defect.
+   *
+   * This check went red twice on 2026-11-19 for the three minutes between a push and the worker serving it, which is the normal shape of a deploy — and a check that
+   * fires during normal operation is a check people learn to ignore. If GitHub reports a deploy run queued or in progress for this branch, that is the answer.
+   */
+  let inFlight = false;
+  try {
+    const runs = JSON.parse(
+      execFileSync("gh", ["run", "list", "--workflow=deploy-console.yml", "--branch", "main", "--limit", "5", "--json", "status,conclusion,headSha"], {
+        encoding: "utf8",
+        timeout: 60_000,
+        cwd: REPO,
+      }),
+    );
+    inFlight = runs.some((r) => r.status === "queued" || r.status === "in_progress" || r.status === "waiting");
+  } catch {
+    inFlight = false; // no gh, or no network: fall through to the honest answer
+  }
+  if (inFlight) {
+    console.log(
+      `deployed-sha: site is at ${deployed.slice(0, 8)}, ${branch} is ${expected.slice(0, 8)} — a deploy is in flight, so this is transitional rather than behind`,
+    );
+    process.exit(0);
+  }
   console.error(
-    `deployed-sha: site is running ${deployed.slice(0, 8)}, ${branch} is ${expected.slice(0, 8)} — ${behind} deployable commit(s) behind`,
+    `deployed-sha: site is running ${deployed.slice(0, 8)}, ${branch} is ${expected.slice(0, 8)} — ${behind} deployable commit(s) behind and no deploy running`,
   );
   process.exit(10);
 }
