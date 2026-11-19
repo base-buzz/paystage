@@ -32,7 +32,30 @@ const sourceBlocks = [...drainers.matchAll(/\{\s*name:\s*"([^"]+)",\s*\n\s*url:\
 const drainerCount = (drainers.match(/^\s{2}"0x[0-9a-f]{40}",$/gm) ?? []).length;
 const nonReceivable = [...drainers.matchAll(/^\s{2}"(0x[0-9a-f]{40})",\s*$/gm)].map(([, a]) => a).slice(-2);
 
+/**
+ * The positive list, from the same registry the evaluator uses.
+ *
+ * A deny list alone tells a reader what we block; it does not say what we would vouch for. These are the hosts whose 402 challenge
+ * we have actually probed, with the payee they published on the day we looked — which is what makes rule 7c possible and what a
+ * reader can hold us to.
+ */
+const services = JSON.parse(readFileSync(join(ROOT, "registry/services.json"), "utf8"));
+const verifiedPayees = services
+  .filter((s) => s.url && s.payTo)
+  .map((s) => {
+    let host = null;
+    try {
+      host = new URL(s.url).host;
+    } catch {
+      host = null;
+    }
+    return { host, service: s.name, payee: s.payTo.toLowerCase(), verified_at: s.verified_at ?? null };
+  })
+  .filter((e) => e.host)
+  .sort((a, b) => String(a.host).localeCompare(String(b.host)));
+
 const manifest = {
+  verifiedPayees,
   generatedAt: new Date().toISOString().slice(0, 10),
   ofac: {
     name: "OFAC SDN — Digital Currency Address, ETH",

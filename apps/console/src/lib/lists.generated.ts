@@ -5,6 +5,92 @@
  * not have. Regenerate with `node scripts/gen-lists-manifest.mjs`.
  */
 export const LISTS = {
+  "verifiedPayees": [
+    {
+      "host": "aegisaudit.org",
+      "service": "AegisAudit",
+      "payee": "0x111ef680b6efdd859fbec473b907ace95f0d1acb",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "agent.pocket.network",
+      "service": "agent.pocket.network",
+      "payee": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "api.aidress.ai",
+      "service": "api.aidress.ai",
+      "payee": "0x0e84ddedaae6a779c462c22a59f301ec31b6b808",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "api.chit402.com",
+      "service": "api.chit402.com",
+      "payee": "0x23f713411c30bbd9a989c9cbc22eb0b55f7f7334",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "api.nansen.ai",
+      "service": "api.nansen.ai",
+      "payee": "0x93053f1e7a5efeda532fe69cbbe43cbec3a0f13f",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "api.nullclear.dev",
+      "service": "NullClear Token Security",
+      "payee": "0xb586efcca41df27ad3873beca54da0c30bf04d5c",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "api.paystage.xyz",
+      "service": "PayStage Evaluate",
+      "payee": "0x1b2272a2ca1792e8497a8d45fd3eb8665ae88fae",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "headers.use.x402atlas.com",
+      "service": "headers.use.x402atlas.com",
+      "payee": "0x7f8043c400799643bcb62b41b84b297a8ecb7b9c",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "hyperliquid-predict.use.x402atlas.com",
+      "service": "hyperliquid-predict.use.x402atlas.com",
+      "payee": "0xa55b06462a2e48661badf22f5841f95ae654b716",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "search.cyberwarex.com",
+      "service": "search.cyberwarex.com",
+      "payee": "0x058d0cc5cc97e61e8a9f38d6d6365bce525921b2",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "websearch.use.x402atlas.com",
+      "service": "websearch.use.x402atlas.com",
+      "payee": "0xf752eeb75d3bea24aa867ad93bfd8ef5a2f431b9",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "wiki.use.x402atlas.com",
+      "service": "wiki.use.x402atlas.com",
+      "payee": "0x6a706d6fcf192c15fb592d7502258ed41425dd36",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "x402.clashofcoins.com",
+      "service": "x402.clashofcoins.com",
+      "payee": "0x8b29dabd6fbb5a09dacbc7978eaed66a8540721d",
+      "verified_at": "2026-11-17"
+    },
+    {
+      "host": "x402.tbs-digital.com",
+      "service": "x402.tbs-digital.com",
+      "payee": "0xd6fce15298fc9d60f867d9455d497177da9bfb0a",
+      "verified_at": "2026-11-18"
+    }
+  ],
   "generatedAt": "2026-11-19",
   "ofac": {
     "name": "OFAC SDN — Digital Currency Address, ETH",

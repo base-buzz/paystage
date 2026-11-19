@@ -123,6 +123,40 @@ export default function ListsPage() {
           funds — and the refusal names which one applied.
         </p>
 
+        <h3>Verified sellers — the positive list</h3>
+        <p>
+          A deny list says what we block. This says what we have actually checked: {LISTS.verifiedPayees.length} hosts whose 402
+          challenge we probed, with the payee each one published on the date we looked. When a challenge names one of these hosts and
+          a different <code>payTo</code>, the evaluator returns <strong>review</strong> — the endpoint may be a clone, or the seller
+          may have rotated its payee, and only a human can tell which.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Host</th>
+              <th>Payee</th>
+              <th>Verified</th>
+            </tr>
+          </thead>
+          <tbody>
+            {LISTS.verifiedPayees.map((v) => (
+              <tr key={`${v.host}-${v.payee}`}>
+                <td>{v.host}</td>
+                <td>
+                  <code>
+                    {v.payee.slice(0, 8)}…{v.payee.slice(-4)}
+                  </code>
+                </td>
+                <td>{v.verified_at ?? "undated"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p>
+          <strong>What it is not:</strong> a vouch for the seller&apos;s honesty, and not a complete list — a host we have never
+          probed is simply absent, and absence means <em>unknown</em>, not <em>cleared</em>.
+        </p>
+
         <h3>{sinks.name}</h3>
         <p>
           {sinks.addresses} addresses where funds cannot be recovered: the canonical burn address and the zero address. Same
