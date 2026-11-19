@@ -107,6 +107,59 @@ export const TOOLS: ToolEntry[] = [
     output: "decision, reasons[], window totals",
     network: "none",
   },
+  /**
+   * The five that were missing.
+   *
+   * `TOOL_NAMES` in the MCP server lists ten; this manifest listed five, and every agent-facing surface renders from it — so
+   * `llms.txt`, `/.well-known/paystage.json` and `llms-full.txt` were all advertising half the product to the only reader
+   * that cannot see the rest of the site. A conformance check that compares the manifest to itself cannot catch that, which
+   * is why the entry names and the server's list are now cross-checked by a test.
+   */
+  {
+    name: "verify_receipt",
+    package: "@paystage/mcp",
+    summary: "Verifies a signed evaluation receipt offline against the published key",
+    decisions: [],
+    input: "receipt JSON (or path), optional key id",
+    output: "valid / invalid / unsigned / unverifiable, with the reason",
+    network: "none — signature check happens locally",
+  },
+  {
+    name: "decode_payment_required",
+    package: "@paystage/mcp",
+    summary: "Decodes a 402 Payment-Required header into its terms, without evaluating them",
+    decisions: [],
+    input: "the raw 402 header, base64 or JSON",
+    output: "scheme, network, asset, amount, payTo, timeout",
+    network: "none",
+  },
+  {
+    name: "validate_policy",
+    package: "@paystage/mcp",
+    summary: "Checks a policy document on its own, before it is used to judge a payment",
+    decisions: [],
+    input: "policy JSON (or path)",
+    output: "valid, or the field and the reason it is wrong",
+    network: "none",
+  },
+  {
+    name: "evaluate_batch",
+    package: "@paystage/mcp",
+    summary: "Evaluates several proposed payments in one call, each with its own verdict",
+    decisions: VERDICTS_PAY,
+    input: "payments[] + policy (or policy_path)",
+    output: "per-payment decision and reasons[], plus a summary",
+    network: "none",
+  },
+  {
+    name: "request_testnet_funds",
+    package: "@paystage/mcp",
+    summary: "Requests testnet USDC for an address so an agent can try the paid path",
+    decisions: [],
+    input: "address on Base Sepolia, optional amount",
+    output: "drip confirmed or the reason it was refused, with the reset time",
+    network: "Base Sepolia (eip155:84532)",
+  },
 ];
 
 export const PAYSTAGE_MANIFEST = {
