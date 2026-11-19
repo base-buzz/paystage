@@ -141,6 +141,21 @@
   border-bottom: 1px solid color-mix(in oklab, currentColor 12%, transparent);
 }
 
+/**
+ * On a phone the deny-lists tables overflowed the viewport by 26px, because a 42-character address in a `<code>` cell sets a minimum width the table cannot shrink
+ * below. The table scrolls inside its own box instead of pushing the page sideways, and long identifiers are allowed to break.
+ */
+@media (max-width: 640px) {
+  .lp-prose table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .lp-prose code {
+    word-break: break-word;
+  }
+}
+
 .lp-prose th {
   font-weight: 600;
   opacity: 0.7;
