@@ -18,6 +18,7 @@ import x402GuardPkg from "../../../../packages/x402-guard/package.json";
 import xEvmPkg from "../../../../packages/x-evm/package.json";
 import skillPkg from "../../../../packages/skill/package.json";
 import aiSdkPkg from "../../../../packages/ai-sdk/package.json";
+import n8nPkg from "../../../../packages/n8n/package.json";
 
 export const PACKAGE_VERSIONS: Record<string, string> = {
   "@paystage/mcp": mcpPkg.version,
@@ -30,6 +31,7 @@ export const PACKAGE_VERSIONS: Record<string, string> = {
   "@paystage/x-evm": xEvmPkg.version,
   "@paystage/skill": skillPkg.version,
   "@paystage/ai-sdk": aiSdkPkg.version,
+  "@paystage/n8n": n8nPkg.version,
 };
 
 /**
