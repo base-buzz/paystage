@@ -176,6 +176,7 @@ try {
     "check-published-links.mjs",
     "check-count-claims.mjs",
     "check-network-claims.mjs",
+    "check-sanctions-live.mjs",
     "check-manifests.mjs",
     "check-changelog.mjs",
     "check-version-parity.mjs",
