@@ -318,6 +318,15 @@ export default async function LabPage() {
                   </p>
                 ) : null}
 
+                {p.id === "discovery" && typeof summary.coverage === "number" ? (
+                  <p style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>
+                    Coverage {summary.coverage}% — {String(summary.measured)} of {String(summary.planned)} planned queries
+                    measured
+                    {summary.excluded ? `, ${String(summary.excluded)} excluded after retries` : ""}. A shrunken denominator
+                    changes the ratio, so it is printed beside it.
+                  </p>
+                ) : null}
+
                 {queries !== null ? (
                   <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, fontSize: 13.5 }}>
                     <thead>
