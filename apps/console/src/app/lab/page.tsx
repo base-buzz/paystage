@@ -667,6 +667,16 @@ export default async function LabPage() {
                     {String(summary.callers ?? "\u2014")} · controls {summary.controls_ok === true ? "passed" : "failed"} ·
                     contacts filed {String(summary.contacts_filed ?? "0")}. Aggregate only: this page never names a
                     repository whose payment path is unguarded.
+                    {/*
+                      The classifier changed on 2026-11-19 and the number fell with it. A page that shows the new ratio without saying the rule moved is worse than one that shows the old
+                      one, so the rule and its date travel with the number.
+                    */}
+                    {" "}
+                    <span style={{ opacity: 0.8 }}>
+                      From 2026-11-19: a call site counts only when a buyer invocation appears outside the test, examples and
+                      scripts directories, and a repository whose gate cannot be classified counts as <em>gated-unknown</em> in the
+                      denominator. Under the earlier rule this same panel read 52 of 94; under this one it reads 35 of 81.
+                    </span>
                   </p>
                 ) : null}
               </>
