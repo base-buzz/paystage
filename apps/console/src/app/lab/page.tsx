@@ -239,7 +239,7 @@ export default async function LabPage() {
       <p style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", opacity: 0.6 }}>Lab · unlisted</p>
       <h1 style={{ fontSize: 34, margin: "8px 0 12px" }}>Probe results</h1>
       <p style={{ opacity: 0.75, maxWidth: 720, lineHeight: 1.6 }}>
-        Three questions asked on a schedule, and the answers kept as they were given. The block below is the signal: each
+        Four questions asked on a schedule, and the answers kept as they were given. The block below is the signal: each
         probe&apos;s latest score and how it moved against the previous day, week, month and quarter. Where there is not
         enough history for a comparison, it says so rather than drawing a flat line.
       </p>
