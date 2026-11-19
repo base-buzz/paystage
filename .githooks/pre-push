@@ -10,6 +10,26 @@ cd "$root" || exit 1
 fail=0
 note() { printf 'pre-push: %s\n' "$1"; }
 
+# 0a. Push identity is anchored to a file a container recreate cannot change (#120).
+#
+# Rule 14 keys on DSH_SESSION_ID, which a recreate re-issues while the conversation continues — on 2026-11-13 two sessions acted
+# in good faith on a role neither held, and about twenty PRs went out under ids the table did not name. The table is still the
+# record; this is the anchor that does not depend on being read correctly during a bad moment.
+#
+# Missing marker is a warning, not a block: a fresh clone has no ops tree, and a hook that refuses to run without one would be
+# removed the first time it was inconvenient.
+identity_file="${PUSH_IDENTITY_FILE:-/work/ops/docs/state/push-identity}"
+if [ -f "$identity_file" ]; then
+  expected=$(tr -d '[:space:]' < "$identity_file")
+  if [ -n "${DSH_SESSION_ID:-}" ] && [ "$expected" != "${DSH_SESSION_ID}" ]; then
+    note "push identity: this session is ${DSH_SESSION_ID}, but ${identity_file} names ${expected}"
+    note "  rule 14 allows one push identity. If the anchor has legitimately moved, update it and roles.md in the same commit."
+    fail=1
+  fi
+elif [ -n "${DSH_SESSION_ID:-}" ]; then
+  note "push identity: no marker at ${identity_file} — warning only"
+fi
+
 # 0. A force-push to the protected branch is the one destructive act this hook can still prevent.
 #
 # Git hands pre-push one line per ref on stdin: <local ref> <local sha> <remote ref> <remote sha>. A non-zero remote sha
