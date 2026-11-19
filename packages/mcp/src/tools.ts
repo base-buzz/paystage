@@ -162,6 +162,13 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
           .string()
           .optional()
           .describe("Which agent is asking. Required to reach per-agent budgets in policy.agents."),
+        payment_identifier: z
+          .string()
+          .max(128)
+          .optional()
+          .describe(
+            "The x402 payment-identifier for this challenge, if the seller or client supplies one. Passing the same value on a retry turns the second verdict into `review` instead of a second `pay`, because a retried preflight is not a second approval.",
+          ),
       },
     },
     async (input: {
@@ -169,15 +176,15 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
       policy_path?: string;
       policy?: unknown;
       agent_id?: string;
+      payment_identifier?: string;
     }) => {
       try {
         const policy = await deps.resolvePolicy(input);
         const pr = normalizePaymentRequired(input.payment_required);
-        const result: EvaluateResult = evaluatePayment(
-          pr,
-          policy,
-          input.agent_id !== undefined ? { agentId: input.agent_id } : {},
-        );
+        const result: EvaluateResult = evaluatePayment(pr, policy, {
+          ...(input.agent_id !== undefined ? { agentId: input.agent_id } : {}),
+          ...(input.payment_identifier !== undefined ? { paymentIdentifier: input.payment_identifier } : {}),
+        });
         return {
           content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
         };

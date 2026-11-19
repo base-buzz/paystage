@@ -1,5 +1,12 @@
 # Changelog
 
+## @paystage/preflight 0.2.3 — unreleased
+
+- `evaluatePayment` accepts `{ paymentIdentifier }`. When the same identifier has already produced a `pay` verdict inside the window (ten minutes by default, overridable), the second verdict
+  is `review` with a reason that says so: an agent that times out after `pay` and retries the same logical purchase no longer gets a second approval (#187, issue #228). In-memory and
+  per process — see LIMITS.md 6b for the bounds.
+- `@paystage/mcp`: `evaluate_mcp_payment` gains the optional `payment_identifier` argument.
+
 ## @paystage/preflight 0.2.2 — 2026-11-10
 
 - `evaluatePayment` accepts `{ agentId }`. When a policy declares `agents`, the

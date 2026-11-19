@@ -57,6 +57,17 @@ We evaluate the challenge we received. A server that changes its price between t
 settlement is a different payment from the one we judged — the signed payload protects the transfer, not
 the seller's honesty about what it was for.
 
+## 6b. A retried preflight, when the caller supplies no identifier
+
+Passing `payment_identifier` (the x402 payment-identifier extension's client-supplied id) makes a repeated `pay` for the same id return `review` instead: a retried preflight is not a
+second approval. Three things bound that.
+
+- **It is in-memory, per process.** A restart forgets; on the hosted API each isolate has its own view. It catches retry loops, not a distributed adversary.
+- **It only downgrades `pay`.** Repeating a refusal or a review changes nothing, which is deliberate — those are verdicts an agent should be free to re-ask.
+- **It needs the identifier.** An agent that omits it gets the plain stateless verdict, which is the behaviour before this existed.
+
+The window is ten minutes. A legitimate rebuy after it is a `pay` again; a rebuy inside it should carry a new identifier, because it is a different purchase.
+
 ## 7. A compromised agent, or a compromised policy
 
 If the process running the gate is compromised, the attacker supplies the policy as well as the payment.

@@ -243,9 +243,32 @@ export interface EvaluateOptions {
   agentId?: string;
   /** Injectable clock, so a time-window test does not depend on when it runs. */
   now?: Date;
+  /**
+   * The client-supplied payment identifier from the x402 payment-identifier extension.
+   *
+   * When present, a `pay` verdict for an identifier we have already approved inside the window becomes `review` instead. The evaluator is stateless by design, and that statelessness
+   * is the gap: an agent that times out after `pay` and retries the same logical purchase gets a second approval for a payment that may already be authorised (#187, issue #228).
+   */
+  paymentIdentifier?: string;
+  /** How long an identifier stays "already judged". Ten minutes covers retry loops; a rebuy is a new challenge or a new identifier. */
+  dedupWindowMs?: number;
 }
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
+
+/**
+ * Identifiers this process has already turned into a `pay` verdict, with the time it happened.
+ *
+ * In memory and per process, deliberately: the evaluator holds no keys and talks to no network, so a shared store would make a security decision depend on a second service being up.
+ * The cost is honest and belongs in LIMITS.md — a restart forgets, and on a hosted deployment each isolate has its own view.
+ */
+const approvedIdentifiers = new Map<string, number>();
+export const DEFAULT_DEDUP_WINDOW_MS = 10 * 60 * 1000;
+
+/** Test hook: the cache is process-wide, and a test that leaks state between cases is a test that will one day pass for the wrong reason. */
+export function resetPaymentIdentifierCache(): void {
+  approvedIdentifiers.clear();
+}
 
 export function evaluatePayment(
   pr: PaymentRequest,
@@ -338,6 +361,37 @@ export function evaluatePayment(
   let dailyCapNote: string | undefined;
   if (policy.daily_cap) {
     dailyCapNote = `daily_cap ${policy.daily_cap.value} ${policy.daily_cap.asset} (informational only)`;
+  }
+
+  /**
+   * Rule 11.5: a retried preflight is not a second approval.
+   *
+   * Only a `pay` is downgraded: repeating a refusal or a review changes nothing, and those verdicts are the ones an agent should be free to re-ask. The identifier is checked *before*
+   * the summary is written so the human-readable line and the decision cannot disagree.
+   */
+  const identifier = options.paymentIdentifier?.trim();
+  if (identifier && decision === "pay") {
+    if (identifier.length > 128) {
+      decision = "review";
+      reasons.push(`payment_identifier is ${identifier.length} characters — refusing to cache a value that long; ask again with a stable, short id`);
+    } else {
+      const at = (options.now ?? new Date()).getTime();
+      const window = options.dedupWindowMs ?? DEFAULT_DEDUP_WINDOW_MS;
+      const seenAt = approvedIdentifiers.get(identifier);
+      if (seenAt !== undefined && at - seenAt < window) {
+        const seconds = Math.max(0, Math.round((at - seenAt) / 1000));
+        decision = "review";
+        reasons.push(
+          `payment_identifier ${identifier} already produced a pay verdict ${seconds}s ago (window ${Math.round(window / 1000)}s) — a retried preflight is not a second approval`,
+        );
+      } else {
+        approvedIdentifiers.set(identifier, at);
+        // Prune inside the same call: an unbounded map is a memory leak with a security name.
+        for (const [key, when] of approvedIdentifiers) {
+          if (at - when >= window) approvedIdentifiers.delete(key);
+        }
+      }
+    }
   }
 
   // Rule 12: summary
