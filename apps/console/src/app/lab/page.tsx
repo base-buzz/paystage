@@ -240,7 +240,7 @@ export default async function LabPage() {
       <p style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", opacity: 0.6 }}>Lab · unlisted</p>
       <h1 style={{ fontSize: 34, margin: "8px 0 12px" }}>Probe results</h1>
       <p style={{ opacity: 0.75, maxWidth: 720, lineHeight: 1.6 }}>
-        Four questions asked on a schedule, and the answers kept as they were given. The block below is the signal: each
+        {PROBES.length} questions asked on a schedule, and the answers kept as they were given. The block below is the signal: each
         probe&apos;s latest score and how it moved against the previous day, week, month and quarter. Where there is not
         enough history for a comparison, it says so rather than drawing a flat line.
       </p>
@@ -257,7 +257,20 @@ export default async function LabPage() {
               <div key={`signal-${p.id}`}>
                 <div style={{ fontSize: 13, opacity: 0.6 }}>{p.label}</div>
                 <div style={{ fontSize: 26, fontWeight: 600, lineHeight: 1.2 }}>
-                  {p.failure !== null ? "\u2014" : latest ? pct(latest.value) : "never run"}
+                  {/*
+                    Supply is a denominator, not a score: 1,223 payees over 24,078 accepts is a shape of the market, and rendered as "5%" it reads as a
+                    failing grade next to four real ones. The number that means something there is the count of payees, so that is what the tile shows.
+                  */}
+                  {p.failure !== null
+                    ? "\u2014"
+                    : !latest
+                      ? "never run"
+                      : p.id === "supply"
+                        ? (() => {
+                            const [payees, accepts] = String(latest.headline).split("/");
+                            return `${Number(payees).toLocaleString("en-US")} payees`;
+                          })()
+                        : pct(latest.value)}
                 </div>
                 <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>
                   {latest
