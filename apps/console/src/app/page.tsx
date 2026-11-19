@@ -546,6 +546,23 @@ export default function LandingPage() {
                   Publishing. Verify with <code>npm audit signatures</code>.
                 </p>
               </a>
+              {/*
+                One filed upstream finding, and it is named. #102 asked for "we have filed N upstream security findings" as a
+                verifiable claim; the number is one, so the card says one and links the issue. A count with a link is checkable, a
+                badge is not — and ops runs `check-outbound-parity.mjs` against the ledger so this cannot drift from what was filed.
+              */}
+              <a
+                className="lp-card"
+                href="https://github.com/Libertai/libertai-agents/issues/161"
+                rel="noopener"
+              >
+                <span className="lp-card-tag">1 upstream report</span>
+                <h3>Filed where the bug was</h3>
+                <p>
+                  When we find a payment path that signs without checking the payee, we report it upstream with reproduction
+                  steps. One filed, open, linked here.
+                </p>
+              </a>
               <a className="lp-card" href="/ai-sdk">
                 <span className="lp-card-tag">@paystage/ai-sdk</span>
                 <h3>Works with the Vercel AI SDK</h3>
