@@ -166,6 +166,13 @@ jobs:
             node scripts/assert-artifact.mjs "@paystage/$pkg" --latest --wait 420
           done
 
+      # assert-artifact compares the tarball to this commit; this installs the thing and
+      # imports it. A version can be correct and still not load — and the one package a
+      # user types is the one worth proving (#317).
+      - name: Install and import the published umbrella
+        if: github.ref_type == 'tag'
+        run: node scripts/check-tarballs.mjs --install
+
   registry:
     needs: publish
     # Only a stable tag publishes to the MCP registry; canary builds must not move what
