@@ -522,8 +522,8 @@ export default function LandingPage() {
                 <span className="lp-card-tag">SECURITY.md</span>
                 <h3>What it touches, and why</h3>
                 <p>
-                  One policy file read, two environment variables, two read-only
-                  endpoints. No shell, no eval, no telemetry, no key custody.
+                  One policy file read, two environment variables, and calls that
+                  only ever read. No shell, no eval, no telemetry, no key custody.
                 </p>
               </a>
               <a
