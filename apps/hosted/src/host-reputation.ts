@@ -143,3 +143,22 @@ export async function checkHostReputation(
 
 /** A domain younger than this has no history to lose; the caller turns that into `review`, not a refusal. */
 export const YOUNG_DOMAIN_DAYS = 30;
+
+/**
+ * The youngest signal we could actually read, and what it was.
+ *
+ * RDAP answers **403** to this Worker on every TLD server we tried (`rdap.org`, `rdap.centralnic.com`) — datacentre egress is
+ * blocked, and no amount of retrying changes that. crt.sh answers fine, so the earliest certificate is the signal that works: a
+ * host whose first certificate is three months old has a history, whatever its registration date says, and one whose first
+ * certificate is a week old does not.
+ */
+export function youngestSignal(rep: HostReputation): { days: number; source: "domain" | "certificate" } | null {
+  const candidates: Array<{ days: number; source: "domain" | "certificate" }> = [];
+  if (rep.domain_age_days !== null) candidates.push({ days: rep.domain_age_days, source: "domain" });
+  if (rep.first_certificate_at) {
+    const certDays = Math.max(0, Math.floor((Date.now() - Date.parse(rep.first_certificate_at)) / 86_400_000));
+    candidates.push({ days: certDays, source: "certificate" });
+  }
+  if (candidates.length === 0) return null;
+  return candidates.sort((a, b) => a.days - b.days)[0] ?? null;
+}

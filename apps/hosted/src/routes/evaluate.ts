@@ -7,7 +7,7 @@ import {
 } from "@paystage/preflight";
 import { parsePolicyCached } from "../policy-cache.js";
 import { checkAddressRisk } from "../address-risk.js";
-import { checkHostReputation, YOUNG_DOMAIN_DAYS } from "../host-reputation.js";
+import { checkHostReputation, youngestSignal, YOUNG_DOMAIN_DAYS } from "../host-reputation.js";
 import {
   listOutstandingAuths,
   evaluateOutstandingAuths,
@@ -79,10 +79,11 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
             first_certificate_at: reputation.first_certificate_at,
             ...(reputation.error ? { error: reputation.error } : {}),
           };
-          if (reputation.domain_age_days !== null && reputation.domain_age_days < YOUNG_DOMAIN_DAYS) {
+          const youngest = youngestSignal(reputation);
+          if (youngest && youngest.days < YOUNG_DOMAIN_DAYS) {
             decision.decision = "review";
             decision.reasons = [
-              `seller domain ${reputation.host} is ${reputation.domain_age_days} days old (registered ${reputation.registered_at?.slice(0, 10)}) — a young domain has no history to lose`,
+              `seller host ${reputation.host}: ${youngest.source === "domain" ? "domain" : "first certificate"} is ${youngest.days} days old — a host with no history has none to lose`,
               ...(decision.reasons ?? []),
             ];
           }

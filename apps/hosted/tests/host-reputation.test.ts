@@ -82,3 +82,28 @@ describe("host reputation", () => {
     expect(second.registered_at).toBe(first.registered_at);
   });
 });
+
+describe("youngest readable signal", () => {
+  it("prefers the younger of domain age and certificate age", async () => {
+    const { youngestSignal } = await import("../src/host-reputation.js");
+    const now = Date.now();
+    const iso = (daysAgo: number) => new Date(now - daysAgo * 86_400_000).toISOString();
+    expect(youngestSignal({ host: "x", registered_at: iso(400), domain_age_days: 400, first_certificate_at: iso(5), cached: false })).toEqual({ days: 5, source: "certificate" });
+    expect(youngestSignal({ host: "x", registered_at: iso(3), domain_age_days: 3, first_certificate_at: iso(300), cached: false })).toEqual({ days: 3, source: "domain" });
+  });
+
+  it("falls back to the certificate when RDAP is blocked, which it is from the Worker", async () => {
+    const { youngestSignal } = await import("../src/host-reputation.js");
+    const now = Date.now();
+    const signal = youngestSignal({
+      host: "x",
+      registered_at: null,
+      domain_age_days: null,
+      first_certificate_at: new Date(now - 90 * 86_400_000).toISOString(),
+      cached: false,
+      error: "RDAP: HTTP 403",
+    });
+    expect(signal?.source).toBe("certificate");
+    expect(signal?.days).toBe(90);
+  });
+});
