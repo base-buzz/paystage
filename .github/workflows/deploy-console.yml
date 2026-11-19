@@ -40,6 +40,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
+    # Job-level on purpose: the /api/build route is prerendered during `npm run build`, which happens several steps before the
+    # OpenNext bundle step — so setting these on one step left the route with nulls and it reported source "local" from CI.
+    env:
+      PAYSTAGE_BUILD_SHA: ${{ github.sha }}
+      PAYSTAGE_BUILD_AT: ${{ github.event.head_commit.timestamp }}
     defaults:
       run:
         working-directory: apps/console

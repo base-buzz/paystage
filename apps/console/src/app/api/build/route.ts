@@ -16,7 +16,8 @@ export async function GET() {
   const sha = process.env.PAYSTAGE_BUILD_SHA ?? process.env.GITHUB_SHA ?? null;
   return NextResponse.json({
     sha,
-    source: process.env.CI ? "ci" : "local",
+    // `CI` is set by GitHub Actions; it is a better provenance signal than the SHA alone being present.
+    source: process.env.CI === "true" || process.env.CI === "1" ? "ci" : "local",
     built_at: process.env.PAYSTAGE_BUILD_AT ?? null,
   });
 }
