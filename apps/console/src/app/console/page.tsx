@@ -66,6 +66,7 @@ export default async function Page() {
         </nav>
       </header>
       <main id="main" className="site-main">
+        <h1 className="visually-hidden">PayStage console — live payment checks</h1>
         <section id="try-it" aria-label="Try it">
           <ScenarioRunner />
         </section>
