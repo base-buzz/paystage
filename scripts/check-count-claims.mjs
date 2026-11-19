@@ -10,8 +10,11 @@
  * Exit 0 every count matches · 10 one does not.
  */
 import { readFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = "/work/paystage";
+// Resolved from the script, never hardcoded: CI checks out to a different path, and a hardcoded root passed locally and failed there.
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const WORDS = {
   two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
   eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16,
