@@ -418,7 +418,10 @@ export default async function LabPage() {
                             {a.decision === null || a.decision === undefined ? (
                               // "2/6" is a coverage fact, not a refusal rate: four agents never answered, and a dash
                               // invites the reader to assume they refused. Say what happened.
-                              <span style={{ opacity: 0.6 }}>did not answer ({String(a.state)})</span>
+                              <span style={{ opacity: 0.6 }}>
+                                {/* A page that never rendered a composer was never asked: our harness, not the agent. */}
+                                {a.state === "no-composer" ? "never asked — the page had no composer" : `did not answer (${String(a.state)})`}
+                              </span>
                             ) : (
                               String(a.decision)
                             )}
