@@ -60,6 +60,7 @@ const PACKAGE_ROLES = {
   "@paystage/policy": "policy schema and loader",
   "@paystage/skill": "agent skill manifest",
   "@paystage/x-evm": "chain-agnostic EVM helpers",
+  "@paystage/n8n": "the gate as an n8n community node",
 };
 
 const PKG_START = "<!-- packages:table:start -->";
