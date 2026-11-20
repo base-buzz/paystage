@@ -2,6 +2,14 @@
 
 ## 2026-11-20
 
+- `@paystage/velocity@0.2.4` and `@paystage/mcp@0.8.17`: **the per-payee ceiling is now published.** The feature (#39) landed in
+  the repo but not on npm — the release that was supposed to carry it published `0.2.3` from an earlier build, so the published
+  tarball's `check.js` had no per-payee code while the repo did. That is why every release run since has ended red at "Assert the
+  published artifacts match the repo": the assert was right, and it was the only thing saying so. `mcp` moves because it pins
+  `velocity` exactly, and a pin that stays at `0.2.3` would hand mcp's users the old evaluator.
+
+## 2026-11-20
+
 - `@paystage/policy@0.3.1`: **the version the repo has been pinning since 2026-11-19 is finally on npm.** It carries the
   asset-address-per-network rule, per-payee velocity ceilings and time windows — so until today a fresh install of any
   package that pins `0.3.1` failed with `ETARGET`, and the daily cadence reported `npm latest is 0.3.0; the repo is 0.3.1`.
