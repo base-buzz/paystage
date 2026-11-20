@@ -175,6 +175,46 @@ jobs:
         if: github.ref_type == 'tag'
         run: node scripts/check-tarballs.mjs --install
 
+  # The canary date badge's value has to come from the run that published the canary, not from a string in the README. Shields reads it as an
+  # endpoint badge from badges/canary.json, so something has to write that file where shields can reach it. Branch protection refuses a
+  # github-actions[bot] push to main, so the JSON lives on the dedicated, unprotected `badges` branch, and only this scheduled path writes it —
+  # after `publish` succeeded, never on a failed run, never on a tag run (a stable tag is not a canary).
+  badge-canary:
+    needs: publish
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout main (for the badge writer)
+        uses: actions/checkout@v4
+        with:
+          path: app
+      - name: Checkout the badges branch (unprotected, so the bot may push)
+        uses: actions/checkout@v4
+        with:
+          ref: badges
+          path: badges
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Write the date of this scheduled publish
+        run: node app/scripts/write-canary-badge.mjs canary.json
+      - name: Push the badge JSON to the badges branch
+        working-directory: badges
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add canary.json
+          if git diff --cached --quiet; then
+            echo "canary date unchanged since the last scheduled run; nothing to push"
+            exit 0
+          fi
+          git commit -m "badge: canary last published $(date -u +%F)"
+          git push origin HEAD:badges
+
   registry:
     needs: publish
     # Only a stable tag publishes to the MCP registry; canary builds must not move what
