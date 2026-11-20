@@ -57,7 +57,17 @@ jobs:
       - name: Published artifacts match the repo
         # A hand publish, a failed tag step, or a registry lag can leave npm behind the repo. This is
         # the check that would have caught the five-tool package before mcp.so did.
-        run: node scripts/assert-artifact.mjs @paystage/mcp --latest
+        #
+        # Every published package, not just the umbrella (#341). On 2026-11-20 `c6da068` changed both `packages/mcp` and `packages/preflight` without a version bump: the mcp half turned this job
+        # red and the preflight half drifted in silence, because this step named one package. A loop over the same list `release.yml` publishes is the only version where a new package is
+        # covered the day it is added.
+        run: |
+          set -euo pipefail
+          PKGS="policy preflight x402-guard x-evm auth-watch velocity trade-preflight skill mcp ai-sdk"
+          for pkg in $PKGS; do
+            echo "--- @paystage/$pkg"
+            node scripts/assert-artifact.mjs "@paystage/$pkg" --latest
+          done
       - name: The canary itself is alive
         # Dead-man switch: the canary is what notices a broken payment path, and its own silence has to be noticed
         # by something. Fails when the newest line in the ops log is older than 36 hours.

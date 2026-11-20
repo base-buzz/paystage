@@ -1,6 +1,6 @@
 # Changelog
 
-## @paystage/preflight 0.2.3 — unreleased
+## @paystage/preflight 0.5.3 — 2026-11-20
 
 - `evaluatePayment` accepts `{ paymentIdentifier }`. When the same identifier has already produced a `pay` verdict inside the window (ten minutes by default, overridable), the second verdict
   is `review` with a reason that says so: an agent that times out after `pay` and retries the same logical purchase no longer gets a second approval (#187, issue #228). In-memory and
