@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-20
+
+- `@paystage/policy@0.3.1`: **the version the repo has been pinning since 2026-11-19 is finally on npm.** It carries the
+  asset-address-per-network rule, per-payee velocity ceilings and time windows — so until today a fresh install of any
+  package that pins `0.3.1` failed with `ETARGET`, and the daily cadence reported `npm latest is 0.3.0; the repo is 0.3.1`.
+  No policy tag had ever been pushed for the bump; tagged now. The release run itself is red for an unrelated reason
+  (`@paystage/velocity@0.2.3` publishes a dist that differs from the repo) — recorded, not hidden.
+
 ## 2026-11-19
 
 - `@paystage/mcp@0.8.15` and `@paystage/x402-guard@0.4.10`: **keywords for the two buyer queries we lose.** The daily probe
