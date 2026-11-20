@@ -194,6 +194,7 @@ try {
     "check-hosted-deps.mjs",
     "check-i18n-discovery.mjs",
     "check-titles.mjs",
+    "check-fail-closed.mjs",
   ]) {
     if (!existsSync(join(worktree, "scripts", script))) continue;
     run(script, "node", [join("scripts", script)], worktree);
