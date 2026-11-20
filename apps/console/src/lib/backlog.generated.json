@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-20T05:27:24.652Z",
+ "generatedAt": "2026-11-20T05:32:29.469Z",
  "source": "docs/backlog.md",
  "counts": {
   "total": 231,
@@ -7,7 +7,7 @@
   "done": 163
  },
  "droppedForSafety": 0,
- "redactedFields": 1,
+ "redactedFields": 5,
  "duplicateNumbers": 0,
  "items": [
   {
@@ -65,7 +65,7 @@
    "title": "Hosted try-it, no install",
    "done": true,
    "size": null,
-   "summary": "verified: page 200, three real scenarios against the hosted API, POST /api/try returned do_not_pay with \"payTo 0x1111…1111 not in allowed_pay_to\"; every call labelled x-paystage-source: test so demo traffic never counts as a caller",
+   "summary": "verified: page 200, three real scenarios against the hosted API, POST /api/try returned do_not_pay with \"payTo ▮1111 not in allowed_pay_to\"; every call labelled x-paystage-source: test so demo traffic never counts as a caller",
    "doneWhen": null,
    "gate": null,
    "ref": "done 2026-11-12 (#76, live at paystage"
@@ -865,7 +865,7 @@
    "title": "Testnet faucet — humans",
    "done": true,
    "size": "M",
-   "summary": "address per 24h, cap published by GET /faucet, refusal returns resetsAt + hoursRemaining. Ledger is Supabase (faucet_drips) because an isolate's memory is not a cap. Verified on the wire: a real drip (0xeaaa54f7…, confirmed) then a 429 with the reset time.…",
+   "summary": "address per 24h, cap published by GET /faucet, refusal returns resetsAt + hoursRemaining. Ledger is Supabase (faucet_drips) because an isolate's memory is not a cap. Verified on the wire: a real drip (▮, confirmed) then a 429 with the reset time.…",
    "doneWhen": "an address receives test USDC once, a second request in 24h is refused with the reset time, and the cap is stated on the page",
    "gate": null,
    "ref": "done 2026-11-18 (#290)"
@@ -2235,7 +2235,7 @@
    "title": "The first-payer alert is suppressed by a false record of itself",
    "done": false,
    "size": "S",
-   "summary": "found 2026-11-20 while checking 315. docs/state/first-payer.json says alerted: true for 0x73fb4a47…, which bin/first-payer-alert.mjs lists in OURS as PAYSTAGE_E2E_SEPOLIA_KEY.…",
+   "summary": "found 2026-11-20 while checking 315. docs/state/first-payer.json says alerted: true for ▮, which bin/first-payer-alert.mjs lists in OURS as PAYSTAGE_E2E_SEPOLIA_KEY.…",
    "doneWhen": "--check-state exits 0 on the real state file (i.e. the false record is corrected) and the check is wired into the hourly canary so a future bad record cannot sit unnoticed",
    "gate": null,
    "ref": null
@@ -2245,7 +2245,7 @@
    "title": "A public endpoint serves the payer address",
    "done": true,
    "size": "S",
-   "summary": "found 2026-11-20 by checking, not by assuming: curl https://paystage.xyz/api/metrics returns 500 events each carrying a payer field. Today the only value in it is 0xc64a71e1… (our loadgen wallet), so nothing external is exposed *yet*…",
+   "summary": "found 2026-11-20 by checking, not by assuming: curl https://paystage.xyz/api/metrics returns 500 events each carrying a payer field. Today the only value in it is ▮ (our loadgen wallet), so nothing external is exposed *yet*…",
    "doneWhen": "/api/metrics no longer emits payer for addresses outside OURS (truncate, or omit the field and keep uniquePayers24h as the count), and a test asserts **no address-shaped string from a non-OURS wallet appears in any public response body**",
    "gate": null,
    "ref": "done 2026-11-20 (8fa25ca, #340)"
