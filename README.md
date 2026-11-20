@@ -373,6 +373,14 @@ key, no account. Exit code 1 if anything is off.
 It runs daily in CI ([cadence.yml](.github/workflows/cadence.yml)) and the result
 history is on the [site](https://paystage.xyz).
 
+A green tick is a claim; the run's JSON is the evidence. Every run uploads the full
+JSON as the workflow artefact `conformance-<run id>`, retained for 30 days, and a
+one-line summary (timestamp, status, passed/total, run id, run URL) is committed to
+[docs/state/conformance.log](docs/state/conformance.log) from that artefact. The
+artefact is attached per run on the [cadence workflow page](https://github.com/base-buzz/paystage/actions/workflows/cadence.yml);
+because the repo is public but artefact downloads require a GitHub login, that page is
+the link to the evidence rather than a direct file URL.
+
 ## Supply chain
 
 Socket.dev scores packages on capability, so a payment-safety tool will always carry
