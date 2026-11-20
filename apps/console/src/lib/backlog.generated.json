@@ -1,13 +1,13 @@
 {
- "generatedAt": "2026-11-20T05:32:29.469Z",
+ "generatedAt": "2026-11-20T18:00:02.485Z",
  "source": "docs/backlog.md",
  "counts": {
-  "total": 231,
-  "open": 68,
-  "done": 163
+  "total": 233,
+  "open": 55,
+  "done": 178
  },
  "droppedForSafety": 0,
- "redactedFields": 5,
+ "redactedFields": 6,
  "duplicateNumbers": 0,
  "items": [
   {
@@ -256,8 +256,8 @@
    "done": true,
    "size": null,
    "summary": "adds one entry under Finance & Fintech in their format. Still OPEN, awaiting a maintainer, so the item is done on our side and gated on theirs. original scope follows.…",
-   "doneWhen": "a page on that site (or a merged PR in that repo) returns 200 and names PayStage with https://api.paystage.xyz/mcp - gate: none - S",
-   "gate": null,
+   "doneWhen": "a page on that site (or a merged PR in that repo) returns 200 and names PayStage with https://api.paystage.xyz/mcp - gate: **external** - S",
+   "gate": "external",
    "ref": null
   },
   {
@@ -336,8 +336,8 @@
    "done": false,
    "size": null,
    "summary": "**PR opened 2026-11-14: xpaysh/awesome-x402#2228** under *Security & Audits*. **the item named a repo that does not exist.** x402-foundation/awesome-x402 returns 404; there are two real lists and xpaysh/awesome-x402 (306 stars) is the active one.…",
-   "doneWhen": "a page on that site (or a merged PR in that repo) returns 200 and names PayStage with https://api.paystage.xyz/mcp - gate: none - S",
-   "gate": null,
+   "doneWhen": "a page on that site (or a merged PR in that repo) returns 200 and names PayStage with https://api.paystage.xyz/mcp - gate: **external** - S",
+   "gate": "external",
    "ref": null
   },
   {
@@ -695,9 +695,9 @@
    "title": "Pricing: a global free-tier cap",
    "done": false,
    "size": "M",
-   "summary": "the cap is per-isolate, so the real limit is generous by accident. **blocked on a privacy decision, 2026-11-17.** A shared counter needs somewhere to live, and every store writes something derived from the caller: a Durable Object key (salted hash, ideally wit…",
+   "summary": "the cap is per-isolate, so the real limit is generous by accident.",
    "doneWhen": "two isolates share one counter and a test proves the limit holds across instances — **and** the privacy page states exactly what the counter stores",
-   "gate": null,
+   "gate": "operator",
    "ref": null
   },
   {
@@ -1074,10 +1074,10 @@
    "n": 118,
    "title": "Monthly x402 liveness sample, published",
    "done": false,
-   "size": "S",
+   "size": null,
    "summary": "**not before 2027-02-14** (its own decision: publish after two or three months, at N=100, duplicates excluded). Re-running it sooner produces the same numbers and no new claim.…",
-   "doneWhen": "a script samples N remote entries, writes the unreachable share and tool-count distribution to docs/specs/liveness.md with the date and N, and the digest prints the latest line",
-   "gate": null,
+   "doneWhen": "a script samples N remote entries, writes the unreachable share and tool-count distribution to docs/specs/liveness.md with the date and N, and the digest prints the latest line - gate: **waiting** (not before 2027-02-14) - S",
+   "gate": "waiting (not before 2027-02-14)",
    "ref": null
   },
   {
@@ -1193,9 +1193,9 @@
   {
    "n": 130,
    "title": "Aggressive integration sweep: top 25 repos with a signing seam",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "every repo depending on @x402/fetch, @x402/evm, @coinbase/x402 or x402, ranked by reach; one PR or mention each.",
+   "summary": "25 assessed by reach (542 distinct repos found; own excluded), 9 seam-open, 7 seam-gated, 4 seller-only, 5 no-runtime; first contact filed (coinbase/agentkit#1667) and the other 8 queued for the daily slot.…",
    "doneWhen": "25 assessed, PRs opened where a seam exists, and the rejected ones recorded with reason",
    "gate": null,
    "ref": null
@@ -1893,12 +1893,12 @@
   {
    "n": 305,
    "title": "Say fail-closed in the words a reviewer uses",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "our verdict docs explain the behaviour at length. The sentence to adopt, from their governance skill: *\"do not invent authority; fail closed when policy, identity, cost or evidence is missing.\"* one paragraph in LIMITS.md plus the same line in the MCP tool des…",
+   "summary": "the sentence (capitalised as prose, so the item's literal lowercase grep read 0 — the check is case-insensitive and says so). All ten MCP tool descriptions now end with the same line;…",
    "doneWhen": "grep -c \"do not invent authority\" LIMITS.md returns 1 and the tool descriptions carry the fail-closed line",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-20 (repo c1cb497): `LIMITS"
   },
   {
    "n": 306,
@@ -1913,12 +1913,12 @@
   {
    "n": 307,
    "title": "Generate that status from a machine source",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "their capability status page is generated from integrations.json, so the document cannot drift from the data. Ours would drift within a week if it were hand-written, which is the same class of bug as the lander claiming nine tools while the endpoint served one…",
+   "summary": "single source (12 entries, each with evidence path/URL, the command and the last-verified date); scripts/gen-integrations.mjs writes docs/integrations/README.md and --check fails when page and data disagree, wired into ci-local and CI.…",
    "doneWhen": "docs/state/integrations.json is the only place a capability is recorded, the markdown is generated from it in CI, and a stale last_verified_at (over 90 days) fails the build",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-20 (repo df22133): `docs/state/integrations"
   },
   {
    "n": 308,
@@ -1935,7 +1935,7 @@
    "title": "A zero-spend local quickstart",
    "done": false,
    "size": "S",
-   "summary": "npx agoragentic-harness-core init && validate && run --profile local_no_spend gives a developer a proof boundary with **no account, no wallet, no hosted runtime**. We have examples/ but no single command that proves the gate works before anyone signs up.",
+   "summary": "**built 2026-11-20 (repo 39e543d), blocked on a release train.** packages/preflight/src/demo.ts evaluates four bundled challenges against a policy defined in the file and prints verdict + the evaluator's own reason code;…",
    "doneWhen": "npx -y @paystage/preflight demo evaluates one bundled challenge and prints pay/review/do_not_pay with the rule that fired, offline, in under 30 seconds",
    "gate": null,
    "ref": null
@@ -1953,12 +1953,12 @@
   {
    "n": 311,
    "title": "Find out why we lose the need-phrased searches",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "the daily discovery probe puts us in 4 of 12, and the misses are the way a buyer phrases it (\"stop agent paying drainer\", \"limit agent spending usdc\"). Read the metadata of whoever *does* rank for those terms…",
+   "summary": "the premise was wrong twice. \"4 of 12\" merged ranking with a channel that cannot answer — npm was 4/6, mcp-registry 0/6 because its search matches names only (paystage 11 rows, all six phrases 0, for every publisher).…",
    "doneWhen": "each failing query is paired with the top-3 results' metadata, a proposed rewrite exists for package + registry + README, and the next probe run is the test",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-20 (`docs/specs/need-phrased-queries"
   },
   {
    "n": 312,
@@ -1973,22 +1973,22 @@
   {
    "n": 313,
    "title": "Design the review packet from how humans actually approve",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "before 302 is built. Read how x402 sellers and wallet UIs ask a person to approve a spend, then choose fields from that evidence instead of inventing them.…",
+   "summary": "five approval surfaces read in the authenticated browser — Stripe Checkout and PayPal Expanded Checkout fully rendered; the Stripe Payment Element builder half-rendered (order summary only, approval control absent, recorded unassessed);…",
    "doneWhen": "5 real approval surfaces are documented with what they show, and the packet schema cites which field came from which",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-20 (docs/specs/review-packet/, 7 screenshots):"
   },
   {
    "n": 314,
    "title": "Receipt key rotation (R2)",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "the last public claim with no rotation story: verify.ts and receipt.ts carry one key and no kid, so rotating it invalidates every receipt a third party holds.…",
+   "summary": "(grep -rn \"retired\" packages/ apps/hosted/tests was 0). apps/hosted/tests/receipt-rotation.test.ts proves it with six assertions over two throwaway P-256 pairs: JWKS serves both kids with the active first, the retired entry is the old public key, a pre-rotatio…",
    "doneWhen": "a kid is in the signed payload, a JWKS is served, and a test verifies a receipt signed by the previous key",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-20 (repo 20c850b): rotation was already implemented; nothing exercised it"
   },
   {
    "n": 315,
@@ -2003,12 +2003,12 @@
   {
    "n": 316,
    "title": "A canary that is visible, without minting a release per day",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "the daily canary is green and publishes canary to npm, but a reader of the repo cannot see it: no badge, no timestamp, no link. Minting a GitHub Release per canary would flood the feed and break releases/latest, so the visible artefact should be a badge/status…",
+   "summary": "the release workflow's status filtered to event=schedule (so v* tag runs cannot colour it) wrapped to read canary and linked to the scheduled-run list, plus an npm @paystage/mcp@canary version badge fed by the dist-tag only a successful scheduled publish moves…",
    "doneWhen": "the README carries a canary badge fed by the last successful scheduled release run, and the link goes to that run",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-20 (repo 567d0bd): two badges in the README —"
   },
   {
    "n": 317,
@@ -2023,19 +2023,19 @@
   {
    "n": 318,
    "title": "A badge row on the README, and only badges that cannot lie",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "the README has **zero** badges, which reads as a side project before the first sentence is read. Add one row of six: npm version of @paystage/mcp, CI status for the workflow that gates merges, MIT licence, **canary last-published date** (a shields *endpoint* b…",
+   "summary": "six badges — npm version of @paystage/mcp, CI, licence, **canary last published** as a shields endpoint reading canary.json on a data-only badges branch, MCP Registry through its live API, and a static x402 · Base label that says \"static\" on its face.…",
    "doneWhen": "the six badges render on GitHub on a fresh clone's README, the canary badge shows a date from the last scheduled run rather than a hardcoded string, and every non-static badge's source is linked in the README's footer",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-20 (repo aeb9e84, branch badges dd3e17a):"
   },
   {
    "n": 319,
    "title": "/console throws a React hydration error (#418)",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "found 2026-11-19 by page-audit, which now listens for console errors on every route. The server-rendered markup and the client's first render disagree on some text; React logs it once and recovers, so a visitor sees a normal page and nothing else noticed.…",
+   "summary": "root cause was **not** time, locale or randomness. SiweStub read process.env.NEXT_PUBLIC_SIWE_ENABLED in a client module: Next inlines NEXT_PUBLIC_ only when it is set at build time, while @opennextjs/cloudflare copies the Worker's request-time variables onto…",
    "doneWhen": "node /work/ops/bin/page-audit.mjs reports zero console errors on /console **and** the named exception is removed from KNOWN_CONSOLE_ERRORS",
    "gate": null,
    "ref": null
@@ -2203,9 +2203,9 @@
   {
    "n": 336,
    "title": "Clear the stale Substack drafts the publishing work left behind",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "33 of the 34 drafts on basebuzz.substack.com are empty or single-line test drafts from building the poster. They are server-side, so they cost nothing on the host, but they make the Drafts list useless for finding real work.…",
+   "summary": "5 screenshots + a 51-row table): the list holds **51** drafts, not 34 — 10 untitled, 24 single-line tests, 18 rows titled x402 notes — 2026-11-19, 9 duplicates of the published article, 5 legacy [UNPUBLISHED] drafts, 1 Substack starter.…",
    "doneWhen": "fewer than 5 drafts remain and each is a real draft, or the record says the UI cannot do it in bulk and names the manual path",
    "gate": null,
    "ref": null
@@ -2213,9 +2213,9 @@
   {
    "n": 337,
    "title": "Keyword phrases do not move the npm queries that miss us",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "measured 2026-11-19 after adding the exact contiguous phrases (stop agent paying drainer, limit agent spending usdc, agent spending limits, budget) to the keywords of @paystage/mcp, @paystage/x402-guard and @paystage/preflight, and publishing a canary.…",
+   "summary": "(docs/specs/need-phrased-queries.md §\"The description-position test\"): keywords are settled as the wrong lever — the exact contiguous phrases are already published and the query still returns nothing.…",
    "doneWhen": "the description-position test is run on one package (not all three), or the record says the phrase position is unmeasurable without shipping copy we would not defend",
    "gate": null,
    "ref": null
@@ -2233,12 +2233,12 @@
   {
    "n": 339,
    "title": "The first-payer alert is suppressed by a false record of itself",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "found 2026-11-20 while checking 315. docs/state/first-payer.json says alerted: true for ▮, which bin/first-payer-alert.mjs lists in OURS as PAYSTAGE_E2E_SEPOLIA_KEY.…",
+   "summary": "docs/state/first-payer.json says alerted: true for ▮, which bin/first-payer-alert.mjs lists in OURS as PAYSTAGE_E2E_SEPOLIA_KEY.…",
    "doneWhen": "--check-state exits 0 on the real state file (i.e. the false record is corrected) and the check is wired into the hourly canary so a future bad record cannot sit unnoticed",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-20"
   },
   {
    "n": 340,
@@ -2255,7 +2255,7 @@
    "title": "@paystage/receipt-verify — checking a receipt should not require installing the server",
    "done": false,
    "size": "S",
-   "summary": "packages/mcp/src/verify.ts already fetches the key by kid, checks the signature, expiry and payment binding, but only as part of the MCP server.…",
+   "summary": "**landed 2026-11-20** (repo 92125df, packages/receipt-verify, private: true); **publishing is still blocked on the npm Trusted Publisher**.…",
    "doneWhen": "the package is published, and its test verifies a receipt produced by the live hosted endpoint with only the receipt and a fetch — no server import",
    "gate": null,
    "ref": null
@@ -2273,12 +2273,12 @@
   {
    "n": 343,
    "title": "@paystage/channel — read-only deposit-channel inspection",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "balance, signedMaxClaimable, withdrawRequestedAt, expiry. Ranked first in onchain-integration-options.md and implemented nowhere in the repo; a eth_call-only read, no keys, no writes. source: docs/specs/package-candidates.md (8b8275c) · research",
+   "summary": "eth_call only, live on Base mainnet. Two premises corrected by the contract itself: it is **one contract with many channels** keyed by bytes32 channelId (▮0003), not one contract per channel; and **signedMaxClaimable is not on-chain**…",
    "doneWhen": "it reads a live Base channel and returns the four values, its test pins each field against a recorded eth_call, and no code path can sign or send",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-20 (repo 92125df, packages/channel, private: true):"
   },
   {
    "n": 344,
@@ -2295,9 +2295,9 @@
    "title": "paystage on PyPI — the hosted endpoint has a Python door and no Python client",
    "done": false,
    "size": "S",
-   "summary": "a thin HTTP client to /mcp (item 303), so a Python agent reaches the same gate without reading the JSON-RPC by hand. source: docs/specs/package-candidates.md (8b8275c) · research",
+   "summary": "**blocked on the operator, checked 2026-11-20.** Two blockers, both outside this container: (1) **no PyPI publishing credential or trusted publisher** — there is no PyPI account reference anywhere in the ops tree, and the container holds no token;…",
    "doneWhen": "pip install paystage resolves a version, and its test evaluates one payment against the hosted endpoint and asserts a verdict",
-   "gate": null,
+   "gate": "operator — the PyPI upload needs an account and token",
    "ref": null
   },
   {
@@ -2313,10 +2313,30 @@
   {
    "n": 347,
    "title": "npm @paystage/policy is 0.3.0 while the repo is 0.3.1, so the daily cadence has been red on it",
+   "done": true,
+   "size": "S",
+   "summary": "(tag v2026.11.20-policy-0.3.1, release run 44693034509): npm view @paystage/policy version = **0.3.1**, and assert-artifact @paystage/policy --latest reports published dist/ matches this commit (12 files). The cause was not a missing tag…",
+   "doneWhen": "npm view @paystage/policy version equals packages/policy/package.json, the cadence \"Published artifacts match the repo\" step is green, and the release that closed it is named in the strike line",
+   "gate": null,
+   "ref": "done 2026-11-20"
+  },
+  {
+   "n": 348,
+   "title": "@paystage/velocity@0.2.3 is on npm with a different dist than the repo, so every release run ends red",
+   "done": true,
+   "size": "S",
+   "summary": "(release 27432e0, tag v2026.11.20-mcp-0.8.17, run 44771389059 **success**): the published 0.2.3 tarball had no per-payee code while the repo had it since #39 — a real feature that never shipped.…",
+   "doneWhen": "node scripts/assert-artifact.mjs @paystage/velocity --latest is green (a 0.2.4 bump published, or the dist diff reverted if it was unintended), and the release run after it is green end to end",
+   "gate": null,
+   "ref": "done 2026-11-20"
+  },
+  {
+   "n": 349,
+   "title": "The note poster leaves a new draft behind on every run, so the Drafts list is now 51 rows",
    "done": false,
    "size": "S",
-   "summary": "found by ci(cadence) run 44677769582 (2026-11-20T04:57Z) at the \"Published artifacts match the repo\" step: npm latest is 0.3.0; the repo is 0.3.1. The handover note said all three packages were published; two were.…",
-   "doneWhen": "npm view @paystage/policy version equals packages/policy/package.json, the cadence \"Published artifacts match the repo\" step is green, and the release that closed it is named in the strike line",
+   "summary": "found while surveying #336: 18 rows titled x402 notes — 2026-11-19 (the same title, same day), 9 duplicates of the published article, 10 untitled, and 24 single-line probes.…",
+   "doneWhen": "a second note-run on a day with no published post does not leave a second draft (it updates or deletes the one it made), and the Drafts count stops growing across rehearsals…",
    "gate": null,
    "ref": null
   }
