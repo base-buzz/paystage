@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { signInWithWallet } from "@/lib/siwe/client";
 
-const SIWE_ENABLED = process.env.NEXT_PUBLIC_SIWE_ENABLED === "1";
-
 type EvalItem = {
   item?: {
     token?: string;
@@ -15,7 +13,7 @@ type EvalItem = {
   summary?: string;
 };
 
-export function SiweStub() {
+export function SiweStub({ enabled }: { enabled: boolean }) {
   const [address, setAddress] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
@@ -24,7 +22,7 @@ export function SiweStub() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!SIWE_ENABLED) {
+  if (!enabled) {
     return (
       <section
         aria-labelledby="siwe-heading"

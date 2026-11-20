@@ -13,10 +13,17 @@ import { useEffect, useState } from "react";
  */
 type Snapshot = { block: number | null; gasGwei: number | null; ok: boolean; note?: string };
 
-const CHAIN_ENDPOINT =
-  process.env.NEXT_PUBLIC_CHAIN_ENDPOINT ?? "https://api.paystage.xyz/v1/public/chain.json";
+const DEFAULT_CHAIN_ENDPOINT = "https://api.paystage.xyz/v1/public/chain.json";
 
-export function ChainTicker() {
+/**
+ * The endpoint arrives as a prop, resolved by the server component that mounts this.
+ *
+ * It used to read `process.env.NEXT_PUBLIC_CHAIN_ENDPOINT` here, which is the same defect that produced
+ * React #418 in SiweStub on 2026-11-20: a `NEXT_PUBLIC_` variable is inlined by Next only when it is set at
+ * build time, and this Worker sets its variables at request time — so the server could read one value and
+ * the browser another. A prop cannot disagree with itself.
+ */
+export function ChainTicker({ endpoint = DEFAULT_CHAIN_ENDPOINT }: { endpoint?: string }) {
   const [snap, setSnap] = useState<Snapshot | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -28,7 +35,7 @@ export function ChainTicker() {
         // The endpoint lives on the API host, not the site host. Calling the relative path asked the
         // console Worker for a route it does not have, so the strip read "unreachable" on a page that
         // was working perfectly — a wrong URL that looked exactly like an outage.
-        const res = await fetch(CHAIN_ENDPOINT, { cache: "no-store" });
+        const res = await fetch(endpoint, { cache: "no-store" });
         if (!res.ok) throw new Error(String(res.status));
         const body = (await res.json()) as Snapshot;
         if (alive) {
