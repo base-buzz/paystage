@@ -13,3 +13,4 @@
 # The JSON behind a line is the workflow artefact `conformance-<run id>` on that run's
 # page, retained for 30 days. Once an artefact expires the line remains a summary, not
 # the evidence — the run URL is where the original lived.
+2026-11-20T04:57:07Z  PASS  26/26  run=44677769582  https://github.com/base-buzz/paystage/actions/runs/44677769582
