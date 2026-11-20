@@ -169,6 +169,7 @@ try {
     "check-client-manifests.mjs",
     "check-agent-surfaces.mjs --live",
     "gen-lists-manifest.mjs --check",
+    "gen-integrations.mjs --check",
     "gen-verified-payees.mjs --check",
     "gen-build-info.mjs --check",
     "check-copy.mjs",

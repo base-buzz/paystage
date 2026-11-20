@@ -1,0 +1,163 @@
+{
+ "schema_version": 1,
+ "entries": [
+  {
+   "id": "mcp-hosts",
+   "name": "MCP hosts (Claude Code, Cursor, Claude Desktop)",
+   "kind": "client",
+   "what_we_gate": "The MCP server that carries the gate, over stdio and Streamable HTTP.",
+   "status": "documented",
+   "evidence": {
+    "path": "scripts/mcp-handshake.mjs",
+    "command": "node scripts/mcp-handshake.mjs"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "The stdio handshake against the published package proves initialize and tools/list, but no named host was driven. The Claude Desktop, Cursor and Claude Code snippets are documented in README.md only."
+  },
+  {
+   "id": "ai-sdk",
+   "name": "AI SDK",
+   "kind": "framework",
+   "what_we_gate": "Paystage payment tools called from an AI SDK agent loop before the wallet signs.",
+   "status": "tested",
+   "evidence": {
+    "path": "packages/ai-sdk/tests/tools.test.ts",
+    "command": "npm test -w @paystage/ai-sdk"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "The tests call the generated tool execute() functions directly; no model loop is driven."
+  },
+  {
+   "id": "elizaos",
+   "name": "elizaOS",
+   "kind": "framework",
+   "what_we_gate": "The payment-evaluation action an elizaOS agent runs before signing.",
+   "status": "tested",
+   "evidence": {
+    "path": "packages/eliza-plugin/src/index.test.ts",
+    "command": "npm test -w @paystage/eliza-plugin"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "The action handler is driven with a fabricated agent message; no live elizaOS runtime is started."
+  },
+  {
+   "id": "n8n",
+   "name": "n8n",
+   "kind": "framework",
+   "what_we_gate": "The community node that evaluates a proposed x402 payment before a workflow signs it.",
+   "status": "tested",
+   "evidence": {
+    "path": "packages/n8n/src/nodes/PayStage/PayStage.node.test.ts",
+    "command": "npm test -w @paystage/n8n"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "The node is driven through a fake n8n execution context and a stubbed HTTP helper; the hosted endpoint it calls is not contacted in the test."
+  },
+  {
+   "id": "x402-core",
+   "name": "@x402/core",
+   "kind": "library",
+   "what_we_gate": "Payment payload creation through paystageClientHook on a real x402 client.",
+   "status": "tested",
+   "evidence": {
+    "path": "packages/x402-guard/tests/v2-client.test.ts",
+    "command": "npm test -w @paystage/x402-guard"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "A real @x402/core client is driven with a throwaway key; the allowed case produces a signed payload, and the denied case aborts before anything is signed."
+  },
+  {
+   "id": "x402-evm",
+   "name": "@x402/evm",
+   "kind": "library",
+   "what_we_gate": "The EVM scheme's createPaymentPayload call, after the gate returns pay.",
+   "status": "tested",
+   "evidence": {
+    "path": "packages/x402-guard/tests/v2-client.test.ts",
+    "command": "npm test -w @paystage/x402-guard"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "ExactEvmScheme from @x402/evm signs only after the hook returns pay. The throwaway key is never funded, so this is not an on-chain payment."
+  },
+  {
+   "id": "x402-fetch",
+   "name": "x402-fetch (v1, unscoped)",
+   "kind": "library",
+   "what_we_gate": "The buyer's 402 challenge before x402-fetch signs and retries.",
+   "status": "tested",
+   "evidence": {
+    "path": "packages/x402-guard/tests/default-wrap.test.ts",
+    "command": "npm test -w @paystage/x402-guard"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "The optional peer resolves and the no-peer message is not raised when it is installed. The signed-payment path is delegated to x402-fetch and is stubbed in the test, so this is not a funded end-to-end payment."
+  },
+  {
+   "id": "paymcp",
+   "name": "PayMCP",
+   "kind": "seller-pairing",
+   "what_we_gate": "The buyer-side evaluation of the x402 challenge PayMCP's Mode.X402 returns to the seller's tool call.",
+   "status": "documented",
+   "evidence": {
+    "url": "https://github.com/PayMCP/paymcp/blob/main/README.md",
+    "path": "docs/integrations/paymcp.md",
+    "label": "PayMCP README",
+    "command": "curl -fsSL https://raw.githubusercontent.com/PayMCP/paymcp/main/README.md"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "Prose pairing only: the page maps PayMCP's documented 402 challenge to the evaluator input. No PayMCP server was run and no payment was made; their API may move."
+  },
+  {
+   "id": "npm-mcp",
+   "name": "npm \u2014 @paystage/mcp",
+   "kind": "listing",
+   "what_we_gate": "The published MCP server a reader installs from the registry.",
+   "status": "tested",
+   "evidence": {
+    "url": "https://registry.npmjs.org/@paystage%2Fmcp/latest",
+    "command": "node scripts/check-listings.mjs --json"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "Live probe on 2026-11-20: published version 0.8.16 matches the local package. The overall check-listings run exited 1 because other surfaces were stale; this row was current."
+  },
+  {
+   "id": "glama",
+   "name": "Glama",
+   "kind": "listing",
+   "what_we_gate": "The directory page that describes the server and its tools.",
+   "status": "tested",
+   "evidence": {
+    "url": "https://glama.ai/mcp/servers/base-buzz/paystage",
+    "command": "node scripts/check-listings.mjs --json"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "Live probe on 2026-11-20: all 10 tool names present. The overall check-listings run exited 1 because other surfaces were stale; this row was current."
+  },
+  {
+   "id": "mcp-registry",
+   "name": "Official MCP registry",
+   "kind": "listing",
+   "what_we_gate": "The registry entry that MCP hosts search and resolve.",
+   "status": "unverified",
+   "evidence": {
+    "url": "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz",
+    "command": "node scripts/check-listings.mjs --json"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "Live probe on 2026-11-20 returned 0.8.15 against local 0.8.16. The entry exists but is behind, so it is not current; republishing it was not part of this change. check-listings exited 1 on this row."
+  },
+  {
+   "id": "mcp-so",
+   "name": "mcp.so",
+   "kind": "listing",
+   "what_we_gate": "The directory page that describes the server and its tools.",
+   "status": "unverified",
+   "evidence": {
+    "url": "https://mcp.so/servers/paystage-6d8a8f",
+    "command": "node scripts/check-listings.mjs --json"
+   },
+   "last_verified_at": "2026-11-20",
+   "notes": "Live probe on 2026-11-20 found 3 of 10 tool names. The page is stale; updating it is the directory's crawl, not a repo change. check-listings exited 1 on this row."
+  }
+ ]
+}
