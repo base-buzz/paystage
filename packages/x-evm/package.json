@@ -41,7 +41,7 @@
     }
   },
   "dependencies": {
-    "@paystage/preflight": "^0.5.2",
+    "@paystage/preflight": "^0.5.3",
     "@paystage/policy": "0.3.0"
   },
   "devDependencies": {
