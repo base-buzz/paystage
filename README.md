@@ -85,10 +85,14 @@ uses them is [packages/x402-guard/src/index.ts](packages/x402-guard/src/index.ts
 Try it without installing anything:
 
 ```bash
+# Copy-paste as-is. A real 12.5 USDC Base challenge against a 5 USDC policy:
 curl -s -X POST https://api.paystage.xyz/v1/evaluate_mcp_payment \
   -H 'content-type: application/json' \
-  -d '{"payment_required":{…},"policy":{…}}'
+  -d '{"payment_required":{"x402Version":2,"resource":{"url":"https://api.dataquay.xyz/v1/ohlc"},"accepts":[{"scheme":"exact","network":"eip155:8453","amount":"12500000","asset":"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913","payTo":"0x6160a0d8a3a1f8b0c4e2d1f7b3a9c6e5d4f23757","maxTimeoutSeconds":300}]},"policy":{"version":1,"max_amount":{"value":"5","asset":"USDC","decimals":6},"allowed_pay_to":["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],"allowed_assets":[{"symbol":"USDC","decimals":6,"address":"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"}],"allowed_networks":["eip155:8453"],"max_timeout_seconds":600,"unknown_payee":"deny"}}'
 ```
+
+It answers `do_not_pay` with `amount 12.5 USDC exceeds max_amount 5 USDC` — a refusal with a reason, in one paste, with nothing elided. The shorter forms below are for reference
+only; an example a reader cannot paste is an example that costs them their first attempt.
 
 The hosted endpoint serves a real verdict with no payment and no account for the first 1,000 calls
 per IP per day — an agent cannot fill in a signup form, so requiring one would exclude exactly
