@@ -1,0 +1,1392 @@
+{
+ "generatedAt": "2026-11-20T05:10:30.909Z",
+ "source": "docs/backlog.md",
+ "counts": {
+  "total": 230,
+  "open": 68,
+  "done": 162
+ },
+ "droppedForSafety": 1,
+ "items": [
+  {
+   "n": 3,
+   "title": "CDP x402 Bazaar listing",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 4,
+   "title": "@paystage/x402-guard",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 5,
+   "title": "x402scan + Glama listings",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 6,
+   "title": "One substantive answer in the x402 Slack",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 7,
+   "title": "Comment on wg-identity #49",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 8,
+   "title": "Hosted try-it, no install",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 9,
+   "title": "One-page \"why gate before signing\"",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 10,
+   "title": "Receipt spec with test vectors",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 11,
+   "title": "PayMCP integration note",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 12,
+   "title": "Capture the payer at settle time",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 13,
+   "title": "Wire first-user-check.mjs",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 14,
+   "title": "API keys panel — a plugin, not a drop folder",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 15,
+   "title": "List PayStage in the Arcade/Smithery registry",
+   "done": false,
+   "size": null
+  },
+  {
+   "n": 16,
+   "title": "Remote MCP endpoint",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 17,
+   "title": "Wrapper: @x402/evm",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 18,
+   "title": "Wrapper: @x402/extensions",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 19,
+   "title": "Wrapper: @x402/svm",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 20,
+   "title": "Wrapper: @aifinpay/skill",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 21,
+   "title": "Wrapper: @circle-fin/x402-batching",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 22,
+   "title": "Wrapper: @payai/facilitator",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 23,
+   "title": "Listing: Glama",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 24,
+   "title": "Listing: PulseMCP",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 25,
+   "title": "Listing: mcpservers.org",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 26,
+   "title": "Listing: mcpmarket",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 27,
+   "title": "Listing: awesome-mcp-servers",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 28,
+   "title": "Listing: x402scan",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 29,
+   "title": "Listing: AgentKit plugins",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 30,
+   "title": "Listing: LangChain integrations",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 31,
+   "title": "Listing: elizaOS plugins",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 32,
+   "title": "Listing: CrewAI tools",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 33,
+   "title": "Listing: Vercel AI SDK examples",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 34,
+   "title": "Listing: n8n community nodes",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 35,
+   "title": "Listing: awesome-x402",
+   "done": false,
+   "size": null
+  },
+  {
+   "n": 36,
+   "title": "Policy: per-agent budgets in the verdict",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 37,
+   "title": "Policy: allow-list by asset address across networks",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 38,
+   "title": "Policy: time windows",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 39,
+   "title": "Policy: velocity by counterparty",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 40,
+   "title": "Preflight: official x402 verifier hooks",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 41,
+   "title": "Preflight: Bazaar discovery extension",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 42,
+   "title": "Receipts: publish a JWKS, not a single key",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 43,
+   "title": "Receipts: sign the key id and format version",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 44,
+   "title": "Receipts: verify as an MCP tool",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 45,
+   "title": "Hosted: per-key quotas on the paid path",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 46,
+   "title": "Hosted: cache the parsed policy by digest",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 47,
+   "title": "CLI: paystage policy check <file>",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 48,
+   "title": "CLI: paystage explain <receipt>",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 49,
+   "title": "x402-guard: SDK-hook adapter alongside fetch",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 50,
+   "title": "x402-guard: persist the verdict, not just a header",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 51,
+   "title": "Metrics: a funnel, not a counter",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 52,
+   "title": "Metrics: install-to-call attribution",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 53,
+   "title": "Metrics: weekly growth log",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 54,
+   "title": "Metrics: alert on the first real payer",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 55,
+   "title": "Evidence: adversarial review of the live copy",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 56,
+   "title": "Evidence: reproduce a receipt from a clean container",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 57,
+   "title": "Evidence: publish LIMITS.md",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 58,
+   "title": "Evidence: compute the SLO, do not just document it",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 59,
+   "title": "Evidence: incident drill",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 60,
+   "title": "Security: fuzz the challenge parser",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 61,
+   "title": "Security: property test the canonicaliser",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 62,
+   "title": "Security: dependency check on Dependabot PRs",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 63,
+   "title": "Security: provenance assertions for every version",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 64,
+   "title": "Docs: comparison page against the four threats",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 65,
+   "title": "Docs: protect an x402 seller in 5 minutes",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 66,
+   "title": "Docs: glossary",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 67,
+   "title": "Docs: llms-full.txt end-to-end audit",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 68,
+   "title": "Docs: runnable examples/",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 69,
+   "title": "Docs: generate the changelog from commits",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 70,
+   "title": "Pricing: measure the marginal cost of a call",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 71,
+   "title": "Pricing: a global free-tier cap",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 72,
+   "title": "Commercial: settlement export",
+   "done": false,
+   "size": null
+  },
+  {
+   "n": 73,
+   "title": "Ops: the loop survives a container restart",
+   "done": false,
+   "size": null
+  },
+  {
+   "n": 74,
+   "title": "Ops: back up the memory store",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 75,
+   "title": "Ops: dead-man switch for the daily canary",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 76,
+   "title": "Ops: cost visibility for CI",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 81,
+   "title": "SIWE identity — only when item 14 ships",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 82,
+   "title": "Light theme",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 83,
+   "title": "PWA — decided against, do not build",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 84,
+   "title": "Lander v3.1 — the visual work left on the table",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 85,
+   "title": "A restart channel from the container to the host",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 86,
+   "title": "Publish @paystage/skill and @paystage/x-evm",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 87,
+   "title": "Apply the events.payer migration to the live database",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 88,
+   "title": "elizaOS plugin package",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 89,
+   "title": "n8n community node package",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 90,
+   "title": "Prove the ChatGPT connector end to end",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 91,
+   "title": "A \"pay with real money\" path on the lander",
+   "done": false,
+   "size": null
+  },
+  {
+   "n": 92,
+   "title": "Testnet faucet — humans",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 93,
+   "title": "Testnet faucet — agents",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 94,
+   "title": "The hosted /mcp exposes ONE tool while the site claims nine",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 95,
+   "title": "Conformance: assert tool parity between the package and the hosted endpoint",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 96,
+   "title": "Stale tool-count copy in four places",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 97,
+   "title": "Tool annotations on all nine tools",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 98,
+   "title": "resources/list and prompts/list return empty, not an error",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 99,
+   "title": "A privacy policy page",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 100,
+   "title": "Client manifests in one repository",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 101,
+   "title": "Work the prospect queue",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 102,
+   "title": "Surface the reports as a trust signal on the lander",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 108,
+   "title": "Install snippets in the README",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 109,
+   "title": "A starter repo that runs in one command",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 110,
+   "title": "Prove base-mcp interop",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 111,
+   "title": "Base Builder Grant application",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 112,
+   "title": "Base Builder Call pitch",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 113,
+   "title": "Farcaster and X demo",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 114,
+   "title": "Base Builder Codes — support added, code needed",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 115,
+   "title": "Push the telemetry retry allowlist",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 116,
+   "title": "A dropped telemetry field is an alarm, not a warning",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 117,
+   "title": "A merge is not shipped until the deploy ran for that SHA",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 118,
+   "title": "Monthly x402 liveness sample, published",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 119,
+   "title": "apps/hosted sits outside the npm workspace — make that visible",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 120,
+   "title": "The push identity needs an anchor a recreate cannot change",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 121,
+   "title": "Open the agentkit PR",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 122,
+   "title": "Seller-side outreach: circlefin/arc-nanopayments",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 123,
+   "title": "Split @paystage/preflight: the evaluator must not carry the MCP server",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 124,
+   "title": "PR to BlockRunAI/ClawRouter",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 125,
+   "title": "PR to vybenetwork/x402-client: guarded scheme, Solana included",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 126,
+   "title": "Monthly census diff, wired to the schedule",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 127,
+   "title": "Watch the eight adopters of our language",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 128,
+   "title": "Policy extension: draft spec, submitted",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 129,
+   "title": "Monthly \"state of x402\" post",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 130,
+   "title": "Aggressive integration sweep: top 25 repos with a signing seam",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 131,
+   "title": "events.amount_usdc is never written, so our own settled volume is zero",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 132,
+   "title": "Re-scan the five stale x402 packages for a wrapper seam",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 133,
+   "title": "Verified payee registry (positive allowlist)",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 135,
+   "title": "Hook: a script that runs a binary must declare it",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 136,
+   "title": "Hook: internal doc links resolve",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 137,
+   "title": "Hook: version parity across package.json, server.json and the registry entry",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 138,
+   "title": "Hook: ops scripts must be valid JavaScript",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 139,
+   "title": "Hook: documented environment variables exist in code, and vice versa",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 140,
+   "title": "Hook: every route in the app is documented, and every documented endpoint exists",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 141,
+   "title": "The decider must not offer work that shipped but was not closed",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 142,
+   "title": "Hook: README and lander must name the same listings",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 143,
+   "title": "Tool descriptions must say when to call, what comes back, and how to verify",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 144,
+   "title": "Receipts should expire, and name the payment they are about",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 145,
+   "title": "A refusal should tell you what to do next",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 146,
+   "title": "Publish a verdict mapping table",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 147,
+   "title": "Sanctions screening is a blank space buyers will ask about",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 148,
+   "title": "We are invisible to the searches an agent actually runs",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 149,
+   "title": "Re-check the MCP Registry entry against how its search works",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 150,
+   "title": "The Bazaar crawler never sees a 402 from us",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 151,
+   "title": "The registry searches names, so our entry cannot be found for \"x402\"",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 152,
+   "title": "Repeat the phrase lever for the four remaining queries",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 153,
+   "title": "Chinese discovery: the keywords are published, the ranking is not there",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 154,
+   "title": "Inventory the x402 supply side as coverage data",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 155,
+   "title": "Decision: do not become a facilitator or liquidity router",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 156,
+   "title": "Decision: do not launch a project token",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 157,
+   "title": "Test the decision, not the argument: attach the real server to an agent and measure",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 158,
+   "title": "Measure how much of the x402 supply side is self-checkable at all",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 159,
+   "title": "Issue #85 — the registry checker's own findings",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 160,
+   "title": "Speak the agents' words, not ours",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 161,
+   "title": "The p90 tail is a liability for agents that demand no delay",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 162,
+   "title": "The artifact guard passes when a version number is reused",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 163,
+   "title": "\"Reasons I can show the user\" is a feature, not a side effect",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 164,
+   "title": "Seller identity: bind the host to the payee",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 165,
+   "title": "The enforceable form is the client hook, not the MCP tool",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 166,
+   "title": "Wrapper: @circle-fin/x402-batching — gate Circle's batched client with the existing hook",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 167,
+   "title": "@x402/paywall has no decision seam, and that is the finding",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 168,
+   "title": "Decision: the generic policy gate is commoditised",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 169,
+   "title": "Integrate a free address-risk API instead of hand-growing a 25-entry list",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 170,
+   "title": "Audit the drainer list for precision before it is called a moat",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 171,
+   "title": "Hash-chain the receipts",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 172,
+   "title": "Wrapper: superagent-ai/grok-cli — gate createX402Fetch before it signs",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 173,
+   "title": "Optional preference sync — local by default, wallet-signed to carry it",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 174,
+   "title": "Reopen 81 (SIWE) with the narrower purpose",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 175,
+   "title": "The browser handover route works only over HTTP/1.1, so no browser can use it",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 176,
+   "title": "Daily x402 post on Substack, from its own session",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 177,
+   "title": "Sequence diagram + verdict flowchart in the README",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 178,
+   "title": "The wallet chip: connected state is a dead end",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 179,
+   "title": "Dependency budget as a stated advantage",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 180,
+   "title": "The registry can hold a version with no tarball, and we only found out from a failed release",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 181,
+   "title": "Zero-dependency evaluator",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 182,
+   "title": "Publish the MCP registry entry automatically, so it cannot lag a release",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 183,
+   "title": "Separate \"is the product broken\" from \"is a listing stale\" in the nightly run",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 184,
+   "title": "cadence.json says all_passing: true while 7 of 12 recent runs passed",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 185,
+   "title": "The /try paid card reads washed out in light mode",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 186,
+   "title": "Our own registry entry fails the registry check",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 187,
+   "title": "A retried challenge gets a second pay verdict, because the evaluator is stateless",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 188,
+   "title": "/zh rendered as raw HTML",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 294,
+   "title": "## Guards added 2026-11-18 (do not remove these; each replaced a memory)",
+   "done": false,
+   "size": null
+  },
+  {
+   "n": 295,
+   "title": "## The daily check was red because the checkout was empty (2026-11-18)",
+   "done": false,
+   "size": null
+  },
+  {
+   "n": 296,
+   "title": "The lander's own tool list is one behind the package",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 297,
+   "title": "The Official MCP registry entry advertises no tools",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 298,
+   "title": "x402scan and mcp.so index us at 2/10 and 3/10",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 299,
+   "title": "Two panel agents answer no-composer, and nobody knows why",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 300,
+   "title": "A probe guard counted a stricter thing than its own message claimed",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 301,
+   "title": "packages/mcp is ahead of its published version, so the next tag publishes nothing",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 302,
+   "title": "A review packet for review verdicts",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 303,
+   "title": "A Python entry point",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 304,
+   "title": "Publish the evidence of a conformance run, not just its exit code",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 305,
+   "title": "Say fail-closed in the words a reviewer uses",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 306,
+   "title": "Grade our integrations the way they grade theirs",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 307,
+   "title": "Generate that status from a machine source",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 308,
+   "title": "A per-run evidence bundle, not just a verdict",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 309,
+   "title": "A zero-spend local quickstart",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 310,
+   "title": "## Payee categories: classify a wallet by what it does, and publish the page",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 311,
+   "title": "Find out why we lose the need-phrased searches",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 312,
+   "title": "What an agent does after it decides",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 313,
+   "title": "Design the review packet from how humans actually approve",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 314,
+   "title": "Receipt key rotation (R2)",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 315,
+   "title": "First-payer forensics, decided in advance (R10)",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 316,
+   "title": "A canary that is visible, without minting a release per day",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 317,
+   "title": "Install the tarball we just published",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 318,
+   "title": "A badge row on the README, and only badges that cannot lie",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 319,
+   "title": "/console throws a React hydration error (#418)",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 320,
+   "title": "Market demand, measured daily",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 321,
+   "title": "Market supply as a daily series, with the top ten visible",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 322,
+   "title": "The market series needs seven days before it draws a line",
+   "done": false,
+   "size": null
+  },
+  {
+   "n": 323,
+   "title": "Receipt rotation needs a paragraph, not a test",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 324,
+   "title": "One adversarial case for each tool with no behavioural test",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 325,
+   "title": "Run the MCP assertions inside the 10-minute CI canary",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 326,
+   "title": "Channel attribution: which listing actually sent anyone",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 327,
+   "title": "Our challenge advertises one useful extension out of four",
+   "done": true,
+   "size": "M"
+  },
+  {
+   "n": 328,
+   "title": "A copy-pasteable first call, with the policy included",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 329,
+   "title": "State the price of call 1,001 beside the free tier",
+   "done": true,
+   "size": null
+  },
+  {
+   "n": 330,
+   "title": "The twelve paid payees are the only outreach list that matters",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 331,
+   "title": "Price the gate as one more call in a loop",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 332,
+   "title": "The backlog cannot be counted, so nobody knows how much is left",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 333,
+   "title": "## Three packages were published broken, and the check that found them was written today (2026-11-18)",
+   "done": false,
+   "size": null
+  },
+  {
+   "n": 334,
+   "title": "## npm search: keywords bought rank on one query and nothing on the sentence ones (2026-11-19)",
+   "done": false,
+   "size": null
+  },
+  {
+   "n": 335,
+   "title": "Split the one skill into four task-scoped skills",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 336,
+   "title": "Clear the stale Substack drafts the publishing work left behind",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 337,
+   "title": "Keyword phrases do not move the npm queries that miss us",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 338,
+   "title": "The discovery probe silently shrank its own sample",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 339,
+   "title": "The first-payer alert is suppressed by a false record of itself",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 340,
+   "title": "A public endpoint serves the payer address",
+   "done": true,
+   "size": "S"
+  },
+  {
+   "n": 341,
+   "title": "@paystage/receipt-verify — checking a receipt should not require installing the server",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 342,
+   "title": "@paystage/payment-policy — make the policy draft adoptable before it merges",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 343,
+   "title": "@paystage/channel — read-only deposit-channel inspection",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 344,
+   "title": "@paystage/solana — we cannot evaluate 28% of the catalogue",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 345,
+   "title": "paystage on PyPI — the hosted endpoint has a Python door and no Python client",
+   "done": false,
+   "size": "S"
+  },
+  {
+   "n": 346,
+   "title": "The registry namespace is split, and the OIDC half is one release behind",
+   "done": false,
+   "size": "M"
+  },
+  {
+   "n": 347,
+   "title": "npm @paystage/policy is 0.3.0 while the repo is 0.3.1, so the daily cadence has been red on it",
+   "done": false,
+   "size": "S"
+  }
+ ]
+}
