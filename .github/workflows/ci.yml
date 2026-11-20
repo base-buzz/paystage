@@ -59,3 +59,4 @@ jobs:
       - run: node scripts/check-manifests.mjs
       - run: node scripts/check-manifest-packages.mjs
       - run: node scripts/check-dep-pins.mjs
+      - run: node scripts/check-canary-badge.mjs

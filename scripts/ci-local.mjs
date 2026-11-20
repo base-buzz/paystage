@@ -189,6 +189,7 @@ try {
     "check-doc-links.mjs",
     "check-published-links.mjs",
     "check-badges.mjs",
+    "check-canary-badge.mjs",
     "check-tarballs.mjs",
     "check-count-claims.mjs",
     "check-network-claims.mjs",
