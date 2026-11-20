@@ -10,7 +10,7 @@ import Link from "next/link";
  * we collect is merely dull; one that understates it is a lie with a footer link.
  */
 export const metadata: Metadata = {
-  title: "Privacy — PayStage",
+  title: "Privacy",
   description:
     "What PayStage records when an evaluation is made, what it does not record, and how to have a row removed.",
 };

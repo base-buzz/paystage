@@ -4,7 +4,7 @@ import { TryConsole } from "./TryConsole";
 import { PaidMainnet } from "@/components/PaidMainnet";
 
 export const metadata: Metadata = {
-  title: "Try the gate — PayStage",
+  title: "Try the gate",
   description:
     "Send a real x402 payment challenge to the hosted PayStage API and see the verdict. No install, no key, no account.",
 };

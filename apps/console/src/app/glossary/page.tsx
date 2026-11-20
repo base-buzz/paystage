@@ -11,7 +11,7 @@ import { GLOSSARY_MARKDOWN } from "@/lib/glossary.generated";
  * where the console deploys without the repository.
  */
 export const metadata: Metadata = {
-  title: "Glossary — PayStage",
+  title: "Glossary",
   description: "x402, facilitator, settlement, EIP-3009, HIP-3, CAIP-2 and every other term this project uses.",
 };
 

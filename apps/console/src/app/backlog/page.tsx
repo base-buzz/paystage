@@ -17,7 +17,7 @@ import backlog from "@/lib/backlog.generated.json";
  * current — a backlog page that quietly shows last week's list is worse than one that admits the date.
  */
 export const metadata: Metadata = {
-  title: "Backlog — PayStage",
+  title: "Backlog",
   description: "What is open and what is done, as a list.",
   robots: { index: false, follow: false, nocache: true },
 };

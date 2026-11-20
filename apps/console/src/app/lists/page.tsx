@@ -16,7 +16,7 @@ import { LISTS } from "@/lib/lists.generated";
  * advice, and the last section says so in those words.
  */
 export const metadata: Metadata = {
-  title: "Deny lists — PayStage",
+  title: "Deny lists",
   description:
     "The sanctions and drainer lists PayStage checks before a payment is allowed: sources, retrieval dates, counts, refresh cadence and the limits of exact-address matching.",
 };
