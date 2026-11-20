@@ -15,7 +15,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@paystage/auth-watch",
-      "version": "0.2.0",
+      "version": "0.2.2",
       "transport": {
         "type": "stdio"
       },

@@ -15,7 +15,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@paystage/preflight",
-      "version": "0.2.3",
+      "version": "0.5.3",
       "transport": {
         "type": "stdio"
       },
