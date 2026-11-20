@@ -1,0 +1,51 @@
+{
+  "name": "@paystage/channel",
+  "version": "0.1.0",
+  "description": "Read-only inspection of x402 batch-settlement deposit channels on Base (balance, withdraw request, expiry)",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "!dist/**/*.map"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "mcp",
+    "x402",
+    "agent-payments",
+    "base",
+    "deposit-channel",
+    "batch-settlement"
+  ],
+  "homepage": "https://paystage.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/base-buzz/paystage.git",
+    "directory": "packages/channel"
+  },
+  "bugs": {
+    "url": "https://github.com/base-buzz/paystage/issues"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4",
+    "vitest": "^4.1.12"
+  }
+}

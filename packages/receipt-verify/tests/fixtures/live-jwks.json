@@ -1,0 +1,16 @@
+{
+  "keys": [
+    {
+      "kty": "EC",
+      "ext": true,
+      "crv": "P-256",
+      "x": "AryGJCCdbsSu5w6PlqaifsNWzEToaCtdmfskkXh5crw",
+      "y": "gEnvRzHSsCqSfecoKdDC_s5I3cKnHjn0wQXg0zulhJE",
+      "kid": "paystage-receipt-v1",
+      "use": "sig",
+      "alg": "ES256"
+    }
+  ],
+  "configured": true,
+  "alg": "ECDSA-P256-SHA256"
+}

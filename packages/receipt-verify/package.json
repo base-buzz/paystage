@@ -1,0 +1,63 @@
+{
+  "name": "@paystage/receipt-verify",
+  "version": "0.1.0",
+  "description": "verify a PayStage verdict receipt without installing the server: fetch the published JWKS by kid, check the ES256 signature, expiry and payment binding. Same verdict shape as @paystage/mcp.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "payment-safety",
+    "x402",
+    "agent-payments",
+    "receipt",
+    "receipt-verification",
+    "verify-receipt",
+    "jwks",
+    "es256",
+    "ecdsa",
+    "offline-verification",
+    "verify-without-trust",
+    "agent-payment-safety",
+    "usdc",
+    "base",
+    "no-server",
+    "signature-verification"
+  ],
+  "homepage": "https://paystage.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/base-buzz/paystage.git",
+    "directory": "packages/receipt-verify"
+  },
+  "bugs": {
+    "url": "https://github.com/base-buzz/paystage/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12"
+  },
+  "private": true
+}

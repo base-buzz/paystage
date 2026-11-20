@@ -1,0 +1,25 @@
+{
+  "v": 1,
+  "issuer": "paystage",
+  "issued_at": "2026-11-20T13:48:13.863Z",
+  "expires_at": "2026-11-20T13:53:13.863Z",
+  "payment": {
+    "scheme": "exact",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "amount": "1000",
+    "payee": "0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE"
+  },
+  "service": { "name": "@paystage/hosted", "version": "2026.11.12" },
+  "verdict": {
+    "decision": "pay",
+    "reasons": [],
+    "summary": "Decision: pay. Selected 0.001 USDC on eip155:8453 to 0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE."
+  },
+  "request_sha256": "716a235c2cca4dd18229bc5a204cce1c8090d5cc053d1d181c4a5ab95db871eb",
+  "policy_sha256": "055134fc50e90987d0188bca32c8671b3321df2e76c3cfa57141b8c4f3963550",
+  "signed": true,
+  "alg": "ECDSA-P256-SHA256",
+  "key_id": "paystage-receipt-v1",
+  "signature": "BOyAxuIv_nnkyn1y2-G2OXco0uJBdcjvFr_2dEQB67fdgzKe5jGUswjWj-cDd8R76boKeLeKNLc4PdtUw_CpoA"
+}
