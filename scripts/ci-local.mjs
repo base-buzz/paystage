@@ -117,6 +117,19 @@ function run(label, command, commandArgs, cwd) {
   } catch (error) {
     failed = true;
     const output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+    /**
+     * A killed process is not a failed check, and saying "install failed" about an OOM sends the reader to the wrong file.
+     *
+     * Measured 2026-11-20: two runs exited 1 with an empty install log while a clean `npm ci` in the same container succeeded —
+     * the npm child had been SIGKILLed (137) at this container's 3 GB limit while other work was running, and `npm ci --silent`
+     * wrote nothing before it died, so the output looked like a silent failure of the code under test. It was memory pressure.
+     */
+    if (error.signal === "SIGKILL" || error.status === 137 || /\bKilled\b/.test(output)) {
+      console.error(`  FAIL  ${label} — KILLED, not failed: the process was SIGKILLed (exit 137)`);
+      console.error(`        this is almost always memory pressure, e.g. another build running; check \`cat /sys/fs/cgroup/memory.current\``);
+      console.error(`        nothing here says the code is broken — re-run when the container is quieter`);
+      return;
+    }
     console.error(`  FAIL  ${label}`);
     for (const line of output.split("\n").slice(-12)) console.error(`        ${line}`);
   }
