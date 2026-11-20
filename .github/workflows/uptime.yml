@@ -52,6 +52,21 @@ jobs:
           '
         continue-on-error: true
 
+      # The protocol assertions the HTTP probe cannot make (#325).
+      #
+      # uptime-probe checks reachability; it cannot tell a working endpoint from one that answers 200 with an empty tool list. `mcp-canary` speaks the real protocol over Streamable
+      # HTTP — initialize, tools/list, and calling a tool — and asserts the verdicts. A broken `tools/list` now turns this red inside ten minutes instead of being found by a user.
+      - name: Assert the MCP protocol
+        id: mcp
+        run: |
+          set +e
+          node scripts/mcp-canary.mjs > mcp-canary.log 2>&1
+          rc=$?
+          echo "exit=$rc" >> "$GITHUB_OUTPUT"
+          cat mcp-canary.log
+          exit $rc
+        continue-on-error: true
+
       # Append one probe result to the SLO history (#58). Committed back to the repo so the error budget is computed
       # from a record anyone can audit, not from a dashboard nobody can query later.
       - name: Record the probe for the SLO budget
@@ -83,7 +98,7 @@ jobs:
       # that cannot get a challenge cannot pay, which is an outage for its purpose even
       # though the Worker is up.
       - name: Open or update the incident issue
-        if: steps.probe.outputs.exit != '0'
+        if: steps.probe.outputs.exit != '0' || steps.mcp.outputs.exit != '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -96,7 +111,7 @@ jobs:
           fi
 
       - name: Close the incident issue on recovery
-        if: steps.probe.outputs.exit == '0'
+        if: steps.probe.outputs.exit == '0' && steps.mcp.outputs.exit == '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -108,6 +123,10 @@ jobs:
 
       # The issue is the durable signal, but a green run would let the failure hide in
       # the Actions tab. Make the run red too.
-      - name: Fail the run when the probe failed
-        if: steps.probe.outputs.exit != '0'
-        run: exit 1
+      # Two different failures, one red run: the HTTP probe answers "can an agent reach us", the canary answers "does the protocol work when it does".
+      - name: Fail the run when the probe or the canary failed
+        if: steps.probe.outputs.exit != '0' || steps.mcp.outputs.exit != '0'
+        run: |
+          echo "probe exit: ${{ steps.probe.outputs.exit }}"
+          echo "canary exit: ${{ steps.mcp.outputs.exit }}"
+          exit 1
