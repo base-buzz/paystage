@@ -8,6 +8,8 @@
  * `package.json`.
  */
 import mcpPkg from "../../../../packages/mcp/package.json";
+import receiptVerifyPkg from "../../../../packages/receipt-verify/package.json";
+import channelPkg from "../../../../packages/channel/package.json";
 import authWatchPkg from "../../../../packages/auth-watch/package.json";
 import policyPkg from "../../../../packages/policy/package.json";
 import preflightPkg from "../../../../packages/preflight/package.json";
@@ -34,6 +36,8 @@ export const PACKAGE_VERSIONS: Record<string, string> = {
   "@paystage/ai-sdk": aiSdkPkg.version,
   "@paystage/n8n": n8nPkg.version,
   "@paystage/eliza-plugin": elizaPluginPkg.version,
+  "@paystage/receipt-verify": receiptVerifyPkg.version,
+  "@paystage/channel": channelPkg.version,
 };
 
 /**

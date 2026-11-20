@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-21
+
+- `@paystage/receipt-verify@0.1.0` and `@paystage/channel@0.1.0`: **two new packages, published.** `receipt-verify` checks a
+  signed receipt without installing the MCP server — "verify without trusting us" was an advertised promise that cost a
+  third party a server install to keep; it takes the receipt and a fetch, selects the key by `kid`, and returns the same
+  verdict strings the server does. `channel` reads an x402 deposit channel over `eth_call` only (`balance`, `totalClaimed`,
+  `withdrawRequestedAt`, derived expiry) and reports `signedMaxClaimable` as unassessed because that value lives in the
+  off-chain voucher, not in contract storage. Both were bootstrapped by hand — the versions before today's CI publish carry
+  no provenance attestation — and both are now in `PKGS`, so every later version ships through OIDC.
+
 ## 2026-11-20
 
 - `@paystage/velocity@0.2.4` and `@paystage/mcp@0.8.17`: **the per-payee ceiling is now published.** The feature (#39) landed in

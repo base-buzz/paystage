@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Read-only inspection of x402 batch-settlement deposit channels on Base (balance, withdraw request, expiry)",
   "license": "MIT",
-  "private": true,
+  "private": false,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
