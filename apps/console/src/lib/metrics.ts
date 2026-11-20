@@ -23,10 +23,19 @@ type EventRow = {
   tx_hash: string | null;
   /** Added 2026-11-12: the address that settled, from the PAYMENT-RESPONSE receipt. */
   payer: string | null;
+  external?: boolean | null;
   request_id: string | null;
   facilitator_status: string | null;
   error_class: string | null;
 };
+
+/**
+ * Wallets we operate. Kept beside the payload mapper so "is this ours" cannot drift from what is published.
+ */
+const OURS_HINT = /^0xc64a71e1|^0x73fb4a47/i;
+function isOurs(payer: string | null | undefined): boolean {
+  return typeof payer === "string" && OURS_HINT.test(payer);
+}
 
 type IncidentRow = {
   id: string;
@@ -69,7 +78,15 @@ function mapEvent(row: EventRow): TelemetryEvent {
     created_at: row.ts,
     latency_ms: typeof row.latency_ms === "number" ? row.latency_ms : null,
     tx_hash: row.tx_hash ?? null,
-    payer: row.payer ?? null,
+    /**
+     * The payer address is not served unless it is ours.
+     *
+     * `/api/metrics` is a public payload, and `payer` on a settled row is the address that signed. The console needs to know whether a settlement was *external* or our own traffic, and a
+     * boolean answers that without publishing a stranger's pseudonym — an address carries a history, and republishing it invites somebody else to deanonymise them with our help
+     * (docs/first-payer.md). Today the only value in this field is our loadgen wallet, so this changes nothing visible; it stops the day one external payer would have made it a leak.
+     */
+    payer: isOurs(row.payer) ? row.payer : null,
+    external: row.payer ? !isOurs(row.payer) : null,
   };
 }
 
