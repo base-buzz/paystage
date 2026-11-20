@@ -25,6 +25,7 @@ const DECLARED = [
   { file: "packages/mcp/src/tools.ts", host: "sepolia.api.paystage.xyz", what: "request_testnet_funds → faucet" },
   { file: "packages/mcp/src/tools.ts", host: "api.paystage.xyz", what: "verify_receipt → receipt key" },
   { file: "packages/auth-watch/src/rpc.ts", host: "base.org", what: "auth-watch → JSON-RPC default" },
+  { file: "packages/channel/src/rpc.ts", host: "base.org", what: "channel → eth_call reads, no signing path" },
   { file: "packages/trade-preflight/src/hyperliquid.ts", host: "api.hyperliquid.xyz", what: "trade-preflight → market context" },
   // A caller-supplied URL, so there is no literal host to match — declared because it exists.
   { file: "packages/x402-guard/src/index.ts", host: null, what: "guard → optional telemetryUrl supplied by the caller" },
