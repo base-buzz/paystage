@@ -4,8 +4,9 @@
  * a hosted endpoint will serve those callers first; this is how we do not lose them at step
  * one. Owner-approved 2026-11-12.
  *
- * Limit: 1000 evaluations per IP per day. Counted in isolate memory, which means the real
- * ceiling is 1000 × (number of warm isolates) — generous by design. A precise global counter
+ * Limit: 1000 evaluations a day, counted per isolate rather than per IP. The key includes the caller, but the counter lives in isolate memory, so the effective ceiling is
+ * 1000 × (number of warm isolates) — generous by design, and deliberately described that way everywhere: this comment, the site, the README and `/v1/public/status` all say
+ * per-instance now, because "per IP per day" was the sentence in three of those four for two days after the code stopped working that way. A precise global counter
  * needs a Durable Object or KV, and at current volume the over-allowance costs nothing while
  * a wrong hard stop would lose the exact caller we are trying to win.
  *

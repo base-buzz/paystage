@@ -64,7 +64,7 @@ curl -s -X POST https://api.paystage.xyz/v1/evaluate_mcp_payment \
 ```
 
 Returns a real verdict, signed receipt included, with no payment and no account for the
-first 1,000 calls per IP per day. A browser demo of the same call is at
+first 1,000 calls a day (counted per Worker instance, so the allowance scales with instance count — `GET /v1/public/status` publishes the exact wording), then $0.002 per call over x402. A browser demo of the same call is at
 <https://paystage.xyz/try>.
 
 ## What it does not do

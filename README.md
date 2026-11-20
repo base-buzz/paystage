@@ -95,8 +95,14 @@ It answers `do_not_pay` with `amount 12.5 USDC exceeds max_amount 5 USDC` — a 
 only; an example a reader cannot paste is an example that costs them their first attempt.
 
 The hosted endpoint serves a real verdict with no payment and no account for the first 1,000 calls
-per IP per day — an agent cannot fill in a signup form, so requiring one would exclude exactly
-the callers this is built for.
+a day — an agent cannot fill in a signup form, so requiring one would exclude exactly the callers
+this is built for. Beyond that it is **$0.002 per call** over x402, paid in USDC on Base — 1,001 is
+0.002, not a plan, not a seat, and no different from the surrounding calls.
+
+Two caveats, both published rather than implied: the free counter lives in Worker isolate memory, so the
+allowance is **per instance** and scales with instance count instead of being a global per-IP cap
+(`https://api.paystage.xyz/v1/public/status` states it in machine-readable form), and the price is read
+from the same constant the Worker charges.
 
 ## The ten tools
 
