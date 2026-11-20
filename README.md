@@ -125,6 +125,27 @@ npm run build -w @paystage/preflight && node examples/run.mjs
 
 Four challenges against one policy, four verdicts with reasons — no network, no keys. See [examples/](examples/).
 
+## Inside a loop, not in front of one
+
+The endpoints that get paid in this ecosystem are cheap, deterministic calls an agent makes in a loop — hashing at 0.001 USDC, embeddings at 0.0005, completions at 0.003. A gate is bought
+when it sits *inside* such a loop, so the integration is one line: whatever pays your x402 call, wrap it.
+
+```js
+import { guardFetch } from "@paystage/x402-guard";
+
+// Before:  const pay = wrapFetchWithPayment(fetch, account);
+// After:   wrap the same fetch, and every 402 it meets is evaluated first.
+const pay = guardFetch(fetch, { walletClient: account, policy });
+const res = await pay(url, init);
+```
+
+`guardFetch` returns a `fetch` of the same shape, so the loop does not change: it evaluates the 402 the caller was about to sign and passes the response through only when the verdict is
+`pay`. A refusal costs one call and nothing else. The exact options are in
+[packages/x402-guard/README.md](packages/x402-guard/README.md). The paid endpoint is
+$0.002 per call, the same order as the calls around it — so the gate is one more line item, not a new procurement.
+
+A refusal costs nothing; a loop that pays a drainer costs every iteration.
+
 ## Quick start
 
 ```bash
