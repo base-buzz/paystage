@@ -33,7 +33,7 @@ function walk(dir, out = []) {
     if (entry.isDirectory()) {
       if (["node_modules", "dist", ".next", ".open-next", ".wrangler"].includes(entry.name)) continue;
       walk(full, out);
-    } else if (/\.(ts|mjs|js)$/.test(entry.name) && !/\.test\.ts$/.test(entry.name)) {
+    } else if (/\.(ts|tsx|mjs|js)$/.test(entry.name) && !/\.test\.(ts|tsx)$/.test(entry.name)) {
       out.push(full);
     }
   }
