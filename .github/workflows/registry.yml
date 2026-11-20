@@ -63,8 +63,13 @@ jobs:
             } catch {}
             try {
               const l = JSON.parse(fs.readFileSync("listings.json", "utf8"));
-              for (const x of l.listings) {
-                lines.push(`- ${x.ok ? "ok" : "**DRIFT**"} ${x.name}: ${x.ok ? "in sync" : x.reason}`);
+              // check-listings.mjs emits rows (found/note) since #152; the old listings shape
+              // no longer exists, and this catch hid that, so the issue listed no surfaces.
+              const rows = l.rows ?? l.listings ?? [];
+              for (const x of rows) {
+                const ok = x.ok ?? (x.found !== null && x.found === l.tools);
+                const reason = x.reason ?? x.note;
+                lines.push(`- ${ok ? "ok" : "**DRIFT**"} ${x.name}: ${ok ? "in sync" : reason}`);
               }
             } catch {}
             fs.writeFileSync("report.md", lines.join("\n"));
