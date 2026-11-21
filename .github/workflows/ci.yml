@@ -65,3 +65,4 @@ jobs:
       - run: node scripts/check-canary-badge.mjs
       - run: node scripts/check-client-env.mjs
       - run: node scripts/check-deps-budget.mjs
+      - run: node scripts/check-pypi-package.mjs

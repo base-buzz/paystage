@@ -212,6 +212,7 @@ try {
     "check-fail-closed.mjs",
     "check-client-env.mjs",
     "check-deps-budget.mjs",
+    "check-pypi-package.mjs",
   ]) {
     if (!existsSync(join(worktree, "scripts", script))) continue;
     run(script, "node", [join("scripts", script)], worktree);
