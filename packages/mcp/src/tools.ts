@@ -3,9 +3,9 @@ import { McpServer, type ServerCapabilities } from "@modelcontextprotocol/server
 import { z } from "zod";
 import { parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
-import { evaluatePayment, normalizePaymentRequired } from "@paystage/preflight";
+import { buildEvidenceBundle, evaluatePayment, normalizePaymentRequired } from "@paystage/preflight";
 import type { EvaluateResult } from "@paystage/preflight";
-import { verifyReceipt } from "./verify.js";
+import { verifyReceipt, verifyReceiptChain } from "./verify.js";
 import {
   listOutstandingAuths,
   evaluateOutstandingAuths,
@@ -51,7 +51,7 @@ export type ToolName = (typeof TOOL_NAMES)[number];
  * `scripts/check-client-id.mjs` fails CI when the two disagree, which is the guard that makes a constant safe.
  */
 export const CLIENT_PACKAGE = "@paystage/mcp";
-export const CLIENT_ID = `${CLIENT_PACKAGE}/0.8.15`;
+export const CLIENT_ID = `${CLIENT_PACKAGE}/0.8.17`;
 
 const DEFAULT_NETWORK = "base";
 
@@ -140,6 +140,19 @@ export interface ToolDeps {
    * removes the network from the one path that is supposed to be an independent check.
    */
   resolveReceiptKey?: () => Promise<Record<string, unknown> | null>;
+  /**
+   * Store a bundle for a later `GET /runs/:id`. Optional: the stdio package has no server
+   * to serve it from, but the hosted endpoint passes the Supabase-backed store. Absence is
+   * reported as `bundle_stored: false`, never as a success.
+   */
+  persistBundle?: (bundle: {
+    id: string;
+    decision: string;
+    events: string;
+    proof: string;
+    receipt: string | null;
+    summary: string;
+  }) => Promise<void>;
 }
 
 export function registerAllTools(server: McpServer, deps: ToolDeps): void {
@@ -147,7 +160,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "evaluate_mcp_payment",
     {
       description:
-        "verify the recipient. Call this BEFORE signing any x402 payment. Verdict is pay | review | do_not_pay, each with stable reason codes (e.g. 'amount 1.00 USDC exceeds max_amount 0.05 USDC'). Fail-closed by design: do not invent authority — when policy, identity, cost or evidence is missing the answer is a refusal or a review, never a pay. Returns the decision plus a signed receipt you can verify offline with verify_receipt. Read-only: holds no keys, never signs, never moves funds. A refusal costs nothing. This tool evaluates locally, so it makes no network calls and returns no seller reputation; the hosted HTTP API adds `seller_reputation` (domain and certificate age) because it can reach the network.",
+        "verify the recipient. Call this BEFORE signing any x402 payment. Verdict is pay | review | do_not_pay, each with stable reason codes (e.g. 'amount 1.00 USDC exceeds max_amount 0.05 USDC'). Fail-closed by design: do not invent authority — when policy, identity, cost or evidence is missing the answer is a refusal or a review, never a pay. A `review` verdict also carries a `packet` object with the amount and its share of the applicable cap, the payee, the rule that fired, the checks run and skipped, and the one decision being asked of the human; `pay` and `do_not_pay` do not. Returns the decision plus a signed receipt you can verify offline with verify_receipt, and a `bundle_id` naming the evidence bundle for this call (events, hashed inputs, receipt, summary). Read-only: holds no keys, never signs, never moves funds. A refusal costs nothing. This tool evaluates locally, so it makes no network calls and returns no seller reputation; the hosted HTTP API adds `seller_reputation` (domain and certificate age) because it can reach the network.",
       annotations: {
         title: "Evaluate an x402 payment (read-only, never signs)",
         readOnlyHint: true,
@@ -181,12 +194,61 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
       try {
         const policy = await deps.resolvePolicy(input);
         const pr = normalizePaymentRequired(input.payment_required);
+        const evaluatedAt = new Date();
         const result: EvaluateResult = evaluatePayment(pr, policy, {
+          now: evaluatedAt,
           ...(input.agent_id !== undefined ? { agentId: input.agent_id } : {}),
           ...(input.payment_identifier !== undefined ? { paymentIdentifier: input.payment_identifier } : {}),
         });
+        const bundle = await buildEvidenceBundle(
+          {
+            payment_required: pr,
+            policy,
+            options: {
+              now: evaluatedAt,
+              ...(input.agent_id !== undefined ? { agent_id: input.agent_id } : {}),
+              ...(input.payment_identifier !== undefined ? { payment_identifier: input.payment_identifier } : {}),
+            },
+          },
+          result,
+        );
+        let bundleStored = false;
+        if (deps.persistBundle) {
+          try {
+            await deps.persistBundle({
+              id: bundle.bundle_id,
+              decision: result.decision,
+              events: bundle.events_jsonl,
+              proof: bundle.proof,
+              receipt: bundle.receipt ?? null,
+              summary: bundle.summary_md,
+            });
+            bundleStored = true;
+          } catch {
+            // A storage failure must not turn a verdict into an error for the agent; the
+            // response says it was not stored so the caller does not assume a GET works.
+          }
+        }
         return {
-          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  ...result,
+                  bundle_id: bundle.bundle_id,
+                  bundle_stored: bundleStored,
+                  bundle: {
+                    "events.jsonl": bundle.events_jsonl,
+                    proof: JSON.parse(bundle.proof),
+                    "summary.md": bundle.summary_md,
+                  },
+                },
+                null,
+                2,
+              ),
+            },
+          ],
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -202,7 +264,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "list_outstanding_auths",
     {
       description:
-        "spending limits. Call this when auditing what an agent could still spend without a new signature — ERC-20 allowances, Permit2 and EIP-3009 authorisations. Returns each authorisation with spender, amount and expiry. Read-only and needs only a public RPC; no key, no funds moved. Use it after an incident to see what remains exposed, not to revoke anything (this tool cannot revoke).",
+        "spending limits. Call this when auditing what an agent could still spend without a new signature — ERC-20 allowances, Permit2 and EIP-3009 authorisations. Returns each authorisation with spender, amount and expiry. Read-only and needs only a public RPC; no key, no funds moved. Use it after an incident to see what remains exposed, not to revoke anything (this tool cannot revoke). Fails closed: do not invent authority — a missing policy, identity, cost or evidence is a refusal, never a default.",
       annotations: {
         title: "List outstanding token authorizations (read-only, never signs)",
         readOnlyHint: true,
@@ -245,7 +307,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "evaluate_outstanding_auths",
     {
       description:
-        "spending limits. Call this when an agent already holds authorisations and you need to know which are dangerous. Verdict is pay | review | do_not_pay per authorisation, with reason codes naming the rule that fired (unlimited allowance, expiry already passed, spender not on the allow-list). Returns per-authorisation decisions plus a summary action. Read-only: never revokes, never signs. Revocation is a transaction you send yourself.",
+        "spending limits. Call this when an agent already holds authorisations and you need to know which are dangerous. Verdict is pay | review | do_not_pay per authorisation, with reason codes naming the rule that fired (unlimited allowance, expiry already passed, spender not on the allow-list). Returns per-authorisation decisions plus a summary action. Read-only: never revokes, never signs. Revocation is a transaction you send yourself. Fails closed: do not invent authority — a missing policy, identity, cost or evidence is a refusal, never a default.",
       annotations: {
         title: "Evaluate outstanding token authorizations (read-only, never signs)",
         readOnlyHint: true,
@@ -290,7 +352,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "evaluate_hip3_trade",
     {
       description:
-        "transaction scope. Call this BEFORE an agent places a HIP-3 / trade.xyz order. Verdict is allow | review | do_not_trade, with the rule that fired (notional above cap, market not allowed, leverage too high). Returns the decision and a one-line reason. Local policy only: this is not financial advice, holds no keys, and cannot place or cancel an order. Prices come from a read-only market query.",
+        "transaction scope. Call this BEFORE an agent places a HIP-3 / trade.xyz order. Verdict is allow | review | do_not_trade, with the rule that fired (notional above cap, market not allowed, leverage too high). Returns the decision and a one-line reason. Local policy only: this is not financial advice, holds no keys, and cannot place or cancel an order. Prices come from a read-only market query. Fails closed: do not invent authority — a missing policy, identity, cost or evidence is a refusal, never a default.",
       annotations: {
         title: "Evaluate a HIP-3 trade (read-only, never signs)",
         readOnlyHint: true,
@@ -338,7 +400,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "evaluate_velocity",
     {
       description:
-        "transparent risk assessments. Call this when an agent is about to make its Nth payment and you need to know whether the rate itself is the risk. Verdict is pay | review | do_not_pay over a rolling window (per-hour and per-day spend, count of payees). Returns the decision plus which window was breached. Read-only: it reads the history you pass in, holds no keys, and calls no external service.",
+        "transparent risk assessments. Call this when an agent is about to make its Nth payment and you need to know whether the rate itself is the risk. Verdict is pay | review | do_not_pay over a rolling window (per-hour and per-day spend, count of payees). Returns the decision plus which window was breached. Read-only: it reads the history you pass in, holds no keys, and calls no external service. Fails closed: do not invent authority — a missing policy, identity, cost or evidence is a refusal, never a default.",
       annotations: {
         title: "Evaluate payment velocity (read-only, never signs)",
         readOnlyHint: true,
@@ -389,7 +451,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "verify_receipt",
     {
       description:
-        "verify the recipient. Call this when you have a receipt and want to know whether it is genuine, without trusting the server that issued it. Returns VALID with the verdict it attests to, INVALID if the payload was altered, or UNVERIFIABLE when the key cannot be fetched — and UNVERIFIABLE is a refusal, not a pass. Needs only the receipt JSON and a network connection; no account, no shared secret. Fetches the signing key from a published URL you can pin with key_url.",
+        "verify the recipient. Call this when you have a receipt and want to know whether it is genuine, without trusting the server that issued it. Returns VALID with the verdict it attests to, INVALID if the payload was altered, or UNVERIFIABLE when the key cannot be fetched — and UNVERIFIABLE is a refusal, not a pass. Pass `chain` instead of one receipt to walk a hash-chained list: it verifies every link and reports the first gap by index, with the receipt ids either side. Needs only the receipt JSON and a network connection; no account, no shared secret. Fetches the signing key from a published URL you can pin with key_url. Fails closed: do not invent authority — a missing policy, identity, cost or evidence is a refusal, never a default.",
       annotations: {
         title: "Verify a receipt against the published key (read-only, never signs)",
         readOnlyHint: true,
@@ -397,21 +459,31 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         openWorldHint: true,
       },
       inputSchema: {
-        receipt: z.unknown().describe("The receipt object as issued"),
+        receipt: z.unknown().optional().describe("The receipt object as issued (omit when passing chain)"),
+        chain: z
+          .array(z.unknown())
+          .min(1)
+          .optional()
+          .describe("A hash-chained list of receipts; reports the first gap by index and the ids either side"),
         key_url: z.string().url().optional().describe("Override the published key location"),
       },
     },
-    async ({ receipt, key_url }: { receipt: unknown; key_url?: string }) => {
+    async ({ receipt, chain, key_url }: { receipt?: unknown; chain?: unknown[]; key_url?: string }) => {
       try {
+        if (receipt === undefined && chain === undefined) {
+          return { isError: true, content: [{ type: "text" as const, text: "Error: give receipt or chain" }] };
+        }
         // Prefer a key the host already holds; an explicit key_url still wins, so a caller can check
         // a receipt from a different deployment against that deployment's published key.
         const injected = key_url === undefined && deps.resolveReceiptKey
           ? await deps.resolveReceiptKey()
           : null;
-        const verdict = await verifyReceipt(
-          receipt as never,
-          key_url ? { keyUrl: key_url } : injected ? { jwk: injected as never } : {},
-        );
+        const keyOptions = key_url ? { keyUrl: key_url } : injected ? { jwk: injected as never } : {};
+        if (chain !== undefined) {
+          const verdict = await verifyReceiptChain(chain as never[], keyOptions);
+          return { content: [{ type: "text" as const, text: JSON.stringify(verdict, null, 2) }] };
+        }
+        const verdict = await verifyReceipt(receipt as never, keyOptions);
         return { content: [{ type: "text" as const, text: JSON.stringify(verdict, null, 2) }] };
       } catch (error) {
         return {
@@ -426,7 +498,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "decode_payment_required",
     {
       description:
-        "verify the recipient. Call this first when a 402 response arrives and you cannot read the payment-required header. Returns the decoded x402 v2 challenge: scheme, network, asset, atomic amount, payee, resource and timeout. Pure decoding: no network call, no signature, no verdict — use evaluate_mcp_payment when you want a decision. Fails closed with a named error if the header is malformed or not base64.",
+        "verify the recipient. Call this first when a 402 response arrives and you cannot read the payment-required header. Returns the decoded x402 v2 challenge: scheme, network, asset, atomic amount, payee, resource and timeout. Pure decoding: no network call, no signature, no verdict — use evaluate_mcp_payment when you want a decision. Fails closed with a named error if the header is malformed or not base64. Fails closed: do not invent authority — a missing policy, identity, cost or evidence is a refusal, never a default.",
       annotations: {
         title: "Decode a payment-required header (read-only, never signs)",
         readOnlyHint: true,
@@ -460,7 +532,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "validate_policy",
     {
       description:
-        "spending limits. Call this before wiring a policy into anything: a policy that fails validation makes every evaluation refuse, which looks like a product bug and is not one. Returns valid: true, or the exact field and message that is wrong. No payment needed, no network call, no key. Use it in CI on the policy file your agent ships with.",
+        "spending limits. Call this before wiring a policy into anything: a policy that fails validation makes every evaluation refuse, which looks like a product bug and is not one. Returns valid: true, or the exact field and message that is wrong. No payment needed, no network call, no key. Use it in CI on the policy file your agent ships with. Fails closed: do not invent authority — a missing policy, identity, cost or evidence is a refusal, never a default.",
       annotations: {
         title: "Validate a spending policy (read-only, never signs)",
         readOnlyHint: true,
@@ -488,7 +560,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "request_testnet_funds",
     {
       description:
-        "test funds. Call this when you need Base Sepolia USDC to exercise the paid path end to end — one drip of 0.5 USDC per address per 24 hours, and the refusal tells you when it resets rather than just failing. Reads a public faucet: no key needed, no account, and it can only ever send testnet USDC. Use a throwaway address for anything automated; the cap is per address, so a script that generates a new address per call is not clever, it is why faucets get closed.",
+        "test funds. Call this when you need Base Sepolia USDC to exercise the paid path end to end — one drip of 0.5 USDC per address per 24 hours, and the refusal tells you when it resets rather than just failing. Reads a public faucet: no key needed, no account, and it can only ever send testnet USDC. Use a throwaway address for anything automated; the cap is per address, so a script that generates a new address per call is not clever, it is why faucets get closed. Fails closed: do not invent authority — a missing policy, identity, cost or evidence is a refusal, never a default.",
       annotations: {
         title: "Request testnet funds (writes a testnet tx, never touches mainnet)",
         readOnlyHint: false,
@@ -532,7 +604,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "evaluate_batch",
     {
       description:
-        "transaction scope. Call this when an agent might pay several times in one turn and you want one policy decision covering all of them. Verdict is pay | review | do_not_pay per item, in input order, with reason codes — so the agent can stop at the first refusal rather than discovering it after three payments. Read-only, holds no keys, never signs. Cheaper and more consistent than calling evaluate_mcp_payment in a loop: same policy, one round trip.",
+        "transaction scope. Call this when an agent might pay several times in one turn and you want one policy decision covering all of them. Verdict is pay | review | do_not_pay per item, in input order, with reason codes — so the agent can stop at the first refusal rather than discovering it after three payments. Read-only, holds no keys, never signs. Cheaper and more consistent than calling evaluate_mcp_payment in a loop: same policy, one round trip. Fails closed: do not invent authority — a missing policy, identity, cost or evidence is a refusal, never a default.",
       annotations: {
         title: "Evaluate a batch of x402 payments (read-only, never signs)",
         readOnlyHint: true,

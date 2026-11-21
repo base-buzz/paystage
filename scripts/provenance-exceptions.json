@@ -1,5 +1,11 @@
 {
   "@paystage/x402-guard@0.1.0": {
     "reason": "published by hand on 2026-11-12 before the release workflow existed; npm Trusted Publishing cannot be backfilled, so the version stays unsigned and every later version is attested"
+  },
+  "@paystage/channel@0.1.0": {
+    "reason": "published 2026-11-20T18:10:09Z by _npmUser paystage-admin (npm registry metadata) \u2014 a hand publish outside release.yml, so no attestation exists for the version. An attestation cannot be backfilled onto a published version; the next version goes through release.yml, which passes --provenance, and is attested"
+  },
+  "@paystage/receipt-verify@0.1.0": {
+    "reason": "published 2026-11-20T18:12:03Z by _npmUser paystage-admin (npm registry metadata) \u2014 a hand publish outside release.yml, so no attestation exists for the version. An attestation cannot be backfilled onto a published version; the next version goes through release.yml, which passes --provenance, and is attested"
   }
 }

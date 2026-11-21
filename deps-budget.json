@@ -1,0 +1,143 @@
+{
+  "measuredAt": "2026-11-21",
+  "method": "npm pack <package> from packages/; npm install --ignore-scripts --no-audit --no-fund <tarball> in an empty temp project; npm ls --all --parseable, dropping the temp project's own root line. The count includes the package itself and every resolved copy, hoisted or nested.",
+  "packages": {
+    "@paystage/ai-sdk": {
+      "budget": 4,
+      "resolvedPackages": [
+        "node_modules/@paystage/ai-sdk",
+        "node_modules/@paystage/policy",
+        "node_modules/@paystage/preflight",
+        "node_modules/zod"
+      ]
+    },
+    "@paystage/auth-watch": {
+      "budget": 5,
+      "resolvedPackages": [
+        "node_modules/@modelcontextprotocol/core",
+        "node_modules/@modelcontextprotocol/server",
+        "node_modules/@paystage/auth-watch",
+        "node_modules/@paystage/policy",
+        "node_modules/zod"
+      ]
+    },
+    "@paystage/channel": {
+      "budget": 1,
+      "resolvedPackages": [
+        "node_modules/@paystage/channel"
+      ]
+    },
+    "@paystage/mcp": {
+      "budget": 11,
+      "reason": "11 rather than 9: the published @paystage/preflight 0.5.3 and @paystage/auth-watch 0.2.2 still pin @paystage/policy 0.3.0, so npm installs two nested 0.3.0 copies beside the umbrella's 0.3.1. The budget stays at 11 until those siblings are republished; a lower count passes.",
+      "resolvedPackages": [
+        "node_modules/@modelcontextprotocol/core",
+        "node_modules/@modelcontextprotocol/server",
+        "node_modules/@paystage/auth-watch",
+        "node_modules/@paystage/auth-watch/node_modules/@paystage/policy",
+        "node_modules/@paystage/mcp",
+        "node_modules/@paystage/policy",
+        "node_modules/@paystage/preflight",
+        "node_modules/@paystage/preflight/node_modules/@paystage/policy",
+        "node_modules/@paystage/trade-preflight",
+        "node_modules/@paystage/velocity",
+        "node_modules/zod"
+      ]
+    },
+    "@paystage/policy": {
+      "budget": 2,
+      "resolvedPackages": [
+        "node_modules/@paystage/policy",
+        "node_modules/zod"
+      ]
+    },
+    "@paystage/preflight": {
+      "budget": 3,
+      "resolvedPackages": [
+        "node_modules/@paystage/policy",
+        "node_modules/@paystage/preflight",
+        "node_modules/zod"
+      ]
+    },
+    "@paystage/receipt-verify": {
+      "budget": 1,
+      "resolvedPackages": [
+        "node_modules/@paystage/receipt-verify"
+      ]
+    },
+    "@paystage/skill": {
+      "budget": 1,
+      "resolvedPackages": [
+        "node_modules/@paystage/skill"
+      ]
+    },
+    "@paystage/trade-preflight": {
+      "budget": 4,
+      "resolvedPackages": [
+        "node_modules/@modelcontextprotocol/core",
+        "node_modules/@modelcontextprotocol/server",
+        "node_modules/@paystage/trade-preflight",
+        "node_modules/zod"
+      ]
+    },
+    "@paystage/velocity": {
+      "budget": 5,
+      "resolvedPackages": [
+        "node_modules/@modelcontextprotocol/core",
+        "node_modules/@modelcontextprotocol/server",
+        "node_modules/@paystage/policy",
+        "node_modules/@paystage/velocity",
+        "node_modules/zod"
+      ]
+    },
+    "@paystage/x-evm": {
+      "budget": 5,
+      "reason": "one nested @paystage/policy 0.3.0 copy from the published @paystage/preflight 0.5.3 pin; would be 4 after preflight is republished.",
+      "resolvedPackages": [
+        "node_modules/@paystage/policy",
+        "node_modules/@paystage/preflight",
+        "node_modules/@paystage/preflight/node_modules/@paystage/policy",
+        "node_modules/@paystage/x-evm",
+        "node_modules/zod"
+      ]
+    },
+    "@paystage/x402-guard": {
+      "budget": 32,
+      "reason": "mostly the @x402/extensions -> viem stack, plus one nested @paystage/policy 0.3.0 copy from the published @paystage/preflight 0.5.3 pin.",
+      "resolvedPackages": [
+        "node_modules/@adraffy/ens-normalize",
+        "node_modules/@noble/ciphers",
+        "node_modules/@noble/curves",
+        "node_modules/@noble/hashes",
+        "node_modules/@paystage/policy",
+        "node_modules/@paystage/preflight",
+        "node_modules/@paystage/preflight/node_modules/@paystage/policy",
+        "node_modules/@paystage/x402-guard",
+        "node_modules/@scure/base",
+        "node_modules/@scure/bip32",
+        "node_modules/@scure/bip39",
+        "node_modules/@signinwithethereum/siwe",
+        "node_modules/@signinwithethereum/siwe-parser",
+        "node_modules/@x402/core",
+        "node_modules/@x402/extensions",
+        "node_modules/abitype",
+        "node_modules/ajv",
+        "node_modules/apg-js",
+        "node_modules/eventemitter3",
+        "node_modules/fast-deep-equal",
+        "node_modules/fast-uri",
+        "node_modules/isows",
+        "node_modules/jose",
+        "node_modules/json-schema-traverse",
+        "node_modules/ox",
+        "node_modules/ox/node_modules/@noble/curves",
+        "node_modules/require-from-string",
+        "node_modules/tweetnacl",
+        "node_modules/viem",
+        "node_modules/viem/node_modules/@noble/curves",
+        "node_modules/ws",
+        "node_modules/zod"
+      ]
+    }
+  }
+}

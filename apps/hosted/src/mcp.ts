@@ -11,17 +11,19 @@ import { registerAllTools, SERVER_CAPABILITIES } from "@paystage/mcp/tools";
 import { parsePolicyCached } from "./policy-cache.js";
 import { publicKeyJwk } from "./receipt.js";
 import { recordEvent, sourceFromHeaders, type TelemetrySource } from "./telemetry.js";
+import { supabaseBundleStore, type BundleStore } from "./bundle-store.js";
 
 export const MCP_PATH = "/mcp";
 const SERVICE_VERSION = "2026.11.14";
 
 type Env = { SUPABASE_URL?: string; SUPABASE_SERVICE_ROLE_KEY?: string };
 
-function buildServer(env: Env, source: TelemetrySource): McpServer {
+function buildServer(env: Env, source: TelemetrySource, injectedStore?: BundleStore): McpServer {
   const server = new McpServer(
     { name: "paystage", version: SERVICE_VERSION },
     { capabilities: SERVER_CAPABILITIES },
   );
+  const bundleStore = injectedStore ?? supabaseBundleStore(env);
 
   registerAllTools(server, {
     // No filesystem in a Worker: a caller must send the policy inline. Refusing `policy_path` with a
@@ -44,6 +46,18 @@ function buildServer(env: Env, source: TelemetrySource): McpServer {
       const jwk = await publicKeyJwk(pkcs8);
       return jwk ? (jwk as unknown as Record<string, unknown>) : null;
     },
+    ...(bundleStore === undefined
+      ? {}
+      : {
+          persistBundle: async (bundle: {
+            id: string;
+            decision: string;
+            events: string;
+            proof: string;
+            receipt: string | null;
+            summary: string;
+          }) => bundleStore.put(bundle),
+        }),
   });
 
   // Telemetry: the MCP path recorded nothing until 2026-11-14, so a real agent call and a quiet day
@@ -82,12 +96,15 @@ function buildServer(env: Env, source: TelemetrySource): McpServer {
   return server;
 }
 
-export function mcpHandler(env: Env): { fetch: (request: Request) => Promise<Response> } {
+export function mcpHandler(
+  env: Env,
+  options: { bundleStore?: BundleStore } = {},
+): { fetch: (request: Request) => Promise<Response> } {
   return createMcpHandler((ctx) => {
     const req = ctx?.requestInfo;
     const source = req
       ? sourceFromHeaders({ header: (name: string) => req.headers.get(name) ?? undefined })
       : "real";
-    return buildServer(env, source);
+    return buildServer(env, source, options.bundleStore);
   });
 }

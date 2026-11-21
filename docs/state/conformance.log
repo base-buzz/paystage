@@ -1,0 +1,16 @@
+# PayStage conformance log — one line per cadence run, with the evidence that backs it.
+#
+# Written only by `ops/bin/conformance-log.mjs`, from the JSON artefact the cadence
+# workflow uploaded for that run — never from a re-run, so the line and the file cannot
+# disagree. The workflow itself does not commit: `main` requires the `ci` check and a
+# bot push is refused, so the writer is the session that holds the push identity.
+# Append-only and idempotent by run id:
+# re-running a workflow run never adds a second line. Never hand-edit a line.
+#
+# Format (two spaces between fields, one line per run):
+#   <checked_at ISO-8601 UTC>  <PASS|FAIL>  <passed>/<total>  run=<run id>  <run URL>
+#
+# The JSON behind a line is the workflow artefact `conformance-<run id>` on that run's
+# page, retained for 30 days. Once an artefact expires the line remains a summary, not
+# the evidence — the run URL is where the original lived.
+2026-11-20T04:57:07Z  PASS  26/26  run=44677769582  https://github.com/base-buzz/paystage/actions/runs/44677769582

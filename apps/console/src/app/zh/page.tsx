@@ -138,7 +138,7 @@ export default function ZhHome() {
         </section>
 
         <section className="lp-wrap" aria-label="实时动态">
-          <ChainTicker />
+          <ChainTicker endpoint={process.env.NEXT_PUBLIC_CHAIN_ENDPOINT ?? "https://api.paystage.xyz/v1/public/chain.json"} />
           <SettledStrip />
           <FunnelPanel />
         </section>

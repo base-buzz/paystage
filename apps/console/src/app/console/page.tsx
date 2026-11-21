@@ -36,6 +36,12 @@ export default async function Page() {
     return rank(a.source) - rank(b.source);
   });
 
+  // Resolved on the server and handed to the client component as a prop. Reading
+  // it inside the client module instead makes the two renders disagree: the Worker
+  // has process.env at request time, the browser bundle does not, so the server
+  // rendered one branch and hydration rendered the other (React #418).
+  const siweEnabled = process.env.NEXT_PUBLIC_SIWE_ENABLED === "1";
+
   return (
     <>
       <a href="#main" className="skip-link">
@@ -108,7 +114,7 @@ export default async function Page() {
         <IncidentFeed incidents={m.incidents} />
         <ConfidenceChecklist />
         <SyntheticWallets />
-        <SiweStub />
+        <SiweStub enabled={siweEnabled} />
 
         <SyncPrefs />
       </main>

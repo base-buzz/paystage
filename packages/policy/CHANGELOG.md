@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-20 — @paystage/policy 0.3.1
+
+- Three features had shipped to the tree without a version bump, so the published 0.3.0 `dist/` no longer matched this commit (`assert-artifact` caught it while busy failing a release for an
+  unrelated reason): an asset entry may name an address for any allowed network, per-payee velocity ceilings, and `allowed_hours_utc` / `blocked_hours_utc` time windows.
+- No API removed; every change is additive.
+
 ## 0.2.1 — 2026-11-10
 
 - **Per-agent budgets.** `policy.agents` is a narrowing overlay: `max_amount`,

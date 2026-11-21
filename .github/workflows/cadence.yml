@@ -6,6 +6,13 @@
 #
 # Deliberately read-only: no `contents: write`, no deploys, no publishing. A check
 # that can change what it checks is not a check.
+#
+# #304 asks for the run's JSON as evidence, not just its exit code. This workflow
+# uploads it as an artefact (`conformance-<run_id>`) and stops there. The one-line
+# summary in `docs/state/conformance.log` is appended by `ops/bin/conformance-log.mjs`
+# from the artefact, not by this workflow: `main` requires the `ci` status check, and a
+# `github-actions[bot]` push to it is refused — so the runner that can write is the
+# session that already holds the push identity (rule 14).
 
 name: cadence
 
@@ -41,11 +48,43 @@ jobs:
         # thing a release does.
         run: npm run build
       - name: Run the conformance kit against production
-        # tee, so the assertions are in the run log rather than only in the step summary. A red run nobody can read is a
-        # red run that gets ignored — this one failed twice and its output was invisible.
-        run: node apps/hosted/scripts/conformance.mjs 2>&1 | tee /tmp/conformance.log
+        # One live pass, two outputs: `--json` writes the evidence artefact, and the
+        # readable lines in /tmp/conformance.log are rendered from that same JSON by
+        # scripts/conformance-evidence.mjs. Re-running the kit to format a summary would
+        # double the network calls and could show a different answer from the artefact.
+        #
+        # `exit` is captured explicitly: a `node … | tee` pipeline used to report tee's
+        # status, so "Fail if the kit failed" below could never see the kit's exit code.
+        run: |
+          set +e
+          node apps/hosted/scripts/conformance.mjs --json > /tmp/conformance.json 2>/tmp/conformance.err
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+          cat /tmp/conformance.err >&2
+          node scripts/conformance-evidence.mjs human /tmp/conformance.json > /tmp/conformance.log 2>&1
+          render=$?
+          cat /tmp/conformance.log
+          # Exit 1 is a legitimate FAIL run (valid JSON, failed checks) and still gets
+          # uploaded. Above that the kit produced no parseable document, so there is no
+          # evidence to attach — remove it and let the upload step turn this red.
+          if [ "$render" -gt 1 ]; then
+            echo "::error::the kit produced no parseable JSON — nothing to upload"
+            rm -f /tmp/conformance.json
+          fi
+          exit 0
         continue-on-error: true
         id: conformance
+      - name: Upload the conformance JSON as this run's evidence
+        # A green tick is a claim; this file is the evidence behind it (#304). The name
+        # carries the run id so the `record` job can download exactly this run's file and
+        # never a neighbouring run's. 30 days is long enough to investigate a regression
+        # noticed within a month and short enough not to grow storage forever.
+        if: steps.conformance.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-${{ github.run_id }}
+          path: /tmp/conformance.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Print the summary
         # Reads the log the previous step wrote. This used to re-run the whole kit — a second pass of live network
         # calls whose failure was swallowed by `|| true`, so the summary could show a different answer from the job.
@@ -63,7 +102,7 @@ jobs:
         # covered the day it is added.
         run: |
           set -euo pipefail
-          PKGS="policy preflight x402-guard x-evm auth-watch velocity trade-preflight skill mcp ai-sdk"
+          PKGS="policy preflight x402-guard x-evm auth-watch velocity trade-preflight skill mcp ai-sdk receipt-verify channel eliza-plugin n8n"
           for pkg in $PKGS; do
             echo "--- @paystage/$pkg"
             node scripts/assert-artifact.mjs "@paystage/$pkg" --latest
@@ -80,7 +119,10 @@ jobs:
         # the tarball is the artifact.
         run: node scripts/check-tarballs.mjs
       - name: Fail if the kit failed
-        if: steps.conformance.outcome == 'failure'
+        # The run step captures the kit's exit code into `exit` and ends with `exit 0`
+        # so the evidence upload and summary still happen. This is the only place a red
+        # kit becomes a red job.
+        if: steps.conformance.outputs.exit != '0'
         run: exit 1
 
   listings:

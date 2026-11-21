@@ -86,6 +86,21 @@ ${m.runtime_dependencies.map((d) => `- \`${d}\``).join("\n")}
 - Mainnet: ${m.hosted_api.mainnet} (${m.networks.mainnet}), $0.002 USDC per call.
 - Sepolia: ${m.hosted_api.sepolia} (${m.networks.sepolia}), $0.002 USDC per call.
 
+An evaluation returns a \`bundle_id\` naming its evidence bundle. Fetch the record at
+\`GET /runs/:id\` (all four artefacts as markdown), \`GET /runs/:id?format=json\` (structured),
+or one artefact at a time with \`?format=events|proof|receipt|summary\`. The bundle is
+content-addressed: the id is the SHA-256 of the canonical inputs, so the same decision always
+has the same name. Recompute its verdict from \`proof\` alone with
+\`npx -y -p @paystage/preflight paystage-verify-bundle proof.json\`.
+
+\`GET /wallets/:address\` returns stored observations about one payee — contract vs EOA, age band,
+activity band, whether it holds the asset being paid, our own list hits, and GoPlus flags. Each
+observation names the source that reported it and the date it was read. The response has three arrays
+(\`labels\`, \`observations\`, \`disagreements\`); there is no score, no "trust" field and no combined
+verdict. A field two sources disagree about appears in \`disagreements\` with both values and dates. An
+address with no stored rows returns empty arrays; that means no observations were recorded, not that
+the address is safe.
+
 The hosted API runs the same evaluation code. Use it when you cannot run a local
 process; run locally when you can, because it removes the network hop before a
 payment.

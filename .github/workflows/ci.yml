@@ -26,8 +26,15 @@ jobs:
       - run: node scripts/check-claims.mjs
       - run: node scripts/check-client-manifests.mjs
       - run: node scripts/check-published-links.mjs
+      # Publish lists are hand-written in three places; a package missing from one is never released and
+      # never asserted. Compare all three against packages/ so the failure lands on the commit that adds it.
+      - run: node scripts/check-publish-list.mjs
       - run: node scripts/check-count-claims.mjs
       - run: node scripts/check-network-claims.mjs
+      - run: node scripts/gen-integrations.mjs --check
+      # The six grading dimensions: every strong value needs a ref a reviewer can open, unknowns stay unknown,
+      # and the generated page must match the JSON (the guard runs the generator's --check itself).
+      - run: node scripts/check-integrations-grading.mjs
       - run: node scripts/sync-tool-docs.mjs --check
       - run: node scripts/check-privacy.mjs
       - run: node scripts/check-contrast.mjs
@@ -58,3 +65,7 @@ jobs:
       - run: node scripts/check-manifests.mjs
       - run: node scripts/check-manifest-packages.mjs
       - run: node scripts/check-dep-pins.mjs
+      - run: node scripts/check-canary-badge.mjs
+      - run: node scripts/check-client-env.mjs
+      - run: node scripts/check-deps-budget.mjs
+      - run: node scripts/check-pypi-package.mjs

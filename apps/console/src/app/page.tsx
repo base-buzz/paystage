@@ -275,7 +275,7 @@ export default function LandingPage() {
         </section>
 
         <section className="lp-wrap" aria-label="Live activity">
-          <ChainTicker />
+          <ChainTicker endpoint={process.env.NEXT_PUBLIC_CHAIN_ENDPOINT ?? "https://api.paystage.xyz/v1/public/chain.json"} />
           <SettledStrip />
           <FunnelPanel />
         </section>

@@ -61,6 +61,20 @@ async function sha256Hex(value: unknown): Promise<string> {
   return Buffer.from(new Uint8Array(digest)).toString("hex");
 }
 
+/** The explicit first-link marker. Same literal the issuer writes (`RECEIPT_CHAIN_GENESIS`). */
+export const CHAIN_GENESIS = "genesis";
+
+const CHAIN_HASH = /^[0-9a-f]{64}$/;
+
+/**
+ * The id a receipt has inside a hash chain: SHA-256 over its canonical signed payload, any
+ * signature fields excluded. Matches `receiptDigest` in `apps/hosted/src/receipt.ts`; a test
+ * pins the two together so the issuer and verifier cannot drift.
+ */
+export async function receiptChainId(receipt: ReceiptLike): Promise<string> {
+  return sha256Hex(receiptPayload(receipt));
+}
+
 /** Minimal JWK shape: the fields Web Crypto reads, no lib.dom dependency. */
 type JsonWebKeyLike = { kty: string; crv?: string; x?: string; y?: string; n?: string; e?: string };
 
@@ -85,6 +99,11 @@ export interface ReceiptLike {
   expires_at?: string;
   /** The payment terms this verdict was issued for, from v2 onward. */
   payment?: { scheme?: string; network?: string; asset?: string; amount?: string; payee?: string };
+  /**
+   * Chain link (#171): the digest of the previous receipt from this issuer, or `"genesis"`.
+   * Absent means the receipt predates chaining, or its issuer had no stored chain head.
+   */
+  prev?: string;
   service?: { name?: string; version?: string };
   verdict?: { decision?: string; reasons?: string[]; summary?: string };
   request_sha256?: string;
@@ -199,6 +218,66 @@ function base64UrlToBuffer(value: string): Buffer {
 }
 
 /**
+ * Resolve the verifying key, from the caller or the published document. Extracted from
+ * `verifyReceipt` so a chain resolves each key id once instead of once per receipt.
+ */
+async function resolveKey(
+  receipt: ReceiptLike,
+  options: VerifyOptions,
+): Promise<{ jwk: JwkLike } | { error: VerifyVerdict }> {
+  const url = options.keyUrl ?? DEFAULT_KEY_URL;
+  const fetchImpl = options.fetchImpl ?? fetch;
+  try {
+    const res = await fetchImpl(url);
+    if (!res.ok) {
+      return { error: { ok: false, status: "unverifiable", reason: `key endpoint returned ${res.status}` } };
+    }
+    // Two shapes: a JWKS (`{ keys: [...] }`, each with a `kid`) or the original single key (`{ jwk }`). The set is
+    // what makes rotation additive — without it, publishing a new key silently invalidates every receipt signed by
+    // the old one. Selection is by the `key_id` the receipt already carries, and a set that does not contain it is
+    // `unverifiable` rather than a guess at which key was meant.
+    const body = (await res.json()) as {
+      configured?: boolean;
+      jwk?: JwkLike;
+      keys?: Array<JwkLike & { kid?: string }>;
+    };
+    const keys = body.keys ?? [];
+    if (keys.length > 0) {
+      const wanted = receipt.key_id;
+      const match = wanted === undefined ? keys[0] : keys.find((k) => k.kid === wanted);
+      if (match === undefined) {
+        return {
+          error: {
+            ok: false,
+            status: "unverifiable",
+            reason: `the published key set has no key with kid ${String(wanted)} — the receipt names a key this issuer does not publish`,
+          },
+        };
+      }
+      return { jwk: match };
+    }
+    if (body.configured !== true || body.jwk === undefined) {
+      return {
+        error: {
+          ok: false,
+          status: "unverifiable",
+          reason: "issuer has not published a signing key, so nothing can be checked",
+        },
+      };
+    }
+    return { jwk: body.jwk };
+  } catch (error) {
+    return {
+      error: {
+        ok: false,
+        status: "unverifiable",
+        reason: `could not fetch the key: ${error instanceof Error ? error.message : String(error)}`,
+      },
+    };
+  }
+}
+
+/**
  * Check a receipt. Returns a verdict rather than throwing, because "I could not check
  * this" is a distinct and important outcome from "this is forged".
  */
@@ -267,50 +346,9 @@ export async function verifyReceipt(
 
   let jwk = options.jwk;
   if (jwk === undefined) {
-    const url = options.keyUrl ?? DEFAULT_KEY_URL;
-    const fetchImpl = options.fetchImpl ?? fetch;
-    try {
-      const res = await fetchImpl(url);
-      if (!res.ok) {
-        return { ok: false, status: "unverifiable", reason: `key endpoint returned ${res.status}` };
-      }
-      // Two shapes: a JWKS (`{ keys: [...] }`, each with a `kid`) or the original single key (`{ jwk }`). The set is
-      // what makes rotation additive — without it, publishing a new key silently invalidates every receipt signed by
-      // the old one. Selection is by the `key_id` the receipt already carries, and a set that does not contain it is
-      // `unverifiable` rather than a guess at which key was meant.
-      const body = (await res.json()) as {
-        configured?: boolean;
-        jwk?: JwkLike;
-        keys?: Array<JwkLike & { kid?: string }>;
-      };
-      const keys = body.keys ?? [];
-      if (keys.length > 0) {
-        const wanted = receipt.key_id;
-        const match = wanted === undefined ? keys[0] : keys.find((k) => k.kid === wanted);
-        if (match === undefined) {
-          return {
-            ok: false,
-            status: "unverifiable",
-            reason: `the published key set has no key with kid ${String(wanted)} — the receipt names a key this issuer does not publish`,
-          };
-        }
-        jwk = match;
-      } else if (body.configured !== true || body.jwk === undefined) {
-        return {
-          ok: false,
-          status: "unverifiable",
-          reason: "issuer has not published a signing key, so nothing can be checked",
-        };
-      } else {
-        jwk = body.jwk;
-      }
-    } catch (error) {
-      return {
-        ok: false,
-        status: "unverifiable",
-        reason: `could not fetch the key: ${error instanceof Error ? error.message : String(error)}`,
-      };
-    }
+    const found = await resolveKey(receipt, options);
+    if ("error" in found) return found.error;
+    jwk = found.jwk;
   }
 
   const data = new TextEncoder().encode(canonicalize(receiptPayload(receipt)));
@@ -464,4 +502,217 @@ export async function verifyReceipt(
       reason: `could not verify: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
+}
+
+/** One receipt's position and content id inside a chain verdict. */
+export interface ChainReceiptRef {
+  index: number;
+  /** SHA-256 of the canonical signed payload — the value the next receipt's `prev` names. */
+  id: string;
+  issued_at?: string;
+  key_id?: string;
+}
+
+/**
+ * The result of walking a list of receipts.
+ *
+ * Status strings are new and separate from `VerifyVerdict`: `verifyReceipt` keeps returning
+ * exactly the same values for a single receipt. "The chain has a gap" is not "this receipt is
+ * forged", and collapsing them would repeat the mistake the single-receipt vocabulary avoids.
+ */
+export type ChainVerdict =
+  | {
+      ok: true;
+      status: "chain-valid";
+      count: number;
+      head: "genesis" | "pre-chain";
+      /** False for a pre-chain head: the chain cannot prove what came before it. */
+      anchored: boolean;
+      receipts: ChainReceiptRef[];
+      note: string;
+    }
+  | {
+      ok: false;
+      status: "chain-gap";
+      reason: string;
+      /** Index of the first receipt that does not extend the one at `index - 1`. */
+      index: number;
+      /** The receipt before the gap, or null when the gap is at the head. */
+      previous: ChainReceiptRef | null;
+      /** The receipt after the gap — the one whose `prev` did not match. */
+      next: ChainReceiptRef;
+      /** What the link should have been: the previous receipt id, or `genesis` at the head. */
+      expected_prev: string;
+      /** What the receipt actually claims. */
+      actual_prev: string | null;
+      /** The id of the receipt that is missing, when the claim names a real digest. */
+      missing_receipt_id?: string;
+      note: string;
+    }
+  | {
+      ok: false;
+      status: "chain-invalid";
+      reason: string;
+      index: number;
+      receipt: ChainReceiptRef;
+      receipt_verdict: VerifyVerdict;
+    }
+  | { ok: false; status: "chain-empty"; reason: string };
+
+const CHAIN_LIMIT_NOTE =
+  "A hash chain proves no interior receipt was removed from this list. It cannot, by itself, prove the first or last entry is the real start or end of the issuer's history: that needs the head or tail committed somewhere outside the list.";
+
+/**
+ * Walk a list of receipts and report the first break.
+ *
+ * - Every receipt is verified individually first, with the same verifier a single receipt uses.
+ * - The first receipt must be `prev: "genesis"` or pre-chain (no `prev`). A first receipt that
+ *   names a hash is a gap at index 0: the receipt it extends is not in the list.
+ * - Each later receipt must name the previous receipt's id. A missing `prev` mid-list is a gap,
+ *   not "pre-chain" — the receipt sits after another one and cannot be shown to extend it.
+ * - A receipt whose `prev` was edited after signing fails its signature and is `chain-invalid`
+ *   at that index; a correctly signed receipt that names the wrong predecessor is a `chain-gap`.
+ */
+export async function verifyReceiptChain(
+  receipts: ReceiptLike[],
+  options: VerifyOptions = {},
+): Promise<ChainVerdict> {
+  if (!Array.isArray(receipts) || receipts.length === 0) {
+    return { ok: false, status: "chain-empty", reason: "no receipts to walk — the chain is empty" };
+  }
+
+  const refs: ChainReceiptRef[] = [];
+  const keyCache = new Map<string, JwkLike>();
+
+  for (let index = 0; index < receipts.length; index += 1) {
+    const receipt = receipts[index];
+    if (receipt === null || typeof receipt !== "object" || Array.isArray(receipt)) {
+      const ref: ChainReceiptRef = { index, id: "(unreadable)" };
+      return {
+        ok: false,
+        status: "chain-invalid",
+        reason: `receipt at index ${index} is not an object`,
+        index,
+        receipt: ref,
+        receipt_verdict: { ok: false, status: "invalid", reason: "receipt is not an object" },
+      };
+    }
+
+    const id = await receiptChainId(receipt);
+    const ref: ChainReceiptRef = {
+      index,
+      id,
+      ...(receipt.issued_at === undefined ? {} : { issued_at: receipt.issued_at }),
+      ...(receipt.key_id === undefined ? {} : { key_id: receipt.key_id }),
+    };
+
+    // Resolve each key id once. A rotated key must still select by `key_id`, so the cache is
+    // keyed by it rather than by "the one key".
+    let jwk = options.jwk;
+    if (jwk === undefined) {
+      const cacheKey = receipt.key_id ?? "";
+      const cached = keyCache.get(cacheKey);
+      if (cached !== undefined) {
+        jwk = cached;
+      } else {
+        const found = await resolveKey(receipt, options);
+        if ("error" in found) {
+          const keyError = found.error;
+          return {
+            ok: false,
+            status: "chain-invalid",
+            reason: `could not verify receipt at index ${index}: ${keyError.ok ? "key unavailable" : keyError.reason}`,
+            index,
+            receipt: ref,
+            receipt_verdict: keyError,
+          };
+        }
+        jwk = found.jwk;
+        keyCache.set(cacheKey, jwk);
+      }
+    }
+
+    const verdict = await verifyReceipt(receipt, { ...options, jwk });
+    if (!verdict.ok) {
+      return {
+        ok: false,
+        status: "chain-invalid",
+        reason: `receipt at index ${index} is not a valid receipt: ${verdict.reason}`,
+        index,
+        receipt: ref,
+        receipt_verdict: verdict,
+      };
+    }
+    refs.push(ref);
+
+    const prev = typeof receipt.prev === "string" ? receipt.prev : undefined;
+
+    if (index === 0) {
+      if (prev !== undefined && prev !== CHAIN_GENESIS) {
+        const malformed = !CHAIN_HASH.test(prev);
+        return {
+          ok: false,
+          status: "chain-gap",
+          reason: malformed
+            ? `receipt at index 0 has a malformed prev (${JSON.stringify(prev)}); expected "genesis" or a 64-hex digest`
+            : `chain does not start at genesis: receipt 0 extends ${prev}, so at least one earlier receipt is missing from this list`,
+          index: 0,
+          previous: null,
+          next: ref,
+          expected_prev: CHAIN_GENESIS,
+          actual_prev: prev,
+          ...(malformed ? {} : { missing_receipt_id: prev }),
+          note: CHAIN_LIMIT_NOTE,
+        };
+      }
+      continue;
+    }
+
+    const previous = refs[index - 1];
+    if (prev === undefined) {
+      return {
+        ok: false,
+        status: "chain-gap",
+        reason: `receipt at index ${index} has no prev, so it cannot be shown to extend the receipt at index ${index - 1} — it is a pre-chain receipt inside a chain`,
+        index,
+        previous,
+        next: ref,
+        expected_prev: previous.id,
+        actual_prev: null,
+        missing_receipt_id: previous.id,
+        note: CHAIN_LIMIT_NOTE,
+      };
+    }
+    if (prev !== previous.id) {
+      return {
+        ok: false,
+        status: "chain-gap",
+        reason: `receipt at index ${index} does not extend the receipt at index ${index - 1}: expected prev ${previous.id}, got ${prev}`,
+        index,
+        previous,
+        next: ref,
+        expected_prev: previous.id,
+        actual_prev: prev,
+        ...(CHAIN_HASH.test(prev) ? { missing_receipt_id: prev } : {}),
+        note: CHAIN_LIMIT_NOTE,
+      };
+    }
+  }
+
+  const head = refs[0].id;
+  const first = receipts[0];
+  const firstPrev = typeof first.prev === "string" ? first.prev : undefined;
+  const headKind: "genesis" | "pre-chain" = firstPrev === CHAIN_GENESIS ? "genesis" : "pre-chain";
+  return {
+    ok: true,
+    status: "chain-valid",
+    count: refs.length,
+    head: headKind,
+    anchored: firstPrev === CHAIN_GENESIS,
+    receipts: refs,
+    note:
+      headKind === "pre-chain"
+        ? `The first receipt is pre-chain (no prev), so this chain proves links from ${head} forward but not that it is the issuer's first receipt. ${CHAIN_LIMIT_NOTE}`
+        : CHAIN_LIMIT_NOTE,
+  };
 }

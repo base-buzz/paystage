@@ -41,8 +41,8 @@
     }
   },
   "dependencies": {
-    "@paystage/preflight": "^0.5.2",
-    "@paystage/policy": "0.3.0"
+    "@paystage/preflight": "^0.5.3",
+    "@paystage/policy": "0.3.1"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

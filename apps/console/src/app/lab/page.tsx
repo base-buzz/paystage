@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "../landing.css";
+import { MarketDemandPanel } from "@/components/MarketDemandPanel";
+import { buildDemandView, type MarketDemandRow, type MarketSupplyRow, type ReadResult } from "@/lib/market-demand";
 import { selectRowsStrict } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +63,24 @@ function headlineFor(probe: string, row: ProbeRow): string {
   const summary = (row.summary ?? {}) as Record<string, unknown>;
   if (probe === "outreach" && summary.controls_ok !== true) return "controls failed — no figure";
   return row.headline ?? "—";
+}
+
+/**
+ * The discovery ratio over channels that can actually answer.
+ *
+ * The MCP Registry's search matches server *names*, so every phrase query there returns zero rows for every publisher — a
+ * channel failure, not a loss. Counting those six rows in the ratio made a 5-of-6 result read as 5-of-12 on the page and in
+ * the trend line, which is the same "number nobody can trust" problem the coverage line was added to fix. This reduces over
+ * `answered !== false` channels only and returns null when the summary carries no per-channel breakdown.
+ */
+function comparableRatio(summary: Record<string, unknown> | undefined): { present: number; measured: number } | null {
+  const by = (summary?.by_channel ?? null) as Record<string, { answered?: boolean; present?: number; measured?: number; planned?: number }> | null;
+  if (!by) return null;
+  const answerable = Object.values(by).filter((c) => c.answered !== false);
+  if (answerable.length === 0) return null;
+  const present = answerable.reduce((n, c) => n + (c.present ?? 0), 0);
+  const measured = answerable.reduce((n, c) => n + (c.measured ?? c.planned ?? 0), 0);
+  return measured > 0 ? { present, measured } : null;
 }
 
 /** "4/12" → 0.333. Null when the headline is not a ratio, so a non-numeric probe simply has no series. */
@@ -203,7 +223,7 @@ function Panel({ children, tone = "neutral" }: { children: React.ReactNode; tone
  * Two reads, not one, because they come from different sources and fail independently — a day can have a catalogue with no on-chain window, or the reverse, and the page must be able to
  * say which half is missing rather than drawing a zero.
  */
-interface MarketSupplyRow {
+interface SupplySnapshotRow {
   run_date: string;
   resources: number;
   accepts: number;
@@ -214,28 +234,9 @@ interface MarketSupplyRow {
   networks: Record<string, number>;
 }
 
-interface MarketDemandRow {
-  run_date: string;
-  window_blocks: number;
-  chain_usdc_transfers: number;
-  payee_transfers: number;
-  payee_transfers_value_usdc: number | null;
-  distinct_payees_paid: number;
-  distinct_payers: number;
-  repeat_payers: number;
-  payees_listed: number;
-  sampled_payees: number;
-  size_p50_usdc: number | null;
-  size_p90_usdc: number | null;
-  method: string;
-  control_topic_filter: boolean | null;
-  payers: Array<{ transfers: number; transfers_per_hour: number; span_hours: number; value_usdc: number; class: string }> | null;
-  likely_test_payers: number | null;
-}
-
 async function readMarket<T>(table: "market_supply" | "market_demand"): Promise<{ row: T | null; reason: string | null }> {
   const result = await selectRowsStrict<T>(table, "select=*&order=run_date.desc&limit=1");
-  if (!result.ok) return { row: null, reason: REASON_TEXT[result.reason] ?? "unreadable" };
+  if (!result.ok) return { row: null, reason: marketReason(table, result.reason) };
   return { row: result.rows[0] ?? null, reason: null };
 }
 
@@ -253,6 +254,17 @@ const REASON_TEXT: Record<string, string> = {
   forbidden: "The service key was refused for this table (401/403). The rows exist; this environment cannot read them.",
   unreachable: "The database could not be reached. No conclusion about the probes can be drawn from this page right now.",
 };
+
+/**
+ * The probe wording names `probe_runs`; the market tables have the same RLS shape but a different name, and a reason
+ * that names the wrong table is a small lie in the one place the page is explaining why it cannot show a number.
+ */
+function marketReason(table: "market_supply" | "market_demand", reason: string): string {
+  if (reason === "no_service_key") {
+    return `SUPABASE_SERVICE_ROLE_KEY is not set. ${table} has RLS on with no policy, so reading with the anon key returns zero rows — which would render as "no row" and be wrong.`;
+  }
+  return REASON_TEXT[reason] ?? "unreadable";
+}
 
 export default async function LabPage() {
   const data = await Promise.all(
@@ -272,7 +284,37 @@ export default async function LabPage() {
     }),
   );
 
-  const [supplyMarket, demandMarket] = await Promise.all([readMarket<MarketSupplyRow>("market_supply"), readMarket<MarketDemandRow>("market_demand")]);
+  const [supplyMarket, demandMarket] = await Promise.all([readMarket<SupplySnapshotRow>("market_supply"), readMarket<MarketDemandRow>("market_demand")]);
+
+  /**
+   * Coverage's denominator is the catalogue's payee count for the demand row's *own* date.
+   *
+   * Reading the latest catalogue row instead would put two different days in one ratio on the morning the demand
+   * worker runs before the catalogue worker. If that day's catalogue row is missing the panel says coverage has no
+   * denominator; it never borrows yesterday's.
+   */
+  let supplyForDemand: ReadResult<MarketSupplyRow> = { ok: true, rows: [] };
+  if (demandMarket.row) {
+    const catalogueForDate = await selectRowsStrict<MarketSupplyRow>(
+      "market_supply",
+      `select=run_date,payees&run_date=eq.${demandMarket.row.run_date}&limit=1`,
+    );
+    supplyForDemand = catalogueForDate.ok
+      ? { ok: true, rows: catalogueForDate.rows }
+      : { ok: false, reason: marketReason("market_supply", catalogueForDate.reason) };
+  }
+
+  const demandView = buildDemandView(
+    {
+      demand: demandMarket.row
+        ? { ok: true, rows: [demandMarket.row] }
+        : demandMarket.reason
+          ? { ok: false, reason: demandMarket.reason }
+          : { ok: true, rows: [] },
+      supply: supplyForDemand,
+    },
+    Date.now(),
+  );
 
   const today = new Date().toISOString().slice(0, 10);
   const measured = data.filter((p) => p.series.length > 0);
@@ -352,10 +394,10 @@ export default async function LabPage() {
         ) : null}
       </section>
 
-      {/* ---- the market: supply and demand, from their own tables ---- */}
+      {/* ---- supply: what sellers advertise ---- */}
       <section style={{ marginTop: 28, padding: 18, borderRadius: 12, border: "1px solid var(--lp-line, #6b7280)" }}>
         <h2 style={{ fontSize: 15, margin: 0, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.65 }}>
-          What sellers advertise, and what they are paid
+          What sellers advertise
         </h2>
 
         {supplyMarket.row ? (
@@ -375,54 +417,17 @@ export default async function LabPage() {
           </p>
         ) : (
           <p style={{ marginTop: 12, fontSize: 14, opacity: 0.8 }}>
-            No catalogue reading stored{supplyMarket.reason ? ` — ${supplyMarket.reason}` : ""}. Half the market picture is missing; the demand block below is unaffected.
+            No catalogue reading stored{supplyMarket.reason ? ` — ${supplyMarket.reason}` : ""}. Half the market picture is missing; the demand panel below is unaffected.
           </p>
         )}
+      </section>
 
-        {demandMarket.row ? (
-          <>
-            <p style={{ marginTop: 10, fontSize: 14, lineHeight: 1.6 }}>
-              In a <strong>{Number(demandMarket.row.window_blocks).toLocaleString("en-US")}</strong>-block window, Base carried{" "}
-              <strong>{Number(demandMarket.row.chain_usdc_transfers).toLocaleString("en-US")}</strong> USDC transfers in total. Of the{" "}
-              {Number(demandMarket.row.sampled_payees).toLocaleString("en-US")} busiest listed payees we watch,{" "}
-              <strong>{Number(demandMarket.row.distinct_payees_paid).toLocaleString("en-US")}</strong> received anything:{" "}
-              {Number(demandMarket.row.payee_transfers).toLocaleString("en-US")} transfer(s),{" "}
-              {Number(demandMarket.row.payee_transfers_value_usdc ?? 0).toLocaleString("en-US")} USDC, from{" "}
-              {Number(demandMarket.row.distinct_payers).toLocaleString("en-US")} payer(s)
-              {demandMarket.row.size_p50_usdc !== null ? ` · median ${Number(demandMarket.row.size_p50_usdc).toLocaleString("en-US")} USDC` : ""}
-              . Read {demandMarket.row.run_date}.
-            </p>
-            <p style={{ marginTop: 6, fontSize: 13, opacity: 0.8, fontStyle: "italic" }}>
-              {/* The method travels with the number, always: without it the count reads as revenue. */}
-              {demandMarket.row.method}.
-            </p>
-            {/*
-              A transfer count is not demand. Three wallets each spending the identical total in half an hour, and one paying every thirty-odd seconds for five hours, are a budget spend-down
-              and a loop — so the split is printed before anyone can read the number as adoption.
-            */}
-            {demandMarket.row.likely_test_payers !== null && demandMarket.row.likely_test_payers > 0 ? (
-              <p style={{ marginTop: 6, fontSize: 13 }}>
-                <strong>{demandMarket.row.likely_test_payers}</strong> of {demandMarket.row.distinct_payers} payer(s) look automated: more than ten transfers an hour, or a hundred or more
-                into one payee. <em>Likely-test</em> is not proof of a demo, and an unclassified payer is not proof of a customer.
-              </p>
-            ) : null}
-            {demandMarket.row.control_topic_filter === false ? (
-              <p style={{ marginTop: 6, fontSize: 13, color: "var(--lp-amber, #b45309)" }}>
-                The address filter could not find the busiest recipient in its own window, so this row&apos;s zero means &quot;the query is broken&quot;, not &quot;nobody paid&quot;. Do not read it
-                as demand.
-              </p>
-            ) : null}
-            <p style={{ marginTop: 6, fontSize: 12, opacity: 0.6 }}>
-              Chain-wide transfers are measured in the same window and stored in the same row, which is what makes a zero distinguishable from a failed query
-              {demandMarket.row.control_topic_filter === true ? " — and the filter found the window's busiest recipient, so this zero would be real" : ""}. Batched and channel settlement are
-              not visible to this method.
-            </p>
-          </>
-        ) : (
-          <p style={{ marginTop: 10, fontSize: 14, opacity: 0.8 }}>
-            No demand window stored{demandMarket.reason ? ` — ${demandMarket.reason}` : ""}. The catalogue reading above is unaffected.
-          </p>
-        )}
+      {/* ---- demand: what listed sellers are actually paid ---- */}
+      <section style={{ marginTop: 28, padding: 18, borderRadius: 12, border: "1px solid var(--lp-line, #6b7280)" }}>
+        <h2 style={{ fontSize: 15, margin: 0, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.65 }}>
+          What sellers receive, measured daily
+        </h2>
+        <MarketDemandPanel view={demandView} />
       </section>
 
       {/* ---- per probe ---- */}
@@ -431,6 +436,8 @@ export default async function LabPage() {
         const summary = (latestRow?.summary ?? {}) as Record<string, unknown>;
         const queries = Array.isArray(summary.queries) ? (summary.queries as Array<Record<string, unknown>>) : null;
         const agents = Array.isArray(summary.agentsDetail) ? (summary.agentsDetail as Array<Record<string, unknown>>) : null;
+        /** Per-channel answer state, needed by the table as well as the ratio note below it. */
+        const by = (summary.by_channel ?? {}) as Record<string, { answered?: boolean; present?: number; measured?: number; planned?: number }>;
 
         return (
           <section key={p.id} style={{ marginTop: 44 }}>
@@ -449,11 +456,26 @@ export default async function LabPage() {
               </Panel>
             ) : (
               <>
-                <Sparkline series={p.series} higherIsBetter={p.higherIsBetter} />
+                <Sparkline
+                  series={
+                    p.id === "discovery"
+                      ? p.series.map((point) => {
+                          const comparable = comparableRatio(point.summary);
+                          return comparable ? { ...point, value: comparable.present / comparable.measured } : point;
+                        })
+                      : p.series
+                  }
+                  higherIsBetter={p.higherIsBetter}
+                />
 
                 {latestRow ? (
                   <p style={{ marginTop: 10, fontSize: 15 }}>
-                    <strong>{headlineFor(p.id, latestRow)}</strong>{" "}
+                    <strong>
+                      {(() => {
+                        const comparable = p.id === "discovery" ? comparableRatio(latestRow.summary as Record<string, unknown>) : null;
+                        return comparable ? `${comparable.present} of ${comparable.measured} answerable queries` : headlineFor(p.id, latestRow);
+                      })()}
+                    </strong>{" "}
                     <span style={{ opacity: 0.6, fontSize: 13 }}>
                       latest run {latestRow.run_at.slice(0, 10)} · {p.rows.length} run(s) stored
                     </span>
@@ -468,7 +490,6 @@ export default async function LabPage() {
                     changes the ratio, so it is printed beside it.
                     {(() => {
                       // A channel that cannot answer a phrase query is not a channel we lost on — say so where the ratio is read.
-                      const by = summary.by_channel as Record<string, { answered?: boolean; present?: number; planned?: number; measured?: number }> | undefined;
                       const npm = by?.npm;
                       const silent = Object.entries(by ?? {}).filter(([id, c]) => id !== "npm" && c.answered === false);
                       if (!npm || silent.length === 0) return null;
@@ -502,15 +523,33 @@ export default async function LabPage() {
                         >
                           <td style={{ padding: "6px 8px", opacity: 0.75 }}>{String(q.channel)}</td>
                           <td style={{ padding: "6px 8px" }}>{String(q.query)}</td>
-                          <td
-                            style={{
-                              padding: "6px 8px",
-                              color: q.present ? "var(--lp-mint, #047857)" : "var(--lp-red, #b91c1c)",
-                            }}
-                          >
-                            {q.present ? "yes" : "no"}
-                          </td>
-                          <td style={{ padding: "6px 8px", opacity: 0.75 }}>{q.rank === null ? "\u2014" : String(q.rank)}</td>
+                          {(() => {
+                            /**
+                             * A channel whose search cannot answer a phrase query returns zero rows for every publisher. Painting
+                             * that row the same red as a real loss made six "cannot answer"s read as six misses.
+                             */
+                            const channel = by[String(q.channel)];
+                            const cannotMatch = channel !== undefined && channel.answered === false;
+                            return (
+                              <>
+                                <td
+                                  style={{
+                                    padding: "6px 8px",
+                                    color: cannotMatch
+                                      ? "var(--lp-dim, #6b7280)"
+                                      : q.present
+                                        ? "var(--lp-mint, #047857)"
+                                        : "var(--lp-red, #b91c1c)",
+                                  }}
+                                >
+                                  {cannotMatch ? "cannot match" : q.present ? "yes" : "no"}
+                                </td>
+                                <td style={{ padding: "6px 8px", opacity: 0.75 }}>
+                                  {cannotMatch ? "n/a" : q.rank === null ? "\u2014" : String(q.rank)}
+                                </td>
+                              </>
+                            );
+                          })()}
                         </tr>
                       ))}
                     </tbody>

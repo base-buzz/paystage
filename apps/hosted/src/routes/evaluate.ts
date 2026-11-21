@@ -2,9 +2,12 @@ import { Hono } from "hono";
 import { PROBLEMS } from "../problem.js";
 import { buildReceipt } from "../receipt.js";
 import {
+  buildEvidenceBundle,
   evaluatePayment,
   normalizePaymentRequired,
+  buildReviewPacket,
 } from "@paystage/preflight";
+import { BUNDLE_STORE_VAR, type BundleStore } from "../bundle-store.js";
 import { parsePolicyCached } from "../policy-cache.js";
 import { checkAddressRisk } from "../address-risk.js";
 import { checkHostReputation, youngestSignal, YOUNG_DOMAIN_DAYS } from "../host-reputation.js";
@@ -15,7 +18,7 @@ import {
   resolveRpcUrl,
 } from "@paystage/auth-watch";
 
-export const evaluateRoutes = new Hono();
+export const evaluateRoutes = new Hono<{ Variables: { bundleStore: BundleStore | undefined } }>();
 
 evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
   let body: unknown;
@@ -37,7 +40,11 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
     // Without this the hosted API could not reach per-agent budgets at all: the policy
     // declares them, the packages enforce them, and the endpoint silently judged every
     // caller against the loosest rules in the file.
+    // Capture the clock explicitly: a time-window verdict is only recomputable if the
+    // bundle records the hour the evaluator saw.
+    const evaluatedAt = new Date();
     const decision = evaluatePayment(normalized, policy, {
+      now: evaluatedAt,
       ...(typeof b.agent_id === "string" ? { agentId: b.agent_id } : {}),
     });
 
@@ -106,6 +113,23 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
         ];
       }
     }
+    // A review that the hosted-only network checks produced is still a review,
+    // and still owes the human the same case. The evaluator's own verdict was
+    // `pay`, so it could not build this packet; build it from the same helper so
+    // the shape and the rule string cannot drift from the local one.
+    if (decision.decision === "review" && decision.packet === undefined && decision.selectedAccept) {
+      decision.packet = buildReviewPacket(
+        policy,
+        decision.selectedAccept,
+        normalized.resource,
+        decision.reasons[0] ?? "review",
+        {
+          networkChecks: true,
+          allRulesRan: true,
+          checked: ["seller reputation and address-risk feed: checked by the hosted API"],
+        },
+      );
+    }
     // Additive: the receipt binds the verdict to these exact inputs. It never
     // changes the decision, and degrades to signed:false when no key is set.
     // Bind the receipt to the payment it is about, so a verifier holding both can tell whether the decision
@@ -133,7 +157,70 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
       // than advertising a placeholder version as provenance.
       serviceVersion: (c.env as { PAYSTAGE_SERVICE_VERSION?: string } | undefined)?.PAYSTAGE_SERVICE_VERSION,
     });
-    return c.json({ ...decision, receipt });
+    /**
+     * The record of this decision, built from the evaluator's own transcript. Storage is
+     * best-effort: a verdict must never be withheld because accounting failed, but the
+     * response says `bundle_stored: false` rather than letting the caller assume a GET
+     * will find it.
+     */
+    let bundleId: string | undefined;
+    let bundleStored = false;
+    let bundleError: string | undefined;
+    try {
+      const bundle = await buildEvidenceBundle(
+        {
+          payment_required: normalized,
+          policy,
+          options: {
+            now: evaluatedAt,
+            ...(typeof b.agent_id === "string" ? { agent_id: b.agent_id } : {}),
+          },
+          receipt,
+        },
+        decision,
+      );
+      bundleId = bundle.bundle_id;
+      const store = c.get(BUNDLE_STORE_VAR);
+      if (store !== undefined) {
+        try {
+          await store.put({
+            id: bundle.bundle_id,
+            decision: decision.decision,
+            events: bundle.events_jsonl,
+            proof: bundle.proof,
+            receipt: bundle.receipt ?? null,
+            summary: bundle.summary_md,
+          });
+          bundleStored = true;
+        } catch (storageError) {
+          bundleError = storageError instanceof Error ? storageError.message : String(storageError);
+          console.log(
+            JSON.stringify({
+              level: "error",
+              msg: "evidence_bundle_write_failed",
+              error: bundleError,
+            }),
+          );
+        }
+      }
+    } catch (bundleBuildError) {
+      bundleError = bundleBuildError instanceof Error ? bundleBuildError.message : String(bundleBuildError);
+      console.log(
+        JSON.stringify({
+          level: "error",
+          msg: "evidence_bundle_build_failed",
+          error: bundleError,
+        }),
+      );
+    }
+
+    return c.json({
+      ...decision,
+      receipt,
+      ...(bundleId !== undefined ? { bundle_id: bundleId } : {}),
+      bundle_stored: bundleStored,
+      ...(bundleError !== undefined ? { bundle_error: bundleError } : {}),
+    });
   } catch (err) {
     return c.json(
       PROBLEMS.evaluationFailed((err as Error).message),

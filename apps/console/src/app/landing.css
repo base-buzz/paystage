@@ -2302,3 +2302,34 @@ html[data-theme="light"] .lp-aurora span,
   color: var(--lp-faint);
   margin-top: 6px;
 }
+
+/* Backlog page (unlisted at /backlog). A queue, not a marketing list: one entry per row, the claim in text colour
+   and the reasoning dimmed, so a reader can scan 68 open entries without the summaries competing with the titles. */
+.lp-backlog {
+  list-style: none;
+  margin: 0 0 28px;
+  padding-left: 0;
+}
+
+.lp-backlog > li {
+  margin: 0 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--lp-line-soft);
+}
+
+.lp-backlog-title {
+  color: var(--lp-text);
+  font-weight: 600;
+}
+
+.lp-note {
+  color: var(--lp-dim);
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 6px 0 0;
+}
+
+.lp-note strong {
+  color: var(--lp-faint);
+  font-weight: 600;
+}

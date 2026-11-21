@@ -22,6 +22,45 @@ export const RECEIPT_VERSION = 1;
 export const RECEIPT_ALG = "ECDSA-P256-SHA256";
 export const RECEIPT_KEY_ID = "paystage-receipt-v1";
 
+/**
+ * The explicit first-link marker for a hash chain (#171).
+ *
+ * `prev` is either this string or the SHA-256, lowercase hex, of the previous receipt's signed
+ * payload for the same issuer. It is inside the payload and therefore inside the signature; a
+ * verifier that only has one receipt never needs to resolve it.
+ */
+export const RECEIPT_CHAIN_GENESIS = "genesis";
+
+const CHAIN_HASH = /^[0-9a-f]{64}$/;
+
+/** The fields added after signing; everything else is the signed payload. */
+const SIGNATURE_FIELDS = new Set(["signed", "alg", "key_id", "signature"]);
+
+/**
+ * The id of a receipt for chaining purposes: SHA-256 over its canonical signed payload.
+ *
+ * The signature is deliberately excluded: two receipts with the same payload are the same
+ * accounting event, and a receipt id must not depend on how the signature was encoded. The
+ * verifier computes the same value in `packages/mcp/src/verify.ts`; a parity test pins the two
+ * implementations together.
+ */
+export async function receiptDigest(receipt: ReceiptPayload | Receipt): Promise<string> {
+  const payload: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(receipt)) {
+    if (!SIGNATURE_FIELDS.has(key)) payload[key] = value;
+  }
+  return sha256Hex(payload);
+}
+
+function assertPrev(prev: string): string {
+  if (prev !== RECEIPT_CHAIN_GENESIS && !CHAIN_HASH.test(prev)) {
+    throw new Error(
+      `prev must be "${RECEIPT_CHAIN_GENESIS}" or a lowercase 64-hex receipt digest, got ${JSON.stringify(prev)}`,
+    );
+  }
+  return prev;
+}
+
 /** JSON with recursively sorted keys and no insignificant whitespace. */
 export function canonicalize(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
@@ -74,6 +113,12 @@ export interface ReceiptPayload {
   verdict: { decision: string; reasons: string[]; summary?: string };
   /** The payment terms this verdict was issued for. Absent on receipts issued before v2. */
   payment?: ReceiptPayment;
+  /**
+   * The chain link (#171): the SHA-256 of the previous receipt this issuer produced, or
+   * `"genesis"` for the first link. Absent on receipts issued before chaining existed, and on
+   * issuers with no chain head — the verifier treats either as "pre-chain", not invalid.
+   */
+  prev?: string;
   request_sha256: string;
   policy_sha256: string;
 }
@@ -102,6 +147,13 @@ export interface BuildReceiptInput {
    * always says `paystage-receipt-v1` cannot be selected from a key set, and a verifier has to guess.
    */
   keyId?: string;
+  /**
+   * The chain head this receipt extends (#171): the digest of the previous receipt this issuer
+   * produced, or `RECEIPT_CHAIN_GENESIS` for the first. Omitted means "not chained" — the
+   * hosted Worker has no per-issuer head it can read, so it must not guess one; a stateful
+   * issuer supplies the value from its stored head. See the note above `buildReceipt`.
+   */
+  prev?: string;
   now?: Date;
   serviceVersion?: string;
 }
@@ -131,6 +183,21 @@ async function signingKey(pkcs8B64: string): Promise<CryptoKey | undefined> {
  * Build a receipt for one decision. Signature failures degrade to an unsigned
  * receipt rather than failing the request: a verdict must never be withheld
  * because of an accounting problem.
+ *
+ * ## Chaining (#171)
+ *
+ * `prev` goes into the payload, so it is covered by the signature. The caller supplies it:
+ * - first receipt for this issuer: `RECEIPT_CHAIN_GENESIS`;
+ * - every receipt after: `await receiptDigest(previousReceipt)`.
+ *
+ * The per-issuer head is *not* stored here. A Cloudflare Worker isolate is not a safe place
+ * for a monotonic head — two isolates can issue concurrently and neither can prove which came
+ * first, and a database write per receipt would add a new dependency and a new failure mode to
+ * the decision path. So the default is honest: with no `prev`, the receipt is pre-chain
+ * (`prev` absent), and a chain verifier says it cannot prove that receipt extends anything.
+ * A single receipt still verifies exactly as before. A stateful issuer (one process, or a
+ * store with a real compare-and-swap head) passes `prev` explicitly; the hosted endpoint does
+ * not, so live receipts from it must not be presented as an ordered chain.
  */
 export async function buildReceipt(input: BuildReceiptInput): Promise<Receipt> {
   const issued = input.now ?? new Date();
@@ -143,6 +210,7 @@ export async function buildReceipt(input: BuildReceiptInput): Promise<Receipt> {
     issued_at: issued.toISOString(),
     ...(expires === undefined ? {} : { expires_at: expires }),
     ...(input.payment === undefined ? {} : { payment: input.payment }),
+    ...(input.prev === undefined ? {} : { prev: assertPrev(input.prev) }),
     service: { name: "@paystage/hosted", version: input.serviceVersion ?? "unknown" },
     verdict: {
       decision: input.decision.decision,

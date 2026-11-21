@@ -10,15 +10,19 @@ policy **before** your agent pays. Returns one of three verdicts: `pay`,
   MCP client can call it as a tool.
 - **Deterministic** — same input + same policy ⇒ same verdict.
 
-## Install
-
-Run directly with `npx` (no global install):
+## Try it offline (no keys, no spend)
 
 ```bash
-npx -y @paystage/preflight
+npx -y @paystage/preflight demo
 ```
 
-Or add it to your MCP client config.
+A bundled policy and bundled challenges, evaluated by the same `evaluatePayment`
+function. It prints each verdict and the rule that fired, then a five-line
+snippet for running it against your own policy. No network, no environment, no
+key, no signing.
+
+For the MCP server, use the `paystage-preflight-mcp` bin in your client config
+below; it needs the optional `@modelcontextprotocol/server` peer.
 
 ## Claude Desktop
 

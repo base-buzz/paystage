@@ -61,8 +61,8 @@
     "budget"
   ],
   "dependencies": {
-    "@paystage/policy": "0.3.0",
-    "@paystage/preflight": "0.5.2",
+    "@paystage/policy": "0.3.1",
+    "@paystage/preflight": "0.5.3",
     "@x402/extensions": "^2.29.0"
   },
   "peerDependencies": {

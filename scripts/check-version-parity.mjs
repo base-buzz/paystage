@@ -40,11 +40,19 @@ for (const dir of readdirSync(packagesDir, { withFileTypes: true })) {
         `${manifest.name}: server.json says ${server.version}, package.json says ${manifest.version} — bump both, or the registry entry describes a version nobody can install`,
       );
     }
-    // A server.json that names a package at a pinned version must pin the same one.
+    /**
+     * A server.json that names a package at a pinned version must pin the same one — and the schema puts that version in a **separate field**, not in the identifier.
+     *
+     * This read only `identifier` for an `@x.y.z` suffix, which our files never contain (`identifier: "@paystage/preflight"`, `version: "0.2.3"`), so `pinned` was always undefined and the
+     * check skipped every package. It reported "6 declaration(s) agree" while `packages/preflight/server.json` pinned 0.2.3 against a 0.5.3 manifest — correct by luck for mcp, stale for
+     * preflight since at least two releases. Found 2026-11-20 by a peer reading the file rather than the output.
+     */
     for (const pkg of server.packages ?? []) {
-      const pinned = /@(\d+\.\d+\.\d+)/.exec(String(pkg.identifier ?? ""))?.[1];
+      const fromField = typeof pkg.version === "string" ? pkg.version : undefined;
+      const fromIdentifier = /@(\d+\.\d+\.\d+)/.exec(String(pkg.identifier ?? ""))?.[1];
+      const pinned = fromField ?? fromIdentifier;
       if (pinned !== undefined && pinned !== manifest.version) {
-        problems.push(`${manifest.name}: server.json pins ${pkg.identifier}, package.json says ${manifest.version}`);
+        problems.push(`${manifest.name}: server.json pins ${pkg.identifier}@${pinned}, package.json says ${manifest.version}`);
       }
     }
   }

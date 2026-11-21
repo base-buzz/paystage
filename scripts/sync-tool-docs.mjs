@@ -62,6 +62,8 @@ const PACKAGE_ROLES = {
   "@paystage/x-evm": "chain-agnostic EVM helpers",
   "@paystage/n8n": "the gate as an n8n community node",
   "@paystage/eliza-plugin": "the gate as an elizaOS action",
+  "@paystage/receipt-verify": "verify a signed receipt without the server",
+  "@paystage/channel": "read-only x402 deposit-channel state",
 };
 
 /**

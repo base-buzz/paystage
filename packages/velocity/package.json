@@ -1,6 +1,6 @@
 {
   "name": "@paystage/velocity",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Rolling-window rate and spend-pattern checks for agent payments.",
   "keywords": [
     "paystage",
@@ -41,7 +41,7 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/server": "^2.4.0",
-    "@paystage/policy": "0.3.0",
+    "@paystage/policy": "0.3.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

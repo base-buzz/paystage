@@ -8,6 +8,8 @@
  * `package.json`.
  */
 import mcpPkg from "../../../../packages/mcp/package.json";
+import receiptVerifyPkg from "../../../../packages/receipt-verify/package.json";
+import channelPkg from "../../../../packages/channel/package.json";
 import authWatchPkg from "../../../../packages/auth-watch/package.json";
 import policyPkg from "../../../../packages/policy/package.json";
 import preflightPkg from "../../../../packages/preflight/package.json";
@@ -34,6 +36,8 @@ export const PACKAGE_VERSIONS: Record<string, string> = {
   "@paystage/ai-sdk": aiSdkPkg.version,
   "@paystage/n8n": n8nPkg.version,
   "@paystage/eliza-plugin": elizaPluginPkg.version,
+  "@paystage/receipt-verify": receiptVerifyPkg.version,
+  "@paystage/channel": channelPkg.version,
 };
 
 /**
@@ -265,6 +269,9 @@ export const PAYSTAGE_MANIFEST = {
     status: "/v1/public/status",
     chain: "/v1/public/chain.json",
     guard_verdict: "POST /v1/guard-verdict — turn a preflight verdict into a receipt-shaped response",
+    evidence_bundle: "GET /runs/:id — the events.jsonl, proof, receipt and summary.md for one decision",
+    payee_categories:
+      "GET /wallets/:address — stored observations about one payee with source and read date; no score or combined verdict",
   },
   not_advice: true,
 } as const;
