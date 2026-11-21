@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-11-21
+- `@paystage/preflight@0.5.4`: **republishes what 0.5.3 does not contain.** Two features landed after that tag — the review
+  packet (#302) and the per-run evidence bundle (#308) — so the tarball on npm was older than the repo, and `assert-artifact`
+  said so plainly: *"version 0.5.3 is already published but its dist/ differs from this commit"*. npm refuses a republish, and
+  the release would still have looked green, which is exactly the failure that check exists for. No behaviour change beyond
+  what 0.5.3 should have been.
+
 
 - `@paystage/receipt-verify@0.1.0` and `@paystage/channel@0.1.0`: **two new packages, published.** `receipt-verify` checks a
   signed receipt without installing the MCP server — "verify without trusting us" was an advertised promise that cost a
