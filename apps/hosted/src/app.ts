@@ -10,6 +10,8 @@ import { wellKnownRoutes } from "./routes/well-known.js";
 import { wellKnownMcpRoutes } from "./routes/well-known-mcp.js";
 import { guardVerdictRoutes } from "./routes/guard-verdict.js";
 import { openapiRoutes } from "./routes/openapi.js";
+import { createRunsRoutes } from "./routes/runs.js";
+import { BUNDLE_STORE_VAR, supabaseBundleStore, type BundleStore } from "./bundle-store.js";
 import { clientFromHeaders, recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { freeTierMiddleware } from "./free-tier.js";
 import { paidQuotaMiddleware, paidQuotaState } from "./paid-quota.js";
@@ -45,11 +47,14 @@ export interface AppEnv {
 /** Context variables set by middleware and read further down the stack. */
 type Variables = {
   paystageFree: boolean;
+  bundleStore: BundleStore | undefined;
 };
 
 export interface CreateAppOptions {
   facilitatorClient?: FacilitatorClient;
   protect?: boolean;
+  /** Test/deployment seam for evidence-bundle storage; defaults to the Supabase store. */
+  bundleStore?: BundleStore;
 }
 
 function nonEmpty(v: string | undefined): v is string {
@@ -169,6 +174,11 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   };
 
   const app = new Hono<{ Variables: Variables }>();
+  const bundleStore = opts.bundleStore ?? supabaseBundleStore(env);
+  app.use("*", async (c, next) => {
+    c.set(BUNDLE_STORE_VAR, bundleStore);
+    await next();
+  });
 
   // CORS must be first so preflight is answered before payment middleware.
   app.use(
@@ -319,6 +329,9 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   app.route("/", wellKnownMcpRoutes);
   app.route("/", guardVerdictRoutes);
   app.route("/", openapiRoutes);
+  // Public and read-only: checking a past decision is not a new payment.
+  const runsRoutes = createRunsRoutes(bundleStore);
+  app.route("/", runsRoutes);
 
   const protect = opts.protect ?? true;
   if (protect) {
@@ -398,7 +411,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   // Remote MCP endpoint. Mounted outside the payment gate on purpose: the gate protects the
   // *evaluation* service, and an MCP client that cannot complete an x402 handshake still
   // needs to discover tools. The evaluation itself runs with the caller's own policy.
-  const mcp = mcpHandler(env);
+  const mcp = mcpHandler(env, { bundleStore });
   app.all("/mcp", (c) => mcp.fetch(c.req.raw));
 
   return app;

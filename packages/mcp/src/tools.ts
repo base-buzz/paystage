@@ -3,7 +3,7 @@ import { McpServer, type ServerCapabilities } from "@modelcontextprotocol/server
 import { z } from "zod";
 import { parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
-import { evaluatePayment, normalizePaymentRequired } from "@paystage/preflight";
+import { buildEvidenceBundle, evaluatePayment, normalizePaymentRequired } from "@paystage/preflight";
 import type { EvaluateResult } from "@paystage/preflight";
 import { verifyReceipt, verifyReceiptChain } from "./verify.js";
 import {
@@ -140,6 +140,19 @@ export interface ToolDeps {
    * removes the network from the one path that is supposed to be an independent check.
    */
   resolveReceiptKey?: () => Promise<Record<string, unknown> | null>;
+  /**
+   * Store a bundle for a later `GET /runs/:id`. Optional: the stdio package has no server
+   * to serve it from, but the hosted endpoint passes the Supabase-backed store. Absence is
+   * reported as `bundle_stored: false`, never as a success.
+   */
+  persistBundle?: (bundle: {
+    id: string;
+    decision: string;
+    events: string;
+    proof: string;
+    receipt: string | null;
+    summary: string;
+  }) => Promise<void>;
 }
 
 export function registerAllTools(server: McpServer, deps: ToolDeps): void {
@@ -147,7 +160,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "evaluate_mcp_payment",
     {
       description:
-        "verify the recipient. Call this BEFORE signing any x402 payment. Verdict is pay | review | do_not_pay, each with stable reason codes (e.g. 'amount 1.00 USDC exceeds max_amount 0.05 USDC'). Fail-closed by design: do not invent authority — when policy, identity, cost or evidence is missing the answer is a refusal or a review, never a pay. A `review` verdict also carries a `packet` object with the amount and its share of the applicable cap, the payee, the rule that fired, the checks run and skipped, and the one decision being asked of the human; `pay` and `do_not_pay` do not. Returns the decision plus a signed receipt you can verify offline with verify_receipt. Read-only: holds no keys, never signs, never moves funds. A refusal costs nothing. This tool evaluates locally, so it makes no network calls and returns no seller reputation; the hosted HTTP API adds `seller_reputation` (domain and certificate age) because it can reach the network.",
+        "verify the recipient. Call this BEFORE signing any x402 payment. Verdict is pay | review | do_not_pay, each with stable reason codes (e.g. 'amount 1.00 USDC exceeds max_amount 0.05 USDC'). Fail-closed by design: do not invent authority — when policy, identity, cost or evidence is missing the answer is a refusal or a review, never a pay. A `review` verdict also carries a `packet` object with the amount and its share of the applicable cap, the payee, the rule that fired, the checks run and skipped, and the one decision being asked of the human; `pay` and `do_not_pay` do not. Returns the decision plus a signed receipt you can verify offline with verify_receipt, and a `bundle_id` naming the evidence bundle for this call (events, hashed inputs, receipt, summary). Read-only: holds no keys, never signs, never moves funds. A refusal costs nothing. This tool evaluates locally, so it makes no network calls and returns no seller reputation; the hosted HTTP API adds `seller_reputation` (domain and certificate age) because it can reach the network.",
       annotations: {
         title: "Evaluate an x402 payment (read-only, never signs)",
         readOnlyHint: true,
@@ -181,12 +194,61 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
       try {
         const policy = await deps.resolvePolicy(input);
         const pr = normalizePaymentRequired(input.payment_required);
+        const evaluatedAt = new Date();
         const result: EvaluateResult = evaluatePayment(pr, policy, {
+          now: evaluatedAt,
           ...(input.agent_id !== undefined ? { agentId: input.agent_id } : {}),
           ...(input.payment_identifier !== undefined ? { paymentIdentifier: input.payment_identifier } : {}),
         });
+        const bundle = await buildEvidenceBundle(
+          {
+            payment_required: pr,
+            policy,
+            options: {
+              now: evaluatedAt,
+              ...(input.agent_id !== undefined ? { agent_id: input.agent_id } : {}),
+              ...(input.payment_identifier !== undefined ? { payment_identifier: input.payment_identifier } : {}),
+            },
+          },
+          result,
+        );
+        let bundleStored = false;
+        if (deps.persistBundle) {
+          try {
+            await deps.persistBundle({
+              id: bundle.bundle_id,
+              decision: result.decision,
+              events: bundle.events_jsonl,
+              proof: bundle.proof,
+              receipt: bundle.receipt ?? null,
+              summary: bundle.summary_md,
+            });
+            bundleStored = true;
+          } catch {
+            // A storage failure must not turn a verdict into an error for the agent; the
+            // response says it was not stored so the caller does not assume a GET works.
+          }
+        }
         return {
-          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  ...result,
+                  bundle_id: bundle.bundle_id,
+                  bundle_stored: bundleStored,
+                  bundle: {
+                    "events.jsonl": bundle.events_jsonl,
+                    proof: JSON.parse(bundle.proof),
+                    "summary.md": bundle.summary_md,
+                  },
+                },
+                null,
+                2,
+              ),
+            },
+          ],
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);

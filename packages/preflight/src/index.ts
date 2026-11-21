@@ -24,3 +24,25 @@ export type {
   AcceptEvaluation,
 } from "./types.js";
 export { isKnownDrainer, isNonReceivable, KNOWN_DRAINERS, NON_RECEIVABLE, SOURCES } from "./known-drainers.js";
+export {
+  buildEvidenceBundle,
+  canonicalize as canonicalizeEvidence,
+  sha256Hex as evidenceSha256Hex,
+  verdictDependsOnProcessState,
+  EVIDENCE_ARTEFACTS,
+  EVIDENCE_PROOF_SCHEMA,
+  EVIDENCE_SCHEMA,
+} from "./evidence.js";
+export type {
+  EvidenceBundle,
+  EvidenceBundleInputs,
+  EvidenceBundleOptions,
+} from "./evidence.js";
+export { verifyBundle, describeVerification } from "./verify-bundle.js";
+export type {
+  BundleVerification,
+  EvidenceProof,
+  EvidenceProofVerdict,
+  VerificationStatus,
+} from "./verify-bundle.js";
+export type { EvaluationStep, EvaluationStepOutcome } from "./evaluate.js";

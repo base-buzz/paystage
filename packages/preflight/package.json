@@ -18,7 +18,8 @@
   },
   "bin": {
     "preflight": "dist/bin.js",
-    "paystage-preflight-mcp": "dist/cli.js"
+    "paystage-preflight-mcp": "dist/cli.js",
+    "paystage-verify-bundle": "dist/verify-bundle-cli.js"
   },
   "files": [
     "dist",

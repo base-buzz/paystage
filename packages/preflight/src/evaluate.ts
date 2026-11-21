@@ -41,6 +41,27 @@ export interface AcceptResult {
   reasons: string[];
 }
 
+/**
+ * One rule the evaluator actually executed, in the order it executed it.
+ *
+ * This is the evaluator's own transcript, not a reconstruction. A bundle that re-narrates a
+ * verdict from the final reasons can describe a rule that never ran (the evaluator returns at
+ * the first refusal); the only honest source for "what happened" is the code that decided.
+ * `rule` is a stable identifier, `detail` is the evaluator's own sentence, and `accept_index`
+ * ties a per-option step to the accept it judged.
+ */
+export type EvaluationStepOutcome = "pass" | "fail" | "review" | "skip" | "note";
+
+export interface EvaluationStep {
+  /** 1-based position in the transcript. */
+  seq: number;
+  rule: string;
+  scope: "request" | "accept" | "result";
+  outcome: EvaluationStepOutcome;
+  detail: string;
+  accept_index?: number;
+}
+
 export interface EvaluateResult {
   decision: Decision;
   /**
@@ -55,6 +76,11 @@ export interface EvaluateResult {
   acceptResults: AcceptResult[];
   reasons: string[];
   summary: string;
+  /**
+   * The rules this call actually ran, in order. Present on every result, including the early
+   * refusals, because an evidence bundle must be able to say why a request never reached rule 7.
+   */
+  steps: EvaluationStep[];
   dailyCapNote?: string;
   /**
    * The case a human is being asked to decide, present only on `review`.
@@ -142,35 +168,63 @@ function findAsset(
   );
 }
 
-function evaluateAccept(accept: AcceptOption, policy: Policy, resource?: PaymentResource): AcceptResult {
+type RecordStep = (step: Omit<EvaluationStep, "seq">) => void;
+
+function evaluateAccept(
+  accept: AcceptOption,
+  policy: Policy,
+  resource: PaymentResource | undefined,
+  record: RecordStep,
+  acceptIndex: number,
+): AcceptResult {
   const reasons: string[] = [];
+  const pass = (rule: string, detail: string): void => {
+    record({ rule, scope: "accept", accept_index: acceptIndex, outcome: "pass", detail });
+  };
+  const skip = (rule: string, detail: string): void => {
+    record({ rule, scope: "accept", accept_index: acceptIndex, outcome: "skip", detail });
+  };
+  const deny = (rule: string, detail: string): AcceptResult => {
+    reasons.push(detail);
+    record({ rule, scope: "accept", accept_index: acceptIndex, outcome: "fail", detail });
+    return { accept, status: "do_not_pay", reasons };
+  };
+  const hold = (rule: string, detail: string): AcceptResult => {
+    reasons.push(detail);
+    record({ rule, scope: "accept", accept_index: acceptIndex, outcome: "review", detail });
+    return { accept, status: "review", reasons };
+  };
 
   // Rule 2: network allowlist
   const networkAllowed = policy.allowed_networks.some((n) =>
     eq(n, accept.network),
   );
   if (!networkAllowed) {
-    reasons.push(`network ${accept.network} not in allowed_networks`);
-    return { accept, status: "do_not_pay", reasons };
+    return deny(
+      "accept.network",
+      `network ${accept.network} not in allowed_networks`,
+    );
   }
+  pass("accept.network", `network ${accept.network} is in allowed_networks`);
 
   // Rule 3: asset must match allowed_assets with same network
   const asset = findAsset(policy, accept.network, accept.asset);
   if (!asset) {
-    reasons.push(
+    return deny(
+      "accept.asset",
       `asset ${accept.asset} on ${accept.network} not in allowed_assets`,
     );
-    return { accept, status: "do_not_pay", reasons };
   }
+  pass("accept.asset", `asset ${asset.symbol} at ${accept.asset} matched allowed_assets on ${accept.network}`);
 
   // Rule 4: amount is atomic
   let amount: bigint;
   try {
     amount = BigInt(accept.amount);
   } catch {
-    reasons.push(`invalid atomic amount ${accept.amount}`);
-    return { accept, status: "do_not_pay", reasons };
+    return deny("accept.amount", `invalid atomic amount ${accept.amount}`);
   }
+  pass("accept.amount", `atomic amount ${accept.amount} parsed`);
 
   // Rule 5: policy-level max_amount, only if asset symbol matches
   if (eq(policy.max_amount.asset, asset.symbol)) {
@@ -181,20 +235,33 @@ function evaluateAccept(accept: AcceptOption, policy: Policy, resource?: Payment
     // `max_amount.decimals` remains a parse-time cross-check; it must not define the unit.
     const maxAtomic = humanToAtomic(policy.max_amount.value, asset.decimals);
     if (amount > maxAtomic) {
-      reasons.push(
+      return deny(
+        "accept.max_amount",
         `amount ${atomicToHuman(amount, asset.decimals)} ${asset.symbol} exceeds max_amount ${policy.max_amount.value} ${policy.max_amount.asset}`,
       );
-      return { accept, status: "do_not_pay", reasons };
     }
+    pass(
+      "accept.max_amount",
+      `amount ${atomicToHuman(amount, asset.decimals)} ${asset.symbol} is at or under max_amount ${policy.max_amount.value} ${policy.max_amount.asset}`,
+    );
+  } else {
+    skip(
+      "accept.max_amount",
+      `max_amount not applied: the policy ceiling is denominated in ${policy.max_amount.asset}, the challenge asset is ${asset.symbol}`,
+    );
   }
 
   // Rule 6: timeout
   if (accept.maxTimeoutSeconds > policy.max_timeout_seconds) {
-    reasons.push(
+    return deny(
+      "accept.timeout",
       `maxTimeoutSeconds ${accept.maxTimeoutSeconds} exceeds policy max_timeout_seconds ${policy.max_timeout_seconds}`,
     );
-    return { accept, status: "do_not_pay", reasons };
   }
+  pass(
+    "accept.timeout",
+    `maxTimeoutSeconds ${accept.maxTimeoutSeconds} is within policy max_timeout_seconds ${policy.max_timeout_seconds}`,
+  );
 
   // Rule 1.5: the payee must be a 20-byte hex address.
   //
@@ -202,44 +269,53 @@ function evaluateAccept(accept: AcceptOption, policy: Policy, resource?: Payment
   // evaluator answered `pay` because the string matched the allow-list as text. A malformed address is either a
   // typo or a swap, and money sent to it is unrecoverable — so it is a refusal with a named reason, not a match.
   if (!ADDRESS_RE.test(String(accept.payTo ?? ""))) {
-    reasons.push(
+    return deny(
+      "accept.payee_shape",
       `invalid payTo address: expected 0x plus 40 hex characters, got ${String(accept.payTo ?? "").length - 2}`,
     );
-    return { accept, status: "do_not_pay", reasons };
   }
+  pass("accept.payee_shape", `payTo ${accept.payTo} is a 20-byte hex address`);
 
   // Rule 7a: known drainers — hard deny before unknown_payee review
   if (isKnownDrainer(accept.payTo)) {
-    reasons.push("known drainer");
-    return { accept, status: "do_not_pay", reasons };
+    return deny("accept.known_drainer", "known drainer");
   }
+  pass("accept.known_drainer", "payee is not on the known-drainer list");
 
   // Rule 7a2: non-receivable sinks. Separate from the drainer list because the fact is different — paying
   // 0x…dEaD destroys the funds, nobody steals them. Same verdict, truthful reason, and the published drainer
   // list stops claiming a burn address is a thief.
   if (isNonReceivable(accept.payTo)) {
-    reasons.push(`non-receivable payee ${accept.payTo} (funds are destroyed, not received)`);
-    return { accept, status: "do_not_pay", reasons };
+    return deny(
+      "accept.non_receivable",
+      `non-receivable payee ${accept.payTo} (funds are destroyed, not received)`,
+    );
   }
+  pass("accept.non_receivable", "payee is not on the non-receivable list");
 
   // Rule 7b: OFAC sanctions. Separate from the drainer list because the reason for refusing is different —
   // a drainer takes your funds, a sanctioned address may make paying *you* the violation. Both are hard
   // denies, and the reason code says which list fired so a human can check the citation.
   if (SANCTIONED_ADDRESSES.has(String(accept.payTo).toLowerCase())) {
-    reasons.push("sanctioned address (OFAC SDN)");
-    return { accept, status: "do_not_pay", reasons };
+    return deny("accept.sanctions", "sanctioned address (OFAC SDN)");
   }
+  pass("accept.sanctions", "payee is not on the OFAC SDN list");
 
   // Rule 7: payee allowlist
   const payeeAllowed = policy.allowed_pay_to.some((p) => eq(p, accept.payTo));
   if (!payeeAllowed) {
     if (policy.unknown_payee === "deny") {
-      reasons.push(`payTo ${accept.payTo} not in allowed_pay_to (deny)`);
-      return { accept, status: "do_not_pay", reasons };
+      return deny(
+        "accept.payee_allowlist",
+        `payTo ${accept.payTo} not in allowed_pay_to (deny)`,
+      );
     }
-    reasons.push(`payTo ${accept.payTo} not in allowed_pay_to (review)`);
-    return { accept, status: "review", reasons };
+    return hold(
+      "accept.payee_allowlist",
+      `payTo ${accept.payTo} not in allowed_pay_to (review)`,
+    );
   }
+  pass("accept.payee_allowlist", `payTo ${accept.payTo} is in allowed_pay_to`);
 
   /**
    * Rule 7c: the payee matches the host's verified record, when we have one (#133 → #164).
@@ -256,13 +332,24 @@ function evaluateAccept(accept: AcceptOption, policy: Policy, resource?: Payment
     } catch {
       host = undefined;
     }
-    const verified = verifiedPayeeFor(host);
-    if (verified && verified.payee !== String(accept.payTo).toLowerCase()) {
-      reasons.push(
-        `payTo ${accept.payTo} differs from the verified address for ${verified.host} (${verified.payee}, verified ${verified.verified_at ?? "undated"}) — the endpoint may be a clone, or the provider rotated its payee`,
-      );
-      return { accept, status: "review", reasons };
+    if (host === undefined) {
+      skip("accept.verified_payee", "resource.url is not a parseable URL, so there is no host to compare the payee against");
+    } else {
+      const verified = verifiedPayeeFor(host);
+      if (verified && verified.payee !== String(accept.payTo).toLowerCase()) {
+        return hold(
+          "accept.verified_payee",
+          `payTo ${accept.payTo} differs from the verified address for ${verified.host} (${verified.payee}, verified ${verified.verified_at ?? "undated"}) — the endpoint may be a clone, or the provider rotated its payee`,
+        );
+      }
+      if (verified) {
+        pass("accept.verified_payee", `payTo ${accept.payTo} matches the verified address for ${verified.host}`);
+      } else {
+        skip("accept.verified_payee", `no verified-payee record for ${host}`);
+      }
     }
+  } else {
+    skip("accept.verified_payee", "the challenge has no resource.url, so there is no host to compare the payee against");
   }
 
   // Rule 8: require_human_above
@@ -272,13 +359,20 @@ function evaluateAccept(accept: AcceptOption, policy: Policy, resource?: Payment
       policy.require_human_above.decimals,
     );
     if (amount > threshold) {
-      reasons.push(
+      return hold(
+        "accept.require_human_above",
         `amount ${atomicToHuman(amount, asset.decimals)} ${asset.symbol} exceeds require_human_above ${policy.require_human_above.value} ${policy.require_human_above.asset}`,
       );
-      return { accept, status: "review", reasons };
     }
+    pass(
+      "accept.require_human_above",
+      `amount ${atomicToHuman(amount, asset.decimals)} ${asset.symbol} is at or under require_human_above ${policy.require_human_above.value} ${policy.require_human_above.asset}`,
+    );
+  } else {
+    skip("accept.require_human_above", "no require_human_above configured, so no human threshold applied");
   }
 
+  pass("accept.result", "all accept rules allowed this option");
   return { accept, status: "pay", reasons };
 }
 
@@ -557,21 +651,42 @@ export function evaluatePayment(
   policy: Policy,
   options: EvaluateOptions = {},
 ): EvaluateResult {
+  const steps: EvaluationStep[] = [];
+  const record: RecordStep = (step) => {
+    steps.push({ seq: steps.length + 1, ...step });
+  };
+
   // Rule 0: per-agent budgets. Resolve first — every later rule must run against the
   // narrowed policy, not the global one, or a cheap agent could be judged by the
   // expensive agent's ceiling.
   const resolution = resolveAgentPolicy(policy, options.agentId);
   if (!resolution.ok) {
+    record({
+      rule: "agent.resolve",
+      scope: "request",
+      outcome: "fail",
+      detail: resolution.reason,
+    });
     return {
       decision: "do_not_pay",
       acceptResults: [],
       reasons: [resolution.reason],
       summary: "Agent identity could not be resolved against the policy.",
+      steps,
       ...(options.agentId !== undefined ? { agent: options.agentId } : {}),
     };
   }
   const effective = resolution.policy;
   const agent = options.agentId;
+  record({
+    rule: "agent.resolve",
+    scope: "request",
+    outcome: "pass",
+    detail:
+      agent !== undefined
+        ? `agent ${agent} resolved to its narrowed policy`
+        : "global policy applied (no per-agent overlay)",
+  });
   // Rule 0.5: time windows. Policy-wide, not per-accept — the hour does not depend on which payment you choose.
   const window = (effective as { time_window?: { allowed_hours_utc?: [number, number]; blocked_hours_utc?: [number, number] } })
     .time_window;
@@ -586,34 +701,82 @@ export function evaluatePayment(
     if (denied) {
       const [startH, endH] = (window.allowed_hours_utc ?? window.blocked_hours_utc) as [number, number];
       const pad = (n: number) => String(n).padStart(2, "0");
+      record({
+        rule: "request.time_window",
+        scope: "request",
+        outcome: "fail",
+        detail: `outside allowed hours: policy permits ${pad(startH)}:00–${pad(endH)}:00 UTC, now ${pad(hour)}:00 UTC`,
+      });
       return {
         decision: "do_not_pay",
         acceptResults: [],
         reasons: [`outside allowed hours: policy permits ${pad(startH)}:00–${pad(endH)}:00 UTC, now ${pad(hour)}:00 UTC`],
         summary: "Payment refused: outside the policy's time window.",
+        steps,
       };
     }
+    record({
+      rule: "request.time_window",
+      scope: "request",
+      outcome: "pass",
+      detail: `hour ${String(hour).padStart(2, "0")}:00 UTC is inside the policy's time window`,
+    });
+  } else {
+    record({
+      rule: "request.time_window",
+      scope: "request",
+      outcome: "skip",
+      detail: "no time_window configured, so the hour was not a factor",
+    });
   }
 
   // Rule 1: malformed
   if (!pr || pr.x402Version !== 2) {
+    record({
+      rule: "request.version",
+      scope: "request",
+      outcome: "fail",
+      detail: `unsupported x402Version ${pr?.x402Version}`,
+    });
     return {
       decision: "do_not_pay",
       acceptResults: [],
       reasons: [`unsupported x402Version ${pr?.x402Version}`],
       summary: "Payment request is malformed or unsupported version.",
+      steps,
     };
   }
+  record({
+    rule: "request.version",
+    scope: "request",
+    outcome: "pass",
+    detail: "x402Version is 2",
+  });
   if (!Array.isArray(pr.accepts) || pr.accepts.length === 0) {
+    record({
+      rule: "request.accepts",
+      scope: "request",
+      outcome: "fail",
+      detail: "no accepts in payment request",
+    });
     return {
       decision: "do_not_pay",
       acceptResults: [],
       reasons: ["no accepts in payment request"],
       summary: "Payment request has no acceptable payment options.",
+      steps,
     };
   }
+  record({
+    rule: "request.accepts",
+    scope: "request",
+    outcome: "pass",
+    detail: `${pr.accepts.length} accept option(s) to evaluate`,
+  });
 
-  const acceptResults = pr.accepts.map((a) => evaluateAccept(a, effective, pr.resource));
+  const acceptResults = pr.accepts.map((a, index) =>
+    evaluateAccept(a, effective, pr.resource, record, index),
+  );
 
   const payAccepts = acceptResults
     .filter((r) => r.status === "pay")
@@ -636,6 +799,18 @@ export function evaluatePayment(
   } else {
     decision = "do_not_pay";
   }
+  const selectedIndex = selectedAccept
+    ? acceptResults.findIndex((r) => r.accept === selectedAccept)
+    : -1;
+  record({
+    rule: "result.select",
+    scope: "result",
+    outcome: "note",
+    detail:
+      selectedIndex >= 0
+        ? `accept #${selectedIndex} selected from the ${decision === "pay" ? "pay" : "review"}-tier options (cheapest first)`
+        : "no accept option reached pay or review",
+  });
 
   const reasons: string[] = [];
   for (const r of acceptResults) {
@@ -646,6 +821,19 @@ export function evaluatePayment(
   let dailyCapNote: string | undefined;
   if (policy.daily_cap) {
     dailyCapNote = `daily_cap ${policy.daily_cap.value} ${policy.daily_cap.asset} (informational only)`;
+    record({
+      rule: "result.daily_cap",
+      scope: "result",
+      outcome: "skip",
+      detail: `${dailyCapNote}; the evaluator keeps no cross-call history`,
+    });
+  } else {
+    record({
+      rule: "result.daily_cap",
+      scope: "result",
+      outcome: "skip",
+      detail: "no daily_cap declared; remaining daily budget is unknown",
+    });
   }
 
   /**
@@ -662,6 +850,12 @@ export function evaluatePayment(
       decision = "review";
       reviewReason = `payment_identifier is ${identifier.length} characters — refusing to cache a value that long; ask again with a stable, short id`;
       reasons.push(reviewReason);
+      record({
+        rule: "result.payment_identifier",
+        scope: "result",
+        outcome: "review",
+        detail: reviewReason,
+      });
     } else {
       const at = (options.now ?? new Date()).getTime();
       const window = options.dedupWindowMs ?? DEFAULT_DEDUP_WINDOW_MS;
@@ -671,7 +865,19 @@ export function evaluatePayment(
         decision = "review";
         reviewReason = `payment_identifier ${identifier} already produced a pay verdict ${seconds}s ago (window ${Math.round(window / 1000)}s) — a retried preflight is not a second approval`;
         reasons.push(reviewReason);
+        record({
+          rule: "result.payment_identifier",
+          scope: "result",
+          outcome: "review",
+          detail: reviewReason,
+        });
       } else {
+        record({
+          rule: "result.payment_identifier",
+          scope: "result",
+          outcome: "pass",
+          detail: `first use of payment_identifier ${identifier} inside the ${Math.round(window / 1000)}s window`,
+        });
         approvedIdentifiers.set(identifier, at);
         // Prune inside the same call: an unbounded map is a memory leak with a security name.
         for (const [key, when] of approvedIdentifiers) {
@@ -679,6 +885,20 @@ export function evaluatePayment(
         }
       }
     }
+  } else if (identifier) {
+    record({
+      rule: "result.payment_identifier",
+      scope: "result",
+      outcome: "skip",
+      detail: `payment_identifier ${identifier} was not compared because the verdict was already ${decision}`,
+    });
+  } else {
+    record({
+      rule: "result.payment_identifier",
+      scope: "result",
+      outcome: "skip",
+      detail: "no payment_identifier supplied",
+    });
   }
 
   // Rule 12: summary
@@ -696,6 +916,12 @@ export function evaluatePayment(
   } else {
     summary = `Decision: ${decision}. No acceptable payment option.`;
   }
+  record({
+    rule: "result.verdict",
+    scope: "result",
+    outcome: decision === "pay" ? "pass" : decision === "review" ? "review" : "fail",
+    detail: summary,
+  });
 
   // Rule 13: the case for a human, on `review` only. A `pay` is for the agent and a
   // `do_not_pay` already carries the reasons it was refused; neither needs a packet,
@@ -722,6 +948,7 @@ export function evaluatePayment(
     acceptResults,
     reasons,
     summary,
+    steps,
     dailyCapNote,
     ...(packet ? { packet } : {}),
   };

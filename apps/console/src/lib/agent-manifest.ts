@@ -269,6 +269,7 @@ export const PAYSTAGE_MANIFEST = {
     status: "/v1/public/status",
     chain: "/v1/public/chain.json",
     guard_verdict: "POST /v1/guard-verdict — turn a preflight verdict into a receipt-shaped response",
+    evidence_bundle: "GET /runs/:id — the events.jsonl, proof, receipt and summary.md for one decision",
   },
   not_advice: true,
 } as const;

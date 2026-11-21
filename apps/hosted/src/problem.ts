@@ -127,6 +127,61 @@ export const PROBLEMS = {
       fix: "Retry after the indicated delay. Nothing was charged and no receipt was issued.",
       ...(instance !== undefined ? { instance } : {}),
     }),
+  unknownFormat: (format: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "unknown_bundle_format",
+      title: "Unknown bundle format",
+      detail: `format=${format} is not one of json, events, proof, receipt, summary, or the default markdown bundle.`,
+      retriable: false,
+      field: "format",
+      fix: "Use ?format=json for all four artefacts, or ?format=events|proof|receipt|summary for one, or no format for the human-readable bundle.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  unknownRun: (id: string, instance?: string) =>
+    problem({
+      status: 404,
+      code: "run_not_found",
+      title: "No evidence bundle with that id",
+      detail: `No stored bundle has the id ${id}. The id is the SHA-256 of the canonical inputs; check that it was copied whole.`,
+      retriable: false,
+      field: "id",
+      fix: "Use the bundle_id returned by the evaluation call that produced this record, or omit the request if it was never stored.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  receiptNotIssued: (id: string, instance?: string) =>
+    problem({
+      status: 404,
+      code: "receipt_not_issued",
+      title: "This bundle has no receipt",
+      detail: `Bundle ${id} was recorded without a receipt, so there is nothing to serve at ?format=receipt.`,
+      retriable: false,
+      field: "format",
+      fix: "Use ?format=json and read receipt:null, or check the bundle's summary for why no receipt was produced.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  storageNotConfigured: (instance?: string) =>
+    problem({
+      status: 503,
+      code: "storage_not_configured",
+      title: "Evidence bundle storage is not configured",
+      detail:
+        "This deployment has no SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY, so there is nowhere to read a bundle from. The bundle table and its migration exist in the repo; the deployment is what is missing.",
+      retriable: false,
+      fix: "Configure the two Supabase bindings and apply supabase/migrations/*_evidence_bundles.sql, then retry. Do not read this as an unknown id.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  storageUnavailable: (instance?: string) =>
+    problem({
+      status: 503,
+      code: "storage_unavailable",
+      title: "Evidence bundle storage did not answer",
+      detail: "The bundle store rejected the read. The bundle may exist; this response cannot say.",
+      retriable: true,
+      retryAfterSeconds: 5,
+      fix: "Retry after the indicated delay. An empty bundle is never substituted for a failed read.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
   faucetAlreadyFunded: (resetsAt: string, hours: number, instance?: string) =>
     problem({
       status: 429,
