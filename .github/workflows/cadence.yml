@@ -102,7 +102,7 @@ jobs:
         # covered the day it is added.
         run: |
           set -euo pipefail
-          PKGS="policy preflight x402-guard x-evm auth-watch velocity trade-preflight skill mcp ai-sdk receipt-verify channel eliza-plugin n8n"
+          PKGS="policy preflight x402-guard x-evm auth-watch velocity trade-preflight skill mcp ai-sdk receipt-verify channel"
           for pkg in $PKGS; do
             echo "--- @paystage/$pkg"
             node scripts/assert-artifact.mjs "@paystage/$pkg" --latest

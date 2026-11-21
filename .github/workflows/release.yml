@@ -82,7 +82,11 @@ jobs:
       - name: Publish packages (dependency order, skip existing, with provenance)
         run: |
           set -euo pipefail
-          PKGS="policy preflight x402-guard x-evm auth-watch velocity trade-preflight skill mcp ai-sdk receipt-verify channel eliza-plugin n8n"
+          # `eliza-plugin` and `n8n` are deliberately absent: their names are not claimed on npm and have no Trusted
+          # Publisher configured, so publishing them fails with E404 and takes the whole release down with it — which is what
+          # happened on the 2026-11-21 21:30Z tag, where preflight 0.5.4 never got published because the job died on
+          # @paystage/eliza-plugin@0.1.0. Add them back only after their pending publishers exist on npm.
+          PKGS="policy preflight x402-guard x-evm auth-watch velocity trade-preflight skill mcp ai-sdk receipt-verify channel"
 
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
             echo "stable release from tag ${GITHUB_REF_NAME}"
@@ -162,7 +166,11 @@ jobs:
         if: github.ref_type == 'tag'
         run: |
           set -euo pipefail
-          PKGS="policy preflight x402-guard x-evm auth-watch velocity trade-preflight skill mcp ai-sdk receipt-verify channel eliza-plugin n8n"
+          # `eliza-plugin` and `n8n` are deliberately absent: their names are not claimed on npm and have no Trusted
+          # Publisher configured, so publishing them fails with E404 and takes the whole release down with it — which is what
+          # happened on the 2026-11-21 21:30Z tag, where preflight 0.5.4 never got published because the job died on
+          # @paystage/eliza-plugin@0.1.0. Add them back only after their pending publishers exist on npm.
+          PKGS="policy preflight x402-guard x-evm auth-watch velocity trade-preflight skill mcp ai-sdk receipt-verify channel"
           for pkg in $PKGS; do
             echo "--- @paystage/$pkg"
             node scripts/assert-artifact.mjs "@paystage/$pkg" --latest --wait 420

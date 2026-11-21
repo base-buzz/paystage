@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "@paystage/n8n",
   "version": "0.1.0",
   "description": "Payment firewall for n8n workflows: evaluate an x402 payment or verify a receipt before the wallet signs. pay / review / do_not_pay, with the rule that fired. No keys, no signing.",

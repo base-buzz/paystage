@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "@paystage/eliza-plugin",
   "version": "0.1.0",
   "description": "PayStage for elizaOS agents: one action that asks whether an x402 payment should be signed, returning pay, review or do_not_pay with the rule that fired. No keys, no signing.",
