@@ -62,7 +62,7 @@
   ],
   "dependencies": {
     "@paystage/policy": "0.3.1",
-    "@paystage/preflight": "0.5.3",
+    "@paystage/preflight": "0.5.4",
     "@x402/extensions": "^2.29.0"
   },
   "peerDependencies": {
