@@ -108,6 +108,8 @@ console.log(`ci-local: cold run (${reason})`);
 
 const worktree = mkdtempSync(join(tmpdir(), "ci-local-"));
 let failed = false;
+/** Set when the failure was a SIGKILL rather than a red check — the summary must say which. */
+let killed = false;
 
 function run(label, command, commandArgs, cwd) {
   const started = Date.now();
@@ -125,8 +127,18 @@ function run(label, command, commandArgs, cwd) {
      * wrote nothing before it died, so the output looked like a silent failure of the code under test. It was memory pressure.
      */
     if (error.signal === "SIGKILL" || error.status === 137 || /\bKilled\b/.test(output)) {
+      killed = true;
+      const capMiB = (() => {
+        try {
+          return String(Math.round(Number(readFileSync("/sys/fs/cgroup/memory.max", "utf8").trim()) / 1024 / 1024));
+        } catch {
+          return null;
+        }
+      })();
       console.error(`  FAIL  ${label} — KILLED, not failed: the process was SIGKILLed (exit 137)`);
-      console.error(`        this is almost always memory pressure, e.g. another build running; check \`cat /sys/fs/cgroup/memory.current\``);
+      console.error(
+        `        this is almost always memory pressure, e.g. another build running; the container cap is ${capMiB === null ? "unknown" : `${capMiB} MiB`}, \`cat /sys/fs/cgroup/memory.current\` shows the current use`,
+      );
       console.error(`        nothing here says the code is broken — re-run when the container is quieter`);
       return;
     }
@@ -149,7 +161,20 @@ try {
    * is the place that finds out.
    */
   run("npm ci --ignore-scripts", "npm", ["ci", "--ignore-scripts", "--silent"], worktree);
-  if (failed) throw new Error("install failed — nothing after this means anything");
+  /**
+   * The last line is the one that gets copied into a report, so it must carry the classification, not just the fact.
+   *
+   * Measured 2026-11-21: a peer's report said "install failed" while the run had correctly printed "KILLED, not failed" —
+   * the detail was right and the summary was wrong, so the reader was sent to look for a dependency bug that did not
+   * exist. Same class as quoting a pre-push hook instead of the push's exit code.
+   */
+  if (failed) {
+    throw new Error(
+      killed
+        ? "nothing ran — the install was KILLED (memory pressure), not a code failure; re-run when the container is quieter"
+        : "install failed — nothing after this means anything",
+    );
+  }
 
   run("npm run build", "npm", ["run", "build", "--silent"], worktree);
 
