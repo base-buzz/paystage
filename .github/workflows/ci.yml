@@ -64,3 +64,4 @@ jobs:
       - run: node scripts/check-dep-pins.mjs
       - run: node scripts/check-canary-badge.mjs
       - run: node scripts/check-client-env.mjs
+      - run: node scripts/check-deps-budget.mjs

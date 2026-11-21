@@ -211,6 +211,7 @@ try {
     "check-titles.mjs",
     "check-fail-closed.mjs",
     "check-client-env.mjs",
+    "check-deps-budget.mjs",
   ]) {
     if (!existsSync(join(worktree, "scripts", script))) continue;
     run(script, "node", [join("scripts", script)], worktree);

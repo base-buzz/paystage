@@ -399,7 +399,10 @@ the link to the evidence rather than a direct file URL.
 Socket.dev scores packages on capability, so a payment-safety tool will always carry
 flags: it reads a policy file, reads two environment variables and talks to an RPC.
 Every package README states exactly what it touches and why, and
-[SECURITY.md](SECURITY.md) has the full table. The umbrella `@paystage/mcp` is ~16 KB
+[SECURITY.md](SECURITY.md) has the full table. **The umbrella resolves to 11 installed modules**, measured by
+`scripts/check-deps-budget.mjs` (which packs each package, installs the tarball in an empty project and counts
+`npm ls --all --parseable`) and enforced in CI: a dependency that pushes any package past `deps-budget.json` fails
+the build, so a new dependency is a deliberate act rather than a diff nobody reads. The umbrella `@paystage/mcp` is ~16 KB
 with no network, no filesystem and no `eval` of its own — the capability lives in the
 tools it bundles.
 
