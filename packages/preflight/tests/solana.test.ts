@@ -188,7 +188,7 @@ describe("@x402/svm is an optional peer", () => {
     expect(result.decision).toBe("pay");
     const peerStep = result.steps.find((step) => step.rule === "solana.peer");
     expect(peerStep?.outcome).toBe("skip");
-    expect(peerStep?.detail).toMatch(/@x402\/svm is not installed/i);
+    expect(peerStep?.detail).toMatch(/@x402\/svm was not loaded/i);
     // The four assertions still ran; the absence is a transcript fact, not a silent pass.
     for (const rule of ["solana.network", "solana.asset", "solana.payee", "solana.amount"]) {
       expect(result.steps.find((step) => step.rule === rule)?.outcome).toBe("pass");

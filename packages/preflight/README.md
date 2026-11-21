@@ -91,6 +91,20 @@ CAIP-2 identifiers.
 | `review`      | Allowed but above a human threshold — ask a human before paying.        |
 | `do_not_pay`  | Violates policy (network, asset, payTo, amount, timeout, or malformed). |
 
+## Solana
+
+A `solana:*` accept is evaluated when the policy lists that network (or `solana:*`) and a
+Solana mint and payee. The four checks are the ones `@x402/svm` makes on a payment
+requirement before it builds a payload: the network is one of its three CAIP-2 ids, the
+`asset` mint and `payTo` are 32-byte base58 addresses, and `amount` is an integer inside
+the SPL Token `u64` range.
+
+`@x402/svm` is an **optional peer**, not a dependency. Without it the same four checks run
+against the built-in copies and the evaluation transcript records that the peer was not
+loaded. A host that wants the package's own tables can call `loadSvmPeer()` once at start-up.
+The EVM known-drainer, non-receivable and OFAC lists hold EVM addresses, so the transcript
+marks them skipped for a Solana payee rather than claiming a match.
+
 ## Supply chain and access
 
 Socket.dev scores this package on what it *can* do, not what it does with it, so the

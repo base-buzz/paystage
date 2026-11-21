@@ -226,7 +226,7 @@ export function validateSolanaAccept(
   assertions.push(
     assertion(
       "solana.asset",
-      `asset ${accept.asset} is a valid 32-byte base58 Solana address (mint)`,
+      `asset ${accept.asset} is a valid 32-byte base58 Solana address (mint shape; existence not checked locally)`,
     ),
   );
 
@@ -281,7 +281,7 @@ export function validateSolanaAccept(
 
 /** Detail recorded when the optional peer is not installed, so the verdict never implies it was. */
 export const SVM_PEER_ABSENT_DETAIL =
-  "@x402/svm is not installed (optional peer); the four SVM assertions ran against the built-in copy of its network table and address check";
+  "@x402/svm was not loaded (optional peer absent, or the host did not call loadSvmPeer()); the four SVM assertions ran against the built-in copy of its network table and address check";
 
 /** Detail recorded when the peer's own exports were used. */
 export const SVM_PEER_PRESENT_DETAIL =

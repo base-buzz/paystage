@@ -573,11 +573,14 @@ export function buildReviewPacket(
   );
   if (solana) {
     checked.push(`SVM network: ${accept.network} is one of the three CAIP-2 networks @x402/svm accepts`);
-    checked.push(`SVM asset: ${accept.asset} is a 32-byte base58 mint address`);
+    checked.push(`SVM asset: ${accept.asset} is a 32-byte base58 address (mint shape; existence and token program not checked)`);
     checked.push(`SVM payee: ${accept.payTo} is a 32-byte base58 address`);
     checked.push(`SVM amount: ${accept.amount} is an unsigned integer inside the SPL Token u64 range`);
     notChecked.push(
       "known-drainer, non-receivable and OFAC SDN lists: these lists hold EVM addresses, so they were not applied to this Solana payee",
+    );
+    notChecked.push(
+      "mint existence and token program: not checked — the evaluator makes no RPC calls; @x402/svm reads the mint account before signing",
     );
     notChecked.push(
       "fee payer, compute budget, fee-payer isolation, inner transfers and smart-wallet limits: not checked — @x402/svm verifies these against a signed transaction, and a payment challenge contains none",
