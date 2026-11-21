@@ -108,6 +108,17 @@ Precision over recall, deliberately. Entries need a public citation, so an addre
 report is absent — including addresses that are draining funds right now. Absence from the list is not a
 statement of safety.
 
+## 11. Fail closed, and do not invent authority
+
+When the policy, the payee's identity, the cost or the evidence is missing, the answer is **refusal or
+review** — never `pay`. That is the whole behaviour, and it is stated in the words a reviewer uses:
+
+> **Do not invent authority; fail closed when policy, identity, cost or evidence is missing.**
+
+Practically that means a missing policy file is not an empty policy, an unreadable RPC is not a clean
+address, and an unverifiable receipt is not a valid one. Where we cannot tell, the verdict says so and the
+caller pays nothing.
+
 ---
 
 If a claim on the site reads as stronger than this file, the file is right and the copy is wrong. Tell us

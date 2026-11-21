@@ -26,6 +26,9 @@ jobs:
       - run: node scripts/check-claims.mjs
       - run: node scripts/check-client-manifests.mjs
       - run: node scripts/check-published-links.mjs
+      # Publish lists are hand-written in three places; a package missing from one is never released and
+      # never asserted. Compare all three against packages/ so the failure lands on the commit that adds it.
+      - run: node scripts/check-publish-list.mjs
       - run: node scripts/check-count-claims.mjs
       - run: node scripts/check-network-claims.mjs
       - run: node scripts/gen-integrations.mjs --check
