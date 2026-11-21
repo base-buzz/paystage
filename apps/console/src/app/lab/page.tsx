@@ -63,6 +63,24 @@ function headlineFor(probe: string, row: ProbeRow): string {
   return row.headline ?? "—";
 }
 
+/**
+ * The discovery ratio over channels that can actually answer.
+ *
+ * The MCP Registry's search matches server *names*, so every phrase query there returns zero rows for every publisher — a
+ * channel failure, not a loss. Counting those six rows in the ratio made a 5-of-6 result read as 5-of-12 on the page and in
+ * the trend line, which is the same "number nobody can trust" problem the coverage line was added to fix. This reduces over
+ * `answered !== false` channels only and returns null when the summary carries no per-channel breakdown.
+ */
+function comparableRatio(summary: Record<string, unknown> | undefined): { present: number; measured: number } | null {
+  const by = (summary?.by_channel ?? null) as Record<string, { answered?: boolean; present?: number; measured?: number; planned?: number }> | null;
+  if (!by) return null;
+  const answerable = Object.values(by).filter((c) => c.answered !== false);
+  if (answerable.length === 0) return null;
+  const present = answerable.reduce((n, c) => n + (c.present ?? 0), 0);
+  const measured = answerable.reduce((n, c) => n + (c.measured ?? c.planned ?? 0), 0);
+  return measured > 0 ? { present, measured } : null;
+}
+
 /** "4/12" → 0.333. Null when the headline is not a ratio, so a non-numeric probe simply has no series. */
 function ratioOf(headline: string | null): number | null {
   if (!headline) return null;
@@ -431,6 +449,8 @@ export default async function LabPage() {
         const summary = (latestRow?.summary ?? {}) as Record<string, unknown>;
         const queries = Array.isArray(summary.queries) ? (summary.queries as Array<Record<string, unknown>>) : null;
         const agents = Array.isArray(summary.agentsDetail) ? (summary.agentsDetail as Array<Record<string, unknown>>) : null;
+        /** Per-channel answer state, needed by the table as well as the ratio note below it. */
+        const by = (summary.by_channel ?? {}) as Record<string, { answered?: boolean; present?: number; measured?: number; planned?: number }>;
 
         return (
           <section key={p.id} style={{ marginTop: 44 }}>
@@ -449,11 +469,26 @@ export default async function LabPage() {
               </Panel>
             ) : (
               <>
-                <Sparkline series={p.series} higherIsBetter={p.higherIsBetter} />
+                <Sparkline
+                  series={
+                    p.id === "discovery"
+                      ? p.series.map((point) => {
+                          const comparable = comparableRatio(point.summary);
+                          return comparable ? { ...point, value: comparable.present / comparable.measured } : point;
+                        })
+                      : p.series
+                  }
+                  higherIsBetter={p.higherIsBetter}
+                />
 
                 {latestRow ? (
                   <p style={{ marginTop: 10, fontSize: 15 }}>
-                    <strong>{headlineFor(p.id, latestRow)}</strong>{" "}
+                    <strong>
+                      {(() => {
+                        const comparable = p.id === "discovery" ? comparableRatio(latestRow.summary as Record<string, unknown>) : null;
+                        return comparable ? `${comparable.present} of ${comparable.measured} answerable queries` : headlineFor(p.id, latestRow);
+                      })()}
+                    </strong>{" "}
                     <span style={{ opacity: 0.6, fontSize: 13 }}>
                       latest run {latestRow.run_at.slice(0, 10)} · {p.rows.length} run(s) stored
                     </span>
@@ -468,7 +503,6 @@ export default async function LabPage() {
                     changes the ratio, so it is printed beside it.
                     {(() => {
                       // A channel that cannot answer a phrase query is not a channel we lost on — say so where the ratio is read.
-                      const by = summary.by_channel as Record<string, { answered?: boolean; present?: number; planned?: number; measured?: number }> | undefined;
                       const npm = by?.npm;
                       const silent = Object.entries(by ?? {}).filter(([id, c]) => id !== "npm" && c.answered === false);
                       if (!npm || silent.length === 0) return null;
@@ -502,15 +536,33 @@ export default async function LabPage() {
                         >
                           <td style={{ padding: "6px 8px", opacity: 0.75 }}>{String(q.channel)}</td>
                           <td style={{ padding: "6px 8px" }}>{String(q.query)}</td>
-                          <td
-                            style={{
-                              padding: "6px 8px",
-                              color: q.present ? "var(--lp-mint, #047857)" : "var(--lp-red, #b91c1c)",
-                            }}
-                          >
-                            {q.present ? "yes" : "no"}
-                          </td>
-                          <td style={{ padding: "6px 8px", opacity: 0.75 }}>{q.rank === null ? "\u2014" : String(q.rank)}</td>
+                          {(() => {
+                            /**
+                             * A channel whose search cannot answer a phrase query returns zero rows for every publisher. Painting
+                             * that row the same red as a real loss made six "cannot answer"s read as six misses.
+                             */
+                            const channel = by[String(q.channel)];
+                            const cannotMatch = channel !== undefined && channel.answered === false;
+                            return (
+                              <>
+                                <td
+                                  style={{
+                                    padding: "6px 8px",
+                                    color: cannotMatch
+                                      ? "var(--lp-dim, #6b7280)"
+                                      : q.present
+                                        ? "var(--lp-mint, #047857)"
+                                        : "var(--lp-red, #b91c1c)",
+                                  }}
+                                >
+                                  {cannotMatch ? "cannot match" : q.present ? "yes" : "no"}
+                                </td>
+                                <td style={{ padding: "6px 8px", opacity: 0.75 }}>
+                                  {cannotMatch ? "n/a" : q.rank === null ? "\u2014" : String(q.rank)}
+                                </td>
+                              </>
+                            );
+                          })()}
                         </tr>
                       ))}
                     </tbody>
