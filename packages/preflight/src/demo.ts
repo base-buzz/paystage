@@ -27,7 +27,7 @@ import {
  * this bin promises none. `tests/demo.test.ts` compares it with the manifest, so a version bump
  * that forgets this line fails CI instead of printing a stale version forever.
  */
-export const PREFLIGHT_VERSION = "0.5.3";
+export const PREFLIGHT_VERSION = "0.5.4";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const ALLOWLISTED_PAYEE = "0x209693Bc6afc0C5328bA36FaF03C514EF312287C";
