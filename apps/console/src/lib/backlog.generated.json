@@ -1,10 +1,10 @@
 {
- "generatedAt": "2026-11-20T18:00:02.485Z",
+ "generatedAt": "2026-11-21T18:00:03.351Z",
  "source": "docs/backlog.md",
  "counts": {
-  "total": 233,
-  "open": 55,
-  "done": 178
+  "total": 240,
+  "open": 47,
+  "done": 193
  },
  "droppedForSafety": 0,
  "redactedFields": 6,
@@ -705,7 +705,7 @@
    "title": "Commercial: settlement export",
    "done": false,
    "size": null,
-   "summary": "a seller wants a monthly file for accounting. premise **unverified** (2026-11-17): \"a seller wants\" with no named seller and no dated request. Buildable, so it stays; do not start it before a real seller ask exists, or it is a wish with a done-when.…",
+   "summary": "a seller wants a monthly file for accounting. **needs a real ask before it can start** (no named seller, no dated request, three re-checks — see the premise notes below).…",
    "doneWhen": "GET /v1/settlements.csv returns one row per settled call for a date range - gate: none - M",
    "gate": null,
    "ref": null
@@ -1103,9 +1103,9 @@
   {
    "n": 121,
    "title": "Open the agentkit PR",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "**OPEN 2026-11-14: coinbase/agentkit#1648** (base-buzz:feat/x402-payment-policy). Opt-in paymentPolicy on X402Config; one helper replaces the two wrapFetchWithPayment call sites.…",
+   "summary": "\"feat(x402): optional spend policy evaluated before signing\", 0 reviews / 2 comments, re-checked 2026-11-20T23:33Z). The item's done-when was \"a PR is open on agentkit with the guarded scheme behind an opt-in config field\", and it has been for six days…",
    "doneWhen": "a PR is open on agentkit with the guarded scheme behind an opt-in policy config field, and the PR body shows a failing-then-passing test",
    "gate": null,
    "ref": null
@@ -1173,9 +1173,9 @@
   {
    "n": 128,
    "title": "Policy extension: draft spec, submitted",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "**OPEN 2026-11-15: x402-foundation/x402#4279** (spec-only, per their contributing guide). 166-line spec for specs/extensions/payment-policy.md.…",
+   "summary": "0 reviews / 4 comments, re-checked 2026-11-21T00:18Z). The item's own done-when was \"draft spec, submitted\", and the 166-line spec has been in front of the maintainers for six days. Like #121, the row was never struck…",
    "doneWhen": "specs/extensions/payment-policy.md PR is open, or their documented alternative path is taken and recorded",
    "gate": null,
    "ref": null
@@ -1373,9 +1373,9 @@
   {
    "n": 148,
    "title": "We are invisible to the searches an agent actually runs",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "the discovery probe found us in **1 of 12** buyer-style searches: #4 on npm for \"x402 guard\", absent for \"x402 payment safety\", \"agent spend policy\", \"stop agent paying drainer\", \"limit agent spending usdc\", \"mcp payment firewall\", and absent for all six on th…",
+   "summary": "the \"1 of 12\" reading was the day the keywords landed and the probe was still 4/6 on npm. Re-measured 2026-11-20 with nothing published in between: **npm 5 of 6** (rank 1–2 on four queries, 23 on limit agent spending usdc, absent only on stop agent paying drai…",
    "doneWhen": "we appear in the top 5 for at least three of the six queries on npm or the registry, and the daily probe shows the movement",
    "gate": null,
    "ref": null
@@ -1433,12 +1433,12 @@
   {
    "n": 154,
    "title": "Inventory the x402 supply side as coverage data",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "**first full run 2026-11-19, scheduled weekly.** PayAI's discovery endpoint lists 17,577 resources; walking every page gave **24,078 accepts across 1,223 payees on 29 networks**, each screened against the same OFAC + drainer lists the evaluator ships (read fro…",
+   "summary": "across 1,223 payees on 29 networks, screened against the same OFAC + drainer lists the evaluator ships; **zero flagged**, which says the pipeline works at volume and nothing more.…",
    "doneWhen": "the inventory covers every paginated page of both catalogues, is refreshed on a schedule, and each row carries its screening result",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-19, re-confirmed 2026-11-21 (`docs/state/supply/README"
   },
   {
    "n": 155,
@@ -1465,7 +1465,7 @@
    "title": "Test the decision, not the argument: attach the real server to an agent and measure",
    "done": false,
    "size": "M",
-   "summary": "the first probe found agents already list the checks we perform (USDC verification, drainer/sanctions screening, payee reputation, allowance scope) and then say they cannot run them. But it was a *described* tool, which the agent correctly discounted.…",
+   "summary": "**needs a fresh session** — ready to build, deliberately not started 2026-11-21T02:33Z (the picker is told this by the marker, so it stops offering it).…",
    "doneWhen": "a transcript shows an agent calling the tool unprompted and altering its plan on the verdict, or the record says plainly that it does not",
    "gate": null,
    "ref": null
@@ -1485,7 +1485,7 @@
    "title": "Issue #85 — the registry checker's own findings",
    "done": true,
    "size": "S",
-   "summary": "docs/specs/issue-85-findings.md, comment on the issue): 402/400 resolved as a stale probe body (52182b5), mcp.so: in sync resolved as a false-positive definition (5d83c7c) plus a renderer that had silently dropped every surface (cc1826e), and the stale-version…",
+   "summary": "2026-11-20T04:10:50Z — corrected 2026-11-21: this row cited docs/specs/issue-85-findings.md, which was **never committed**; the findings live on the issue, verified with gh issue view 85 --comments): 402/400 resolved as a stale probe body (52182b5), mcp.so: in…",
    "doneWhen": "each of the three is resolved or explicitly reclassified, and #85 is closed with the findings",
    "gate": null,
    "ref": null
@@ -1535,9 +1535,9 @@
    "title": "Seller identity: bind the host to the payee",
    "done": false,
    "size": "M",
-   "summary": "**layer (a) shipped 2026-11-19 with #133; layer (b) partly shipped.** Reputation now reads the **youngest signal it can actually get**: crt.sh's earliest certificate works from the Worker (paystage.xyz → 2026-08-03, verified live), and RDAP returns **403 to th…",
-   "doneWhen": "a 402 from a host whose payee does not match its verified record returns do_not_pay with that reason, and an unverifiable host returns review rather than pay",
-   "gate": null,
+   "summary": "**needs the operator for the next step** — layer (a) shipped 2026-11-19 with #133; layer (b) needs a Cloudflare KV namespace for the 121,413-domain phishing list, and this container is **not authenticated to Cloudflare** (wrangler whoami → \"You are not authent…",
+   "doneWhen": "a 402 from a host whose payee does not match its verified record returns do_not_pay with that reason, and an unverifiable host returns review rather than pay - gate: **operator**…",
+   "gate": "operator — the next step is a Cloudflare namespace and a token, which only the operator holds",
    "ref": null
   },
   {
@@ -1545,7 +1545,7 @@
    "title": "The enforceable form is the client hook, not the MCP tool",
    "done": false,
    "size": "M",
-   "summary": "six agent runs: five check and one (Gemini) pays a **malformed payee address** without noticing. Every model that said it would adopt a gate also said \"automatically before every signature\"…",
+   "summary": "**external** — the done-when is an outcome only third parties can produce (\"two clients ship the guard as their default pre-sign step, or the record says none will\"), and neither half is decidable today.…",
    "doneWhen": "at least two third-party clients or frameworks ship the guard as their default pre-sign step, or the record says plainly that none will",
    "gate": null,
    "ref": null
@@ -1603,19 +1603,19 @@
   {
    "n": 171,
    "title": "Hash-chain the receipts",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "the comparison page found a competitor doing something better than us: SML's log is hash-chained, so it can prove nothing was removed. Ours are individually signed, which proves each one is genuine but says nothing about a receipt that was quietly dropped.…",
+   "summary": "otherwise the sha256 of the previous receipt's canonical signed payload — so a post-signing edit is chain-invalid rather than a silent reorder. verify_receipt --chain walks a list and names the first gap with its index and the ids either side (exit 8);…",
    "doneWhen": "a deleted receipt in a list is detected and named, and a lone receipt still returns VALID",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-21 (repo cfafa27): prev is inside the signed payload — genesis for a first receipt,"
   },
   {
    "n": 172,
    "title": "Wrapper: superagent-ai/grok-cli — gate createX402Fetch before it signs",
    "done": false,
    "size": "M",
-   "summary": "★3,512, MIT, an open-source coding agent for the Grok API. Read the exports: src/payments/agentkit-loader.ts builds an x402Client from @x402/fetch, registers registerExactEvmScheme(client, { signer }) and returns wrapFetchWithPayment(fetch, client)…",
+   "summary": "**needs a fresh session** — an outreach build (fork + ~20-line PR + test), and no PR from us exists yet (checked 2026-11-21T06:18Z: gh pr list --author base-buzz on that repo returns none). The seam is read and recorded, which is the expensive half;…",
    "doneWhen": "either a fork runs createX402Fetch with the gate registered and refuses an over-cap 402, or the upstream PR is open with the hook and a test",
    "gate": null,
    "ref": null
@@ -1683,12 +1683,12 @@
   {
    "n": 179,
    "title": "Dependency budget as a stated advantage",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "signal 2026-11-16: a third-party JS host breach was reported affecting hundreds of high-value sites (Scott Helme, 16 Nov). Every agent stack that installs a payment library inherits whatever that library inherits, and nobody audits it.…",
+   "summary": "(12 measured, umbrella at **11 installed modules**), scripts/check-deps-budget.mjs packs each package, installs the tarball in an empty project and compares, and it runs in **both** ci-local and ci.yml — without that wiring a budget is a comment.…",
    "doneWhen": "the budget file exists, CI fails on an unexplained increase, the README states the measured count with the verifying command, and the number matches a clean install on the day it is written",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-21 (repo 3f53b97, checker landed in 1048cef): `deps-budget"
   },
   {
    "n": 180,
@@ -1713,9 +1713,9 @@
   {
    "n": 182,
    "title": "Publish the MCP registry entry automatically, so it cannot lag a release",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "the cadence check compares the registry entry with npm, and on 2026-11-15 the entry read **0.3.5** against a published **0.6.0** — so the nightly evidence run went red for a manual step nobody remembered.…",
+   "summary": "has a registry job (needs: publish, if: github.ref_type == 'tag', id-token: write) that publishes the entry on every stable tag and is read back by the cadence check. Verified 2026-11-21T07:48Z…",
    "doneWhen": "a tag push updates npm **and** the MCP registry entry in one run, verified by reading the registry back, and a deliberate version mismatch fails the release rather than the next morning's cadence",
    "gate": null,
    "ref": null
@@ -1782,8 +1782,8 @@
   },
   {
    "n": 294,
-   "title": "## Guards added 2026-11-18 (do not remove these; each replaced a memory)",
-   "done": false,
+   "title": "## Guards added 2026-11-18",
+   "done": true,
    "size": null,
    "summary": "check-changelog.mjs - a tag with no changelog entry fails CI (found 28 of 32 missing). check-route-styles.mjs - a page rendering lp-* without importing the stylesheet fails CI. Caught zh, glossary, privacy, state-of-x402 all unstyled in production.…",
    "doneWhen": null,
@@ -1792,8 +1792,8 @@
   },
   {
    "n": 295,
-   "title": "## The daily check was red because the checkout was empty (2026-11-18)",
-   "done": false,
+   "title": "## The daily check was red because the checkout was empty",
+   "done": true,
    "size": null,
    "summary": "The cadence panel read \"7/12 recently\". Reading the failures rather than the count: 2 runs died on ERR_MODULE_NOT_FOUND: @paystage/policy (no node_modules in a fresh checkout…",
    "doneWhen": null,
@@ -1863,19 +1863,19 @@
   {
    "n": 302,
    "title": "A review packet for review verdicts",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "when the answer is \"ask your human\", we currently hand the human a verdict and nothing else. The packet is the case: amount and its share of the budget, payee, which rule fired, what was checked and what was not, and the one decision being asked for.…",
+   "summary": "threshold that fired, payee with network/asset/origin, the evaluator's exact reason string, checked and not_checked lists, and the decision as a question with the two options. pay and do_not_pay carry no packet.…",
    "doneWhen": "a review verdict carries a packet object with those five fields, rendered in /try and returned by the MCP tool, and one human who did not write it can answer from it alone",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-21 (repo 3cc6229): a review verdict now carries packet — amount and its share of the"
   },
   {
    "n": 303,
    "title": "A Python entry point",
    "done": false,
    "size": "M",
-   "summary": "our reach past JS/TS agents is zero. A thin paystage package on PyPI that calls the hosted MCP endpoint over HTTP, with no evaluator logic duplicated and no keys, opens every Python agent framework at once.",
+   "summary": "**built 2026-11-21 (c041944), not yet installable: the first publish needs the operator's PyPI trusted publisher.** py/ holds a stdlib-only transport (urllib JSON-RPC to the hosted /mcp), no policy logic, no keys, no dependencies;…",
    "doneWhen": "pip install paystage gives a client that returns the same verdict for the same input as the MCP tools, with a contract test comparing the two, and the package declares the hosted URL",
    "gate": null,
    "ref": null
@@ -1903,12 +1903,12 @@
   {
    "n": 306,
    "title": "Grade our integrations the way they grade theirs",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "we have a list of listings and partners with one word of status each. Agoragentic's INTEGRATION_CAPABILITY_LEVELS.md shows the better shape: a row of named dimensions with values that cannot be inferred from each other, and the rule *\"do not infer enforcement…",
+   "summary": "pre_action_enforcement, receipt_support, host_version_tested, proof_class, last_verified_at, evidence_ref and an evidence_command; the table is generated into docs/integrations/README.md with the no-inference rule in its legend, and docs/INTEGRATIONS.md is a p…",
    "doneWhen": "docs/INTEGRATIONS.md grades every integration/listing on those dimensions, unknowns stay unknown, and each row carries an evidence_ref a reviewer can open",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-21 (repo 53ba811): 12 rows in `docs/state/integrations"
   },
   {
    "n": 307,
@@ -1925,7 +1925,7 @@
    "title": "A per-run evidence bundle, not just a verdict",
    "done": false,
    "size": "M",
-   "summary": "their local run writes runs/<id>/{state,events.jsonl,local-proof,local-receipt,summary.md}. We return a verdict and keep telemetry, but an agent has nothing it can hand to an auditor as *the record of this decision*.…",
+   "summary": "**needs the operator: one SQL migration applied in the Supabase dashboard.** Built and pushed 2026-11-21 (repo 78b817d); GET /runs/<id> answers 503 storage_not_configured until the table exists.…",
    "doneWhen": "a tool call can return a bundle id, GET /runs/<id> serves the four artefacts, and a third party can recompute the verdict from proof alone",
    "gate": null,
    "ref": null
@@ -1942,13 +1942,13 @@
   },
   {
    "n": 310,
-   "title": "## Payee categories: classify a wallet by what it does, and publish the page",
-   "done": false,
+   "title": "Payee categories: classify a wallet by what it does",
+   "done": true,
    "size": "M",
-   "summary": "Asked for on 2026-11-19 after #169 landed the free address-risk API: **not built, and there was no item for it** — the closest was #169, which is a single flag lookup rather than a categorisation.…",
+   "summary": "original heading was ## Payee categories, which the strike regex does not match — a row struck with the wrong shape reads as open forever, and this one was claimed again an hour after it shipped.…",
    "doneWhen": "/wallets and /wallets/<address> render live categories with per-source provenance, every figure is generated from the shipped code with a --check guard, and #169's GoPlus flags appear as one source among several rather than as the answer",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-21 (repo e67aa70): the classifier and a read-only page; collection is the follow-up (#356)"
   },
   {
    "n": 311,
@@ -1965,7 +1965,7 @@
    "title": "What an agent does after it decides",
    "done": false,
    "size": "M",
-   "summary": "the decision probe stops at the verdict. Ask the second question: what would you search for, and would you install a package, a plugin, or write a script? That is the adoption path, and unlike ranks it does not change weekly.…",
+   "summary": "**built 2026-11-21 (3c902e4), waiting for the next two weekly runs.** The probe's v3 prompt asks for would_search_for (0–3 literal queries), would_install (package|plugin|script|none) and why_not, with the decision block untouched;…",
    "doneWhen": "the prompt records would_search_for, would_install (package|plugin|script|none) and why_not, and two weekly runs are comparable",
    "gate": null,
    "ref": null
@@ -2193,12 +2193,12 @@
   {
    "n": 335,
    "title": "Split the one skill into four task-scoped skills",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "an agent loading our single SKILL.md reads everything to do one thing. Four files, each under 60 lines and each opening with the trigger that tells an agent to load it: evaluate-payment, verify-receipt, decode-challenge, author-policy.…",
+   "summary": "everything to do one thing. Four files, each under 60 lines and each opening with the trigger that tells an agent to load it: evaluate-payment, verify-receipt, decode-challenge, author-policy.…",
    "doneWhen": "four SKILL.md files exist under packages/skill/skills/, the package's README names which to load for which job, and npm pack still contains them",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-21 (1048cef)"
   },
   {
    "n": 336,
@@ -2333,10 +2333,80 @@
   {
    "n": 349,
    "title": "The note poster leaves a new draft behind on every run, so the Drafts list is now 51 rows",
+   "done": true,
+   "size": "S",
+   "summary": "reads the Drafts tab before opening a composer and decides — create when no exact-title match, reuse the newest match, delete-then-create only when reuse is impossible (that one id, title and dialog re-verified, id confirmed gone), refuse when a match has no i…",
+   "doneWhen": "a second note-run on a day with no published post does not leave a second draft (it updates or deletes the one it made), and the Drafts count stops growing across rehearsals…",
+   "gate": null,
+   "ref": "done 2026-11-20 (ops ea54080): the poster"
+  },
+  {
+   "n": 350,
+   "title": "Listing: ChatGPT Apps — the largest agent surface, and we are not in its catalogue",
+   "done": false,
+   "size": "M",
+   "summary": "chatgpt.com/apps returns 200 and contains no \"paystage\" (fetched 2026-11-21, see docs/specs/mcp-directory-gaps.md). We already have a registered connector;…",
+   "doneWhen": "paystage appears on chatgpt.com/apps (or the connector's public page) with the tool count, and the listing links the site",
+   "gate": "account + review (operator's OpenAI account)",
+   "ref": null
+  },
+  {
+   "n": 351,
+   "title": "Listing: mcp.run — a managed MCP runtime whose users already run servers",
    "done": false,
    "size": "S",
-   "summary": "found while surveying #336: 18 rows titled x402 notes — 2026-11-19 (the same title, same day), 9 duplicates of the published article, 10 untitled, and 24 single-line probes.…",
-   "doneWhen": "a second note-run on a day with no published post does not leave a second draft (it updates or deletes the one it made), and the Drafts count stops growing across rehearsals…",
+   "summary": "homepage claims *\"register servers, and must test connectivity before submitting for approval\"*; /servers and /docs both 404 so the submission path is unassessed beyond the claim (fetched 2026-11-21).…",
+   "doneWhen": "a server entry exists and a connectivity check passes, or the record says the runtime cannot host a remote/HTTP server",
+   "gate": "account + review + connectivity test",
+   "ref": null
+  },
+  {
+   "n": 352,
+   "title": "Listing: OpenTools — agentic-commerce audience, submission path unassessed",
+   "done": true,
+   "size": "S",
+   "summary": "*\"a public good on a best-effort basis and is not a paid service\"* — the $0/$99 on the marketing page are storefront scans, not listing fees.…",
+   "doneWhen": "either a free listing exists and paystage is on it, or the record says the listing costs money, at which point it is an operator decision",
+   "gate": "unassessed — could be money",
+   "ref": null
+  },
+  {
+   "n": 353,
+   "title": "Listing: LobeHub MCP directory — an agent client's own catalogue",
+   "done": false,
+   "size": "S",
+   "summary": "lobehub.com/mcp returns 200 but is JS-rendered, so whether we are listed is unassessed (fetched 2026-11-21). LobeHub ships its own agent client; its users browse servers inside the product rather than on the open web.",
+   "doneWhen": "the directory is read through the browser (not a fetch), paystage is either present or submitted, and the submission path is recorded",
+   "gate": "host — the directory has to be read through the authenticated browser, so this is an Ops/host job, not a worker patch",
+   "ref": null
+  },
+  {
+   "n": 354,
+   "title": "Listing: MCP Finder has a submit form and an empty listing area",
+   "done": false,
+   "size": null,
+   "summary": "**blocked on the operator: the form needs a Google sign-in.** /submit redirects to /auth, whose only action is *\"Sign in with Google to continue\"* — no email/password, no guest path (checked 2026-11-21, screenshots in docs/evidence/). Nothing was submitted;…",
+   "doneWhen": "paystage appears in MCP Finder's listing area after a submission, or the form is recorded as broken",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 355,
+   "title": "Listing: mcpmarkete — 4-6 week free queue, still not listed",
+   "done": false,
+   "size": "S",
+   "summary": "mcpmarket.com returns 200 (458 KB) with no occurrence of \"paystage\" (fetched 2026-11-21); a submission was queued previously and has not landed. The 4-6 week queue means the answer is not \"try again tomorrow\" but \"confirm the queued submission survived\".",
+   "doneWhen": "paystage appears in mcpmarket's category search, or the queue position is recorded with the date it was re-checked",
+   "gate": "host — submitting needs the browser session and an account decision",
+   "ref": null
+  },
+  {
+   "n": 356,
+   "title": "Collect the payee observations the classifier reads",
+   "done": false,
+   "size": "M",
+   "summary": "#310 shipped the categoriser and an honest empty page (/wallets/<address> on the hosted app, /wallets?address= in the console), but **no collector exists**, so the table is empty, every page says \"no observations recorded for this address\", and the migration i…",
+   "doneWhen": "a real address has ≥3 observations from ≥2 sources with dates, the page renders them with provenance, and one deliberately conflicting pair is kept as a disagreement rather than resolved",
    "gate": null,
    "ref": null
   }
