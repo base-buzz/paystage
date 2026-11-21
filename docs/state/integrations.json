@@ -110,7 +110,7 @@
       "host_version_tested": "unknown",
       "proof_class": "public-listing",
       "last_verified_at": "2026-11-20",
-      "evidence_ref": "https://github.com/PayMCP/paymcp/blob/main/README.md",
+      "evidence_ref": "https://github.com/PayMCP/paymcp/blob/main/README.md?from=paymcp",
       "evidence_command": "curl -fsSL https://raw.githubusercontent.com/PayMCP/paymcp/main/README.md",
       "notes": "Prose pairing only: the page maps PayMCP's documented 402 challenge to the evaluator input. No PayMCP server was run and no payment was made, so enforcement is none and the host version is unknown. Their API may move."
     },
@@ -124,7 +124,7 @@
       "host_version_tested": "0.8.17",
       "proof_class": "public-listing",
       "last_verified_at": "2026-11-21",
-      "evidence_ref": "https://registry.npmjs.org/@paystage%2Fmcp/latest",
+      "evidence_ref": "https://registry.npmjs.org/@paystage%2Fmcp/latest?from=npm",
       "evidence_command": "node scripts/check-listings.mjs --json",
       "notes": "Live probe on 2026-11-21: published version 0.8.17 matches the local package. A listing does not gate a payment, so pre-action enforcement is none even though the listing is current."
     },
@@ -138,7 +138,7 @@
       "host_version_tested": "unknown",
       "proof_class": "public-listing",
       "last_verified_at": "2026-11-20",
-      "evidence_ref": "https://glama.ai/mcp/servers/base-buzz/paystage",
+      "evidence_ref": "https://glama.ai/mcp/servers/base-buzz/paystage?from=glama",
       "evidence_command": "node scripts/check-listings.mjs --json",
       "notes": "Last successful probe 2026-11-20 found all 10 tool names. On 2026-11-21 the probe failed to fetch the page, so the date stays at the last success and the page version is unknown; this is not evidence that the page changed."
     },
@@ -152,7 +152,7 @@
       "host_version_tested": "0.8.17",
       "proof_class": "public-listing",
       "last_verified_at": "2026-11-21",
-      "evidence_ref": "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz",
+      "evidence_ref": "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz&from=mcp-registry",
       "evidence_command": "node scripts/check-listings.mjs --json",
       "notes": "Live probe on 2026-11-21: the registry entry resolves 0.8.17 and is aligned with the local package. It was behind at 0.8.15 on 2026-11-20; the republish has since landed."
     },
@@ -166,9 +166,37 @@
       "host_version_tested": "unknown",
       "proof_class": "public-listing",
       "last_verified_at": "2026-11-21",
-      "evidence_ref": "https://mcp.so/servers/paystage-6d8a8f",
+      "evidence_ref": "https://mcp.so/servers/paystage-6d8a8f?from=mcp.so",
       "evidence_command": "node scripts/check-listings.mjs --json",
       "notes": "Live probe on 2026-11-21 found 3 of 10 tool names. The page is stale; updating it is the directory's crawl, not a repo change. A listing that is behind still does not gate a payment."
+    },
+    {
+      "id": "x402scan",
+      "name": "x402scan",
+      "kind": "listing",
+      "what_we_gate": "The directory page for a paid x402 endpoint.",
+      "pre_action_enforcement": "none",
+      "receipt_support": "none",
+      "host_version_tested": "unknown",
+      "proof_class": "public-listing",
+      "last_verified_at": "2026-11-14",
+      "evidence_ref": "https://www.x402scan.com/server/71d358eb-0ef8-4d6d-8356-91c5bc237fb0?from=x402scan",
+      "evidence_command": "curl -fsSL 'https://www.x402scan.com/server/71d358eb-0ef8-4d6d-8356-91c5bc237fb0'",
+      "notes": "Registered 2026-11-14 and owner-verified, per ops/docs/state/distribution.json. Not re-probed on 2026-11-21, so the date is the registration date, not a fresh check. An x402 resource listing does not gate a payment."
+    },
+    {
+      "id": "github",
+      "name": "GitHub repository",
+      "kind": "listing",
+      "what_we_gate": "The public source a reader clones or audits.",
+      "pre_action_enforcement": "none",
+      "receipt_support": "none",
+      "host_version_tested": "unknown",
+      "proof_class": "public-listing",
+      "last_verified_at": "2026-11-21",
+      "evidence_ref": "https://github.com/base-buzz/paystage?from=github",
+      "evidence_command": "git rev-parse HEAD",
+      "notes": "The checkout at 2026-11-21 is the repository this row points at; the URL is the canonical public copy. A source listing describes the project and does not gate a payment."
     }
   ]
 }

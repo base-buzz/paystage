@@ -74,6 +74,43 @@ describe("free tier", () => {
     expect(Number(res.headers.get("x-paystage-free-remaining"))).toBe(999);
   });
 
+  it("records ?from= as the event channel at first contact", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 201 }));
+    try {
+      const app = createApp(
+        {
+          ...env,
+          SUPABASE_URL: "https://example.supabase.co",
+          SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        } as never,
+        { facilitatorClient: mockFacilitatorClient() as never },
+      );
+      const res = await app.request(
+        "/v1/evaluate_mcp_payment?from=Glama",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json", "cf-connecting-ip": "203.0.113.9" },
+          body: JSON.stringify(validBody),
+        },
+        env as never,
+      );
+      expect(res.status).toBe(200);
+      expect(res.headers.get("set-cookie") ?? "").toContain("paystage_channel=glama");
+
+      // The row is written by the request telemetry middleware, resolved once from ?from=. Filter to the events
+      // endpoint because the evaluator also persists an evidence bundle through fetch.
+      const eventCalls = () =>
+        fetchSpy.mock.calls.filter(([url]) => String(url).endsWith("/rest/v1/events"));
+      await vi.waitFor(() => expect(eventCalls().length).toBeGreaterThan(0));
+      for (const [, init] of eventCalls()) {
+        const body = JSON.parse(String((init as RequestInit).body));
+        expect(body.channel).toBe("glama");
+      }
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
   it("counts down per IP, and does not charge another IP's allowance", async () => {
     const app = createApp(env as never, { facilitatorClient: mockFacilitatorClient() as never });
     await post(app, "203.0.113.7");

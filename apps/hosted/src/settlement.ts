@@ -105,6 +105,7 @@ export function settlementEvent(input: {
   source: TelemetrySource;
   network?: string | null;
   requestId?: string | null;
+  channel?: string | null;
 }) {
   const payer = normalisePayer(input.receipt.payer);
   const txHash =
@@ -135,6 +136,7 @@ export function settlementEvent(input: {
     tx_hash: txHash,
     payer,
     request_id: input.requestId ?? null,
+    channel: input.channel ?? null,
   };
 }
 
@@ -160,6 +162,7 @@ export function settlementCaptureMiddleware(): MiddlewareHandler {
           source: sourceFromHeaders(c.req),
           network: receipt.network ?? (c.env as { PAYSTAGE_NETWORK?: string } | undefined)?.PAYSTAGE_NETWORK ?? null,
           requestId: c.req.header("x-paystage-request-id") ?? null,
+          channel: c.get("channel") ?? null,
         }) as never,
         (p) => c.executionCtx?.waitUntil?.(p),
       );

@@ -90,16 +90,22 @@ const API = process.env.PAYSTAGE_API_URL ?? "https://api.paystage.xyz";
 
 export async function POST(request: Request) {
   let scenario: keyof typeof SCENARIOS = "allowed";
+  let from: string | undefined;
   try {
-    const body = (await request.json()) as { scenario?: keyof typeof SCENARIOS };
+    const body = (await request.json()) as { scenario?: keyof typeof SCENARIOS; from?: unknown };
     if (body.scenario && body.scenario in SCENARIOS) scenario = body.scenario;
+    // Forwarded only so the hosted API can record the listing channel (#326); it normalises and rejects anything
+    // outside [a-z0-9._-]{1,32}, so this is transport, not a second set of rules.
+    if (typeof body.from === "string" && body.from.length <= 64) from = body.from;
   } catch {
     // No body: run the default scenario rather than fail the demo on a missing field.
   }
 
   const started = Date.now();
   try {
-    const res = await fetch(`${API}/v1/evaluate_mcp_payment`, {
+    const endpoint = new URL(`${API.replace(/\/+$/, "")}/v1/evaluate_mcp_payment`);
+    if (from) endpoint.searchParams.set("from", from);
+    const res = await fetch(endpoint, {
       method: "POST",
       headers: {
         "content-type": "application/json",

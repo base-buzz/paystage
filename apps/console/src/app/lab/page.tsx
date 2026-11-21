@@ -3,6 +3,8 @@ import "../landing.css";
 import { MarketDemandPanel } from "@/components/MarketDemandPanel";
 import { MarketMovementPanel } from "@/components/MarketMovementPanel";
 import { MarketSupplyPanel } from "@/components/MarketSupplyPanel";
+import { ChannelAttributionPanel } from "@/components/ChannelAttributionPanel";
+import { groupByChannel } from "@/lib/channel-counts";
 import { buildDemandView, type MarketDemandRow, type MarketSupplyRow } from "@/lib/market-demand";
 import { buildMarketSeries } from "@/lib/market-series";
 import { selectRowsStrict } from "@/lib/supabase";
@@ -249,6 +251,40 @@ async function readMarketRows<T>(table: "market_supply" | "market_demand"): Prom
   return { rows: result.rows, reason: null };
 }
 
+/**
+ * Channel counts (#326): the newest seven days of `events`, grouped in the application.
+ *
+ * `source=eq.real` keeps our own demo and loadgen labels out of a "which listing sent anyone" number. The query uses
+ * `events_source_ts_idx (source, ts)`; grouping in JS is why no new index was added. Ten thousand rows is a page cap,
+ * not a claim about the window — when the cap is hit the panel says the counts are a floor.
+ */
+const CHANNEL_WINDOW_DAYS = 7;
+const CHANNEL_ROW_CAP = 10_000;
+
+type ChannelEventRow = { channel: string | null };
+
+async function readChannels(): Promise<{
+  rows: ChannelEventRow[];
+  reason: string | null;
+  truncated: boolean;
+}> {
+  const since = new Date(Date.now() - CHANNEL_WINDOW_DAYS * DAY).toISOString();
+  const result = await selectRowsStrict<ChannelEventRow>(
+    "events",
+    `select=channel&ts=gte.${encodeURIComponent(since)}&source=eq.real&order=ts.desc&limit=${CHANNEL_ROW_CAP}`,
+  );
+  if (!result.ok) return { rows: [], reason: channelReason(result.reason), truncated: false };
+  return { rows: result.rows, reason: null, truncated: result.rows.length >= CHANNEL_ROW_CAP };
+}
+
+/** A read failure names `events`, not `probe_runs`: a reason that names the wrong table is a small lie here. */
+function channelReason(reason: string): string {
+  if (reason === "no_service_key") {
+    return "SUPABASE_SERVICE_ROLE_KEY is not set, so the service-key read of events is refused.";
+  }
+  return REASON_TEXT[reason] ?? "unreadable";
+}
+
 async function read(probe: string, limit: number) {
   return selectRowsStrict<ProbeRow>(
     "probe_runs",
@@ -293,10 +329,12 @@ export default async function LabPage() {
     }),
   );
 
-  const [supplyMarket, demandMarket] = await Promise.all([
+  const [supplyMarket, demandMarket, channelRead] = await Promise.all([
     readMarketRows<SupplyRow>("market_supply"),
     readMarketRows<MarketDemandRow>("market_demand"),
+    readChannels(),
   ]);
+  const channelCounts = channelRead.reason === null ? groupByChannel(channelRead.rows) : null;
 
   /**
    * Coverage's denominator is the catalogue's payee count for the demand row's *own* date.
@@ -449,6 +487,14 @@ export default async function LabPage() {
         <MarketMovementPanel series={marketSeries} reason={marketSeriesReason} />
         <MarketDemandPanel view={demandView} />
       </section>
+
+      {/* ---- channel: which listing sent anyone ---- */}
+      <ChannelAttributionPanel
+        counts={channelCounts}
+        reason={channelRead.reason}
+        windowLabel={`the last ${CHANNEL_WINDOW_DAYS} days`}
+        truncated={channelRead.truncated}
+      />
 
       {/* ---- per probe ---- */}
       {data.map((p) => {
@@ -779,6 +825,11 @@ export default async function LabPage() {
             <strong>Registry discovery is structurally zero.</strong> The MCP registry searches server names only and
             truncates at 100 results, so ours cannot surface for a capability query however it is named. That is not a
             regression, and nothing on this page will fix it.
+          </li>
+          <li>
+            <strong>Channel counts are events, not people.</strong> A row is one call that carried a listing token. The{" "}
+            <em>unknown channel</em> row counts calls with no <code>?from=</code>; it is never folded into a known
+            channel or labelled &quot;direct&quot;.
           </li>
           <li>
             <strong>Data as of {today}.</strong> Rows live in <code>probe_runs</code>, one per probe per run.

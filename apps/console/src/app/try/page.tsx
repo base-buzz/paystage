@@ -9,7 +9,13 @@ export const metadata: Metadata = {
     "Send a real x402 payment challenge to the hosted PayStage API and see the verdict. No install, no key, no account.",
 };
 
-export default function TryPage() {
+export default async function TryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const from = typeof params.from === "string" ? params.from : undefined;
   return (
     <main className="lp-wrap" style={{ paddingTop: 48, paddingBottom: 72 }}>
       <h1 style={{ fontSize: 34, lineHeight: 1.15, margin: 0 }}>
@@ -25,7 +31,7 @@ export default function TryPage() {
         npm packages ship.
       </p>
 
-      <TryConsole />
+      <TryConsole from={from} />
       <PaidMainnet />
 
       <section style={{ marginTop: 48, maxWidth: 720 }}>

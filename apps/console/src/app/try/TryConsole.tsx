@@ -70,7 +70,7 @@ const SCENARIOS = [
   },
 ] as const;
 
-export function TryConsole() {
+export function TryConsole({ from }: { from?: string }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
 
@@ -81,7 +81,7 @@ export function TryConsole() {
       const res = await fetch("/api/try", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ scenario }),
+        body: JSON.stringify({ scenario, from }),
       });
       setResult((await res.json()) as Result);
     } catch (error) {

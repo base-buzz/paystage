@@ -21,7 +21,9 @@ export default function PrivacyPage() {
       <h1>Privacy</h1>
       <p className="lp-lead">
         PayStage is a payment-safety tool used by agents. Nothing here requires an account: every tool, the free tier, the
-        paid path and every receipt work signed out. There are no cookies and no tracking pixels.
+        paid path and every receipt work signed out. There are no tracking cookies and no pixels. One first-party
+        session cookie can remember the listing token (<code>?from=</code>) you arrived from; it holds only that token
+        and no identifier.
 
         Signing in is optional and exists for one reason — to remember your theme and language on another device. This
         page states exactly what a call records and exactly what an account would store.
@@ -45,6 +47,12 @@ export default function PrivacyPage() {
           from an <code>x-paystage-client</code> header or the user agent when it names one of our packages. This is the
           build, not you: no IP address, no user-agent string, and nothing that identifies a person is stored. It exists
           so a release can be checked against what is actually installed.
+        </li>
+        <li>
+          <strong>channel</strong> — the listing token from <code>?from=</code> on a listing URL, lowercased and limited
+          to <code>[a-z0-9._-]</code> and 32 characters. Nothing else about the visit is read: no IP address, no
+          referrer URL and no user-agent string. A missing or invalid token is stored as null (unknown), never as
+          &quot;direct&quot;.
         </li>
         <li>
           <strong>decision</strong> and <strong>reason codes</strong> — for example <code>do_not_pay</code> with{" "}
@@ -80,7 +88,13 @@ export default function PrivacyPage() {
           so there is nothing to leak and nothing to reset.
         </li>
         <li>
-          <strong>No cookies or device identifiers</strong> on this site.
+          <strong>No cookies that identify you.</strong> The only cookie is the session one described above: it stores a
+          listing token, not an identifier, and it expires when the browser session does. No device identifier is
+          written to the database.
+        </li>
+        <li>
+          <strong>No referrer URL.</strong> The page that sent you is never read or logged. A publisher can attribute a
+          visit only by putting <code>?from=&lt;channel&gt;</code> on a URL that points at PayStage.
         </li>
         <li>
           <strong>No request bodies.</strong> We record the payment being judged, never the content of your request

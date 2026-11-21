@@ -49,6 +49,11 @@ export interface TelemetryEvent {
   /** Which client package and version made the call (#52). Never an IP, never a person. */
   client_package?: string | null;
   client_version?: string | null;
+  /**
+   * The listing token from `?from=<channel>` (#326), normalised by `channel.ts`. Null means unknown — never "direct"
+   * and never a bucket. This is attribution to a directory, not to a person: no IP, user agent or referrer is read.
+   */
+  channel?: string | null;
   facilitator_status?: string | null;
   error_class?: string | null;
 }
@@ -148,6 +153,7 @@ export function recordEvent(
     request_id: event.request_id ?? null,
     client_package: event.client_package ?? null,
     client_version: event.client_version ?? null,
+    channel: event.channel ?? null,
     facilitator_status: event.facilitator_status ?? null,
     error_class: event.error_class ?? null,
   };
@@ -157,10 +163,11 @@ export function recordEvent(
    * Fields this file may silently drop when the table lacks them.
    *
    * One entry, added 2026-11-14 for the `payer` migration, and it should be deleted once every
-   * environment has the column. Adding to this set is a decision that a missing field is better than
-   * a missing row; that is true for an optional field on a live migration and false in general.
+   * environment has the column. `channel` was added 2026-11-21 for the same reason: its migration is
+   * committed but not applied, and a field the table does not have must not silence telemetry for the
+   * whole window between code and schema. Remove both entries once their columns exist everywhere.
    */
-  const DROPPABLE_FIELDS = new Set(["payer"]);
+  const DROPPABLE_FIELDS = new Set(["payer", "channel"]);
 
   const p: Promise<unknown> = (async () => {
     try {

@@ -11,6 +11,7 @@ import { registerAllTools, SERVER_CAPABILITIES } from "@paystage/mcp/tools";
 import { parsePolicyCached } from "./policy-cache.js";
 import { publicKeyJwk } from "./receipt.js";
 import { recordEvent, sourceFromHeaders, type TelemetrySource } from "./telemetry.js";
+import { channelFromCookieHeader, channelFromUrl, firstTouch } from "./channel.js";
 import { supabaseBundleStore, type BundleStore } from "./bundle-store.js";
 
 export const MCP_PATH = "/mcp";
@@ -18,7 +19,37 @@ const SERVICE_VERSION = "2026.11.14";
 
 type Env = { SUPABASE_URL?: string; SUPABASE_SERVICE_ROLE_KEY?: string };
 
-function buildServer(env: Env, source: TelemetrySource, injectedStore?: BundleStore): McpServer {
+/**
+ * First touch per MCP session (#326).
+ *
+ * `/mcp` bypasses the Hono context, so the cookie middleware's value cannot be read here directly. A Streamable HTTP
+ * client carries `mcp-session-id`; remembering the first valid channel against it gives the same "first touch wins"
+ * rule without reading an IP or a user agent. Per-isolate, like the free-tier counters: a cold isolate forgets the
+ * map, and a request that arrives without the header falls back to the cookie or the URL.
+ */
+const mcpSessionChannels = new Map<string, string>();
+const MCP_SESSION_CAP = 2_000;
+
+function channelForRequest(req: Request): string | null {
+  const sessionId = req.headers.get("mcp-session-id");
+  const prior = sessionId ? mcpSessionChannels.get(sessionId) ?? null : null;
+  const channel = firstTouch(prior ?? channelFromCookieHeader(req.headers.get("cookie")), channelFromUrl(req.url));
+  if (sessionId !== null && channel !== null && !mcpSessionChannels.has(sessionId)) {
+    if (mcpSessionChannels.size >= MCP_SESSION_CAP) {
+      const oldest = mcpSessionChannels.keys().next().value;
+      if (oldest !== undefined) mcpSessionChannels.delete(oldest);
+    }
+    mcpSessionChannels.set(sessionId, channel);
+  }
+  return channel;
+}
+
+function buildServer(
+  env: Env,
+  source: TelemetrySource,
+  channel: string | null,
+  injectedStore?: BundleStore,
+): McpServer {
   const server = new McpServer(
     { name: "paystage", version: SERVICE_VERSION },
     { capabilities: SERVER_CAPABILITIES },
@@ -85,6 +116,7 @@ function buildServer(env: Env, source: TelemetrySource, injectedStore?: BundleSt
             reason_codes: [],
             network: "eip155:8453",
             latency_ms: Date.now() - started,
+            channel,
           },
         );
       } catch {
@@ -105,6 +137,6 @@ export function mcpHandler(
     const source = req
       ? sourceFromHeaders({ header: (name: string) => req.headers.get(name) ?? undefined })
       : "real";
-    return buildServer(env, source, options.bundleStore);
+    return buildServer(env, source, req ? channelForRequest(req) : null, options.bundleStore);
   });
 }

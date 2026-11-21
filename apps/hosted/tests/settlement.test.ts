@@ -111,11 +111,13 @@ describe("settlementEvent", () => {
       paymentHeader,
       tool: "evaluate_mcp_payment",
       source: "synthetic",
+      channel: "glama",
     });
     expect(row.decision).toBe("settled");
     expect(row.amount_usdc).toBe(0.002);
     expect(row.pay_to).toBe("0x833589fcd6edb6e08f4c7c32d4f71b54bda02913");
     expect(row.reason_codes).toEqual([]);
+    expect(row.channel).toBe("glama");
   });
 
   it("falls back to the signed amount when the receipt omits one", () => {

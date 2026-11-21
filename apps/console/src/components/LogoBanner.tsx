@@ -20,15 +20,15 @@ const BUILT_ON = [
 ];
 
 const CALLABLE = [
-  { label: "MCP Registry", note: "listed · remote entry", href: "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz" },
-  { label: "Glama", note: "listed · claimed", href: "https://glama.ai/mcp/servers/base-buzz/paystage" },
-  { label: "x402scan", note: "listed · paid endpoint", href: "https://www.x402scan.com/server/71d358eb-0ef8-4d6d-8356-91c5bc237fb0" },
-  { label: "mcp.so", note: "listed · older tool count", href: "https://mcp.so/servers/paystage-6d8a8f" },
-  { label: "Arcade", note: "worker deployed · not listed", href: "https://arcade.dev" },
+  { label: "MCP Registry", note: "listed · remote entry", href: "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz&from=mcp-registry" },
+  { label: "Glama", note: "listed · claimed", href: "https://glama.ai/mcp/servers/base-buzz/paystage?from=glama" },
+  { label: "x402scan", note: "listed · paid endpoint", href: "https://www.x402scan.com/server/71d358eb-0ef8-4d6d-8356-91c5bc237fb0?from=x402scan" },
+  { label: "mcp.so", note: "listed · older tool count", href: "https://mcp.so/servers/paystage-6d8a8f?from=mcp.so" },
+  { label: "Arcade", note: "worker deployed · not listed", href: "https://arcade.dev?from=arcade" },
   // No count here. A badge reading "10 packages" was wrong the moment the eleventh shipped, and this is the page where a
   // reader can check it in one click — the number lives in the package table, which is generated.
-  { label: "npm", note: "packages · provenance", href: "https://www.npmjs.com/package/@paystage/mcp" },
-  { label: "GitHub", note: "MIT · public CI", href: "https://github.com/base-buzz/paystage" },
+  { label: "npm", note: "packages · provenance", href: "https://www.npmjs.com/package/@paystage/mcp?from=npm" },
+  { label: "GitHub", note: "MIT · public CI", href: "https://github.com/base-buzz/paystage?from=github" },
 ];
 
 function Row({ items }: { items: typeof BUILT_ON }) {

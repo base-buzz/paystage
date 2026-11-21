@@ -18,6 +18,7 @@ import {
   type PayeeObservationStore,
 } from "./payee-observation-store.js";
 import { clientFromHeaders, recordEvent, sourceFromHeaders } from "./telemetry.js";
+import { channelMiddleware } from "./channel.js";
 import { freeTierMiddleware } from "./free-tier.js";
 import { paidQuotaMiddleware, paidQuotaState } from "./paid-quota.js";
 import { settlementCaptureMiddleware } from "./settlement.js";
@@ -53,6 +54,8 @@ export interface AppEnv {
 type Variables = {
   paystageFree: boolean;
   bundleStore: BundleStore | undefined;
+  /** Listing channel for this request (#326); null is unknown, never "direct". */
+  channel: string | null;
 };
 
 export interface CreateAppOptions {
@@ -201,6 +204,10 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
     }),
   );
 
+  // Channel attribution must run before the request logger/telemetry: the event row records the channel
+  // resolved from this request's `?from=`, and the first touch is remembered in a session cookie.
+  app.use("*", channelMiddleware());
+
   // Echo correlating request id on every response (incl. 4xx/5xx).
   app.use("*", async (c, next) => {
     const rid = c.req.header("x-paystage-request-id");
@@ -306,6 +313,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
             request_id: requestId,
             client_package: client.package,
             client_version: client.version,
+            channel: c.get("channel") ?? null,
             facilitator_status,
             error_class,
           },

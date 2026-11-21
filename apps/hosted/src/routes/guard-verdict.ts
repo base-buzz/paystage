@@ -13,7 +13,7 @@ import { recordEvent, sourceFromHeaders } from "../telemetry.js";
  * Free and unauthenticated, like the free tier: the volume here is small and the alternative is that
  * the only people who can audit a refusal are the ones who already have a database.
  */
-export const guardVerdictRoutes = new Hono();
+export const guardVerdictRoutes = new Hono<{ Variables: { channel: string | null } }>();
 
 const VerdictSchema = z.object({
   verdict: z.enum(["pay", "review", "do_not_pay"]),
@@ -48,6 +48,8 @@ guardVerdictRoutes.post("/v1/guard-verdict", async (c) => {
       // The reason codes go in their own column; joining them into error_class would file a refusal as
       // if it were a failure, which is the distinction this whole project is about.
       reason_codes: reasonCodes.slice(0, 10),
+      // The listing that sent this caller (#326). Null is unknown; never a "direct" bucket.
+      channel: c.get("channel") ?? null,
       // The payee is the subject of the decision and a public on-chain address, which is why it can
       // travel here at all. It is not the caller.
       pay_to: payTo ?? null,

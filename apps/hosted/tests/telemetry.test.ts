@@ -83,7 +83,7 @@ describe("recordEvent", () => {
         SUPABASE_URL: "https://example.supabase.co/",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
       },
-      { ...baseEvent, latency_ms: 42, request_id: "rid-1" },
+      { ...baseEvent, latency_ms: 42, request_id: "rid-1", channel: "glama" },
       waitUntil,
     );
     expect(waitUntil).toHaveBeenCalledTimes(1);
@@ -104,6 +104,7 @@ describe("recordEvent", () => {
     expect(body.decision).toBe("allow");
     expect(body.latency_ms).toBe(42);
     expect(body.request_id).toBe("rid-1");
+    expect(body.channel).toBe("glama");
   });
 
   it("swallows fetch errors and logs telemetry_failed", async () => {
@@ -123,6 +124,24 @@ describe("recordEvent", () => {
     expect(logged).toContain("fetch_error");
     // Ensure no secret leaked into logs.
     expect(logged).not.toContain("service-key");
+  });
+
+  it("writes channel: null when no channel was resolved, never a bucket", async () => {
+    fetchSpy.mockResolvedValue(new Response(null, { status: 201 }));
+    const waitUntil = vi.fn();
+    recordEvent(
+      {
+        SUPABASE_URL: "https://example.supabase.co",
+        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+      },
+      baseEvent,
+      waitUntil,
+    );
+    await waitUntil.mock.calls[0]?.[0];
+    const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(String(init.body));
+    expect(body.channel).toBeNull();
+    expect(body.channel).not.toBe("direct");
   });
 
   it("logs telemetry_failed on non-2xx response", async () => {

@@ -15,7 +15,7 @@
 [![CI](https://github.com/base-buzz/paystage/actions/workflows/ci.yml/badge.svg)](https://github.com/base-buzz/paystage/actions/workflows/ci.yml)
 [![licence](https://img.shields.io/github/license/base-buzz/paystage?label=licence)](LICENSE)
 [![canary last published](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbase-buzz%2Fpaystage%2Fbadges%2Fcanary.json)](https://github.com/base-buzz/paystage/actions/workflows/release.yml?query=event%3Aschedule)
-[![MCP Registry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.modelcontextprotocol.io%2Fv0%2Fservers%3Fsearch%3Dio.github.base-buzz%26limit%3D1&query=%24.servers%5B0%5D.server.name&label=MCP%20Registry)](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz)
+[![MCP Registry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.modelcontextprotocol.io%2Fv0%2Fservers%3Fsearch%3Dio.github.base-buzz%26limit%3D1&query=%24.servers%5B0%5D.server.name&label=MCP%20Registry)](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz&from=mcp-registry)
 [![x402 · Base](https://img.shields.io/static/v1?label=x402%20%C2%B7%20Base&message=static&color=0052FF)](#badge-sources)
 
 **Built for agents that spend on your behalf** — Claude Duet, OpenAI Dots, Meta Muse, Grok Bot, and whatever ships next. The
@@ -241,12 +241,14 @@ write one policy file, ask for a verdict, and keep the receipt. `curl` and `node
 
 ## Listed on
 
-- [x402scan](https://www.x402scan.com/server/71d358eb-0ef8-4d6d-8356-91c5bc237fb0) — a directory of paid x402 endpoints
-- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz)
-- [Glama](https://glama.ai/mcp/servers/base-buzz/paystage)
-- [npm](https://www.npmjs.com/package/@paystage/mcp)
-- [GitHub](https://github.com/base-buzz/paystage)
-- [mcp.so](https://mcp.so/servers/paystage-6d8a8f) — lists an older tool count; the endpoint and npm are authoritative
+- [x402scan](https://www.x402scan.com/server/71d358eb-0ef8-4d6d-8356-91c5bc237fb0?from=x402scan) — a directory of paid x402 endpoints
+- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz&from=mcp-registry)
+- [Glama](https://glama.ai/mcp/servers/base-buzz/paystage?from=glama)
+- [npm](https://www.npmjs.com/package/@paystage/mcp?from=npm)
+- [GitHub](https://github.com/base-buzz/paystage?from=github)
+- [mcp.so](https://mcp.so/servers/paystage-6d8a8f?from=mcp.so) — lists an older tool count; the endpoint and npm are authoritative
+
+The `?from=` token on each link names the listing channel; the API records it on the first call and `/lab` reports the counts with unknown as its own row.
 
 ## Pairings
 

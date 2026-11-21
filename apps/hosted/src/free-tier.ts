@@ -127,6 +127,7 @@ export function freeTierMiddleware(cfg: FreeTierConfig = {}): MiddlewareHandler 
         reason_codes: [],
         network: c.env?.PAYSTAGE_NETWORK ?? null,
           request_id: c.req.header("x-paystage-request-id") ?? null,
+          channel: c.get("channel") ?? null,
         } as never,
         waitUntil,
       );
