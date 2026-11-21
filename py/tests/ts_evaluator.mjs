@@ -10,7 +10,7 @@
  * Reads a JSON array of {name, payment_required, policy, agent_id?} on stdin and
  * writes a JSON array of {name, decision, packet, reasons, summary}.
  *
- *   node packages/py/tests/ts_evaluator.mjs < cases.json
+ *   node py/tests/ts_evaluator.mjs < cases.json
  */
 import { readFileSync } from "node:fs";
 import { evaluatePayment } from "../../preflight/dist/evaluate.js";

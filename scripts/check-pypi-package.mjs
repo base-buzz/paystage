@@ -2,7 +2,7 @@
 /**
  * Guard the Python package, which every other check silently skips.
  *
- * All the JS-side checks key off `packages/*​/package.json`, so `packages/py` was invisible to `check-publish-list`,
+ * All the JS-side checks key off `packages/*​/package.json`, so `py` was invisible to `check-publish-list`,
  * `check-manifest-packages`, `check-version-parity`, `check-dep-pins`, `check-deps-budget` and `check-network-claims` — the
  * package could have shipped with a wrong name, a hosted URL typo, or a workflow that authenticates with a token somebody
  * put in a secret, and the only thing that would notice is a human reading it.
@@ -21,7 +21,7 @@
 import { readFileSync, existsSync } from "node:fs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const PY = `${ROOT}packages/py`;
+const PY = `${ROOT}py`;
 const WORKFLOW = `${ROOT}.github/workflows/pypi.yml`;
 
 const problems = [];
@@ -74,7 +74,7 @@ else {
 
 // 6. the line a reader looks for first
 const firstCodeLine = readme.split("\n").find((line) => line.trim() !== "" && !line.startsWith("#")) ?? "";
-if (!/pip install paystage/.test(firstCodeLine)) fail(`packages/py/README.md's first non-heading line is "${firstCodeLine.slice(0, 60)}", expected "pip install paystage"`);
+if (!/pip install paystage/.test(firstCodeLine)) fail(`py/README.md's first non-heading line is "${firstCodeLine.slice(0, 60)}", expected "pip install paystage"`);
 
 if (problems.length > 0) {
   console.error(`check-pypi-package: ${problems.length} problem(s)`);
