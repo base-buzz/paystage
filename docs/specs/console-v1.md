@@ -43,7 +43,7 @@ Vercel is excellent for App Router DX and would be the default for a greenfield 
 - **Supabase:** telemetry events, org already available.
 - **Alchemy:** Base RPC.
 - **npm:** package distribution.
-- **MCP Registry:** `xyz.paystage/mcp`.
+- **MCP Registry:** `io.github.base-buzz/x402-payment-safety`.
 
 ### UI kit direction
 - Next.js App Router.
@@ -91,7 +91,7 @@ Reason codes are rendered verbatim from the policy package output.
 ### Progress rail
 - Shipped npm versions: `@paystage/preflight@0.1.0`, `@paystage/auth-watch@0.1.0`, `@paystage/trade-preflight@0.1.2`, `@paystage/velocity@0.1.2`, `@paystage/policy@0.1.0`, `@paystage/mcp@0.2.1`.
 - npm download counts.
-- MCP Registry listing (`xyz.paystage/mcp`).
+- MCP Registry listing (`io.github.base-buzz/x402-payment-safety`).
 - Uptime %.
 - Changelog.
 - Recent commits (public GitHub).
@@ -220,7 +220,7 @@ Only claim what can be earned. Treat this as a checklist of targets, not a badge
 ### Distribution, not audit
 - Base ecosystem listing.
 - x402 listing.
-- MCP Registry listing (`xyz.paystage/mcp`).
+- MCP Registry listing (`io.github.base-buzz/x402-payment-safety`).
 
 ### Future affiliation targets (never claim until awarded)
 - Base Builder Grants.

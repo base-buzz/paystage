@@ -260,7 +260,7 @@ export const PAYSTAGE_MANIFEST = {
     llms: "/llms.txt",
     llms_full: "/llms-full.txt",
     manifest: "/.well-known/paystage.json",
-    mcp_registry: "xyz.paystage/mcp",
+    mcp_registry: "io.github.base-buzz/x402-payment-safety",
     cadence: "/v1/public/cadence.json",
     // Routes that existed and were served but appeared in no agent-facing document (#140). An endpoint an agent cannot
     // find is an endpoint that does not exist for it.

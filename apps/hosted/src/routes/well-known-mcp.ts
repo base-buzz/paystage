@@ -13,7 +13,7 @@ wellKnownMcpRoutes.get("/.well-known/mcp.json", (c) => {
   const body = {
     // SEP-1649 server card: transport, endpoint, and what the server can do.
     $schema: "https://static.modelcontextprotocol.io/schemas/mcp-server-card.schema.json",
-    name: "xyz.paystage/mcp",
+    name: "io.github.base-buzz/x402-payment-safety",
     title: "PayStage — x402 payment safety",
     description:
       "x402 payment safety: stop your agent paying a drainer before the wallet signs. Nine MCP tools return pay / review / do_not_pay with the rule that fired — policy evaluation, outstanding authorisations, velocity checks, OFAC sanctions screening and signed receipts. Read-only: holds no keys, never signs.",

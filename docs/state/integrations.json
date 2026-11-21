@@ -153,8 +153,8 @@
       "proof_class": "public-listing",
       "last_verified_at": "2026-11-21",
       "evidence_ref": "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz&from=mcp-registry",
-      "evidence_command": "node scripts/check-listings.mjs --json",
-      "notes": "Live probe on 2026-11-21: the registry entry resolves 0.8.17 and is aligned with the local package. It was behind at 0.8.15 on 2026-11-20; the republish has since landed."
+      "evidence_command": "node scripts/check-registry-namespace.mjs --accept-retired",
+      "notes": "Live probe on 2026-11-21, both namespaces read by scripts/check-registry-namespace.mjs. The canonical OIDC namespace serves io.github.base-buzz/x402-payment-safety 0.8.17 (matches npm) and io.github.base-buzz/preflight 0.5.3. @paystage/preflight 0.5.4 is on npm, so the canonical registry is one patch behind for preflight. The retired DNS namespace is frozen: xyz.paystage/mcp 0.3.2 and xyz.paystage/preflight 0.2.2, alongside xyz.paystage/auth-watch 0.2.0 and xyz.paystage/trade-preflight 0.2.0; it is no longer cited as current. The two namespaces do not report the same version, and cannot while the DNS name is frozen."
     },
     {
       "id": "mcp-so",

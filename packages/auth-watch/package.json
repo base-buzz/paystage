@@ -20,7 +20,7 @@
     "server.json",
     "!dist/**/*.map"
   ],
-  "mcpName": "xyz.paystage/auth-watch",
+  "mcpName": "io.github.base-buzz/auth-watch",
   "engines": {
     "node": ">=20"
   },

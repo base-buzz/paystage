@@ -21,7 +21,7 @@
     "README.md",
     "!dist/**/*.map"
   ],
-  "mcpName": "xyz.paystage/trade-preflight",
+  "mcpName": "io.github.base-buzz/trade-preflight",
   "engines": {
     "node": ">=20"
   },

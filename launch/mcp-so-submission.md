@@ -51,4 +51,4 @@ npx @paystage/preflight
 - npm: https://www.npmjs.com/package/@paystage/preflight
 - GitHub: https://github.com/base-buzz/paystage
 - Website: https://paystage.xyz
-- MCP Registry name: `xyz.paystage/preflight`
+- MCP Registry name: `io.github.base-buzz/preflight`

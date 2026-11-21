@@ -42,7 +42,7 @@ not that it is absent.
 
 | Surface | Reader | What it needs from us | Status |
 |---|---|---|---|
-| [Official MCP Registry](https://registry.modelcontextprotocol.io) | agent + builder | `server.json` per package | **Listed** — `xyz.paystage/auth-watch` and siblings answer the search API |
+| [Official MCP Registry](https://registry.modelcontextprotocol.io) | agent + builder | `server.json` per package | **Listed** — `io.github.base-buzz/auth-watch` and siblings answer the search API |
 | [mcp.so](https://mcp.so/server/paystage) | builder | listing text | Listed; the old path 301s to https://mcp.so/servers/paystage-6d8a8f, use that in copy |
 | [x402scan.com](https://x402scan.com) | agent builder | a live 402 endpoint | Unverified |
 | [Agentic.Market](https://agentic.market) | agent builder | listing | Unverified |

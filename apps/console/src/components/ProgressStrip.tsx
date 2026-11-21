@@ -181,12 +181,12 @@ export async function ProgressStrip() {
           <span className="muted">release {release}</span>
         ) : null}
         <a
-          href={`https://registry.modelcontextprotocol.io/v0/servers?search=xyz.paystage`}
+          href={`https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz`}
           target="_blank"
           rel="noopener noreferrer"
           className="link"
         >
-          MCP registry · xyz.paystage/mcp
+          MCP registry · io.github.base-buzz
         </a>
       </div>
       {commits.length > 0 ? (

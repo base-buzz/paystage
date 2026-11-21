@@ -29,6 +29,10 @@ jobs:
       # Publish lists are hand-written in three places; a package missing from one is never released and
       # never asserted. Compare all three against packages/ so the failure lands on the commit that adds it.
       - run: node scripts/check-publish-list.mjs
+      # One registry namespace: io.github.base-buzz is canonical, xyz.paystage is retired
+      # and frozen. --accept-retired prints the known-frozen drift instead of failing on
+      # published state we cannot change; any other drift still fails.
+      - run: node scripts/check-registry-namespace.mjs --accept-retired
       - run: node scripts/check-count-claims.mjs
       - run: node scripts/check-network-claims.mjs
       - run: node scripts/gen-integrations.mjs --check

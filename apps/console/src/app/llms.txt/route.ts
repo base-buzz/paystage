@@ -148,7 +148,7 @@ ${m.socials.map((social) => `- ${social.label}: ${social.url}`).join("\n")}
 - Drainer list + sources: https://github.com/base-buzz/paystage/blob/main/packages/preflight/KNOWN_DRAINERS.md
 - Changelog: https://github.com/base-buzz/paystage/blob/main/CHANGELOG.md
 - npm: https://www.npmjs.com/package/@paystage/mcp
-- MCP Registry: https://registry.modelcontextprotocol.io (xyz.paystage/mcp)
+- MCP Registry: https://registry.modelcontextprotocol.io (io.github.base-buzz/x402-payment-safety)
 `;
 
   return new Response(body, {

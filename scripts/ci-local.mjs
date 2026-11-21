@@ -202,7 +202,7 @@ try {
   }
 
   // The checks CI runs as separate steps.
-  for (const script of [
+  for (const check of [
     "check-claims.mjs",
     "check-client-manifests.mjs",
     "check-agent-surfaces.mjs --live",
@@ -239,9 +239,11 @@ try {
     "check-client-env.mjs",
     "check-deps-budget.mjs",
     "check-pypi-package.mjs",
+    "check-registry-namespace.mjs --accept-retired",
   ]) {
+    const [script, ...scriptArgs] = check.split(" ");
     if (!existsSync(join(worktree, "scripts", script))) continue;
-    run(script, "node", [join("scripts", script)], worktree);
+    run(check, "node", [join("scripts", script), ...scriptArgs], worktree);
   }
 } catch (error) {
   failed = true;

@@ -1,7 +1,12 @@
 # Publish to the official MCP registry on release
 
+> **Historical — retired namespace.** This patch record describes the DNS-claimed
+> `xyz.paystage` namespace used in 2026-11. That namespace is frozen and is no longer
+> cited as current; `release.yml` publishes `io.github.base-buzz/*` with GitHub OIDC.
+> The versions quoted below were correct when the patch was written, not now.
+
 The official registry (`registry.modelcontextprotocol.io`) is what MCP clients resolve
-against, and it is **stale**: `xyz.paystage/mcp` is at **0.2.2** while npm is 0.3.1,
+against, and it was **stale**: `xyz.paystage/mcp` is at **0.2.2** while npm is 0.3.1,
 and `xyz.paystage/preflight` is at **0.1.0** while npm is 0.2.1.
 
 Anyone discovering PayStage through the registry installs a version that predates

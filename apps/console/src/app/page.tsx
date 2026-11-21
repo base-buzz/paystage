@@ -473,7 +473,7 @@ export default function LandingPage() {
                     <code>registry.modelcontextprotocol.io</code>
                   </td>
                   <td>
-                    MCP Registry entry <code>xyz.paystage/mcp</code> for discovery and
+                    MCP Registry entry <code>io.github.base-buzz/x402-payment-safety</code> for discovery and
                     install.
                   </td>
                 </tr>
