@@ -183,6 +183,7 @@ try {
     "check-agent-surfaces.mjs --live",
     "gen-lists-manifest.mjs --check",
     "gen-integrations.mjs --check",
+    "check-integrations-grading.mjs",
     "gen-verified-payees.mjs --check",
     "gen-build-info.mjs --check",
     "check-copy.mjs",
