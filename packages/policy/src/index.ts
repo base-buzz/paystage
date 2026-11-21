@@ -4,3 +4,4 @@ export * from "./amounts.js";
 export * from "./load.js";
 
 export * from "./agents.js";
+export * from "./payee-category.js";

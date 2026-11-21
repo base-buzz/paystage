@@ -182,6 +182,50 @@ export const PROBLEMS = {
       fix: "Retry after the indicated delay. An empty bundle is never substituted for a failed read.",
       ...(instance !== undefined ? { instance } : {}),
     }),
+  invalidAddress: (instance?: string) =>
+    problem({
+      status: 400,
+      code: "invalid_address",
+      title: "That is not an EVM address",
+      detail: "The path segment must be a 0x-prefixed, 40-hex-character EVM address.",
+      retriable: false,
+      field: "address",
+      fix: "Pass the address you want observations for as 0x followed by 40 hex characters.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  payeeStorageNotConfigured: (instance?: string) =>
+    problem({
+      status: 503,
+      code: "payee_storage_not_configured",
+      title: "Payee observation storage is not configured",
+      detail:
+        "This deployment has no SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY, so there is nowhere to read observations from. Do not read this as an address with no observations.",
+      retriable: false,
+      fix: "Configure the two Supabase bindings and apply supabase/migrations/*_payee_observations.sql, then retry.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  payeeStorageUnavailable: (instance?: string) =>
+    problem({
+      status: 503,
+      code: "payee_storage_unavailable",
+      title: "Payee observation storage did not answer",
+      detail: "The observation store rejected the read. This address may have observations; this response cannot say.",
+      retriable: true,
+      retryAfterSeconds: 5,
+      fix: "Retry after the indicated delay. An empty observation list is never substituted for a failed read.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  payeeStoreCorrupt: (instance?: string) =>
+    problem({
+      status: 503,
+      code: "payee_store_corrupt",
+      title: "A stored observation could not be read",
+      detail:
+        "At least one stored row is not a valid observation (unknown field or wrong value type). It was not dropped, because a missing row would look like a fact that was never observed.",
+      retriable: false,
+      fix: "Fix the offending row in payee_observations; the collector must write only the fields the classifier recognises.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
   faucetAlreadyFunded: (resetsAt: string, hours: number, instance?: string) =>
     problem({
       status: 429,

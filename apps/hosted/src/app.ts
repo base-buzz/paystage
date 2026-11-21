@@ -11,7 +11,12 @@ import { wellKnownMcpRoutes } from "./routes/well-known-mcp.js";
 import { guardVerdictRoutes } from "./routes/guard-verdict.js";
 import { openapiRoutes } from "./routes/openapi.js";
 import { createRunsRoutes } from "./routes/runs.js";
+import { createWalletsRoutes } from "./routes/wallets.js";
 import { BUNDLE_STORE_VAR, supabaseBundleStore, type BundleStore } from "./bundle-store.js";
+import {
+  supabasePayeeObservationStore,
+  type PayeeObservationStore,
+} from "./payee-observation-store.js";
 import { clientFromHeaders, recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { freeTierMiddleware } from "./free-tier.js";
 import { paidQuotaMiddleware, paidQuotaState } from "./paid-quota.js";
@@ -55,6 +60,8 @@ export interface CreateAppOptions {
   protect?: boolean;
   /** Test/deployment seam for evidence-bundle storage; defaults to the Supabase store. */
   bundleStore?: BundleStore;
+  /** Test/deployment seam for payee-observation storage; defaults to the Supabase store. */
+  payeeObservationStore?: PayeeObservationStore;
 }
 
 function nonEmpty(v: string | undefined): v is string {
@@ -175,6 +182,8 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
 
   const app = new Hono<{ Variables: Variables }>();
   const bundleStore = opts.bundleStore ?? supabaseBundleStore(env);
+  const payeeObservationStore =
+    opts.payeeObservationStore ?? supabasePayeeObservationStore(env);
   app.use("*", async (c, next) => {
     c.set(BUNDLE_STORE_VAR, bundleStore);
     await next();
@@ -332,6 +341,9 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   // Public and read-only: checking a past decision is not a new payment.
   const runsRoutes = createRunsRoutes(bundleStore);
   app.route("/", runsRoutes);
+  // Public and read-only: a category is a list of observations, not a paid evaluation.
+  const walletsRoutes = createWalletsRoutes(payeeObservationStore);
+  app.route("/", walletsRoutes);
 
   const protect = opts.protect ?? true;
   if (protect) {
