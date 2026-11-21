@@ -1,9 +1,31 @@
 import { z } from "zod";
 import type { Policy } from "./types.js";
 
-const addressSchema = z
+const evmAddressSchema = z
   .string()
   .regex(/^0x[a-fA-F0-9]{40}$/, "Expected a 0x-prefixed Ethereum address");
+
+/**
+ * A payee or asset address on any chain the evaluator understands.
+ *
+ * Solana addresses are base58 and case-sensitive; EVM addresses are 0x-prefixed hex and are
+ * compared case-insensitively. Accepting both here is what lets one policy name a Solana mint
+ * and payee without a second chain module.
+ */
+const vmAddressSchema = z
+  .string()
+  .regex(
+    /^(0x[a-fA-F0-9]{40}|[1-9A-HJ-NP-Za-km-z]{32,44})$/,
+    "Expected a 0x-prefixed Ethereum address or a base58 Solana address",
+  );
+
+/** CAIP-2 ids the evaluator can match: EVM chains, Solana networks, and `@x402/svm`'s wildcard. */
+const networkIdSchema = z
+  .string()
+  .regex(
+    /^(eip155:\d+|solana:\*|solana:[1-9A-HJ-NP-Za-km-z]{32,44})$/,
+    "Expected a network id like eip155:8453 or solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+  );
 
 const amountSpecSchema = z.object({
   value: z
@@ -16,7 +38,7 @@ const amountSpecSchema = z.object({
 const assetSchema = z.object({
   symbol: z.string().min(1),
   decimals: z.number().int().min(0),
-  address: addressSchema,
+  address: vmAddressSchema,
   /**
    * Optional since #37: an asset can be named by address for any allowed network.
    *
@@ -25,10 +47,7 @@ const assetSchema = z.object({
    * network allow-list still decides which chains are reachable, so this widens nothing beyond what the operator already
    * listed.
    */
-  network: z
-    .string()
-    .regex(/^eip155:\d+$/, "Expected a network id like eip155:8453")
-    .optional()
+  network: networkIdSchema.optional()
 });
 
 
@@ -78,16 +97,14 @@ const BasePolicySchema = z.object({
   version: z.literal(1),
   max_amount: amountSpecSchema,
   daily_cap: amountSpecSchema.optional(),
-  allowed_pay_to: z.array(addressSchema).min(1),
+  allowed_pay_to: z.array(vmAddressSchema).min(1),
   allowed_assets: z.array(assetSchema).min(1),
   /**
    * A policy caps ONE asset by name. Allowing others without saying so is how an uncapped
    * asset slips past a reader who thinks `max_amount` is the ceiling — opt in deliberately.
    */
   allow_uncapped_assets: z.boolean().optional(),
-  allowed_networks: z
-    .array(z.string().regex(/^eip155:\d+$/))
-    .min(1),
+  allowed_networks: z.array(networkIdSchema).min(1),
   max_timeout_seconds: z.number().int().positive(),
   /**
    * When an agent may pay, in UTC.
@@ -99,7 +116,7 @@ const BasePolicySchema = z.object({
   require_human_above: amountSpecSchema.optional(),
   unknown_payee: z.enum(["review", "deny"]),
   max_auth_validity_seconds: z.number().int().positive().optional(),
-  allowed_spenders: z.array(addressSchema).optional(),
+  allowed_spenders: z.array(evmAddressSchema).optional(),
   disallow_unlimited_approvals: z.boolean().optional(),
   velocity: z
     .object({ windows: z.array(velocityWindowSchema).min(1) })
@@ -114,9 +131,9 @@ const BasePolicySchema = z.object({
       z.object({
         max_amount: amountSpecSchema.optional(),
         daily_cap: amountSpecSchema.optional(),
-        allowed_pay_to: z.array(addressSchema).optional(),
+        allowed_pay_to: z.array(vmAddressSchema).optional(),
         allowed_assets: z.array(assetSchema).optional(),
-        allowed_networks: z.array(z.string().regex(/^eip155:\d+$/)).optional(),
+        allowed_networks: z.array(networkIdSchema).optional(),
         unknown_payee: z.enum(["review", "deny"]).optional(),
         require_human_above: amountSpecSchema.optional(),
         velocity: z.object({ windows: z.array(velocityWindowSchema).min(1) }).optional(),

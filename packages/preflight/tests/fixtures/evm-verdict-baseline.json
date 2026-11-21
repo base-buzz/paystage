@@ -1,0 +1,468 @@
+{
+  "policy": {
+    "version": 1,
+    "max_amount": {
+      "value": "1.00",
+      "asset": "USDC",
+      "decimals": 6
+    },
+    "daily_cap": {
+      "value": "10.00",
+      "asset": "USDC",
+      "decimals": 6
+    },
+    "allowed_pay_to": [
+      "0x209693Bc6afc0C5328bA36FaF03C514EF312287C"
+    ],
+    "allowed_assets": [
+      {
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "network": "eip155:8453"
+      },
+      {
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "network": "eip155:84532"
+      }
+    ],
+    "allowed_networks": [
+      "eip155:8453",
+      "eip155:84532"
+    ],
+    "max_timeout_seconds": 300,
+    "require_human_above": {
+      "value": "0.50",
+      "asset": "USDC",
+      "decimals": 6
+    },
+    "unknown_payee": "review"
+  },
+  "pay": {
+    "decision": "pay",
+    "selectedAccept": {
+      "scheme": "exact",
+      "network": "eip155:84532",
+      "amount": "10000",
+      "payTo": "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
+      "maxTimeoutSeconds": 60,
+      "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+    },
+    "acceptResults": [
+      {
+        "accept": {
+          "scheme": "exact",
+          "network": "eip155:84532",
+          "amount": "10000",
+          "payTo": "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
+          "maxTimeoutSeconds": 60,
+          "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+        },
+        "status": "pay",
+        "reasons": []
+      }
+    ],
+    "reasons": [],
+    "summary": "Decision: pay. Selected 0.01 USDC on eip155:84532 to 0x209693Bc6afc0C5328bA36FaF03C514EF312287C.",
+    "steps": [
+      {
+        "seq": 1,
+        "rule": "agent.resolve",
+        "scope": "request",
+        "outcome": "pass",
+        "detail": "global policy applied (no per-agent overlay)"
+      },
+      {
+        "seq": 2,
+        "rule": "request.time_window",
+        "scope": "request",
+        "outcome": "skip",
+        "detail": "no time_window configured, so the hour was not a factor"
+      },
+      {
+        "seq": 3,
+        "rule": "request.version",
+        "scope": "request",
+        "outcome": "pass",
+        "detail": "x402Version is 2"
+      },
+      {
+        "seq": 4,
+        "rule": "request.accepts",
+        "scope": "request",
+        "outcome": "pass",
+        "detail": "1 accept option(s) to evaluate"
+      },
+      {
+        "seq": 5,
+        "rule": "accept.network",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "network eip155:84532 is in allowed_networks"
+      },
+      {
+        "seq": 6,
+        "rule": "accept.asset",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "asset USDC at 0x036CbD53842c5426634e7929541eC2318f3dCF7e matched allowed_assets on eip155:84532"
+      },
+      {
+        "seq": 7,
+        "rule": "accept.amount",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "atomic amount 10000 parsed"
+      },
+      {
+        "seq": 8,
+        "rule": "accept.max_amount",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "amount 0.01 USDC is at or under max_amount 1.00 USDC"
+      },
+      {
+        "seq": 9,
+        "rule": "accept.timeout",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "maxTimeoutSeconds 60 is within policy max_timeout_seconds 300"
+      },
+      {
+        "seq": 10,
+        "rule": "accept.payee_shape",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "payTo 0x209693Bc6afc0C5328bA36FaF03C514EF312287C is a 20-byte hex address"
+      },
+      {
+        "seq": 11,
+        "rule": "accept.known_drainer",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "payee is not on the known-drainer list"
+      },
+      {
+        "seq": 12,
+        "rule": "accept.non_receivable",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "payee is not on the non-receivable list"
+      },
+      {
+        "seq": 13,
+        "rule": "accept.sanctions",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "payee is not on the OFAC SDN list"
+      },
+      {
+        "seq": 14,
+        "rule": "accept.payee_allowlist",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "payTo 0x209693Bc6afc0C5328bA36FaF03C514EF312287C is in allowed_pay_to"
+      },
+      {
+        "seq": 15,
+        "rule": "accept.verified_payee",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "skip",
+        "detail": "no verified-payee record for tool"
+      },
+      {
+        "seq": 16,
+        "rule": "accept.require_human_above",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "amount 0.01 USDC is at or under require_human_above 0.50 USDC"
+      },
+      {
+        "seq": 17,
+        "rule": "accept.result",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "all accept rules allowed this option"
+      },
+      {
+        "seq": 18,
+        "rule": "result.select",
+        "scope": "result",
+        "outcome": "note",
+        "detail": "accept #0 selected from the pay-tier options (cheapest first)"
+      },
+      {
+        "seq": 19,
+        "rule": "result.daily_cap",
+        "scope": "result",
+        "outcome": "skip",
+        "detail": "daily_cap 10.00 USDC (informational only); the evaluator keeps no cross-call history"
+      },
+      {
+        "seq": 20,
+        "rule": "result.payment_identifier",
+        "scope": "result",
+        "outcome": "skip",
+        "detail": "no payment_identifier supplied"
+      },
+      {
+        "seq": 21,
+        "rule": "result.verdict",
+        "scope": "result",
+        "outcome": "pass",
+        "detail": "Decision: pay. Selected 0.01 USDC on eip155:84532 to 0x209693Bc6afc0C5328bA36FaF03C514EF312287C."
+      }
+    ],
+    "dailyCapNote": "daily_cap 10.00 USDC (informational only)"
+  },
+  "review": {
+    "decision": "review",
+    "selectedAccept": {
+      "scheme": "exact",
+      "network": "eip155:84532",
+      "amount": "600000",
+      "payTo": "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
+      "maxTimeoutSeconds": 60,
+      "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+    },
+    "acceptResults": [
+      {
+        "accept": {
+          "scheme": "exact",
+          "network": "eip155:84532",
+          "amount": "600000",
+          "payTo": "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
+          "maxTimeoutSeconds": 60,
+          "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+        },
+        "status": "review",
+        "reasons": [
+          "amount 0.6 USDC exceeds require_human_above 0.50 USDC"
+        ]
+      }
+    ],
+    "reasons": [
+      "amount 0.6 USDC exceeds require_human_above 0.50 USDC"
+    ],
+    "summary": "Decision: review. Selected 0.6 USDC on eip155:84532 to 0x209693Bc6afc0C5328bA36FaF03C514EF312287C.",
+    "steps": [
+      {
+        "seq": 1,
+        "rule": "agent.resolve",
+        "scope": "request",
+        "outcome": "pass",
+        "detail": "global policy applied (no per-agent overlay)"
+      },
+      {
+        "seq": 2,
+        "rule": "request.time_window",
+        "scope": "request",
+        "outcome": "skip",
+        "detail": "no time_window configured, so the hour was not a factor"
+      },
+      {
+        "seq": 3,
+        "rule": "request.version",
+        "scope": "request",
+        "outcome": "pass",
+        "detail": "x402Version is 2"
+      },
+      {
+        "seq": 4,
+        "rule": "request.accepts",
+        "scope": "request",
+        "outcome": "pass",
+        "detail": "1 accept option(s) to evaluate"
+      },
+      {
+        "seq": 5,
+        "rule": "accept.network",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "network eip155:84532 is in allowed_networks"
+      },
+      {
+        "seq": 6,
+        "rule": "accept.asset",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "asset USDC at 0x036CbD53842c5426634e7929541eC2318f3dCF7e matched allowed_assets on eip155:84532"
+      },
+      {
+        "seq": 7,
+        "rule": "accept.amount",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "atomic amount 600000 parsed"
+      },
+      {
+        "seq": 8,
+        "rule": "accept.max_amount",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "amount 0.6 USDC is at or under max_amount 1.00 USDC"
+      },
+      {
+        "seq": 9,
+        "rule": "accept.timeout",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "maxTimeoutSeconds 60 is within policy max_timeout_seconds 300"
+      },
+      {
+        "seq": 10,
+        "rule": "accept.payee_shape",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "payTo 0x209693Bc6afc0C5328bA36FaF03C514EF312287C is a 20-byte hex address"
+      },
+      {
+        "seq": 11,
+        "rule": "accept.known_drainer",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "payee is not on the known-drainer list"
+      },
+      {
+        "seq": 12,
+        "rule": "accept.non_receivable",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "payee is not on the non-receivable list"
+      },
+      {
+        "seq": 13,
+        "rule": "accept.sanctions",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "payee is not on the OFAC SDN list"
+      },
+      {
+        "seq": 14,
+        "rule": "accept.payee_allowlist",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "pass",
+        "detail": "payTo 0x209693Bc6afc0C5328bA36FaF03C514EF312287C is in allowed_pay_to"
+      },
+      {
+        "seq": 15,
+        "rule": "accept.verified_payee",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "skip",
+        "detail": "no verified-payee record for tool"
+      },
+      {
+        "seq": 16,
+        "rule": "accept.require_human_above",
+        "scope": "accept",
+        "accept_index": 0,
+        "outcome": "review",
+        "detail": "amount 0.6 USDC exceeds require_human_above 0.50 USDC"
+      },
+      {
+        "seq": 17,
+        "rule": "result.select",
+        "scope": "result",
+        "outcome": "note",
+        "detail": "accept #0 selected from the review-tier options (cheapest first)"
+      },
+      {
+        "seq": 18,
+        "rule": "result.daily_cap",
+        "scope": "result",
+        "outcome": "skip",
+        "detail": "daily_cap 10.00 USDC (informational only); the evaluator keeps no cross-call history"
+      },
+      {
+        "seq": 19,
+        "rule": "result.payment_identifier",
+        "scope": "result",
+        "outcome": "skip",
+        "detail": "no payment_identifier supplied"
+      },
+      {
+        "seq": 20,
+        "rule": "result.verdict",
+        "scope": "result",
+        "outcome": "review",
+        "detail": "Decision: review. Selected 0.6 USDC on eip155:84532 to 0x209693Bc6afc0C5328bA36FaF03C514EF312287C."
+      }
+    ],
+    "dailyCapNote": "daily_cap 10.00 USDC (informational only)",
+    "packet": {
+      "schema": "paystage.review-packet.v1",
+      "amount": {
+        "value": "0.6",
+        "symbol": "USDC",
+        "atomic": "600000",
+        "share": {
+          "of": "require_human_above",
+          "denominator": "0.50 USDC",
+          "ratio": "120%"
+        }
+      },
+      "payee": {
+        "address": "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
+        "network": "eip155:84532",
+        "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "symbol": "USDC",
+        "origin": "tool"
+      },
+      "rule": "amount 0.6 USDC exceeds require_human_above 0.50 USDC",
+      "checked": [
+        "network: eip155:84532 is in allowed_networks",
+        "asset: USDC at 0x036CbD53842c5426634e7929541eC2318f3dCF7e matched allowed_assets",
+        "amount: 0.6 USDC (600000 atomic) parsed and compared",
+        "max_amount: 0.6 USDC is at or under 1.00 USDC",
+        "timeout: 60s is within max_timeout_seconds 300",
+        "payee shape: 0x209693Bc6afc0C5328bA36FaF03C514EF312287C is a 20-byte hex address",
+        "known-drainer, non-receivable and OFAC SDN lists: no match",
+        "payee allowlist: matched",
+        "require_human_above: crossed at 0.50 USDC"
+      ],
+      "not_checked": [
+        "payee-vs-host verification: skipped — no verified record for tool",
+        "per-agent budget: not configured — the global policy applied",
+        "time window: skipped — no time_window configured, so the hour was not a factor",
+        "payment-identifier replay: skipped — no payment_identifier supplied",
+        "daily budget remaining: not checked — daily_cap 10.00 USDC is informational and the evaluator keeps no cross-call history",
+        "seller reputation and address-risk feed: not checked — the local evaluator makes no network calls",
+        "transfer simulation: not checked — the evaluator does not simulate the transfer or its balance changes",
+        "agent identity, request id, approval URL and signature scope: omitted — proposed, no surface evidence in the review-packet study"
+      ],
+      "decision": {
+        "question": "Pay 0.6 USDC to 0x209693Bc6afc0C5328bA36FaF03C514EF312287C on eip155:84532?",
+        "options": [
+          "pay",
+          "do_not_pay"
+        ]
+      }
+    }
+  }
+}

@@ -8,6 +8,15 @@ import {
 import { isKnownDrainer, isNonReceivable } from "./known-drainers.js";
 import { SANCTIONED_ADDRESSES } from "./sanctioned-addresses.js";
 import { verifiedPayeeFor } from "./verified-payees.js";
+import {
+  currentSvmPeer,
+  isSolanaNetwork,
+  SVM_PEER_ABSENT_DETAIL,
+  SVM_PEER_PRESENT_DETAIL,
+  SVM_WILDCARD,
+  validateSolanaAccept,
+  type SvmValidationPeer,
+} from "./solana.js";
 
 export interface AcceptOption {
   scheme: string;
@@ -154,6 +163,24 @@ function eq(a: string, b: string): boolean {
   return a.toLowerCase() === b.toLowerCase();
 }
 
+/**
+ * `allowed_networks` entries are exact CAIP-2 ids, except `solana:*`, which is the wildcard
+ * `@x402/svm` itself registers for v2 clients. An EVM entry always matches exactly.
+ */
+function networkMatches(allowed: string, actual: string): boolean {
+  if (allowed === SVM_WILDCARD) return isSolanaNetwork(actual);
+  return eq(allowed, actual);
+}
+
+/**
+ * Solana base58 addresses are case-sensitive, so the EVM habit of lowercasing before comparing
+ * would let two different mints or payees compare equal. EVM addresses keep their old,
+ * case-insensitive behaviour.
+ */
+function addressEq(network: string, a: string, b: string): boolean {
+  return isSolanaNetwork(network) ? a === b : eq(a, b);
+}
+
 function findAsset(
   policy: Policy,
   network: string,
@@ -163,8 +190,8 @@ function findAsset(
   // networks are reachable, so this cannot widen the policy beyond what the operator listed.
   return policy.allowed_assets.find(
     (a) =>
-      (a.network === undefined || eq(a.network, network)) &&
-      eq(a.address, assetAddress),
+      (a.network === undefined || networkMatches(a.network, network)) &&
+      addressEq(network, a.address, assetAddress),
   );
 }
 
@@ -176,6 +203,7 @@ function evaluateAccept(
   resource: PaymentResource | undefined,
   record: RecordStep,
   acceptIndex: number,
+  svmPeer: SvmValidationPeer | null,
 ): AcceptResult {
   const reasons: string[] = [];
   const pass = (rule: string, detail: string): void => {
@@ -197,7 +225,7 @@ function evaluateAccept(
 
   // Rule 2: network allowlist
   const networkAllowed = policy.allowed_networks.some((n) =>
-    eq(n, accept.network),
+    networkMatches(n, accept.network),
   );
   if (!networkAllowed) {
     return deny(
@@ -206,6 +234,23 @@ function evaluateAccept(
     );
   }
   pass("accept.network", `network ${accept.network} is in allowed_networks`);
+
+  // Rule 2.5: SVM requirement assertions. These are the four checks @x402/svm makes on a
+  // payment requirement before it builds a payload. They run before the policy asset lookup
+  // so a malformed Solana address is reported as `solana.asset`, not as "not in allowed_assets".
+  const solana = isSolanaNetwork(accept.network);
+  if (solana) {
+    if (svmPeer) {
+      pass("solana.peer", SVM_PEER_PRESENT_DETAIL);
+    } else {
+      // An optional peer that is absent must not look like a check that passed. The
+      // transcript says the built-in copy ran; the verdict still depends on all four rules.
+      skip("solana.peer", SVM_PEER_ABSENT_DETAIL);
+    }
+    const svm = validateSolanaAccept(accept, svmPeer);
+    for (const check of svm.assertions) pass(check.rule, check.detail);
+    if (!svm.ok) return deny(svm.rule, svm.reason);
+  }
 
   // Rule 3: asset must match allowed_assets with same network
   const asset = findAsset(policy, accept.network, accept.asset);
@@ -263,46 +308,65 @@ function evaluateAccept(
     `maxTimeoutSeconds ${accept.maxTimeoutSeconds} is within policy max_timeout_seconds ${policy.max_timeout_seconds}`,
   );
 
-  // Rule 1.5: the payee must be a 20-byte hex address.
-  //
-  // An external trading agent found this on our own example: `0x6160…3757e` has 41 hex characters, and the
-  // evaluator answered `pay` because the string matched the allow-list as text. A malformed address is either a
-  // typo or a swap, and money sent to it is unrecoverable — so it is a refusal with a named reason, not a match.
-  if (!ADDRESS_RE.test(String(accept.payTo ?? ""))) {
-    return deny(
-      "accept.payee_shape",
-      `invalid payTo address: expected 0x plus 40 hex characters, got ${String(accept.payTo ?? "").length - 2}`,
+  if (!solana) {
+    // Rule 1.5: the payee must be a 20-byte hex address.
+    //
+    // An external trading agent found this on our own example: `0x6160…3757e` has 41 hex characters, and the
+    // evaluator answered `pay` because the string matched the allow-list as text. A malformed address is either a
+    // typo or a swap, and money sent to it is unrecoverable — so it is a refusal with a named reason, not a match.
+    if (!ADDRESS_RE.test(String(accept.payTo ?? ""))) {
+      return deny(
+        "accept.payee_shape",
+        `invalid payTo address: expected 0x plus 40 hex characters, got ${String(accept.payTo ?? "").length - 2}`,
+      );
+    }
+    pass("accept.payee_shape", `payTo ${accept.payTo} is a 20-byte hex address`);
+
+    // Rule 7a: known drainers — hard deny before unknown_payee review
+    if (isKnownDrainer(accept.payTo)) {
+      return deny("accept.known_drainer", "known drainer");
+    }
+    pass("accept.known_drainer", "payee is not on the known-drainer list");
+
+    // Rule 7a2: non-receivable sinks. Separate from the drainer list because the fact is different — paying
+    // 0x…dEaD destroys the funds, nobody steals them. Same verdict, truthful reason, and the published drainer
+    // list stops claiming a burn address is a thief.
+    if (isNonReceivable(accept.payTo)) {
+      return deny(
+        "accept.non_receivable",
+        `non-receivable payee ${accept.payTo} (funds are destroyed, not received)`,
+      );
+    }
+    pass("accept.non_receivable", "payee is not on the non-receivable list");
+
+    // Rule 7b: OFAC sanctions. Separate from the drainer list because the reason for refusing is different —
+    // a drainer takes your funds, a sanctioned address may make paying *you* the violation. Both are hard
+    // denies, and the reason code says which list fired so a human can check the citation.
+    if (SANCTIONED_ADDRESSES.has(String(accept.payTo).toLowerCase())) {
+      return deny("accept.sanctions", "sanctioned address (OFAC SDN)");
+    }
+    pass("accept.sanctions", "payee is not on the OFAC SDN list");
+  } else {
+    // The drainer and sanctions lists hold EVM addresses. Saying "no match" for a Solana payee
+    // would claim a check that cannot see this chain, so the transcript records the skip.
+    skip(
+      "accept.known_drainer",
+      "the known-drainer list holds EVM addresses; it was not applied to this Solana payee",
     );
-  }
-  pass("accept.payee_shape", `payTo ${accept.payTo} is a 20-byte hex address`);
-
-  // Rule 7a: known drainers — hard deny before unknown_payee review
-  if (isKnownDrainer(accept.payTo)) {
-    return deny("accept.known_drainer", "known drainer");
-  }
-  pass("accept.known_drainer", "payee is not on the known-drainer list");
-
-  // Rule 7a2: non-receivable sinks. Separate from the drainer list because the fact is different — paying
-  // 0x…dEaD destroys the funds, nobody steals them. Same verdict, truthful reason, and the published drainer
-  // list stops claiming a burn address is a thief.
-  if (isNonReceivable(accept.payTo)) {
-    return deny(
+    skip(
       "accept.non_receivable",
-      `non-receivable payee ${accept.payTo} (funds are destroyed, not received)`,
+      "the non-receivable list holds EVM addresses; it was not applied to this Solana payee",
+    );
+    skip(
+      "accept.sanctions",
+      "the OFAC SDN list in this package holds EVM addresses; it was not applied to this Solana payee",
     );
   }
-  pass("accept.non_receivable", "payee is not on the non-receivable list");
-
-  // Rule 7b: OFAC sanctions. Separate from the drainer list because the reason for refusing is different —
-  // a drainer takes your funds, a sanctioned address may make paying *you* the violation. Both are hard
-  // denies, and the reason code says which list fired so a human can check the citation.
-  if (SANCTIONED_ADDRESSES.has(String(accept.payTo).toLowerCase())) {
-    return deny("accept.sanctions", "sanctioned address (OFAC SDN)");
-  }
-  pass("accept.sanctions", "payee is not on the OFAC SDN list");
 
   // Rule 7: payee allowlist
-  const payeeAllowed = policy.allowed_pay_to.some((p) => eq(p, accept.payTo));
+  const payeeAllowed = policy.allowed_pay_to.some((p) =>
+    addressEq(accept.network, p, accept.payTo),
+  );
   if (!payeeAllowed) {
     if (policy.unknown_payee === "deny") {
       return deny(
@@ -325,7 +389,14 @@ function evaluateAccept(
    * for — `review`, not `do_not_pay`, because a provider may legitimately rotate its payee and refusing on rotation would punish
    * the honest case this registry exists to protect.
    */
-  if (resource?.url) {
+  if (solana) {
+    // The registry's records are EVM addresses. Comparing a base58 payee to one would produce a
+    // `review` for every Solana payment, which is a false positive dressed as a safety check.
+    skip(
+      "accept.verified_payee",
+      "the verified-payee registry holds EVM addresses; it was not compared to this Solana payee",
+    );
+  } else if (resource?.url) {
     let host: string | undefined;
     try {
       host = new URL(resource.url).host.toLowerCase();
@@ -496,33 +567,56 @@ export function buildReviewPacket(
     );
   }
   checked.push(`timeout: ${accept.maxTimeoutSeconds}s is within max_timeout_seconds ${policy.max_timeout_seconds}`);
-  checked.push(`payee shape: ${accept.payTo} is a 20-byte hex address`);
-  checked.push("known-drainer, non-receivable and OFAC SDN lists: no match");
-
-  const payeeAllowed = policy.allowed_pay_to.some((p) => eq(p, accept.payTo));
-  checked.push(
-    payeeAllowed
-      ? "payee allowlist: matched"
-      : `payee allowlist: no match (unknown_payee=${policy.unknown_payee})`,
+  const solana = isSolanaNetwork(accept.network);
+  const payeeAllowed = policy.allowed_pay_to.some((p) =>
+    addressEq(accept.network, p, accept.payTo),
   );
+  if (solana) {
+    checked.push(`SVM network: ${accept.network} is one of the three CAIP-2 networks @x402/svm accepts`);
+    checked.push(`SVM asset: ${accept.asset} is a 32-byte base58 mint address`);
+    checked.push(`SVM payee: ${accept.payTo} is a 32-byte base58 address`);
+    checked.push(`SVM amount: ${accept.amount} is an unsigned integer inside the SPL Token u64 range`);
+    notChecked.push(
+      "known-drainer, non-receivable and OFAC SDN lists: these lists hold EVM addresses, so they were not applied to this Solana payee",
+    );
+    notChecked.push(
+      "fee payer, compute budget, fee-payer isolation, inner transfers and smart-wallet limits: not checked — @x402/svm verifies these against a signed transaction, and a payment challenge contains none",
+    );
+    notChecked.push(
+      "payee-vs-host verification: skipped — the verified-payee registry holds EVM addresses",
+    );
+    checked.push(
+      payeeAllowed
+        ? "payee allowlist: matched"
+        : `payee allowlist: no match (unknown_payee=${policy.unknown_payee})`,
+    );
+  } else {
+    checked.push(`payee shape: ${accept.payTo} is a 20-byte hex address`);
+    checked.push("known-drainer, non-receivable and OFAC SDN lists: no match");
+    checked.push(
+      payeeAllowed
+        ? "payee allowlist: matched"
+        : `payee allowlist: no match (unknown_payee=${policy.unknown_payee})`,
+    );
 
-  if (origin) {
-    if (reachedVerifiedPayee) {
-      const verified = verifiedPayeeFor(origin);
-      if (verified) {
-        checked.push(`verified-payee registry: ${origin} is verified at ${verified.payee}`);
+    if (origin) {
+      if (reachedVerifiedPayee) {
+        const verified = verifiedPayeeFor(origin);
+        if (verified) {
+          checked.push(`verified-payee registry: ${origin} is verified at ${verified.payee}`);
+        } else {
+          notChecked.push(`payee-vs-host verification: skipped — no verified record for ${origin}`);
+        }
       } else {
-        notChecked.push(`payee-vs-host verification: skipped — no verified record for ${origin}`);
+        notChecked.push(
+          `payee-vs-host verification: skipped — ${unknownPayeeReview ? "the payee allowlist" : "an earlier rule"} returned review before the registry was consulted`,
+        );
       }
     } else {
       notChecked.push(
-        `payee-vs-host verification: skipped — ${unknownPayeeReview ? "the payee allowlist" : "an earlier rule"} returned review before the registry was consulted`,
+        "payee-vs-host verification: skipped — the challenge has no resource.url, so there is no host to compare the payee against",
       );
     }
-  } else {
-    notChecked.push(
-      "payee-vs-host verification: skipped — the challenge has no resource.url, so there is no host to compare the payee against",
-    );
   }
 
   if (policy.require_human_above && reachedRequireHuman) {
@@ -628,6 +722,13 @@ export interface EvaluateOptions {
   paymentIdentifier?: string;
   /** How long an identifier stays "already judged". Ten minutes covers retry loops; a rebuy is a new challenge or a new identifier. */
   dedupWindowMs?: number;
+  /**
+   * The optional `@x402/svm` exports, when the host has loaded them.
+   *
+   * `undefined` uses whatever `loadSvmPeer()` found (the built-in copy when absent); `null`
+   * explicitly models an absent peer. An injected peer must expose the same two helpers.
+   */
+  svmPeer?: SvmValidationPeer | null;
 }
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -774,8 +875,10 @@ export function evaluatePayment(
     detail: `${pr.accepts.length} accept option(s) to evaluate`,
   });
 
+  const svmPeer =
+    options.svmPeer === undefined ? currentSvmPeer() : options.svmPeer;
   const acceptResults = pr.accepts.map((a, index) =>
-    evaluateAccept(a, effective, pr.resource, record, index),
+    evaluateAccept(a, effective, pr.resource, record, index, svmPeer),
   );
 
   const payAccepts = acceptResults

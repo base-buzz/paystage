@@ -11,6 +11,23 @@ export type {
   ReviewPacketOptions,
 } from "./evaluate.js";
 export { normalizePaymentRequired } from "./normalize.js";
+// The Solana requirement checks and the optional `@x402/svm` peer. A host that wants the
+// peer's own tables calls `loadSvmPeer()` once at start-up; without it the built-in copies
+// run and the evaluation transcript records the peer's absence.
+export {
+  loadSvmPeer,
+  currentSvmPeer,
+  setSvmPeer,
+  resetSvmPeer,
+  isSolanaNetwork,
+  validateSolanaAccept,
+  SUPPORTED_SVM_NETWORKS,
+  SVM_MAINNET_CAIP2,
+  SVM_DEVNET_CAIP2,
+  SVM_TESTNET_CAIP2,
+  SVM_WILDCARD,
+} from "./solana.js";
+export type { SvmValidationPeer, SolanaAssertion } from "./solana.js";
 // The MCP server lives at `@paystage/preflight/mcp` and is not re-exported here.
 //
 // It used to be, which meant importing `evaluatePayment` loaded a module that imports

@@ -83,10 +83,14 @@
     "vitest": "^4.1.12"
   },
   "peerDependencies": {
-    "@modelcontextprotocol/server": "^2.4.0"
+    "@modelcontextprotocol/server": "^2.4.0",
+    "@x402/svm": "^2.32.0"
   },
   "peerDependenciesMeta": {
     "@modelcontextprotocol/server": {
+      "optional": true
+    },
+    "@x402/svm": {
       "optional": true
     }
   }
