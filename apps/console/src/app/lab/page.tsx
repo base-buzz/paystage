@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import "../landing.css";
 import { MarketDemandPanel } from "@/components/MarketDemandPanel";
-import { buildDemandView, type MarketDemandRow, type MarketSupplyRow, type ReadResult } from "@/lib/market-demand";
+import { MarketMovementPanel } from "@/components/MarketMovementPanel";
+import { MarketSupplyPanel } from "@/components/MarketSupplyPanel";
+import { buildDemandView, type MarketDemandRow, type MarketSupplyRow } from "@/lib/market-demand";
+import { buildMarketSeries } from "@/lib/market-series";
 import { selectRowsStrict } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -223,21 +226,27 @@ function Panel({ children, tone = "neutral" }: { children: React.ReactNode; tone
  * Two reads, not one, because they come from different sources and fail independently — a day can have a catalogue with no on-chain window, or the reverse, and the page must be able to
  * say which half is missing rather than drawing a zero.
  */
-interface SupplySnapshotRow {
-  run_date: string;
-  resources: number;
-  accepts: number;
-  payees: number;
-  hosts: number;
-  median_price_usdc: number | null;
-  p90_price_usdc: number | null;
-  networks: Record<string, number>;
-}
+type SupplyRow = MarketSupplyRow & {
+  resources?: number | string | null;
+  accepts?: number | string | null;
+  hosts?: number | string | null;
+  median_price_usdc?: number | string | null;
+  p90_price_usdc?: number | string | null;
+  top_payees?: unknown;
+  networks?: Record<string, number>;
+};
 
-async function readMarket<T>(table: "market_supply" | "market_demand"): Promise<{ row: T | null; reason: string | null }> {
-  const result = await selectRowsStrict<T>(table, "select=*&order=run_date.desc&limit=1");
-  if (!result.ok) return { row: null, reason: marketReason(table, result.reason) };
-  return { row: result.rows[0] ?? null, reason: null };
+/**
+ * Read a window of daily rows, not one row.
+ *
+ * #322 needs the calendar, and the weekday-to-weekday movement the panel states cannot be recovered from the latest
+ * row alone. Thirty rows is enough for a seven-day gate plus the gaps that make it unready; it is a cap on page work,
+ * not a claim that older days do not exist.
+ */
+async function readMarketRows<T>(table: "market_supply" | "market_demand"): Promise<{ rows: T[]; reason: string | null }> {
+  const result = await selectRowsStrict<T>(table, "select=*&order=run_date.desc&limit=30");
+  if (!result.ok) return { rows: [], reason: marketReason(table, result.reason) };
+  return { rows: result.rows, reason: null };
 }
 
 async function read(probe: string, limit: number) {
@@ -284,37 +293,45 @@ export default async function LabPage() {
     }),
   );
 
-  const [supplyMarket, demandMarket] = await Promise.all([readMarket<SupplySnapshotRow>("market_supply"), readMarket<MarketDemandRow>("market_demand")]);
+  const [supplyMarket, demandMarket] = await Promise.all([
+    readMarketRows<SupplyRow>("market_supply"),
+    readMarketRows<MarketDemandRow>("market_demand"),
+  ]);
 
   /**
    * Coverage's denominator is the catalogue's payee count for the demand row's *own* date.
    *
-   * Reading the latest catalogue row instead would put two different days in one ratio on the morning the demand
-   * worker runs before the catalogue worker. If that day's catalogue row is missing the panel says coverage has no
+   * The series reads every recent catalogue row, and `buildDemandView` matches the latest demand row against the
+   * catalogue row with the same `run_date`. If that day's catalogue row is missing the panel says coverage has no
    * denominator; it never borrows yesterday's.
    */
-  let supplyForDemand: ReadResult<MarketSupplyRow> = { ok: true, rows: [] };
-  if (demandMarket.row) {
-    const catalogueForDate = await selectRowsStrict<MarketSupplyRow>(
-      "market_supply",
-      `select=run_date,payees&run_date=eq.${demandMarket.row.run_date}&limit=1`,
-    );
-    supplyForDemand = catalogueForDate.ok
-      ? { ok: true, rows: catalogueForDate.rows }
-      : { ok: false, reason: marketReason("market_supply", catalogueForDate.reason) };
-  }
-
   const demandView = buildDemandView(
     {
-      demand: demandMarket.row
-        ? { ok: true, rows: [demandMarket.row] }
-        : demandMarket.reason
-          ? { ok: false, reason: demandMarket.reason }
-          : { ok: true, rows: [] },
-      supply: supplyForDemand,
+      demand:
+        demandMarket.rows.length > 0
+          ? { ok: true, rows: demandMarket.rows }
+          : demandMarket.reason !== null
+            ? { ok: false, reason: demandMarket.reason }
+            : { ok: true, rows: [] },
+      supply:
+        supplyMarket.rows.length > 0
+          ? { ok: true, rows: supplyMarket.rows }
+          : supplyMarket.reason !== null
+            ? { ok: false, reason: supplyMarket.reason }
+            : { ok: true, rows: [] },
     },
     Date.now(),
   );
+
+  /**
+   * The series is only built when both tables read cleanly. A failed read is not a missing day: building a series from
+   * the half that answered would draw a gap exactly where the page cannot see, which is the failure #322 exists to
+   * prevent. The movement panel says which read failed instead.
+   */
+  const marketSeriesReason = supplyMarket.reason ?? demandMarket.reason;
+  const marketSeries =
+    marketSeriesReason === null ? buildMarketSeries({ supply: supplyMarket.rows, demand: demandMarket.rows }) : null;
+  const latestSupply = supplyMarket.rows[0] ?? null;
 
   const today = new Date().toISOString().slice(0, 10);
   const measured = data.filter((p) => p.series.length > 0);
@@ -400,26 +417,28 @@ export default async function LabPage() {
           What sellers advertise
         </h2>
 
-        {supplyMarket.row ? (
+        {latestSupply ? (
           <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6 }}>
-            <strong>{Number(supplyMarket.row.resources).toLocaleString("en-US")}</strong> resources across{" "}
-            <strong>{Number(supplyMarket.row.accepts).toLocaleString("en-US")}</strong> accepts, from{" "}
-            <strong>{Number(supplyMarket.row.payees).toLocaleString("en-US")}</strong> distinct payees on{" "}
-            {Number(supplyMarket.row.hosts).toLocaleString("en-US")} hosts
-            {supplyMarket.row.median_price_usdc !== null ? (
+            <strong>{Number(latestSupply.resources).toLocaleString("en-US")}</strong> resources across{" "}
+            <strong>{Number(latestSupply.accepts).toLocaleString("en-US")}</strong> accepts, from{" "}
+            <strong>{Number(latestSupply.payees).toLocaleString("en-US")}</strong> distinct payees on{" "}
+            {Number(latestSupply.hosts).toLocaleString("en-US")} hosts
+            {latestSupply.median_price_usdc != null ? (
               <>
                 {" "}
-                · median ask <strong>{Number(supplyMarket.row.median_price_usdc).toLocaleString("en-US")} USDC</strong>, p90{" "}
-                {Number(supplyMarket.row.p90_price_usdc ?? 0).toLocaleString("en-US")}
+                · median ask <strong>{Number(latestSupply.median_price_usdc).toLocaleString("en-US")} USDC</strong>, p90{" "}
+                {Number(latestSupply.p90_price_usdc ?? 0).toLocaleString("en-US")}
               </>
             ) : null}
-            . Read {supplyMarket.row.run_date}. A catalogue entry is a seller&apos;s claim, not a probe of that seller — we have not paid these endpoints.
+            . Read {latestSupply.run_date}. A catalogue entry is a seller&apos;s claim, not a probe of that seller — we have not paid these endpoints.
           </p>
         ) : (
           <p style={{ marginTop: 12, fontSize: 14, opacity: 0.8 }}>
             No catalogue reading stored{supplyMarket.reason ? ` — ${supplyMarket.reason}` : ""}. Half the market picture is missing; the demand panel below is unaffected.
           </p>
         )}
+
+        <MarketSupplyPanel rows={supplyMarket.rows} reason={supplyMarket.reason} />
       </section>
 
       {/* ---- demand: what listed sellers are actually paid ---- */}
@@ -427,6 +446,7 @@ export default async function LabPage() {
         <h2 style={{ fontSize: 15, margin: 0, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.65 }}>
           What sellers receive, measured daily
         </h2>
+        <MarketMovementPanel series={marketSeries} reason={marketSeriesReason} />
         <MarketDemandPanel view={demandView} />
       </section>
 

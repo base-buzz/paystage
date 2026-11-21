@@ -68,42 +68,48 @@ export function MarketDemandPanel({ view }: { view: DemandView }) {
         </p>
       ) : null}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 18, marginTop: 14 }}>
-        <Stat
-          label="Payee transfers"
-          value={formatCount(s.payeeTransfers)}
-          note="direct transfers to watched payees"
-        />
-        <Stat
-          label="Value received"
-          value={formatUsdc(s.payeeTransfersValueUsdc)}
-          note="direct to watched payees"
-        />
-        <Stat
-          label="Chain-wide USDC transfers"
-          value={formatCount(s.chainUsdcTransfers)}
-          note="baseline, same block window"
-        />
-        <div>
-          <div style={LABEL_STYLE}>Coverage · paid ÷ listed</div>
-          <div style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.3 }}>
-            {formatCoverage(s.coverage)}
-          </div>
-          <div style={{ fontSize: 11.5, opacity: 0.55 }}>{coverageDetail(s)}</div>
-          {/* Not a tooltip, not optional: the method sits with the ratio in every state. */}
-          <p style={{ fontSize: 12, margin: "6px 0 0", lineHeight: 1.5 }}>
-            <strong>Method:</strong> {DEMAND_METHOD}.
-          </p>
-          {methodNote ? (
-            <p style={{ fontSize: 11.5, margin: "2px 0 0", opacity: 0.55 }}>{methodNote}</p>
-          ) : null}
+      {/*
+        Coverage is the headline (#322): the demand question is "how much of the listed market actually got paid",
+        not "how many transfers did we see". The counts sit beneath it as the working, not as competing headlines.
+      */}
+      <div style={{ marginTop: 14 }}>
+        <div style={LABEL_STYLE}>Coverage · payees paid ÷ payees listed</div>
+        <div style={{ fontSize: 38, fontWeight: 650, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
+          {formatCoverage(s.coverage)}
         </div>
+        <div style={{ fontSize: 12.5, opacity: 0.65, marginTop: 2 }}>{coverageDetail(s)}</div>
+        {/* Not a tooltip, not optional: the method sits with the ratio in every state. */}
+        <p style={{ fontSize: 12, margin: "7px 0 0", lineHeight: 1.5 }}>
+          <strong>Method:</strong> {DEMAND_METHOD}.
+        </p>
+        {methodNote ? (
+          <p style={{ fontSize: 11.5, margin: "2px 0 0", opacity: 0.55 }}>{methodNote}</p>
+        ) : null}
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 18,
+          marginTop: 18,
+          paddingTop: 14,
+          borderTop: "1px solid rgba(128,128,128,0.22)",
+        }}
+      >
+        <Stat label="Payee transfers" value={formatCount(s.payeeTransfers)} note="direct transfers to watched payees" />
+        <Stat label="Value received" value={formatUsdc(s.payeeTransfersValueUsdc)} note="direct to watched payees" />
         <Stat label="Distinct payers" value={formatCount(s.distinctPayers)} />
-        <Stat label="Repeat payers" value={formatCount(s.repeatPayers)} note="more than one transfer" />
         <Stat
           label="Payment size p50 / p90"
           value={`${formatUsdc(s.sizeP50Usdc)} / ${formatUsdc(s.sizeP90Usdc)}`}
           note={s.sizeP50Usdc === null ? "not recorded" : undefined}
+        />
+        <Stat label="Repeat payers" value={formatCount(s.repeatPayers)} note="more than one transfer" />
+        <Stat
+          label="Chain-wide USDC transfers"
+          value={formatCount(s.chainUsdcTransfers)}
+          note="baseline, same block window"
         />
         <Stat label="Window" value={`${formatCount(s.windowBlocks)} blocks`} note={s.runDate} />
       </div>
