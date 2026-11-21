@@ -193,9 +193,17 @@ export function recordEvent(
       //
       // So the drop is an allowlist, and the allowlist is one field with a date on it. Anything else
       // fails loudly and keeps its error.
+      let detail = "";
       if (res.status === 400) {
-        const detail = await res.text().catch(() => "");
-        const missing = /PGRST204|column .* does not exist|Could not find the '([a-z_]+)' column/i.exec(detail);
+        detail = await res.text().catch(() => "");
+        // PGRST204 puts `code` before `message`, and the message is the only place the column is
+        // named. Capture the message form FIRST: the old alternation listed the bare `PGRST204`
+        // first, so it matched the code and returned before the capture group, leaving `field`
+        // undefined, `droppable` false, and the retry never fired (#360).
+        const missing =
+          /Could not find the '([a-z_]+)' column/i.exec(detail) ??
+          /column "([a-z_]+)"(?: of [^ ]+)? does not exist/i.exec(detail) ??
+          /PGRST204/i.exec(detail);
         const field = missing?.[1];
         // No captured name means we cannot say what is missing; dropping anything (especially a
         // default of `payer`) would be guessing with the field this project most needs.
@@ -208,10 +216,11 @@ export function recordEvent(
               level: "error",
               msg: "telemetry_field_dropped",
               field,
-              note: "on the drop allowlist; retrying without it. Remove it from DROPPABLE_FIELDS once the column exists.",
+              reason: "missing_migration",
+              note: `the events table has no '${field}' column, so the '${field}' migration is committed but not applied. Retrying without it; apply the migration and remove '${field}' from DROPPABLE_FIELDS.`,
             }),
           );
-          return fetch(endpoint, {
+          const retried = await fetch(endpoint, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -221,6 +230,19 @@ export function recordEvent(
             },
             body: JSON.stringify(rest),
           });
+          if (!retried.ok) {
+            const retriedBody = await retried.text().catch(() => "");
+            console.log(
+              JSON.stringify({
+                level: "error",
+                msg: "telemetry_retry_rejected",
+                field,
+                status: retried.status,
+                body: retriedBody.slice(0, 300),
+              }),
+            );
+          }
+          return retried;
         }
       }
 
@@ -239,13 +261,16 @@ export function recordEvent(
       // invisible: every request 200s, nothing is recorded, and the site reports zero users. The
       // status and body are logged so the next schema drift is diagnosable from the logs alone.
       if (!res.ok) {
-        const body = await res.text().catch(() => "");
+        // Reuse the body read above. A Response body can only be read once, so the old code — which
+        // consumed the 400 in the drop check and read `res.text()` again here — logged an empty
+        // body, and the column that was missing never reached the logs.
+        if (detail === "") detail = await res.text().catch(() => "");
         console.log(
           JSON.stringify({
             level: "error",
             msg: "telemetry_insert_rejected",
             status: res.status,
-            body: body.slice(0, 300),
+            body: detail.slice(0, 300),
           }),
         );
       }
