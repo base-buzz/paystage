@@ -112,7 +112,8 @@ Is this spend a burst, a spike, or a runaway cadence? Takes the recent action hi
 
 Checks a receipt against the published signing key and returns the verdict it attests to, or why it
 cannot be trusted. `VALID`, `INVALID` (altered), `EXPIRED` (past its own lifetime), `payment-mismatch`
-(genuine, but about a different payment), or `UNVERIFIABLE` — which is a refusal, not a pass.
+(genuine, but about a different payment), or `UNVERIFIABLE` — which is a refusal, not a pass. Pass
+`chain` (an array of receipts) to verify a hash-chained list and get the first gap instead.
 
 ### `decode_payment_required` — Available now
 
@@ -165,7 +166,12 @@ us — it fetches the published key and verifies the signature over the canonica
 ```sh
 npx -y -p @paystage/mcp paystage-verify receipt.json
 cat receipt.json | npx -y -p @paystage/mcp paystage-verify -
+npx -y -p @paystage/mcp paystage-verify --chain receipts.json   # JSON array or JSONL
 ```
+
+`--chain` walks a hash-chained list and reports the first gap by index, with the receipt ids
+either side. A lone receipt keeps the single-receipt verdicts below; chaining never makes an
+isolated receipt require a predecessor.
 
 Exit codes are distinct on purpose:
 
@@ -177,6 +183,7 @@ Exit codes are distinct on purpose:
 | 3 | unverifiable — the key could not be fetched, or an input file could not be read, so nothing can be checked |
 | 4 | inputs-mismatch — the receipt is genuine but does not cover the `--request`/`--policy` you supplied |
 | 5 | stale — the receipt is genuine but older than `--max-age` allows |
+| 8 | chain-gap — a receipt is missing, reordered, or the list starts mid-chain |
 
 "Invalid" and "could not check" are different facts and must not collapse into one
 failure. `--key <file>` verifies against a local JWK for point-in-time checks.

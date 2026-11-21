@@ -50,6 +50,40 @@ The **payload** — every field above except `signed`, `alg`, `key_id`, `signatu
 canonical form of the payload; verify against the same. `alg` is `ECDSA-P256-SHA256`, and
 the key is published at `https://api.paystage.xyz/.well-known/paystage-receipt-key.json`.
 
+### `prev` — the hash chain (#171)
+
+A receipt may carry `prev` **inside the signed payload**:
+
+| Value | Meaning |
+|---|---|
+| `"genesis"` | the first receipt this issuer produced |
+| 64 lowercase hex | SHA-256 of the previous receipt's canonical signed payload |
+| absent | pre-chain: issued before chaining existed, or by an issuer with no stored chain head |
+
+The receipt id used by the chain is SHA-256 over the canonical payload with the signature fields
+(`signed`, `alg`, `key_id`, `signature`) stripped. `prev` names that id. A verifier does not need
+any ordering assumption: the link is signed, and a list is walked from its first link.
+
+```sh
+npx -y -p @paystage/mcp paystage-verify --chain receipts.json
+# JSON array, or one JSON receipt per line (JSONL)
+```
+
+The walk reports the **first gap by index**, with the receipt ids either side and, when the claim
+names a real digest, the id of the missing receipt. Exit 0 is a complete chain; exit 8 is a gap
+(missing, reordered, or a list that starts mid-chain); exit 1 is a receipt that fails its own
+signature. A lone receipt is **not** walked: `paystage-verify receipt.json` returns exactly the
+same verdicts as before, whether or not it carries `prev`.
+
+What a hash chain proves: no interior receipt was removed or reordered in **this list**. What it
+cannot prove by itself: that the first or last entry is the real start or end of the issuer's
+history — that needs the head or tail committed somewhere outside the list. A missing `prev` is
+treated as pre-chain, never as invalid.
+
+The hosted Worker is stateless and stores no per-issuer chain head, so it does **not** emit `prev`;
+two live receipts from it are not an ordered chain. A stateful issuer supplies `prev` explicitly
+from its stored head (`buildReceipt({ prev })`), and must not present an inferred ordering.
+
 ### That document is a key SET, not a key
 
 ```json

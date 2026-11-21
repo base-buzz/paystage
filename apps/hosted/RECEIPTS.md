@@ -35,6 +35,14 @@ Does **not** prove the policy was a good one, that the drainer list was current,
 or that the caller supplied the inputs it claims. A receipt is an accounting
 record, not an audit.
 
+## Chaining (`prev`)
+
+Receipts may carry `prev` inside the signed payload: `"genesis"` for the first, or the SHA-256 of
+the previous receipt's canonical payload. It is optional because this Worker is stateless — there
+is no per-issuer chain head it can read, and guessing one would invent an ordering. Live receipts
+from this endpoint are therefore pre-chain. A stateful issuer supplies `prev` explicitly; see
+`docs/specs/receipt-spec.md` for the walk and its limits.
+
 ## Canonicalization
 
 Both digests are SHA-256 over a canonical JSON form: object keys sorted,

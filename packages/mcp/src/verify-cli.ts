@@ -10,7 +10,15 @@
  */
 
 import { readFile } from "node:fs/promises";
-import { DEFAULT_KEY_URL, verifyReceipt, type JwkLike, type ReceiptLike, type VerifyVerdict } from "./verify.js";
+import {
+  DEFAULT_KEY_URL,
+  verifyReceipt,
+  verifyReceiptChain,
+  type ChainVerdict,
+  type JwkLike,
+  type ReceiptLike,
+  type VerifyVerdict,
+} from "./verify.js";
 
 const EXIT: Record<VerifyVerdict["status"], number> = {
   "signed-and-valid": 0,
@@ -36,8 +44,10 @@ function usage(): string {
     "Usage:",
     "  paystage-verify <receipt.json>        verify a file",
     "  cat receipt.json | paystage-verify -  verify stdin",
+    "  paystage-verify --chain <list>        verify a JSON array or JSONL chain and report the first gap",
     "",
     "Options:",
+    "  --chain <path> walk a receipt list (JSON array or one JSON receipt per line)",
     "  --key <path>   verify against a local JWK instead of the published one",
     "  --key-url <u>  override the published key endpoint",
     "  --json         machine-readable output",
@@ -49,11 +59,75 @@ function usage(): string {
     "Exit codes:",
     "  0 valid · 1 invalid · 2 unsigned · 3 unverifiable · 4 inputs-mismatch · 5 stale",
     "  6 payment-mismatch · 7 expired",
+    "  8 chain-gap (a receipt is missing, reordered or starts mid-chain)",
     "  4 means the receipt is genuine but does not cover the inputs you supplied",
     "  5 means the receipt is genuine but older than --max-age allows",
     "  6 means the receipt is genuine but was issued for a different payment",
     "  7 means the receipt is genuine but its own expires_at has passed",
+    "  8 means the chain has a first gap; the gap names the receipts either side",
   ].join("\n");
+}
+
+/** A JSON array, a single receipt object, or one JSON receipt per line. */
+function parseReceiptList(raw: string): ReceiptLike[] {
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) throw new Error("file is empty");
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (Array.isArray(parsed)) return parsed as ReceiptLike[];
+    if (parsed !== null && typeof parsed === "object") return [parsed as ReceiptLike];
+    throw new Error("top-level JSON is not an object or array");
+  } catch (error) {
+    // Not one JSON document: try JSONL, but keep the original error when no line parses
+    // either, so a malformed array does not get reported as "line 1".
+    if (!(error instanceof SyntaxError)) throw error;
+  }
+  const lines = trimmed.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.length > 0);
+  if (lines.length === 0) throw new Error("file is empty");
+  return lines.map((line, index) => {
+    try {
+      return JSON.parse(line) as ReceiptLike;
+    } catch {
+      throw new Error(`line ${index + 1} is not valid JSON`);
+    }
+  });
+}
+
+function formatChain(chain: ChainVerdict): string {
+  if (chain.status === "chain-valid") {
+    const lines = [
+      `CHAIN VALID — ${chain.count} receipt${chain.count === 1 ? "" : "s"}, head ${chain.head}, no gaps`,
+      ...chain.receipts.map((r) => `  [${r.index}] ${r.id}`),
+    ];
+    if (!chain.anchored) lines.push(`  note: ${chain.note}`);
+    return lines.join("\n");
+  }
+  if (chain.status === "chain-gap") {
+    const previous = chain.previous === null ? "(none — this is the head)" : `[${chain.previous.index}] ${chain.previous.id}`;
+    const lines = [
+      `CHAIN GAP at receipt ${chain.index} — ${chain.reason}`,
+      `  previous: ${previous}`,
+      `  next:     [${chain.next.index}] ${chain.next.id}`,
+      `  expected prev: ${chain.expected_prev}`,
+      `  claimed prev:  ${chain.actual_prev ?? "(none)"}`,
+    ];
+    if (chain.missing_receipt_id !== undefined) lines.push(`  missing receipt id: ${chain.missing_receipt_id}`);
+    return lines.join("\n");
+  }
+  if (chain.status === "chain-invalid") {
+    return `CHAIN INVALID at receipt ${chain.index} — ${chain.reason}\n  receipt: ${chain.receipt.id}`;
+  }
+  return `CHAIN EMPTY — ${chain.reason}`;
+}
+
+function chainExitCode(chain: ChainVerdict): number {
+  if (chain.status === "chain-valid") return 0;
+  if (chain.status === "chain-gap" || chain.status === "chain-empty") return 8;
+  if (chain.status === "chain-invalid") {
+    if (chain.receipt_verdict.ok) return 1;
+    return EXIT[chain.receipt_verdict.status];
+  }
+  return 1;
 }
 
 async function readStdin(): Promise<string> {
@@ -70,6 +144,7 @@ async function main(argv: string[]): Promise<number> {
   }
 
   let source: string | undefined;
+  let chainPath: string | undefined;
   let keyPath: string | undefined;
   let keyUrl: string | undefined;
   let asJson = false;
@@ -90,29 +165,85 @@ async function main(argv: string[]): Promise<number> {
     else if (arg === "--key") keyPath = args[++i];
     else if (arg === "--key-url") keyUrl = args[++i];
     else if (arg === "--max-age") maxAgeRaw = args[++i];
+    else if (arg === "--chain") chainPath = args[++i];
     else if (arg !== undefined) source = arg;
   }
 
-  if (source === undefined) {
+  if (source === undefined && chainPath === undefined) {
     process.stderr.write("paystage-verify: no receipt given\n");
     return 1;
   }
+  if (source !== undefined && chainPath !== undefined) {
+    process.stderr.write("paystage-verify: give either a receipt or --chain, not both\n");
+    return 1;
+  }
 
+  const input = source ?? chainPath;
   let raw: string;
   try {
-    raw = source === "-" ? await readStdin() : await readFile(source, "utf8");
+    raw = input === "-" ? await readStdin() : await readFile(input as string, "utf8");
   } catch (error) {
     process.stderr.write(
-      `paystage-verify: cannot read ${source}: ${error instanceof Error ? error.message : String(error)}\n`,
+      `paystage-verify: cannot read ${input}: ${error instanceof Error ? error.message : String(error)}\n`,
     );
     return 3;
+  }
+
+  // --chain is a walk, not a set of input checks: --request/--policy/--payment compare one
+  // receipt against one document, and silently applying them to every link would give a
+  // confusing verdict. Say so rather than ignore the flags.
+  if (chainPath !== undefined && (requestPath !== undefined || policyPath !== undefined || paymentPath !== undefined)) {
+    process.stderr.write("paystage-verify: --request, --policy and --payment apply to a single receipt, not --chain\n");
+    return 3;
+  }
+
+  if (chainPath !== undefined) {
+    let receipts: ReceiptLike[];
+    try {
+      receipts = parseReceiptList(raw);
+    } catch (error) {
+      process.stderr.write(
+        `paystage-verify: ${chainPath} is not a receipt list: ${error instanceof Error ? error.message : String(error)}\n`,
+      );
+      return 1;
+    }
+
+    const chainOptions: Parameters<typeof verifyReceiptChain>[1] = {};
+    if (keyPath !== undefined) {
+      try {
+        chainOptions.jwk = JSON.parse(await readFile(keyPath, "utf8")) as JwkLike;
+      } catch (error) {
+        process.stderr.write(
+          `paystage-verify: cannot read key ${keyPath}: ${error instanceof Error ? error.message : String(error)}\n`,
+        );
+        return 3;
+      }
+    }
+    if (keyUrl !== undefined) chainOptions.keyUrl = keyUrl;
+    if (maxAgeRaw !== undefined) {
+      const seconds = Number(maxAgeRaw);
+      if (!Number.isFinite(seconds) || seconds < 0) {
+        process.stderr.write(`paystage-verify: --max-age needs a number of seconds, got ${JSON.stringify(maxAgeRaw)}\n`);
+        return 3;
+      }
+      chainOptions.maxAgeSeconds = seconds;
+    }
+
+    const chain = await verifyReceiptChain(receipts, chainOptions);
+    if (asJson) {
+      const sourceDetail = keyPath !== undefined ? `file:${keyPath}` : (keyUrl ?? DEFAULT_KEY_URL);
+      process.stdout.write(`${JSON.stringify({ ...chain, key_source_detail: sourceDetail })}\n`);
+    } else {
+      process.stdout.write(`${formatChain(chain)}\n`);
+    }
+    return chainExitCode(chain);
   }
 
   let receipt: ReceiptLike;
   try {
     receipt = JSON.parse(raw) as ReceiptLike;
   } catch {
-    process.stderr.write(`paystage-verify: ${source} is not valid JSON\n`);
+    process.stderr.write(`paystage-verify: ${input} is not valid JSON\n`);
     return 1;
   }
 

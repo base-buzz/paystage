@@ -5,7 +5,7 @@ import { parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
 import { evaluatePayment, normalizePaymentRequired } from "@paystage/preflight";
 import type { EvaluateResult } from "@paystage/preflight";
-import { verifyReceipt } from "./verify.js";
+import { verifyReceipt, verifyReceiptChain } from "./verify.js";
 import {
   listOutstandingAuths,
   evaluateOutstandingAuths,
@@ -389,7 +389,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     "verify_receipt",
     {
       description:
-        "verify the recipient. Call this when you have a receipt and want to know whether it is genuine, without trusting the server that issued it. Returns VALID with the verdict it attests to, INVALID if the payload was altered, or UNVERIFIABLE when the key cannot be fetched — and UNVERIFIABLE is a refusal, not a pass. Needs only the receipt JSON and a network connection; no account, no shared secret. Fetches the signing key from a published URL you can pin with key_url. Fails closed: do not invent authority — a missing policy, identity, cost or evidence is a refusal, never a default.",
+        "verify the recipient. Call this when you have a receipt and want to know whether it is genuine, without trusting the server that issued it. Returns VALID with the verdict it attests to, INVALID if the payload was altered, or UNVERIFIABLE when the key cannot be fetched — and UNVERIFIABLE is a refusal, not a pass. Pass `chain` instead of one receipt to walk a hash-chained list: it verifies every link and reports the first gap by index, with the receipt ids either side. Needs only the receipt JSON and a network connection; no account, no shared secret. Fetches the signing key from a published URL you can pin with key_url. Fails closed: do not invent authority — a missing policy, identity, cost or evidence is a refusal, never a default.",
       annotations: {
         title: "Verify a receipt against the published key (read-only, never signs)",
         readOnlyHint: true,
@@ -397,21 +397,31 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
         openWorldHint: true,
       },
       inputSchema: {
-        receipt: z.unknown().describe("The receipt object as issued"),
+        receipt: z.unknown().optional().describe("The receipt object as issued (omit when passing chain)"),
+        chain: z
+          .array(z.unknown())
+          .min(1)
+          .optional()
+          .describe("A hash-chained list of receipts; reports the first gap by index and the ids either side"),
         key_url: z.string().url().optional().describe("Override the published key location"),
       },
     },
-    async ({ receipt, key_url }: { receipt: unknown; key_url?: string }) => {
+    async ({ receipt, chain, key_url }: { receipt?: unknown; chain?: unknown[]; key_url?: string }) => {
       try {
+        if (receipt === undefined && chain === undefined) {
+          return { isError: true, content: [{ type: "text" as const, text: "Error: give receipt or chain" }] };
+        }
         // Prefer a key the host already holds; an explicit key_url still wins, so a caller can check
         // a receipt from a different deployment against that deployment's published key.
         const injected = key_url === undefined && deps.resolveReceiptKey
           ? await deps.resolveReceiptKey()
           : null;
-        const verdict = await verifyReceipt(
-          receipt as never,
-          key_url ? { keyUrl: key_url } : injected ? { jwk: injected as never } : {},
-        );
+        const keyOptions = key_url ? { keyUrl: key_url } : injected ? { jwk: injected as never } : {};
+        if (chain !== undefined) {
+          const verdict = await verifyReceiptChain(chain as never[], keyOptions);
+          return { content: [{ type: "text" as const, text: JSON.stringify(verdict, null, 2) }] };
+        }
+        const verdict = await verifyReceipt(receipt as never, keyOptions);
         return { content: [{ type: "text" as const, text: JSON.stringify(verdict, null, 2) }] };
       } catch (error) {
         return {
