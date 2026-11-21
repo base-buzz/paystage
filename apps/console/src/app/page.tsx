@@ -138,7 +138,9 @@ export default function LandingPage() {
         <section className="lp-hero">
           <div className="lp-wrap lp-hero-grid">
             <div>
-              <p className="lp-eyebrow">x402 · MCP · USDC on Base</p>
+              <p className="lp-eyebrow">
+                x402 · MCP · USDC on Base — built for agents that spend on your behalf
+              </p>
               <h1 className="lp-h1">
                 Stop the payment <em>before</em> it&apos;s signed.
               </h1>

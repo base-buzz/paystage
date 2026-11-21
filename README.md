@@ -18,6 +18,11 @@
 [![MCP Registry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.modelcontextprotocol.io%2Fv0%2Fservers%3Fsearch%3Dio.github.base-buzz%26limit%3D1&query=%24.servers%5B0%5D.server.name&label=MCP%20Registry)](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.base-buzz)
 [![x402 · Base](https://img.shields.io/static/v1?label=x402%20%C2%B7%20Base&message=static&color=0052FF)](#badge-sources)
 
+**Built for agents that spend on your behalf** — Claude Duet, OpenAI Dots, Meta Muse, Grok Bot, and whatever ships next. The
+agent is the caller and the payer; the person is the operator who sets the policy. Compatibility is by protocol (MCP and
+x402), not by partnership: nothing here implies we are embedded in those products, and the surfaces we are actually in are
+graded row by row in [the integration table](docs/integrations/README.md).
+
 The canary date is the day the **scheduled** `release` run last published `@paystage/mcp@canary` — the workflow rewrites `badges/canary.json` after a successful canary publish,
 so a missed or failed run leaves the old date standing rather than a fresh-looking one. It links the [scheduled runs](https://github.com/base-buzz/paystage/actions/workflows/release.yml?query=event%3Aschedule)
 where that publish happened. Sources for every non-static badge: [Badge sources](#badge-sources).
