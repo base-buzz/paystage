@@ -1,4 +1,4 @@
-export { evaluatePayment } from "./evaluate.js";
+export { evaluatePayment, buildReviewPacket } from "./evaluate.js";
 export type {
   AcceptOption,
   PaymentResource,
@@ -7,6 +7,8 @@ export type {
   AcceptStatus,
   AcceptResult,
   EvaluateResult,
+  ReviewPacket,
+  ReviewPacketOptions,
 } from "./evaluate.js";
 export { normalizePaymentRequired } from "./normalize.js";
 // The MCP server lives at `@paystage/preflight/mcp` and is not re-exported here.

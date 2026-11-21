@@ -56,6 +56,72 @@ export interface EvaluateResult {
   reasons: string[];
   summary: string;
   dailyCapNote?: string;
+  /**
+   * The case a human is being asked to decide, present only on `review`.
+   *
+   * `pay` and `do_not_pay` already say what an agent can act on; a `review` says
+   * "ask your human", and without this object it hands that human a verdict and
+   * nothing else. The field names follow `docs/specs/review-packet/README.md`
+   * where that study has them (`schema`, `amount`, `payee`, `decision`); the
+   * study deliberately labels agent identity, request id, approval URL and
+   * signature scope "proposed, no surface evidence", so they stay out rather
+   * than being invented here.
+   */
+  packet?: ReviewPacket;
+}
+
+/**
+ * A small, human-readable case for a `review`.
+ *
+ * Kept flat on purpose: amount and payee and rule are what a person reads first,
+ * then the two lists that stop them over-trusting the verdict, then the single
+ * question. The `rule` string is the evaluator's own reason text, not a second
+ * vocabulary, so it can be matched against `reasons` and `acceptResults[].reasons`.
+ */
+export interface ReviewPacket {
+  schema: "paystage.review-packet.v1";
+  amount: {
+    value: string;
+    symbol: string;
+    atomic: string;
+    share: {
+      /** Which policy ceiling the share is measured against; null when none applies. */
+      of: "max_amount" | "require_human_above" | null;
+      /** The denominator, named in the policy's own units; "unknown" when no cap applies. */
+      denominator: string;
+      /** amount / denominator as a percentage; "unknown" when there is no denominator. */
+      ratio: string;
+    };
+  };
+  payee: {
+    address: string;
+    network: string;
+    asset: string;
+    symbol: string;
+    /** The `resource.url` host, when the challenge named one. */
+    origin?: string;
+  };
+  rule: string;
+  checked: string[];
+  not_checked: string[];
+  decision: {
+    question: string;
+    options: [string, string];
+  };
+}
+
+export interface ReviewPacketOptions {
+  /** Checks a host performed after the evaluator (for example network reputation). */
+  checked?: string[];
+  notChecked?: string[];
+  /** Set when the host has already run the network checks, so they are not reported as skipped. */
+  networkChecks?: boolean;
+  /** Set when the evaluator's own verdict was `pay`, so every local rule did run before the host's extra check. */
+  allRulesRan?: boolean;
+  agentId?: string;
+  paymentIdentifier?: string;
+  /** Whether the replay check actually ran. False with an identifier means an earlier rule returned review. */
+  paymentIdentifierChecked?: boolean;
 }
 
 function eq(a: string, b: string): boolean {
@@ -235,6 +301,222 @@ function cheapest(accepts: AcceptOption[]): AcceptOption | undefined {
   })[0];
 }
 
+function hostOf(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    return new URL(url).host.toLowerCase();
+  } catch {
+    return undefined;
+  }
+}
+
+/** Rounded to two decimal places, without scientific notation and without a trailing `.00`. */
+function percentOf(amount: bigint, cap: bigint): string {
+  if (cap <= 0n) return "unknown";
+  const basisPoints = (amount * 10000n + cap / 2n) / cap;
+  const whole = basisPoints / 100n;
+  const fraction = basisPoints % 100n;
+  if (fraction === 0n) return `${whole}%`;
+  return `${whole}.${fraction.toString().padStart(2, "0").replace(/0$/, "")}%`;
+}
+
+/**
+ * The amount's share of the ceiling that actually applies to this challenge.
+ *
+ * `max_amount` and `require_human_above` are the two ceilings the evaluator
+ * enforces with this asset; `daily_cap` is informational and is reported as not
+ * checked in the packet rather than used to imply a remaining budget we do not
+ * track. When the policy's `max_amount` is denominated in a different asset, the
+ * evaluator skips it (rule 5), so the honest denominator is "unknown", not a
+ * number computed in the wrong unit.
+ */
+function shareOfCap(
+  policy: Policy,
+  asset: Asset | undefined,
+  amount: bigint,
+  reason: string,
+): ReviewPacket["amount"]["share"] {
+  const symbol = asset?.symbol ?? policy.max_amount.asset;
+  const decimals = asset?.decimals ?? policy.max_amount.decimals;
+  const maxApplies = eq(policy.max_amount.asset, symbol);
+  const requireFired = policy.require_human_above !== undefined && reason.includes("require_human_above");
+
+  if (requireFired && policy.require_human_above) {
+    const cap = policy.require_human_above;
+    return {
+      of: "require_human_above",
+      denominator: `${cap.value} ${cap.asset}`,
+      ratio: percentOf(amount, humanToAtomic(cap.value, cap.decimals)),
+    };
+  }
+  if (maxApplies) {
+    return {
+      of: "max_amount",
+      denominator: `${policy.max_amount.value} ${policy.max_amount.asset}`,
+      ratio: percentOf(amount, humanToAtomic(policy.max_amount.value, decimals)),
+    };
+  }
+  return { of: null, denominator: "unknown", ratio: "unknown" };
+}
+
+/**
+ * Build the case for a human from the same policy and accept the verdict was
+ * computed from. Exported so a host that turns a `pay` into a `review` after an
+ * extra check (the hosted API's reputation feed) can produce the same object
+ * rather than a second, drifting packet.
+ */
+export function buildReviewPacket(
+  policy: Policy,
+  accept: AcceptOption,
+  resource: PaymentResource | undefined,
+  reason: string,
+  options: ReviewPacketOptions = {},
+): ReviewPacket {
+  const asset = findAsset(policy, accept.network, accept.asset);
+  const decimals = asset?.decimals ?? policy.max_amount.decimals;
+  const symbol = asset?.symbol ?? policy.max_amount.asset;
+  const amount = amountOf(accept);
+  const human = atomicToHuman(amount, decimals);
+  const origin = hostOf(resource?.url);
+  const checked: string[] = [];
+  const notChecked: string[] = [];
+
+  // The evaluator returns at the first review rule, so a rule after the one that
+  // fired did not run. Say so rather than reporting a check the verdict never
+  // reached — the point of this list is to stop a person over-trusting it.
+  const unknownPayeeReview = reason.includes("not in allowed_pay_to");
+  const verifiedPayeeReview = reason.includes("differs from the verified address");
+  const requireHumanReview = reason.includes("require_human_above");
+  const replayReview = reason.includes("payment_identifier");
+  const reachedVerifiedPayee = options.allRulesRan === true || verifiedPayeeReview || requireHumanReview || replayReview;
+  const reachedRequireHuman = options.allRulesRan === true || requireHumanReview || replayReview;
+
+  checked.push(`network: ${accept.network} is in allowed_networks`);
+  checked.push(`asset: ${symbol} at ${accept.asset} matched allowed_assets`);
+  checked.push(`amount: ${human} ${symbol} (${accept.amount} atomic) parsed and compared`);
+  if (eq(policy.max_amount.asset, symbol)) {
+    checked.push(`max_amount: ${human} ${symbol} is at or under ${policy.max_amount.value} ${policy.max_amount.asset}`);
+  } else {
+    notChecked.push(
+      `max_amount: not applied — the policy ceiling is denominated in ${policy.max_amount.asset}, the challenge asset is ${symbol}`,
+    );
+  }
+  checked.push(`timeout: ${accept.maxTimeoutSeconds}s is within max_timeout_seconds ${policy.max_timeout_seconds}`);
+  checked.push(`payee shape: ${accept.payTo} is a 20-byte hex address`);
+  checked.push("known-drainer, non-receivable and OFAC SDN lists: no match");
+
+  const payeeAllowed = policy.allowed_pay_to.some((p) => eq(p, accept.payTo));
+  checked.push(
+    payeeAllowed
+      ? "payee allowlist: matched"
+      : `payee allowlist: no match (unknown_payee=${policy.unknown_payee})`,
+  );
+
+  if (origin) {
+    if (reachedVerifiedPayee) {
+      const verified = verifiedPayeeFor(origin);
+      if (verified) {
+        checked.push(`verified-payee registry: ${origin} is verified at ${verified.payee}`);
+      } else {
+        notChecked.push(`payee-vs-host verification: skipped — no verified record for ${origin}`);
+      }
+    } else {
+      notChecked.push(
+        `payee-vs-host verification: skipped — ${unknownPayeeReview ? "the payee allowlist" : "an earlier rule"} returned review before the registry was consulted`,
+      );
+    }
+  } else {
+    notChecked.push(
+      "payee-vs-host verification: skipped — the challenge has no resource.url, so there is no host to compare the payee against",
+    );
+  }
+
+  if (policy.require_human_above && reachedRequireHuman) {
+    const threshold = humanToAtomic(policy.require_human_above.value, policy.require_human_above.decimals);
+    checked.push(
+      `require_human_above: ${amount > threshold ? "crossed" : "not crossed"} at ${policy.require_human_above.value} ${policy.require_human_above.asset}`,
+    );
+  } else if (policy.require_human_above) {
+    notChecked.push(
+      "require_human_above: skipped — an earlier payee rule returned review before the amount threshold was reached",
+    );
+  } else {
+    notChecked.push("require_human_above: not configured — no amount above which a human is required");
+  }
+
+  if (policy.agents) {
+    checked.push(`agent budget: ${options.agentId ? `applied for ${options.agentId}` : "per-agent overlay applied"}`);
+  } else {
+    notChecked.push("per-agent budget: not configured — the global policy applied");
+  }
+
+  const window = (policy as { time_window?: unknown }).time_window;
+  if (window) {
+    checked.push("time window: checked against the policy's allowed/blocked UTC hours");
+  } else {
+    notChecked.push("time window: skipped — no time_window configured, so the hour was not a factor");
+  }
+
+  if (options.paymentIdentifier) {
+    if (options.paymentIdentifierChecked) {
+      checked.push(
+        `payment-identifier replay: ${replayReview ? "duplicate detected" : "first use of this id"}`,
+      );
+    } else {
+      notChecked.push(
+        "payment-identifier replay: skipped — an earlier rule returned review before the identifier was compared",
+      );
+    }
+  } else {
+    notChecked.push("payment-identifier replay: skipped — no payment_identifier supplied");
+  }
+
+  if (policy.daily_cap) {
+    notChecked.push(
+      `daily budget remaining: not checked — daily_cap ${policy.daily_cap.value} ${policy.daily_cap.asset} is informational and the evaluator keeps no cross-call history`,
+    );
+  } else {
+    notChecked.push("daily budget remaining: unknown — the policy declares no daily_cap");
+  }
+
+  if (!options.networkChecks) {
+    notChecked.push(
+      "seller reputation and address-risk feed: not checked — the local evaluator makes no network calls",
+    );
+  }
+  notChecked.push("transfer simulation: not checked — the evaluator does not simulate the transfer or its balance changes");
+  notChecked.push(
+    "agent identity, request id, approval URL and signature scope: omitted — proposed, no surface evidence in the review-packet study",
+  );
+
+  checked.push(...(options.checked ?? []));
+  notChecked.push(...(options.notChecked ?? []));
+
+  return {
+    schema: "paystage.review-packet.v1",
+    amount: {
+      value: human,
+      symbol,
+      atomic: accept.amount,
+      share: shareOfCap(policy, asset, amount, reason),
+    },
+    payee: {
+      address: accept.payTo,
+      network: accept.network,
+      asset: accept.asset,
+      symbol,
+      ...(origin ? { origin } : {}),
+    },
+    rule: reason,
+    checked,
+    not_checked: notChecked,
+    decision: {
+      question: `Pay ${human} ${symbol} to ${accept.payTo} on ${accept.network}?`,
+      options: ["pay", "do_not_pay"],
+    },
+  };
+}
+
 export interface EvaluateOptions {
   /**
    * Which agent is asking. Required when the policy declares per-agent budgets:
@@ -342,12 +624,15 @@ export function evaluatePayment(
 
   let decision: Decision;
   let selectedAccept: AcceptOption | undefined;
+  /** The exact evaluator reason that made this a review; it becomes `packet.rule`. */
+  let reviewReason: string | undefined;
   if (payAccepts.length > 0) {
     decision = "pay";
     selectedAccept = cheapest(payAccepts);
   } else if (reviewAccepts.length > 0) {
     decision = "review";
     selectedAccept = cheapest(reviewAccepts);
+    reviewReason = acceptResults.find((r) => r.accept === selectedAccept)?.reasons[0];
   } else {
     decision = "do_not_pay";
   }
@@ -370,10 +655,13 @@ export function evaluatePayment(
    * the summary is written so the human-readable line and the decision cannot disagree.
    */
   const identifier = options.paymentIdentifier?.trim();
+  let replayChecked = false;
   if (identifier && decision === "pay") {
+    replayChecked = true;
     if (identifier.length > 128) {
       decision = "review";
-      reasons.push(`payment_identifier is ${identifier.length} characters — refusing to cache a value that long; ask again with a stable, short id`);
+      reviewReason = `payment_identifier is ${identifier.length} characters — refusing to cache a value that long; ask again with a stable, short id`;
+      reasons.push(reviewReason);
     } else {
       const at = (options.now ?? new Date()).getTime();
       const window = options.dedupWindowMs ?? DEFAULT_DEDUP_WINDOW_MS;
@@ -381,9 +669,8 @@ export function evaluatePayment(
       if (seenAt !== undefined && at - seenAt < window) {
         const seconds = Math.max(0, Math.round((at - seenAt) / 1000));
         decision = "review";
-        reasons.push(
-          `payment_identifier ${identifier} already produced a pay verdict ${seconds}s ago (window ${Math.round(window / 1000)}s) — a retried preflight is not a second approval`,
-        );
+        reviewReason = `payment_identifier ${identifier} already produced a pay verdict ${seconds}s ago (window ${Math.round(window / 1000)}s) — a retried preflight is not a second approval`;
+        reasons.push(reviewReason);
       } else {
         approvedIdentifiers.set(identifier, at);
         // Prune inside the same call: an unbounded map is a memory leak with a security name.
@@ -410,6 +697,24 @@ export function evaluatePayment(
     summary = `Decision: ${decision}. No acceptable payment option.`;
   }
 
+  // Rule 13: the case for a human, on `review` only. A `pay` is for the agent and a
+  // `do_not_pay` already carries the reasons it was refused; neither needs a packet,
+  // and attaching one would make the three verdicts look interchangeable.
+  const packet =
+    decision === "review" && selectedAccept
+      ? buildReviewPacket(
+          effective,
+          selectedAccept,
+          pr.resource,
+          reviewReason ?? reasons[0] ?? "review",
+          {
+            ...(agent !== undefined ? { agentId: agent } : {}),
+            ...(identifier !== undefined ? { paymentIdentifier: identifier } : {}),
+            paymentIdentifierChecked: replayChecked,
+          },
+        )
+      : undefined;
+
   return {
     decision,
     ...(agent !== undefined ? { agent } : {}),
@@ -418,5 +723,6 @@ export function evaluatePayment(
     reasons,
     summary,
     dailyCapNote,
+    ...(packet ? { packet } : {}),
   };
 }

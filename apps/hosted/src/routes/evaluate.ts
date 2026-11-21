@@ -4,6 +4,7 @@ import { buildReceipt } from "../receipt.js";
 import {
   evaluatePayment,
   normalizePaymentRequired,
+  buildReviewPacket,
 } from "@paystage/preflight";
 import { parsePolicyCached } from "../policy-cache.js";
 import { checkAddressRisk } from "../address-risk.js";
@@ -105,6 +106,23 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
           ...(decision.reasons ?? []),
         ];
       }
+    }
+    // A review that the hosted-only network checks produced is still a review,
+    // and still owes the human the same case. The evaluator's own verdict was
+    // `pay`, so it could not build this packet; build it from the same helper so
+    // the shape and the rule string cannot drift from the local one.
+    if (decision.decision === "review" && decision.packet === undefined && decision.selectedAccept) {
+      decision.packet = buildReviewPacket(
+        policy,
+        decision.selectedAccept,
+        normalized.resource,
+        decision.reasons[0] ?? "review",
+        {
+          networkChecks: true,
+          allRulesRan: true,
+          checked: ["seller reputation and address-risk feed: checked by the hosted API"],
+        },
+      );
     }
     // Additive: the receipt binds the verdict to these exact inputs. It never
     // changes the decision, and degrades to signed:false when no key is set.

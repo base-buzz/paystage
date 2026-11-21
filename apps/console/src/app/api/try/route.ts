@@ -46,7 +46,22 @@ const SCENARIOS = {
         {
           scheme: "exact",
           network: "eip155:8453",
-          amount: "500000000", // 500 USDC against a 0.05 cap
+          amount: "500000000", // 500 USDC against a 0.10 cap
+          payTo: "0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE",
+          maxTimeoutSeconds: 60,
+          asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        },
+      ],
+    },
+  },
+  needs_human: {
+    payment: {
+      x402Version: 2,
+      accepts: [
+        {
+          scheme: "exact",
+          network: "eip155:8453",
+          amount: "60000", // 0.06 USDC — under the cap, over the human threshold
           payTo: "0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE",
           maxTimeoutSeconds: 60,
           asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
@@ -58,13 +73,16 @@ const SCENARIOS = {
 
 const POLICY = {
   version: 1,
-  max_amount: { value: "0.05", asset: "USDC", decimals: 6 },
+  // The hard ceiling stays above the human threshold, so the demo can show a
+  // payment that is allowed by the cap but still requires a person.
+  max_amount: { value: "0.10", asset: "USDC", decimals: 6 },
   allowed_pay_to: ["0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE"],
   allowed_assets: [
     { symbol: "USDC", decimals: 6, address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", network: "eip155:8453" },
   ],
   allowed_networks: ["eip155:8453"],
   max_timeout_seconds: 300,
+  require_human_above: { value: "0.05", asset: "USDC", decimals: 6 },
   unknown_payee: "deny",
 };
 

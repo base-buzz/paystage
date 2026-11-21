@@ -6,6 +6,8 @@ export type {
   AcceptStatus,
   AcceptResult,
   EvaluateResult,
+  ReviewPacket,
+  ReviewPacketOptions,
 } from "./evaluate.js";
 
 /** @deprecated alias */

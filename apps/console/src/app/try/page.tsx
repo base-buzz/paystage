@@ -31,10 +31,12 @@ export default function TryPage() {
       <section style={{ marginTop: 48, maxWidth: 720 }}>
         <h2 style={{ fontSize: 20, marginBottom: 8 }}>What you are looking at</h2>
         <p style={{ opacity: 0.8 }}>
-          A policy that allows one payee, one asset, one network, and a 0.05 USDC ceiling.
-          The <strong>allowed</strong> case passes; the <strong>unknown payee</strong> is
-          denied by the allow-list rather than by the amount, which is the case a single
-          spend cap cannot catch; the <strong>over-cap</strong> case is denied on amount.
+          A policy that allows one payee, one asset, one network, a 0.10 USDC ceiling, and a
+          0.05 USDC human-approval threshold. The <strong>allowed</strong> case passes; the{" "}
+          <strong>unknown payee</strong> is denied by the allow-list rather than by the amount,
+          which is the case a single spend cap cannot catch; the <strong>over-cap</strong> case is
+          denied on amount; the <strong>needs a human</strong> case is under the ceiling but over
+          the threshold, so it returns <code>review</code> with a packet.
         </p>
         <p style={{ opacity: 0.8 }}>
           The verdict is <code>pay</code>, <code>review</code> or <code>do_not_pay</code>,
