@@ -97,6 +97,10 @@ if (reason === null) {
     if (!existsSync(join(appDir, "package.json"))) continue;
     runFast(`test apps/${app}`, "npx", ["vitest", "run"], appDir);
   }
+  // The seller example's critical test: removing the gate call must turn CI red.
+  if (existsSync(join(ROOT, "examples/seller/seller.test.mjs"))) {
+    runFast("test examples/seller", "node", ["--test", "examples/seller/seller.test.mjs"], ROOT);
+  }
   if (failedFast) {
     console.error("\nci-local: CI would fail on this commit. Fix it here, or push with --no-verify and say why.");
     process.exit(1);
@@ -199,6 +203,10 @@ try {
       run(`install apps/${app}`, "npm", ["ci", "--ignore-scripts", "--silent"], appDir);
     }
     run(`test apps/${app}`, "npx", ["vitest", "run"], appDir);
+  }
+
+  if (existsSync(join(worktree, "examples/seller/seller.test.mjs"))) {
+    run("test examples/seller", "node", ["--test", "examples/seller/seller.test.mjs"], worktree);
   }
 
   // The checks CI runs as separate steps.

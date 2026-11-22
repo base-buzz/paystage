@@ -145,6 +145,10 @@ npm run build -w @paystage/preflight && node examples/run.mjs
 
 Four challenges against one policy, four verdicts with reasons — no network, no keys. See [examples/](examples/).
 
+A copyable paid seller endpoint — gate first, Bazaar schema, idempotent retries, signed receipt — is one
+file: [`examples/seller/seller.mjs`](examples/seller/seller.mjs). It is a reference to copy, not a
+service we host.
+
 ## Inside a loop, not in front of one
 
 The endpoints that get paid in this ecosystem are cheap, deterministic calls an agent makes in a loop — hashing at 0.001 USDC, embeddings at 0.0005, completions at 0.003. A gate is bought

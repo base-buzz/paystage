@@ -47,6 +47,9 @@ jobs:
       - run: node starter/check.mjs
       - run: node scripts/sync-glossary.mjs --check
       - run: node examples/run.mjs
+      # The seller example's critical test: an over-cap challenge must be refused with
+      # `blocked-by-rule: accept.max_amount`. Removing the gate call turns this red.
+      - run: node --test examples/seller/seller.test.mjs
       # Starts the published server over stdio and asserts five tools answer. The install
       # command in every README was wrong for three releases and nothing caught it.
       - run: node scripts/mcp-handshake.mjs
