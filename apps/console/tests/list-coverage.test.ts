@@ -226,6 +226,16 @@ describe("/lists page", () => {
     expect(SOURCE).toContain("lp-list-monogram");
     expect(SOURCE).not.toMatch(/<img\b/);
   });
+
+  it("renders one citation per drainer entry, and labels unattributed distinctly", () => {
+    // #362 A3: the page used to show one source table for the whole list. A reader could not check any single
+    // address, and there was no visual difference between "no source found" and "sourced".
+    expect(SOURCE).toContain("drainerEntries");
+    expect(SOURCE).toContain("drainerEntries.map");
+    expect(SOURCE).toContain('entry.source === "unattributed"');
+    expect(SOURCE).toContain("lp-list-unattributed");
+    expect(SOURCE).toMatch(/>\s*unattributed\s*</);
+  });
 });
 
 describe("generated manifest", () => {
@@ -248,5 +258,23 @@ describe("generated manifest", () => {
     const attributed = LISTS.drainers.sourceCounts.reduce((sum, source) => sum + source.count, 0);
     expect(attributed).toBe(LISTS.drainers.addresses);
     expect(LISTS.drainers.contributingSources).toBeGreaterThan(1);
+  });
+
+  it("emits one citation per drainer entry, not one per list", () => {
+    // Widen the generated literal union: the `unattributed` branch is part of the contract even when today's
+    // build has no such entry, and TypeScript would otherwise reject the comparison.
+    const entries: readonly { address: string; source: string; readDate: string | null; note?: string }[] =
+      LISTS.drainers.entries;
+    expect(entries).toHaveLength(LISTS.drainers.addresses);
+    expect(LISTS.drainers.attributed + LISTS.drainers.unattributed).toBe(LISTS.drainers.addresses);
+    const addresses = entries.map((entry) => entry.address);
+    expect(new Set(addresses).size).toBe(addresses.length);
+    for (const entry of entries) {
+      expect(entry.source === "unattributed" || /^https:\/\//.test(entry.source)).toBe(true);
+      if (entry.source !== "unattributed") {
+        expect(entry.readDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(entry.note).toBeTruthy();
+      }
+    }
   });
 });

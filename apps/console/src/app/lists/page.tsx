@@ -36,6 +36,22 @@ const ageDays = (iso: string): number => Math.floor((Date.now() - Date.parse(iso
 const changedLabel = (fields: readonly string[]): string =>
   fields.length === 2 ? "last-modified and body" : fields.join(" and ");
 
+/** A readable link label for a per-entry citation; the URL itself is in the href and the generated manifest. */
+const citationLabel = (source: string): string => {
+  try {
+    const host = new URL(source).host;
+    const labels: Record<string, string> = {
+      "raw.githubusercontent.com": "MEW ethereum-lists darklist",
+      "www.0xcert.com": "0xCERT advisory",
+      "www.cryptotimes.io": "CryptoTimes / Matcha Meta",
+      "chainabuse.com": "Chainabuse report",
+    };
+    return labels[host] ?? host;
+  } catch {
+    return source;
+  }
+};
+
 /** One card's generated inputs. Nothing below is typed into JSX. */
 interface ListCard {
   id: string;
@@ -133,6 +149,10 @@ export default function ListsPage() {
   const ofacLastChangeFields = ofac.lastChangeFields as readonly string[];
   const ofacFirstFetchedAt = ofac.firstFetchedAt as string | null;
   const drainers = LISTS.drainers;
+  // The generated manifest is `as const`, so today's fully-attributed list narrows `source` to a URL union and
+  // the `unattributed` branch would not type-check. Keep the shape explicit: a future entry may have no source.
+  const drainerEntries: readonly { address: string; source: string; readDate: string | null; note?: string }[] =
+    drainers.entries;
   const sinks = LISTS.nonReceivable;
   const circle = LISTS.circleBlacklist;
   // `lists.generated.ts` is emitted `as const`; when the snapshot is absent these fields are `null` and would narrow
@@ -364,35 +384,54 @@ export default function ListsPage() {
 
         <h3>{drainers.name}</h3>
         <p>
-          {drainers.addresses} addresses compiled from {drainers.contributingSources} contributing sources (
-          {drainers.sources.length} consulted), each entry carrying the advisory or dataset it came from. The curation policy and extension process live in the repository; the sources below are the
-          record of where each address originated.
+          {drainers.addresses} addresses compiled from {drainers.contributingSources} publisher groups, and every row
+          below carries its own source and the date this repository read it. The citation is per address, not per list,
+          so one entry can be checked without trusting the other {drainers.addresses - 1}.{" "}
+          {drainers.unattributed > 0
+            ? `${drainers.unattributed} of ${drainers.addresses} entries are explicitly marked unattributed because no public source naming the address could be found; none is given an invented citation.`
+            : `All ${drainers.addresses} entries in this build carry a source.`}
         </p>
         <table>
           <thead>
             <tr>
+              <th>Address</th>
               <th>Source</th>
-              <th>Retrieved</th>
+              <th>Read</th>
+              <th>What the source says</th>
             </tr>
           </thead>
           <tbody>
-            {drainers.sources.map((s) => (
-              <tr key={s.url}>
+            {drainerEntries.map((entry) => (
+              <tr key={entry.address}>
                 <td>
-                  <a href={s.url} rel="noreferrer noopener" target="_blank">
-                    {s.name}
-                  </a>
+                  <code>{entry.address}</code>
                 </td>
-                <td>{s.retrieved}</td>
+                <td>
+                  {entry.source === "unattributed" ? (
+                    <span
+                      className="lp-list-unattributed"
+                      title="No public source naming this address was found; the entry is kept but not given a citation"
+                    >
+                      unattributed
+                    </span>
+                  ) : (
+                    <a href={entry.source} rel="noreferrer noopener" target="_blank">
+                      {citationLabel(entry.source)}
+                    </a>
+                  )}
+                </td>
+                <td>{entry.readDate ?? "—"}</td>
+                <td>{entry.note ?? "no note recorded"}</td>
               </tr>
             ))}
           </tbody>
         </table>
         <p>
-          <strong>These are review dates, not an upstream last-change.</strong> The drainer list is curated from the sources
-          below; it has no publisher feed to watch, so there is no last-modified date to hash and no honest way to state
-          one. A change is noticed when a source is re-read, not on a schedule. That gap is a missing discovery mechanism,
-          not a claim that nothing changed.
+          <strong>These are read dates, not an upstream last-change.</strong> Each entry was checked against its source
+          on the date in the Read column; the list is curated, so it has no publisher feed to watch and no honest
+          last-modified date to state. The citation check fails the build after {drainers.citationMaxAgeDays} days, which
+          is a re-verification cadence for the URL, not a claim that an older incident is recent; 180 days rather than
+          the comparison matrix&apos;s 90 because these are historical incidents, not live product claims.
         </p>
         <p>
           <strong>Effect:</strong> hard deny with the reason <code>known drainer</code>. Separate from the sanctions check

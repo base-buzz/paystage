@@ -41,7 +41,15 @@ export type {
   EvaluationDecision,
   AcceptEvaluation,
 } from "./types.js";
-export { isKnownDrainer, isNonReceivable, KNOWN_DRAINERS, NON_RECEIVABLE, SOURCES } from "./known-drainers.js";
+export {
+  isKnownDrainer,
+  isNonReceivable,
+  DRAINER_ENTRIES,
+  KNOWN_DRAINERS,
+  NON_RECEIVABLE,
+  SOURCES,
+} from "./known-drainers.js";
+export type { KnownDrainerCitation, KnownDrainerSource } from "./known-drainers.js";
 export { SANCTIONED_ADDRESSES } from "./sanctioned-addresses.js";
 export {
   buildEvidenceBundle,

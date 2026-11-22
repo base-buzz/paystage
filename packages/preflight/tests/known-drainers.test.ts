@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
+  DRAINER_ENTRIES,
   isKnownDrainer,
   isNonReceivable,
   KNOWN_DRAINERS,
@@ -45,11 +46,17 @@ function req(payTo: string) {
 }
 
 describe("known-drainers", () => {
-  it("exports curated list with sources", () => {
+  it("exports curated list with a citation per entry", () => {
     expect(KNOWN_DRAINERS.length).toBeGreaterThan(0);
     expect(SOURCES.length).toBeGreaterThan(0);
     for (const s of SOURCES) {
-      expect(s.url).toMatch(/^https?:\/\//);
+      expect(s.url).toMatch(/^https:\/\//);
+    }
+    expect(DRAINER_ENTRIES).toHaveLength(KNOWN_DRAINERS.length);
+    expect(DRAINER_ENTRIES.map((entry) => entry.address)).toEqual([...KNOWN_DRAINERS]);
+    for (const entry of DRAINER_ENTRIES) {
+      expect(entry.source === "unattributed" || /^https:\/\//.test(entry.source)).toBe(true);
+      if (entry.source !== "unattributed") expect(entry.readDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
   });
 
@@ -123,9 +130,8 @@ describe("curation guard — the published list may not drift from its own polic
   // The policy is "public citation, precision over recall, no fixtures". Each of those has failed once, so each
   // gets a check rather than a paragraph.
   const source = readFileSync(new URL("../src/known-drainers.ts", import.meta.url), "utf8");
-  const start = source.indexOf("export const KNOWN_DRAINERS");
-  const block = source.slice(start, source.indexOf("]);", start));
-  const lines = block.split("\n");
+  const start = source.indexOf("export const DRAINER_ENTRIES");
+  const block = source.slice(start, source.indexOf("\n]);", start));
 
   it("every entry is a 20-byte hex address", () => {
     for (const address of KNOWN_DRAINERS) expect(address).toMatch(/^0x[0-9a-fA-F]{40}$/);
@@ -138,15 +144,13 @@ describe("curation guard — the published list may not drift from its own polic
     expect(NON_RECEIVABLE.filter((a) => KNOWN_DRAINERS.includes(a))).toEqual([]);
   });
 
-  it("every entry has a citation comment above it", () => {
-    const uncited: string[] = [];
-    lines.forEach((line, i) => {
-      const hit = /"(0x[0-9a-fA-F]{40})"/.exec(line);
-      if (!hit) return;
-      const above = lines.slice(Math.max(0, i - 3), i).join("\n");
-      if (!/^\s*\/\//m.test(above)) uncited.push(hit[1]);
-    });
-    expect(uncited).toEqual([]);
+  it("every entry carries its own source and read date, not a list-level one", () => {
+    // #362 A3: the citation moved from a comment above the block to a field on each entry. An entry with no
+    // source field is a trust-me entry; an explicit `unattributed` is the honest alternative to inventing a URL.
+    expect(block).toMatch(/source:\s*"https:\/\//);
+    expect(DRAINER_ENTRIES.every((entry) => typeof entry.source === "string" && entry.source.length > 0)).toBe(true);
+    expect(DRAINER_ENTRIES.filter((entry) => entry.source === "unattributed")).toHaveLength(0);
+    expect(DRAINER_ENTRIES.filter((entry) => entry.readDate === null)).toEqual([]);
   });
 
   it("has no duplicate entries", () => {

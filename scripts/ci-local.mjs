@@ -207,6 +207,7 @@ try {
     "check-client-manifests.mjs",
     "check-agent-surfaces.mjs --live",
     "gen-lists-manifest.mjs --check",
+    "check-drainer-citations.mjs",
     "gen-integrations.mjs --check",
     "check-integrations-grading.mjs",
     "gen-verified-payees.mjs --check",

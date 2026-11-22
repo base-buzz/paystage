@@ -35,6 +35,8 @@ jobs:
       - run: node scripts/check-registry-namespace.mjs --accept-retired
       - run: node scripts/check-count-claims.mjs
       - run: node scripts/check-network-claims.mjs
+      # Every curated drainer entry carries its own https citation and a read date inside 180 days (#362 A3).
+      - run: node scripts/check-drainer-citations.mjs
       - run: node scripts/gen-integrations.mjs --check
       # The six grading dimensions: every strong value needs a ref a reviewer can open, unknowns stay unknown,
       # and the generated page must match the JSON (the guard runs the generator's --check itself).

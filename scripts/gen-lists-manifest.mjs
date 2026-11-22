@@ -111,42 +111,66 @@ const sourceBlocks = [...drainers.matchAll(/\{\s*name:\s*"([^"]+)",\s*\n\s*url:\
   ([, name, url, retrieved]) => ({ name, url, retrieved }),
 );
 
-const nonReceivable = [...drainers.matchAll(/^\s{2}"(0x[0-9a-f]{40})",\s*$/gm)].map(([, a]) => a).slice(-2);
+/**
+ * Per-entry citations are the authority (#362 A3).
+ *
+ * Previously the attribution lived only in comments above each address, and the list-level page could not be checked
+ * one entry at a time. `DRAINER_ENTRIES` carries `{ address, source, readDate, note }` for every address; the page
+ * renders one row per entry, and `check-drainer-citations.mjs` fails a missing, non-https or stale citation.
+ */
+const entriesStart = drainers.indexOf("export const DRAINER_ENTRIES");
+const entriesEnd = entriesStart >= 0 ? drainers.indexOf("\n]);", entriesStart) : -1;
+const entriesBlock = entriesStart >= 0 && entriesEnd > entriesStart ? drainers.slice(entriesStart, entriesEnd) : "";
+const citationEntries = [...entriesBlock.matchAll(/\{\s*([\s\S]*?)\n\s*\},?/g)].map(([, body]) => {
+  const address = /address:\s*"([^"]+)"/.exec(body)?.[1] ?? null;
+  return {
+    address: address ? address.toLowerCase() : null,
+    source: /source:\s*"([^"]*)"/.exec(body)?.[1] ?? null,
+    readDate: /readDate:\s*"([^"]*)"/.exec(body)?.[1] ?? null,
+    note: /note:\s*"([^"]*)"/.exec(body)?.[1] ?? null,
+  };
+}).filter((entry) => entry.address);
+if (citationEntries.length === 0) {
+  console.error("lists-manifest: no DRAINER_ENTRIES parsed — refusing to publish a list without per-entry citations");
+  process.exit(1);
+}
+
+const nonReceivableStart = drainers.indexOf("export const NON_RECEIVABLE");
+const nonReceivableEnd = nonReceivableStart >= 0 ? drainers.indexOf("\n]);", nonReceivableStart) : -1;
+const nonReceivableBlock = nonReceivableStart >= 0 && nonReceivableEnd > nonReceivableStart
+  ? drainers.slice(nonReceivableStart, nonReceivableEnd)
+  : "";
+const nonReceivable = [...nonReceivableBlock.matchAll(/"(0x[0-9a-f]{40})"/g)].map(([, a]) => a);
 
 /** The address sets, for the coverage dedupe. Read from the same files the evaluator ships, never retyped. */
 const ofacAddresses = [...sanctioned.matchAll(/"(0x[0-9a-f]{40})"/g)].map(([, address]) => address.toLowerCase());
-const drainerBlock = drainers.slice(drainers.indexOf("export const KNOWN_DRAINERS"), drainers.indexOf("export const NON_RECEIVABLE"));
-const drainerAddresses = [...drainerBlock.matchAll(/"(0x[0-9a-f]{40})"/g)].map(([, address]) => address.toLowerCase());
-// Count the parsed set, not the prettiest line shape: three entries carry an inline `// share` comment and the old
-// line-based regex silently read the list as 23 rather than 24.
+const drainerAddresses = citationEntries.map((entry) => entry.address);
 const drainerCount = drainerAddresses.length;
 const sinkAddresses = nonReceivable.map((address) => address.toLowerCase());
 
-/**
- * Per-source counts for the drainer list.
- *
- * The file cites a source in the comment above each entry, and that citation is the only place the attribution exists —
- * there is no `source` field on an address. Parsing the nearest preceding citation is the honest derivation; an entry
- * with no recognisable citation is counted as unattributed rather than assigned to a publisher by guesswork.
- */
-const sourceByUrl = new Map(sourceBlocks.map((source) => [source.url, source.name]));
-const drainerSourceCounts = sourceBlocks.map((source) => ({ ...source, count: 0 }));
-const drainerCountByName = new Map(drainerSourceCounts.map((source) => [source.name, source]));
-let currentSource = "Unattributed (curated)";
-for (const line of drainerBlock.split("\n")) {
-  const text = line.trim();
-  if (text.startsWith("//")) {
-    const cited = /https?:\/\/\S+/.exec(text)?.[0]?.replace(/[.,;)]$/, "") ?? null;
-    if (cited && sourceByUrl.has(cited)) currentSource = sourceByUrl.get(cited);
-    else if (/MEW darklist/i.test(text)) currentSource = sourceBlocks[0]?.name ?? currentSource;
-    continue;
-  }
-  if (/^"0x[0-9a-f]{40}",?(?:\s*\/\/.*)?$/.test(text)) {
-    const row = drainerCountByName.get(currentSource);
-    if (row) row.count += 1;
-    else drainerSourceCounts.push({ name: currentSource, url: null, retrieved: null, count: 1 });
+/** One label per publisher host, so the stacked source bar keeps its meaning with per-entry URLs. */
+const SOURCE_HOST_LABELS = new Map([
+  ["raw.githubusercontent.com", "MyEtherWallet ethereum-lists darklist"],
+  ["www.0xcert.com", "0xCERT advisories and IOC feed"],
+  ["www.cryptotimes.io", "CryptoTimes / Matcha Meta advisory"],
+  ["chainabuse.com", "Chainabuse reports"],
+]);
+function publisherFor(source) {
+  if (!source || source === "unattributed") return "unattributed";
+  try {
+    return SOURCE_HOST_LABELS.get(new URL(source).host) ?? new URL(source).host;
+  } catch {
+    return "unattributed";
   }
 }
+const drainerSourceCounts = [];
+for (const entry of citationEntries) {
+  const name = publisherFor(entry.source);
+  const row = drainerSourceCounts.find((source) => source.name === name);
+  if (row) row.count += 1;
+  else drainerSourceCounts.push({ name, url: null, retrieved: null, count: 1 });
+}
+drainerSourceCounts.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 const drainerContributingSources = drainerSourceCounts.filter((source) => source.count > 0);
 
 /** The newest supply-catalogue reading, copied into the repo by `scripts/gen-catalogue-snapshot.mjs`. */
@@ -220,8 +244,8 @@ const ofacFreshnessBasis = ofacFreshness?.lastChangeAt
       ? "first-fetch"
       : "none";
 const drainerReviewedAt =
-  sourceBlocks
-    .map((source) => source.retrieved)
+  citationEntries
+    .map((entry) => entry.readDate)
     .filter(Boolean)
     .sort()
     .at(-1) ?? null;
@@ -391,6 +415,11 @@ const manifest = {
     sources: sourceBlocks,
     sourceCounts: drainerContributingSources,
     contributingSources: drainerContributingSources.length,
+    /** One `{ address, source, readDate, note }` row per entry, so the page can cite the address it blocks. */
+    entries: citationEntries,
+    attributed: citationEntries.filter((entry) => entry.source && entry.source !== "unattributed").length,
+    unattributed: citationEntries.filter((entry) => !entry.source || entry.source === "unattributed").length,
+    citationMaxAgeDays: 180,
     freshness: {
       upstreamChangedAt: null,
       basis: "review",

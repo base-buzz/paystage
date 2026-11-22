@@ -2486,6 +2486,19 @@ html[data-theme="light"] .lp-aurora span,
   font-size: 10.5px;
 }
 
+/* An entry with no findable source is labelled, not hidden and not dressed as a citation. */
+.lp-list-unattributed {
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px dashed color-mix(in srgb, var(--lp-red) 55%, var(--lp-line));
+  padding: 1px 8px;
+  color: var(--lp-red);
+  background: color-mix(in srgb, var(--lp-red) 8%, transparent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .lp-list-caption {
   margin: 0;
   color: var(--lp-dim);
