@@ -253,6 +253,12 @@ record has three defined homes, the [offer-and-receipt extension](https://github
 [bazaar discovery extension](https://github.com/x402-foundation/x402/blob/main/specs/extensions/bazaar.md). Where a decision can be refused, and where the evidence
 lives, are both specified. **Who occupies that seat is not** — and that is a commercial question, not a standards one.
 
+What the industry is doing about that seat is public, and it is arriving from several directions at once: Google's **Agent Payments Protocol (AP2)** and
+Mastercard's **Verifiable Intent**, co-developed with Google, have both been contributed to the **FIDO Alliance** for its agentic-payments trust layer
+([FIDO Alliance](https://fidoalliance.org/building-the-trust-layer-for-agentic-payments-with-ap2-and-verifiable-intent/), read 2026-11-22), while Visa runs its own
+agentic-commerce programme ([Visa newsroom](https://usa.visa.com/about-visa/newsroom/press-releases.html), 18 November 2026). Different implementations, one question:
+who is allowed to say a payment should not happen. That plurality is why an independent checker has a place — and why none of them can be assumed to be it.
+
 We are **not claiming the protocol requires us**. The protocol makes room for an independent adjudicator, and the value of that room grows as more
 value moves through rails no single company controls.
 
