@@ -18,7 +18,7 @@ import { LISTS } from "@/lib/lists.generated";
 export const metadata: Metadata = {
   title: "Deny lists",
   description:
-    "The sanctions and drainer lists PayStage checks before a payment is allowed: sources, retrieval and last-change dates, counts, refresh cadence and the limits of exact-address matching.",
+    "The sanctions and drainer lists PayStage checks before a payment is allowed, plus Circle's on-chain USDC blacklist events: sources, retrieval and last-change dates, counts, refresh cadence and the limits of exact-address matching.",
 };
 
 const ageDays = (iso: string): number => Math.floor((Date.now() - Date.parse(iso)) / 86_400_000);
@@ -34,6 +34,13 @@ export default function ListsPage() {
   const ofacFirstFetchedAt = ofac.firstFetchedAt as string | null;
   const drainers = LISTS.drainers;
   const sinks = LISTS.nonReceivable;
+  const circle = LISTS.circleBlacklist;
+  // `lists.generated.ts` is emitted `as const`; when the snapshot is absent these fields are `null` and would narrow
+  // to `never`, so the optional branches below would not type-check.
+  const circleFirstEventAt = circle.firstEventAt as string | null;
+  const circleLastEventAt = circle.lastEventAt as string | null;
+  const circleCollectedAt = circle.collectedAt as string | null;
+  const circleCoverageNote = circle.coverageNote as string | null;
   const ofacAge = ageDays(ofac.retrieved);
   // An old retrieval is only stale if the upstream body moved. The detector proves "unchanged" with a body hash; when
   // that proof is absent (no snapshot), fall back to the age window rather than assuming the list is current.
@@ -47,6 +54,11 @@ export default function ListsPage() {
         Every payment this product evaluates is checked against {total} addresses across three lists before it can be allowed.
         Each list, who publishes it, when this copy was retrieved, when its upstream feed last changed, and what the check does and does not mean is below. The
         figures are generated from the code that runs, so they cannot drift from what is shipped.
+      </p>
+      <p>
+        There is one more source that is not a list and is not yet a check: Circle&apos;s on-chain USDC{" "}
+        <code>Blacklisted(address)</code> events on Base. It is collected and dated below, and this build does not yet refuse
+        payments to those addresses.
       </p>
 
       <section>
@@ -207,6 +219,116 @@ export default function ListsPage() {
       </section>
 
       <section>
+        <h2>On-chain signal — collected, not yet enforced</h2>
+
+        <h3>{circle.name}</h3>
+        <p>
+          OFAC and the drainer list are snapshots: they are as current as their last copy. This signal is different. When Circle
+          freezes an address it calls <code>blacklist(address)</code> on the USDC contract, and the contract emits{" "}
+          <code>Blacklisted(address)</code>. The event is public in the rail a payment would use, and its date is the block&apos;s
+          timestamp — so unlike the curated lists it needs no publisher feed to carry a real change date.
+        </p>
+        <table>
+          <tbody>
+            <tr>
+              <th>Publisher</th>
+              <td>{circle.publisher}</td>
+            </tr>
+            <tr>
+              <th>Contract</th>
+              <td>
+                {circle.source ? (
+                  <a href={circle.source} rel="noreferrer noopener" target="_blank">
+                    USDC on Base (chain {circle.chainId})
+                  </a>
+                ) : (
+                  "USDC on Base"
+                )}{" "}
+                — <code>{circle.contract}</code>
+              </td>
+            </tr>
+            <tr>
+              <th>Event</th>
+              <td>
+                <code>{circle.topicSignature}</code> <code>{circle.topic}</code>
+              </td>
+            </tr>
+            <tr>
+              <th>Addresses blacklisted</th>
+              <td>
+                {circle.addresses ?? "not collected"}{" "}
+                {circle.addresses !== null ? "distinct addresses in the tracked range" : ""}
+              </td>
+            </tr>
+            <tr>
+              <th>Events</th>
+              <td>{circle.events ?? "not collected"}</td>
+            </tr>
+            <tr>
+              <th>First event</th>
+              <td>
+                {circleFirstEventAt ? (
+                  <>
+                    {circleFirstEventAt.slice(0, 10)} — block {circle.firstEventBlock}, the block&apos;s timestamp, not the
+                    date this copy was collected
+                  </>
+                ) : (
+                  "none in the tracked range"
+                )}
+              </td>
+            </tr>
+            <tr>
+              <th>Latest event</th>
+              <td>
+                {circleLastEventAt ? (
+                  <>
+                    {circleLastEventAt.slice(0, 10)} — block {circle.lastEventBlock}
+                  </>
+                ) : (
+                  "none in the tracked range"
+                )}
+              </td>
+            </tr>
+            <tr>
+              <th>Coverage</th>
+              <td>
+                Blocks {circle.fromBlock ?? "?"}–{circle.toBlock ?? "?"}.{" "}
+                {circle.completeSinceDeployment ? (
+                  <>Covered from the USDC deployment block.</>
+                ) : (
+                  <>
+                    <strong>Earlier history is not covered.</strong> {circleCoverageNote} This is a coverage boundary, not a
+                    statement that the address count is the whole chain.
+                  </>
+                )}
+              </td>
+            </tr>
+            <tr>
+              <th>Collected</th>
+              <td>{circleCollectedAt ? circleCollectedAt.slice(0, 10) : "not collected"}</td>
+            </tr>
+            <tr>
+              <th>Refresh</th>
+              <td>{circle.refresh}</td>
+            </tr>
+            <tr>
+              <th>Enforced</th>
+              <td>
+                <strong>Not yet.</strong> This build ingests and dates the events; the preflight verdict does not read them, so an
+                address here is not refused by PayStage today. It is shown because the event is real and public, not because the
+                check is shipped.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <strong>What it is not:</strong> it does not give OFAC a last-change date, and it is not a substitute for OFAC. A
+          Circle freeze is one company&apos;s action on one chain; it does not carry the legal effect of a sanctions listing, and
+          an address absent here is not cleared.
+        </p>
+      </section>
+
+      <section>
         <h2>Provenance and freshness</h2>
         <ul>
           <li>
@@ -233,6 +355,12 @@ export default function ListsPage() {
           <li>
             <strong>Delisting works the same way.</strong> When a publisher removes an address, the next sync removes it here
             and the block stops — the lists are replaced wholesale, not appended to.
+          </li>
+          <li>
+            <strong>One source is on-chain, and dated by the block.</strong> The Circle signal is read from USDC events on Base,
+            not downloaded from a feed. Its date is the block timestamp, and the collector appends events rather than replacing
+            the file, so an earlier entry cannot disappear because a later scan did not see it. Its coverage start is recorded
+            and printed above because free RPC access does not reach the deployment block.
           </li>
         </ul>
       </section>
@@ -284,6 +412,11 @@ export default function ListsPage() {
           <li>
             <strong>Lists are incomplete by nature.</strong> A drainer not yet in any published advisory is not in this list.
             Absence of a match is not evidence that a counterparty is safe.
+          </li>
+          <li>
+            <strong>The Circle blacklist is not enforced yet.</strong> This build collects and dates Circle&apos;s on-chain
+            <code>Blacklisted</code> events; it does not refuse a payment to one. Treat the section above as evidence the signal
+            is being read, not as coverage.
           </li>
           <li>
             <strong>Not a compliance product.</strong> This is not screening, onboarding, identity verification or legal

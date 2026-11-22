@@ -119,6 +119,28 @@ export const LISTS = {
     "maxAgeDays": 45,
     "refresh": "The hourly canary hashes SDN.XML's Last-Modified and body and refreshes this file when either moves; the 45-day check is a floor and reads the list's last change, not only its age."
   },
+  "circleBlacklist": {
+    "name": "Circle USDC blacklist — on-chain Base events",
+    "publisher": "Circle Internet Financial",
+    "source": "https://basescan.org/address/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "chainId": 8453,
+    "contract": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "topic": "0xffa4e6181777692565cf28528fc88fd1516ea86b56da075235fa575af6a4b855",
+    "topicSignature": "Blacklisted(address)",
+    "events": 84,
+    "addresses": 84,
+    "firstEventAt": "2026-09-09T14:57:33.000Z",
+    "firstEventBlock": 51088253,
+    "lastEventAt": "2026-11-19T14:48:16.000Z",
+    "lastEventBlock": 59546604,
+    "fromBlock": 51000000,
+    "toBlock": 60766560,
+    "completeSinceDeployment": false,
+    "coverageNote": "archive history before block 51000000 is not served by the public RPC; entries before that block are absent, not empty",
+    "collectedAt": "2026-11-22T10:34:48.066Z",
+    "enforced": false,
+    "refresh": "Re-run `node bin/circle-blacklist.mjs`; the collector appends new events and never drops an old one. No scheduled run is wired yet."
+  },
   "drainers": {
     "name": "Known drainers (curated)",
     "addresses": 23,

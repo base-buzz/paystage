@@ -42,6 +42,22 @@ const ofacFreshness = listFreshness?.lists?.["ofac-sdn"] ?? null;
 const changedSinceCopy =
   ofacFreshness?.sha256 && ofacSourceSha256 ? ofacFreshness.sha256 !== ofacSourceSha256 : null;
 
+/**
+ * Circle's on-chain `Blacklisted(address)` signal, from the ops collector's state file copied here
+ * (`apps/console/src/lib/circle-blacklist.json`).
+ *
+ * Unlike OFAC, this is not a feed with a Last-Modified header: the event's date is the block's timestamp, so the page
+ * can state a real first-event date. But it is also not a full history on a free RPC — the collector records which block
+ * its coverage starts at and why, and the page must repeat that limit rather than let the count read as chain-wide.
+ */
+let circleSnapshot = null;
+try {
+  circleSnapshot = JSON.parse(readFileSync(join(ROOT, "apps/console/src/lib/circle-blacklist.json"), "utf8"));
+} catch {
+  circleSnapshot = null;
+}
+const circleCounts = circleSnapshot?.counts ?? null;
+
 /** `SOURCES` is a literal array of {name, url, retrieved} — parse it rather than duplicating the list by hand. */
 const sourceBlocks = [...drainers.matchAll(/\{\s*name:\s*"([^"]+)",\s*\n\s*url:\s*"([^"]+)",\s*\n\s*retrieved:\s*"([^"]+)",/g)].map(
   ([, name, url, retrieved]) => ({ name, url, retrieved }),
@@ -90,6 +106,29 @@ const manifest = {
     maxAgeDays: 45,
     refresh:
       "The hourly canary hashes SDN.XML's Last-Modified and body and refreshes this file when either moves; the 45-day check is a floor and reads the list's last change, not only its age.",
+  },
+  circleBlacklist: {
+    name: "Circle USDC blacklist — on-chain Base events",
+    publisher: "Circle Internet Financial",
+    source: circleSnapshot ? `https://basescan.org/address/${circleSnapshot.contract}` : null,
+    chainId: circleSnapshot?.chainId ?? null,
+    contract: circleSnapshot?.contract ?? null,
+    topic: circleSnapshot?.topic ?? null,
+    topicSignature: circleSnapshot?.topicSignature ?? null,
+    events: circleCounts?.entries ?? null,
+    addresses: circleCounts?.addresses ?? null,
+    firstEventAt: circleCounts?.firstEventAt ?? null,
+    firstEventBlock: circleCounts?.firstEventBlock ?? null,
+    lastEventAt: circleCounts?.lastEventAt ?? null,
+    lastEventBlock: circleCounts?.lastEventBlock ?? null,
+    fromBlock: circleSnapshot?.fromBlock ?? null,
+    toBlock: circleSnapshot?.toBlock ?? null,
+    completeSinceDeployment: circleSnapshot?.coverage?.completeSinceDeployment ?? null,
+    coverageNote: circleSnapshot?.coverage?.note ?? null,
+    collectedAt: circleSnapshot?.generatedAt ?? null,
+    enforced: false,
+    refresh:
+      "Re-run `node bin/circle-blacklist.mjs`; the collector appends new events and never drops an old one. No scheduled run is wired yet.",
   },
   drainers: {
     name: "Known drainers (curated)",
