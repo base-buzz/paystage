@@ -222,6 +222,25 @@ written down here because the alternative is implying perpetual motion. The meas
 client SDKs whose interfaces we implement — and on the maintainers of the directories and lists that make tools findable. Where we
 implement a spec we try to cite it; where we get something wrong, the issue is open.
 
+## Why an independent adjudicator exists
+
+x402 is not owned by a vendor. It is a Linux Foundation project whose Technical Steering Committee lists Coinbase, Cloudflare and Stripe among
+its participating organisations ([`TSC.md`](https://github.com/x402-foundation/x402/blob/main/TSC.md), read 2026-11-22). That structure is the
+point: a payment rail several companies depend on cannot be judged by whichever one happens to hold the wallet.
+
+Every payment has two roles, and they pull in opposite directions. The **payer** wants the call to happen; the **adjudicator** has to be able to
+say no. A tool that holds the keys and approves the spend cannot credibly answer whether the spend was a good idea — it is the party whose revenue,
+engagement or convenience depends on the answer being yes. The same reason a seller cannot verify its own delivery applies to a wallet judging its
+own payment.
+
+So the useful shape is a checker that is a *third party* to the transaction: it holds no funds, it is not the seller, it is not the wallet, and it
+produces a record anyone can verify without trusting us. That is what this is, all the way down — MIT, no custody, self-hostable, verdicts carrying
+the rule that fired, receipts signed with a published key, and the sanctions and drainer lists published so the reasons can be inspected rather
+than believed.
+
+We are **not claiming the protocol requires us**. The protocol makes room for an independent adjudicator, and the value of that room grows as more
+value moves through rails no single company controls.
+
 ## What it does not catch
 
 A gate that claims to stop every bad payment is the thing this project argues against. [LIMITS.md](LIMITS.md)

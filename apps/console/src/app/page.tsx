@@ -166,6 +166,16 @@ export default function LandingPage() {
                 </a>
                 <CopyCommand command="npx -y -p @paystage/mcp paystage-mcp" />
               </div>
+              {/* The structural argument, directly under the hero: a payment has two jobs and the
+                  wallet can only credibly do the first. It says why a third party exists at all,
+                  which the three bullets below (empirical objections) do not. */}
+              <p className="lp-lede" style={{ marginTop: 18 }}>
+                <strong>A payment has two jobs: making it, and deciding whether it should happen.</strong>{" "}
+                The wallet does the first. It cannot credibly do the second — it is the party whose
+                revenue depends on the answer. PayStage is the third party: no keys, no funds, no
+                listings. It returns a verdict with the rule that fired, and a receipt anyone can
+                verify without trusting us.
+              </p>
               {/* The risk reducer belongs beside the CTA, not in 12px grey under it — these are
                   the three objections that stop a payment-safety tool being tried. */}
               <ul className="lp-reassure">
