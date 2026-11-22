@@ -17,12 +17,12 @@ import Link from "next/link";
  * clean bill of health.
  */
 const SUPPLY = [
-  { value: "17,833", label: "resources advertised", note: "PayAI's public discovery endpoint" },
-  { value: "24,473", label: "accepts recorded", note: "one resource can offer several assets or networks" },
-  { value: "1,321", label: "distinct payees", note: "1,039 EVM, the rest Solana / Algorand / other" },
-  { value: "29", label: "CAIP-2 networks", note: "13,080 accepts on eip155:8453 (Base) alone" },
-  { value: "0", label: "flagged by our lists", note: "against 23 cited addresses — see the caveat below" },
-  { value: "7,302", label: "accepts on Solana", note: "outside what an EVM policy can express today" },
+  { value: "18,043", label: "resources advertised", note: "PayAI's public discovery endpoint" },
+  { value: "24,799", label: "accepts recorded", note: "one resource can offer several assets or networks" },
+  { value: "1,351", label: "distinct payees", note: "the rest Solana / Algorand / other alongside the EVM majority" },
+  { value: "29", label: "CAIP-2 networks", note: "13,306 accepts on eip155:8453 (Base) alone" },
+  { value: "0", label: "flagged by our lists", note: "against 24 cited addresses — see the caveat below" },
+  { value: "7,314", label: "accepts on Solana", note: "outside what an EVM policy can express today" },
 ];
 
 export const metadata: Metadata = {
@@ -82,7 +82,7 @@ export default function StateOfX402() {
 
       <h2>Method</h2>
       <p>
-        Supply figures: one complete walk of PayAI&apos;s discovery endpoint on <strong>2026-11-21</strong>, refreshed weekly, screened against the same lists
+        Supply figures: one complete walk of PayAI&apos;s discovery endpoint on <strong>2026-11-22</strong>, refreshed weekly, screened against the same lists
         the evaluator ships. The inventory is a catalogue read, not a probe of each seller — a listing is a claim, and the payee registry only accepts hosts
         whose 402 challenge we have read ourselves.
       </p>
