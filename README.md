@@ -196,6 +196,28 @@ npx -y mcporter list https://api.paystage.xyz/mcp
 Prefer it local? `npx -y -p @paystage/mcp paystage-mcp` runs the same ten tools over stdio and reads a
 policy file from disk.
 
+## How this is built
+
+PayStage is a public good. MIT, no account, no custody, and an evaluator you can read in an afternoon.
+
+**The loop that maintains it is agentic.** A research agent runs on a schedule, reads what changed in the protocol and the market, and
+writes proposals; a human decides which become backlog rows; build and test agents implement them, and merged work ships through CI.
+Counted from this repository on 2026-11-22: **300 merged pull requests**, **14 published packages**, and **10 MCP tools** — each of those three is derived by a script in CI rather than typed here, which is why they are stated at all.
+
+A seatbelt has to move at the speed of the road. The x402 spec, the facilitator landscape and the sanctioned-address list all change
+without asking us, so the jobs that keep this useful — re-reading a spec, re-checking a list, noticing a facilitator that started
+rejecting payments — are the jobs agents are best at. The loop runs on a cycle measured in hours; it does not claim to outrun an
+exploit, and a 24-hour loop would not be that claim.
+
+**Sustainability, stated as a condition rather than a promise.** The work runs on inference budget and operator time. If paid calls
+ever cover the cost, the loop continues on its own; until then it depends on both being available. If neither is, the cycle slows —
+written down here because the alternative is implying perpetual motion. The measured numbers behind any cost claim live in
+`docs/state/` so the claim can be checked rather than believed.
+
+**On the shoulders of others.** This builds on the work of the people who maintain x402 — the protocol, its facilitators, and the
+client SDKs whose interfaces we implement — and on the maintainers of the directories and lists that make tools findable. Where we
+implement a spec we try to cite it; where we get something wrong, the issue is open.
+
 ## What it does not catch
 
 A gate that claims to stop every bad payment is the thing this project argues against. [LIMITS.md](LIMITS.md)
