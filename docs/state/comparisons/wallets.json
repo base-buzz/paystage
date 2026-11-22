@@ -1,0 +1,239 @@
+{
+  "computedOn": "2026-11-22",
+  "title": "Payer wallet vs gate, capability by capability",
+  "columns": [
+    "Coinbase Wallet MCP",
+    "MetaMask (Delegation Toolkit)",
+    "Safe (modules)",
+    "PayStage"
+  ],
+  "columnMeta": {
+    "Coinbase Wallet MCP": {
+      "monogram": "CW",
+      "vendor": "Coinbase",
+      "role": "wallet"
+    },
+    "MetaMask (Delegation Toolkit)": {
+      "monogram": "MM",
+      "vendor": "MetaMask",
+      "role": "wallet"
+    },
+    "Safe (modules)": {
+      "monogram": "SF",
+      "vendor": "Safe",
+      "role": "wallet"
+    },
+    "PayStage": {
+      "monogram": "PS",
+      "vendor": "PayStage",
+      "role": "gate"
+    }
+  },
+  "rows": [
+    {
+      "capability": "Holds no keys",
+      "definition": "The component that decides whether to pay holds no signing key and no funds.",
+      "cells": {
+        "Coinbase Wallet MCP": "unassessed",
+        "MetaMask (Delegation Toolkit)": "unassessed",
+        "Safe (modules)": "unassessed",
+        "PayStage": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/base-buzz/paystage/main/README.md",
+          "readDate": "2026-11-22"
+        }
+      }
+    },
+    {
+      "capability": "Never executes the payment",
+      "definition": "It does not sign, submit or settle the payment; it returns a verdict before the wallet signs.",
+      "cells": {
+        "Coinbase Wallet MCP": {
+          "mark": "no",
+          "source": "https://docs.cdp.coinbase.com/ai-agents/coinbase-for-agents/wallet-mcp",
+          "readDate": "2026-11-22"
+        },
+        "MetaMask (Delegation Toolkit)": {
+          "mark": "no",
+          "source": "https://docs.metamask.io/smart-accounts-kit/guides/delegation/use-delegation-scopes/spending-limit/",
+          "readDate": "2026-11-22"
+        },
+        "Safe (modules)": {
+          "mark": "no",
+          "source": "https://docs.safe.global/home/ai-agent-quickstarts/agent-with-spending-limit",
+          "readDate": "2026-11-22"
+        },
+        "PayStage": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/base-buzz/paystage/main/packages/preflight/src/evaluate.ts",
+          "readDate": "2026-11-22"
+        }
+      }
+    },
+    {
+      "capability": "Declares a per-payment cap",
+      "definition": "A maximum applies to one payment, declared in advance rather than inferred afterwards.",
+      "cells": {
+        "Coinbase Wallet MCP": {
+          "mark": "yes",
+          "source": "https://docs.cdp.coinbase.com/ai-agents/coinbase-for-agents/wallet-mcp",
+          "readDate": "2026-11-22"
+        },
+        "MetaMask (Delegation Toolkit)": {
+          "mark": "yes",
+          "source": "https://docs.metamask.io/smart-accounts-kit/reference/delegation/caveats/",
+          "readDate": "2026-11-22"
+        },
+        "Safe (modules)": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/safe-global/safe-modules/main/modules/allowances/contracts/AllowanceModule.sol",
+          "readDate": "2026-11-22"
+        },
+        "PayStage": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/base-buzz/paystage/main/packages/preflight/src/evaluate.ts",
+          "readDate": "2026-11-22"
+        }
+      }
+    },
+    {
+      "capability": "Payee allow-list",
+      "definition": "The payee address must appear on an operator-controlled list, so an unlisted payee is refused or held.",
+      "cells": {
+        "Coinbase Wallet MCP": "unassessed",
+        "MetaMask (Delegation Toolkit)": "unassessed",
+        "Safe (modules)": "unassessed",
+        "PayStage": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/base-buzz/paystage/main/packages/preflight/src/evaluate.ts",
+          "readDate": "2026-11-22"
+        }
+      }
+    },
+    {
+      "capability": "Velocity / rolling window",
+      "definition": "A limit over a rolling or resetting time window, not only a cap on each payment.",
+      "cells": {
+        "Coinbase Wallet MCP": {
+          "mark": "yes",
+          "source": "https://docs.cdp.coinbase.com/ai-agents/coinbase-for-agents/wallet-mcp",
+          "readDate": "2026-11-22"
+        },
+        "MetaMask (Delegation Toolkit)": {
+          "mark": "yes",
+          "source": "https://docs.metamask.io/smart-accounts-kit/guides/delegation/use-delegation-scopes/spending-limit/",
+          "readDate": "2026-11-22"
+        },
+        "Safe (modules)": {
+          "mark": "yes",
+          "source": "https://docs.safe.global/home/ai-agent-quickstarts/agent-with-spending-limit",
+          "readDate": "2026-11-22"
+        },
+        "PayStage": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/base-buzz/paystage/main/packages/velocity/src/check.ts",
+          "readDate": "2026-11-22"
+        }
+      }
+    },
+    {
+      "capability": "Names the rule that fired",
+      "definition": "A refusal carries the specific rule that produced it, not just a pass/fail bit.",
+      "cells": {
+        "Coinbase Wallet MCP": "unassessed",
+        "MetaMask (Delegation Toolkit)": "unassessed",
+        "Safe (modules)": "unassessed",
+        "PayStage": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/base-buzz/paystage/main/packages/preflight/src/evaluate.ts",
+          "readDate": "2026-11-22"
+        }
+      }
+    },
+    {
+      "capability": "Third-party-verifiable receipt",
+      "definition": "A record a third party can check against a published key without trusting the issuer.",
+      "cells": {
+        "Coinbase Wallet MCP": "unassessed",
+        "MetaMask (Delegation Toolkit)": "unassessed",
+        "Safe (modules)": "unassessed",
+        "PayStage": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/base-buzz/paystage/main/docs/specs/receipt-spec.md",
+          "readDate": "2026-11-22"
+        }
+      }
+    },
+    {
+      "capability": "Independent of the payer's wallet",
+      "definition": "The deciding component is not the wallet or account that signs the payment.",
+      "shaded": true,
+      "cells": {
+        "Coinbase Wallet MCP": {
+          "mark": "no",
+          "source": "https://docs.cdp.coinbase.com/ai-agents/coinbase-for-agents/wallet-mcp",
+          "readDate": "2026-11-22"
+        },
+        "MetaMask (Delegation Toolkit)": {
+          "mark": "no",
+          "source": "https://docs.metamask.io/smart-accounts-kit/guides/delegation/use-delegation-scopes/spending-limit/",
+          "readDate": "2026-11-22"
+        },
+        "Safe (modules)": {
+          "mark": "no",
+          "source": "https://docs.safe.global/home/ai-agent-quickstarts/agent-with-spending-limit",
+          "readDate": "2026-11-22"
+        },
+        "PayStage": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/base-buzz/paystage/main/README.md",
+          "readDate": "2026-11-22"
+        }
+      }
+    },
+    {
+      "capability": "Open source, self-hostable",
+      "definition": "The source is public and the payer can run the deciding component themselves.",
+      "cells": {
+        "Coinbase Wallet MCP": "unassessed",
+        "MetaMask (Delegation Toolkit)": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/MetaMask/smart-accounts-kit/main/package.json",
+          "readDate": "2026-11-22"
+        },
+        "Safe (modules)": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/safe-global/safe-modules/main/LICENSE",
+          "readDate": "2026-11-22"
+        },
+        "PayStage": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/base-buzz/paystage/main/LICENSE",
+          "readDate": "2026-11-22"
+        }
+      }
+    },
+    {
+      "capability": "Not the seller either",
+      "definition": "The deciding component is not the party being paid.",
+      "cells": {
+        "Coinbase Wallet MCP": "unassessed",
+        "MetaMask (Delegation Toolkit)": "unassessed",
+        "Safe (modules)": "unassessed",
+        "PayStage": {
+          "mark": "yes",
+          "source": "https://raw.githubusercontent.com/base-buzz/paystage/main/README.md",
+          "readDate": "2026-11-22"
+        }
+      }
+    }
+  ],
+  "notes": {
+    "unassessed": "An unassessed cell means no source we opened answers that question for that product. It is not a no. A product may do the thing and not document it; this page reports only what its documentation says, read on the date beside each mark.",
+    "conflict": "A wallet that pays and judges has the same conflict of interest as a seller that verifies.",
+    "trademark": "Coinbase Wallet, MetaMask and Safe are trademarks of their respective owners. PayStage is not affiliated with, endorsed by, or sponsored by any of them; the names identify the products compared.",
+    "productsChange": "Products change. Coinbase's documentation now titles this product Wallet MCP and its navigation carries a Migrate from Payments MCP entry; MetaMask's delegation material is now published under Smart Accounts Kit. Every mark carries the date it was read, so a later change can be seen rather than inherited.",
+    "velocity": "PayStage's velocity check is a separately callable tool (@paystage/velocity); the preflight verdict does not itself consult it. The mark says the capability ships, not that the main verdict runs it.",
+    "receipt": "PayStage's receipt is signed with a published ECDSA P-256 key and can be verified with the separate @paystage/receipt-verify package. Unsigned receipts are a supported state and are reported as unsigned, not as valid."
+  }
+}
