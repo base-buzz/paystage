@@ -103,7 +103,7 @@ export const LISTS = {
       "verified_at": "2026-11-18"
     }
   ],
-  "generatedAt": "2026-11-21",
+  "generatedAt": "2026-11-22",
   "ofac": {
     "name": "OFAC SDN — Digital Currency Address, ETH",
     "publisher": "US Department of the Treasury, Office of Foreign Assets Control",
