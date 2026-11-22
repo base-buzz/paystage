@@ -33,6 +33,10 @@ PayStage sits between an agent and the x402 payment it is about to make, and ans
 question before the signature exists: *should this payment happen?* Every tool returns
 `pay`, `review`, or `do_not_pay`, with the rule that fired and a receipt you can keep.
 
+It is a **third party to the transaction**: no keys, no funds, no listings, not the wallet, not the facilitator and not the seller. That position is the product —
+a wallet that pays and judges has the same conflict of interest as a seller that verifies its own delivery — and the rest of this file is what makes the claim
+checkable rather than a slogan.
+
 The gap it fills is narrow and load-bearing. x402 makes paying trivial and leaves *deciding*
 to the caller: a wallet enforces signatures, not intent. `@paystage/x402-guard` evaluates the
 challenge before the wallet signs, so a wrong payee, an over-cap amount or an unknown asset
