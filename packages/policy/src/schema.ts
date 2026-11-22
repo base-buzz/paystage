@@ -1,9 +1,35 @@
-import { z } from "zod";
 import type { Policy } from "./types.js";
+import {
+  createSink,
+  parseNode,
+  PolicyParseError,
+  type Field,
+  type Refinement,
+  type Schema,
+  type SchemaSink,
+} from "./guards.js";
 
-const evmAddressSchema = z
-  .string()
-  .regex(/^0x[a-fA-F0-9]{40}$/, "Expected a 0x-prefixed Ethereum address");
+export { PolicyParseError } from "./guards.js";
+export type { PolicyIssue } from "./guards.js";
+
+/**
+ * The policy schema. These are hand-written guards (#181) — the same accepted inputs, rejected
+ * inputs, unknown-key stripping and error text as the zod schemas they replace. `guards.ts`
+ * explains the engine and why it exists; this file is only the shape of v1.
+ *
+ * The regexes are the schema: an address is an address because it matches one of them, and the
+ * pattern is repeated into the error message, so changing one changes the user-facing text.
+ */
+const EVM_ADDRESS = /^0x[a-fA-F0-9]{40}$/;
+const VM_ADDRESS = /^(0x[a-fA-F0-9]{40}|[1-9A-HJ-NP-Za-km-z]{32,44})$/;
+const NETWORK_ID = /^(eip155:\d+|solana:\*|solana:[1-9A-HJ-NP-Za-km-z]{32,44})$/;
+const AMOUNT_VALUE = /^\d+(?:\.\d+)?$/;
+
+const evmAddress: Schema = {
+  kind: "string",
+  pattern: EVM_ADDRESS,
+  patternMessage: "Expected a 0x-prefixed Ethereum address",
+};
 
 /**
  * A payee or asset address on any chain the evaluator understands.
@@ -12,75 +38,131 @@ const evmAddressSchema = z
  * compared case-insensitively. Accepting both here is what lets one policy name a Solana mint
  * and payee without a second chain module.
  */
-const vmAddressSchema = z
-  .string()
-  .regex(
-    /^(0x[a-fA-F0-9]{40}|[1-9A-HJ-NP-Za-km-z]{32,44})$/,
-    "Expected a 0x-prefixed Ethereum address or a base58 Solana address",
-  );
+const vmAddress: Schema = {
+  kind: "string",
+  pattern: VM_ADDRESS,
+  patternMessage: "Expected a 0x-prefixed Ethereum address or a base58 Solana address",
+};
 
 /** CAIP-2 ids the evaluator can match: EVM chains, Solana networks, and `@x402/svm`'s wildcard. */
-const networkIdSchema = z
-  .string()
-  .regex(
-    /^(eip155:\d+|solana:\*|solana:[1-9A-HJ-NP-Za-km-z]{32,44})$/,
-    "Expected a network id like eip155:8453 or solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-  );
+const networkId: Schema = {
+  kind: "string",
+  pattern: NETWORK_ID,
+  patternMessage: "Expected a network id like eip155:8453 or solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+};
 
-const amountSpecSchema = z.object({
-  value: z
-    .string()
-    .regex(/^\d+(?:\.\d+)?$/, "Amount value must be a non-negative decimal string"),
-  asset: z.string().min(1),
-  decimals: z.number().int().min(0)
-});
+const amountSpec: Schema = {
+  kind: "object",
+  fields: [
+    {
+      key: "value",
+      schema: {
+        kind: "string",
+        pattern: AMOUNT_VALUE,
+        patternMessage: "Amount value must be a non-negative decimal string",
+      },
+    },
+    { key: "asset", schema: { kind: "string", min: 1 } },
+    { key: "decimals", schema: { kind: "number", integer: true, minimum: 0 } },
+  ],
+};
 
-const assetSchema = z.object({
-  symbol: z.string().min(1),
-  decimals: z.number().int().min(0),
-  address: vmAddressSchema,
-  /**
-   * Optional since #37: an asset can be named by address for any allowed network.
-   *
-   * USDC is the same contract story on every chain a policy allows, and requiring a policy to repeat the entry per network is
-   * how a stale duplicate gets missed. Omitting `network` means "this address, wherever `allowed_networks` permits" — the
-   * network allow-list still decides which chains are reachable, so this widens nothing beyond what the operator already
-   * listed.
-   */
-  network: networkIdSchema.optional()
-});
+const asset: Schema = {
+  kind: "object",
+  fields: [
+    { key: "symbol", schema: { kind: "string", min: 1 } },
+    { key: "decimals", schema: { kind: "number", integer: true, minimum: 0 } },
+    { key: "address", schema: vmAddress },
+    /**
+     * Optional since #37: an asset can be named by address for any allowed network.
+     *
+     * USDC is the same contract story on every chain a policy allows, and requiring a policy to repeat the entry per network is
+     * how a stale duplicate gets missed. Omitting `network` means "this address, wherever `allowed_networks` permits" — the
+     * network allow-list still decides which chains are reachable, so this widens nothing beyond what the operator already
+     * listed.
+     */
+    { key: "network", schema: networkId, optional: true },
+  ],
+};
 
+const velocityAmount: Schema = {
+  kind: "object",
+  fields: [
+    {
+      key: "value",
+      schema: {
+        kind: "string",
+        pattern: AMOUNT_VALUE,
+        patternMessage: "Amount value must be a non-negative decimal string",
+      },
+    },
+    { key: "decimals", schema: { kind: "number", integer: true, minimum: 0 } },
+    { key: "asset", schema: { kind: "string", min: 1 }, optional: true },
+  ],
+};
 
-const velocityAmountSchema = z.object({
-  value: z
-    .string()
-    .regex(/^\d+(?:\.\d+)?$/, "Amount value must be a non-negative decimal string"),
-  decimals: z.number().int().min(0),
-  asset: z.string().min(1).optional(),
-});
+const hour: Schema = { kind: "number", integer: true, minimum: 0, maximum: 23 };
+const hourRange: Schema = { kind: "tuple", items: [hour, hour] };
 
-const timeWindowSchema = z
-  .object({
-    allowed_hours_utc: z.tuple([z.number().int().min(0).max(23), z.number().int().min(0).max(23)]).optional(),
-    blocked_hours_utc: z.tuple([z.number().int().min(0).max(23), z.number().int().min(0).max(23)]).optional(),
-  })
-  .refine((w) => (w.allowed_hours_utc === undefined) !== (w.blocked_hours_utc === undefined), {
-    message: "time_window needs exactly one of allowed_hours_utc or blocked_hours_utc",
-  });
+const timeWindow: Schema = {
+  kind: "object",
+  fields: [
+    { key: "allowed_hours_utc", schema: hourRange, optional: true },
+    { key: "blocked_hours_utc", schema: hourRange, optional: true },
+  ],
+  refine: (value, sink) => {
+    if ((value.allowed_hours_utc === undefined) === (value.blocked_hours_utc === undefined)) {
+      sink.soft({
+        code: "custom",
+        path: ["time_window"],
+        message: "time_window needs exactly one of allowed_hours_utc or blocked_hours_utc",
+      });
+    }
+  },
+};
 
-const velocityWindowSchema = z.object({
-  window_seconds: z.number().int().positive(),
-  max_count: z.number().int().nonnegative().optional(),
-  max_amount: velocityAmountSchema.optional(),
-  /**
-   * A ceiling per payee inside this window (#39).
-   *
-   * The aggregate ceiling does not stop one compromised seller address: every payment can be small, spread across the
-   * day, and the daily total still looks normal. This bounds a single counterparty instead. Actions without a `payee`
-   * are counted toward the aggregate only, because attributing them to a payee would be inventing one.
-   */
-  per_payee_max_amount: velocityAmountSchema.optional(),
-});
+const velocityWindow: Schema = {
+  kind: "object",
+  fields: [
+    {
+      key: "window_seconds",
+      schema: { kind: "number", integer: true, minimum: 0, minimumInclusive: false },
+    },
+    { key: "max_count", schema: { kind: "number", integer: true, minimum: 0 }, optional: true },
+    { key: "max_amount", schema: velocityAmount, optional: true },
+    /**
+     * A ceiling per payee inside this window (#39).
+     *
+     * The aggregate ceiling does not stop one compromised seller address: every payment can be small, spread across the
+     * day, and the daily total still looks normal. This bounds a single counterparty instead. Actions without a `payee`
+     * are counted toward the aggregate only, because attributing them to a payee would be inventing one.
+     */
+    { key: "per_payee_max_amount", schema: velocityAmount, optional: true },
+  ],
+};
+
+const velocity: Schema = {
+  kind: "object",
+  fields: [{ key: "windows", schema: { kind: "array", element: velocityWindow, min: 1 } }],
+};
+
+/**
+ * Per-agent overlays. Shape is validated here; the *narrowing* rule is enforced in
+ * `resolveAgentPolicy`, because it needs the surrounding policy to compare against.
+ */
+const agentBudget: Schema = {
+  kind: "object",
+  fields: [
+    { key: "max_amount", schema: amountSpec, optional: true },
+    { key: "daily_cap", schema: amountSpec, optional: true },
+    { key: "allowed_pay_to", schema: { kind: "array", element: vmAddress }, optional: true },
+    { key: "allowed_assets", schema: { kind: "array", element: asset }, optional: true },
+    { key: "allowed_networks", schema: { kind: "array", element: networkId }, optional: true },
+    { key: "unknown_payee", schema: { kind: "enum", values: ["review", "deny"] }, optional: true },
+    { key: "require_human_above", schema: amountSpec, optional: true },
+    { key: "velocity", schema: velocity, optional: true },
+  ],
+};
 
 /**
  * Cross-field checks. These exist because each one was a live hole:
@@ -93,72 +175,61 @@ const velocityWindowSchema = z.object({
  *  - An allowed asset with no cap is uncapped, which is not what "max_amount is the ceiling"
  *    says. Opting in is explicit because guessing intent about money is not our job.
  */
-const BasePolicySchema = z.object({
-  version: z.literal(1),
-  max_amount: amountSpecSchema,
-  daily_cap: amountSpecSchema.optional(),
-  allowed_pay_to: z.array(vmAddressSchema).min(1),
-  allowed_assets: z.array(assetSchema).min(1),
+const POLICY_FIELDS: readonly Field[] = [
+  { key: "version", schema: { kind: "literal", value: 1 } },
+  { key: "max_amount", schema: amountSpec },
+  { key: "daily_cap", schema: amountSpec, optional: true },
+  { key: "allowed_pay_to", schema: { kind: "array", element: vmAddress, min: 1 } },
+  { key: "allowed_assets", schema: { kind: "array", element: asset, min: 1 } },
   /**
    * A policy caps ONE asset by name. Allowing others without saying so is how an uncapped
    * asset slips past a reader who thinks `max_amount` is the ceiling — opt in deliberately.
    */
-  allow_uncapped_assets: z.boolean().optional(),
-  allowed_networks: z.array(networkIdSchema).min(1),
-  max_timeout_seconds: z.number().int().positive(),
+  { key: "allow_uncapped_assets", schema: { kind: "boolean" }, optional: true },
+  { key: "allowed_networks", schema: { kind: "array", element: networkId, min: 1 } },
+  {
+    key: "max_timeout_seconds",
+    schema: { kind: "number", integer: true, minimum: 0, minimumInclusive: false },
+  },
   /**
    * When an agent may pay, in UTC.
    *
    * `allowed_hours_utc: [9, 17]` permits 09:00–17:00 UTC; `[22, 6]` wraps midnight. Half-open: [start, end), so a
    * window of [9, 9] is empty rather than all day — an ambiguous rule should refuse, not permit.
    */
-  time_window: timeWindowSchema.optional(),
-  require_human_above: amountSpecSchema.optional(),
-  unknown_payee: z.enum(["review", "deny"]),
-  max_auth_validity_seconds: z.number().int().positive().optional(),
-  allowed_spenders: z.array(evmAddressSchema).optional(),
-  disallow_unlimited_approvals: z.boolean().optional(),
-  velocity: z
-    .object({ windows: z.array(velocityWindowSchema).min(1) })
-    .optional(),
-  /**
-   * Per-agent overlays. Shape is validated here; the *narrowing* rule is enforced in
-   * `resolveAgentPolicy`, because it needs the surrounding policy to compare against.
-   */
-  agents: z
-    .record(
-      z.string().min(1),
-      z.object({
-        max_amount: amountSpecSchema.optional(),
-        daily_cap: amountSpecSchema.optional(),
-        allowed_pay_to: z.array(vmAddressSchema).optional(),
-        allowed_assets: z.array(assetSchema).optional(),
-        allowed_networks: z.array(networkIdSchema).optional(),
-        unknown_payee: z.enum(["review", "deny"]).optional(),
-        require_human_above: amountSpecSchema.optional(),
-        velocity: z.object({ windows: z.array(velocityWindowSchema).min(1) }).optional(),
-      }),
-    )
-    .optional()
-});
+  { key: "time_window", schema: timeWindow, optional: true },
+  { key: "require_human_above", schema: amountSpec, optional: true },
+  { key: "unknown_payee", schema: { kind: "enum", values: ["review", "deny"] } },
+  {
+    key: "max_auth_validity_seconds",
+    schema: { kind: "number", integer: true, minimum: 0, minimumInclusive: false },
+    optional: true,
+  },
+  { key: "allowed_spenders", schema: { kind: "array", element: evmAddress }, optional: true },
+  { key: "disallow_unlimited_approvals", schema: { kind: "boolean" }, optional: true },
+  { key: "velocity", schema: velocity, optional: true },
+  { key: "agents", schema: { kind: "record", value: agentBudget }, optional: true },
+];
 
-
-export const PolicySchema = BasePolicySchema.superRefine((p, ctx) => {
-  const places = (value: string): number => {
-    const dot = value.indexOf(".");
-    return dot === -1 ? 0 : value.length - dot - 1;
+const policyRefine: Refinement = (value, sink: SchemaSink): void => {
+  // `allow_uncapped_assets` is part of the schema but is deliberately absent from the exported
+  // `Policy` interface (it only affects parsing); keep the public type unchanged.
+  const policy = value as unknown as Policy & { allow_uncapped_assets?: boolean };
+  const decimalPlaces = (amount: string): number => {
+    const dot = amount.indexOf(".");
+    return dot === -1 ? 0 : amount.length - dot - 1;
   };
 
   // 1. The cap's precision must fit the cap's own decimals. This used to parse fine and then
   //    throw inside evaluatePayment — a 400 on a live request instead of a construction error.
   for (const [field, spec] of [
-    ["max_amount", p.max_amount],
-    ["daily_cap", p.daily_cap],
+    ["max_amount", policy.max_amount],
+    ["daily_cap", policy.daily_cap],
   ] as const) {
     if (spec === undefined) continue;
-    if (places(spec.value) > spec.decimals) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+    if (decimalPlaces(spec.value) > spec.decimals) {
+      sink.soft({
+        code: "custom",
         path: [field, "value"],
         message: `${field}.value "${spec.value}" has more decimal places than ${field}.decimals (${spec.decimals})`,
       });
@@ -167,16 +238,16 @@ export const PolicySchema = BasePolicySchema.superRefine((p, ctx) => {
 
   // 2. The drain. decimals must describe the same unit as the asset the cap names: the same
   //    "0.05" with 18 decimals against a 6-decimal asset is a cap 10^12 times too large.
-  const named = p.allowed_assets.find((a) => a.symbol === p.max_amount.asset);
-  if (named !== undefined && named.decimals !== p.max_amount.decimals) {
-    const factor = Math.abs(p.max_amount.decimals - named.decimals);
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+  const named = policy.allowed_assets.find((entry) => entry.symbol === policy.max_amount.asset);
+  if (named !== undefined && named.decimals !== policy.max_amount.decimals) {
+    const factor = Math.abs(policy.max_amount.decimals - named.decimals);
+    sink.soft({
+      code: "custom",
       path: ["max_amount", "decimals"],
       message:
-        `max_amount.decimals is ${p.max_amount.decimals} but asset "${named.symbol}" has ` +
+        `max_amount.decimals is ${policy.max_amount.decimals} but asset "${named.symbol}" has ` +
         `${named.decimals} decimals — the cap would be 10^${factor} times ` +
-        `${p.max_amount.decimals > named.decimals ? "too large" : "too small"}`,
+        `${policy.max_amount.decimals > named.decimals ? "too large" : "too small"}`,
     });
   }
 
@@ -188,32 +259,67 @@ export const PolicySchema = BasePolicySchema.superRefine((p, ctx) => {
   // that legitimately share a ticker — a symbol-only rule rejected valid policies, which CI
   // caught because the local suite ran the previously built schema. The hole needs the same
   // ticker on the SAME chain at a different scale.
-  const keys = p.allowed_assets.map((a) => `${a.symbol}@${a.network}`);
-  const dupes = keys.filter((k, i) => keys.indexOf(k) !== i);
-  if (dupes.length > 0) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+  const keys = policy.allowed_assets.map((entry) => `${entry.symbol}@${entry.network}`);
+  const duplicates = keys.filter((key, index) => keys.indexOf(key) !== index);
+  if (duplicates.length > 0) {
+    sink.soft({
+      code: "custom",
       path: ["allowed_assets"],
       message:
-        `duplicate asset ${[...new Set(dupes)].map((d) => `"${d}"`).join(", ")} — same ticker on the same chain; ` +
+        `duplicate asset ${[...new Set(duplicates)].map((duplicate) => `"${duplicate}"`).join(", ")} — same ticker on the same chain; ` +
         `rename one if they are genuinely different assets`,
     });
   }
 
   // 4. An allowed asset with no cap is uncapped, which contradicts "max_amount is the ceiling".
-  const uncapped = p.allowed_assets.filter((a) => a.symbol !== p.max_amount.asset);
-  if (uncapped.length > 0 && p.allow_uncapped_assets !== true) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+  const uncapped = policy.allowed_assets.filter((entry) => entry.symbol !== policy.max_amount.asset);
+  if (uncapped.length > 0 && policy.allow_uncapped_assets !== true) {
+    sink.soft({
+      code: "custom",
       path: ["allowed_assets"],
       message:
-        `allowed_assets includes ${uncapped.map((a) => `"${a.symbol}"`).join(", ")}, which no cap covers — ` +
-        `max_amount only caps "${p.max_amount.asset}". Set allow_uncapped_assets: true if that is intended`,
+        `allowed_assets includes ${uncapped.map((entry) => `"${entry.symbol}"`).join(", ")}, which no cap covers — ` +
+        `max_amount only caps "${policy.max_amount.asset}". Set allow_uncapped_assets: true if that is intended`,
     });
   }
-});
+};
 
-export type PolicyFromSchema = z.infer<typeof PolicySchema>;
+const POLICY: Schema = { kind: "object", fields: POLICY_FIELDS, refine: policyRefine };
+
+/**
+ * The field map, keyed by name. `@paystage/payment-policy` reads the key set from `shape` to
+ * refuse unknown fields; the values are this package's schema nodes and are not consumer API.
+ */
+export const POLICY_SHAPE: Readonly<Record<string, Schema>> = Object.freeze(
+  Object.fromEntries(POLICY_FIELDS.map((field) => [field.key, field.schema])),
+);
+
+export interface PolicySchemaApi {
+  readonly shape: Readonly<Record<string, Schema>>;
+  parse(input: unknown): Policy;
+  safeParse(input: unknown):
+    | { success: true; data: Policy }
+    | { success: false; error: PolicyParseError };
+}
+
+export const PolicySchema: PolicySchemaApi = {
+  shape: POLICY_SHAPE,
+  parse(input: unknown): Policy {
+    const sink = createSink();
+    const value = parseNode(POLICY, input, [], sink) as Policy;
+    if (sink.issues.length > 0) throw new PolicyParseError(sink.issues);
+    return value;
+  },
+  safeParse(input: unknown) {
+    try {
+      return { success: true, data: PolicySchema.parse(input) };
+    } catch (error) {
+      if (error instanceof PolicyParseError) return { success: false, error };
+      throw error;
+    }
+  },
+};
+
+export type PolicyFromSchema = Policy;
 
 export type ParsedPolicy = Policy;
-

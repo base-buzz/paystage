@@ -36,9 +36,9 @@ PayStage has **no shell/child processes, no `eval`, no telemetry, and no private
 
 ## Supply chain
 
-- Runtime dependencies are only **`zod` (^4.6.7)** and the official **`@modelcontextprotocol/server` v2 SDK** (which depends only on `@modelcontextprotocol/core` and `zod`), plus other `@paystage/*` packages pinned to exact versions.
+- Runtime dependencies: **`@paystage/policy` and `@paystage/preflight` have none** (#181 — the policy parser is hand-written, and zod is a devDependency used only by the differential test that holds the guards to zod's behaviour). The MCP surfaces — `mcp`, `velocity`, `auth-watch`, `trade-preflight` and `ai-sdk` — are built on the official **`@modelcontextprotocol/server` v2 SDK** (which depends on `@modelcontextprotocol/core` and **`zod` ^4.2.0**); they inherit zod from the SDK, so it remains in a user's tree there. Other `@paystage/*` packages are pinned to exact versions.
 - As of `mcp` 0.3.0 we moved off `@modelcontextprotocol/sdk` v1, which pulled in ~90 transitive packages (express, hono, cors, cross-spawn, ajv, jose, eventsource, ...) that a stdio-only server never used. This removed the dependency behind Socket's shell-access, unmaintained-package and most network/env alerts.
-- Upgraded `zod` 3 -> 4.6.7 to fix **GHSA-mrhx-c7xc-m3w5** (high, memory exhaustion validating oversized collections).
+- Upgraded the SDK's `zod` 3 -> ^4.2.0 to fix **GHSA-mrhx-c7xc-m3w5** (high, memory exhaustion validating oversized collections). The keys `policy` and `preflight` parse with no zod at all, so they carry no version of it.
 - Published tarballs contain only `dist/*.js`, `*.d.ts`, `README` and `server.json` — no source maps, tests or sources.
 - Releases are built in GitHub Actions (`.github/workflows/release.yml`) and published with npm provenance via Trusted Publishing once enabled per package. Verify with `npm audit signatures`.
 - Remaining Socket alerts on the bundled MCP SDK (e.g. dynamic code generation used by its JSON-schema validator, URL strings in protocol code) are expected and come from the official SDK.

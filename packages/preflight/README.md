@@ -10,6 +10,14 @@ policy **before** your agent pays. Returns one of three verdicts: `pay`,
   MCP client can call it as a tool.
 - **Deterministic** — same input + same policy ⇒ same verdict.
 
+## Dependencies
+
+The evaluator has no runtime dependency other than `@paystage/policy`, and that package has none
+of its own (#181): `npm i @paystage/preflight` installs this package and the policy parser, and
+no schema library. The optional MCP server entry (`@paystage/preflight/mcp`) needs
+`@modelcontextprotocol/server`, which lists zod as its own dependency — that is the official
+SDK's dependency, not this package's.
+
 ## Try it offline (no keys, no spend)
 
 ```bash

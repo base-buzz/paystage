@@ -44,7 +44,9 @@ export function policyDocument(policy: Policy): PolicyDocument {
   refuseUnknownFields(unknown, "policy");
   refuseUndefinedFields(policy);
 
-  const parsed = PolicySchema.parse(policy) as Record<string, unknown>;
+  // `parse` returns the `Policy` interface, which has no implicit index signature, so the
+  // record view needs the `unknown` hop rather than a direct assertion.
+  const parsed = PolicySchema.parse(policy) as unknown as Record<string, unknown>;
   const { version, ...rules } = parsed;
   return { version: version as 1, rules: rules as PolicyDocument["rules"] };
 }

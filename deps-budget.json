@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-21",
+  "measuredAt": "2026-11-22",
   "method": "npm pack <package> from packages/; npm install --ignore-scripts --no-audit --no-fund <tarball> in an empty temp project; npm ls --all --parseable, dropping the temp project's own root line. The count includes the package itself and every resolved copy, hoisted or nested.",
   "packages": {
     "@paystage/ai-sdk": {
@@ -28,8 +28,8 @@
       ]
     },
     "@paystage/mcp": {
-      "budget": 11,
-      "reason": "11 rather than 9: the published @paystage/preflight 0.5.3 and @paystage/auth-watch 0.2.2 still pin @paystage/policy 0.3.0, so npm installs two nested 0.3.0 copies beside the umbrella's 0.3.1. The budget stays at 11 until those siblings are republished; a lower count passes.",
+      "budget": 10,
+      "reason": "10: the published @paystage/preflight 0.5.4 no longer nests @paystage/policy 0.3.0, so there is no nested copy left. zod is still here from @modelcontextprotocol/server, and stays until the SDK drops it \u2014 the policy and preflight packages in this tree declare no runtime dependency (#181).",
       "resolvedPackages": [
         "node_modules/@modelcontextprotocol/core",
         "node_modules/@modelcontextprotocol/server",
@@ -38,18 +38,17 @@
         "node_modules/@paystage/mcp",
         "node_modules/@paystage/policy",
         "node_modules/@paystage/preflight",
-        "node_modules/@paystage/preflight/node_modules/@paystage/policy",
         "node_modules/@paystage/trade-preflight",
         "node_modules/@paystage/velocity",
         "node_modules/zod"
       ]
     },
     "@paystage/policy": {
-      "budget": 2,
+      "budget": 1,
       "resolvedPackages": [
-        "node_modules/@paystage/policy",
-        "node_modules/zod"
-      ]
+        "node_modules/@paystage/policy"
+      ],
+      "reason": "1: no runtime dependencies since #181. The policy parser is hand-written; zod is a devDependency of this package (the differential test's oracle), so it is not in the install tree."
     },
     "@paystage/preflight": {
       "budget": 3,
@@ -57,7 +56,8 @@
         "node_modules/@paystage/policy",
         "node_modules/@paystage/preflight",
         "node_modules/zod"
-      ]
+      ],
+      "reason": "3: @paystage/preflight plus the published @paystage/policy 0.3.1, which still depends on zod. This tarball resolves its @paystage/policy from the registry, so the drop to 2 is only measurable after the #181 policy release is published; a lower count passes."
     },
     "@paystage/receipt-verify": {
       "budget": 1,
@@ -91,19 +91,18 @@
       ]
     },
     "@paystage/x-evm": {
-      "budget": 5,
-      "reason": "one nested @paystage/policy 0.3.0 copy from the published @paystage/preflight 0.5.3 pin; would be 4 after preflight is republished.",
+      "budget": 4,
+      "reason": "4: the zod entry is the published @paystage/policy 0.3.1's dependency. Drops to 3 once the #181 policy release is published, since that package then has no dependencies.",
       "resolvedPackages": [
         "node_modules/@paystage/policy",
         "node_modules/@paystage/preflight",
-        "node_modules/@paystage/preflight/node_modules/@paystage/policy",
         "node_modules/@paystage/x-evm",
         "node_modules/zod"
       ]
     },
     "@paystage/x402-guard": {
-      "budget": 32,
-      "reason": "mostly the @x402/extensions -> viem stack, plus one nested @paystage/policy 0.3.0 copy from the published @paystage/preflight 0.5.3 pin.",
+      "budget": 31,
+      "reason": "mostly the @x402/extensions -> viem stack; the zod entry is the published @paystage/policy 0.3.1 dependency, gone once the #181 policy release is published.",
       "resolvedPackages": [
         "node_modules/@adraffy/ens-normalize",
         "node_modules/@noble/ciphers",
@@ -111,7 +110,6 @@
         "node_modules/@noble/hashes",
         "node_modules/@paystage/policy",
         "node_modules/@paystage/preflight",
-        "node_modules/@paystage/preflight/node_modules/@paystage/policy",
         "node_modules/@paystage/x402-guard",
         "node_modules/@scure/base",
         "node_modules/@scure/bip32",

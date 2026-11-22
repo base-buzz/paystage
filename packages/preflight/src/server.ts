@@ -1,11 +1,11 @@
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { McpServer } from "@modelcontextprotocol/server";
-import { z } from "zod";
 import { loadPolicy, parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
 import { normalizePaymentRequired } from "./normalize.js";
 import { evaluatePayment } from "./evaluate.js";
 import type { EvaluateResult } from "./evaluate.js";
+import { evaluateToolInput } from "./tool-schema.js";
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -18,11 +18,9 @@ export function createServer(): McpServer {
     {
       description:
         "Evaluate an x402 PaymentRequired payload against a PayStage spending policy before paying",
-      inputSchema: z.object({
-        payment_required: z.unknown(),
-        policy_path: z.string().optional(),
-        policy: z.unknown().optional(),
-      }),
+      // Hand-written Standard Schema: the input contract is a public surface, and #181 removed
+      // the last zod import from this package. See `tool-schema.ts`.
+      inputSchema: evaluateToolInput,
     },
     async (input: {
       payment_required: unknown;

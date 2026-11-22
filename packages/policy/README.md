@@ -8,6 +8,23 @@ Shared spending-policy schema and loader for PayStage agent payment tools.
 npm install @paystage/policy
 ```
 
+## Zero runtime dependencies
+
+This package has **no runtime dependencies** (#181). The policy parser is hand-written
+(`src/guards.ts`); zod is a **devDependency**, used by `tests/differential.test.ts` as the oracle
+for every fixture in the repository plus generated mutations. That test is the reason the
+replacement is safe: it asserts the same accept/reject decision, the same parsed output and the
+same `invalid policy:` message, byte for byte.
+
+The gain is narrow and worth stating exactly. This is the evaluator every other surface depends
+on, so `npm i @paystage/preflight` is now one installable evaluator with no schema library in the
+tree.
+
+What this does **not** claim: `@paystage/mcp`, `@paystage/velocity`, `@paystage/auth-watch`,
+`@paystage/trade-preflight` and `@paystage/ai-sdk` are built on the official
+`@modelcontextprotocol/server` SDK, which lists zod as its own dependency. They inherit zod from
+the SDK; removing our imports does not remove it from a user's tree.
+
 ## Usage
 
 ```ts
