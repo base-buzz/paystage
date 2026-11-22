@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "max_amount": {
+    "value": "1.00",
+    "asset": "USDC",
+    "decimals": 6
+  },
+  "daily_cap": {
+    "value": "10.00",
+    "asset": "USDC",
+    "decimals": 6
+  },
+  "allowed_pay_to": [
+    "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
+    "0x000000000000000000000000000000000000dEaD"
+  ],
+  "allowed_assets": [
+    {
+      "symbol": "USDC",
+      "decimals": 6,
+      "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "network": "eip155:8453"
+    },
+    {
+      "symbol": "USDC",
+      "decimals": 6,
+      "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "network": "eip155:84532"
+    },
+    {
+      "symbol": "WETH",
+      "decimals": 18,
+      "address": "0x4200000000000000000000000000000000000006",
+      "network": "eip155:8453"
+    }
+  ],
+  "allow_uncapped_assets": true,
+  "allowed_networks": [
+    "eip155:8453",
+    "eip155:84532"
+  ],
+  "max_timeout_seconds": 300,
+  "time_window": {
+    "allowed_hours_utc": [
+      9,
+      17
+    ]
+  },
+  "require_human_above": {
+    "value": "0.50",
+    "asset": "USDC",
+    "decimals": 6
+  },
+  "unknown_payee": "review",
+  "max_auth_validity_seconds": 3600,
+  "allowed_spenders": [
+    "0x209693Bc6afc0C5328bA36FaF03C514EF312287C"
+  ],
+  "disallow_unlimited_approvals": true,
+  "velocity": {
+    "windows": [
+      {
+        "window_seconds": 300,
+        "max_count": 10,
+        "max_amount": {
+          "value": "5.00",
+          "decimals": 6,
+          "asset": "USDC"
+        },
+        "per_payee_max_amount": {
+          "value": "2.00",
+          "decimals": 6,
+          "asset": "USDC"
+        }
+      },
+      {
+        "window_seconds": 86400,
+        "max_count": 100
+      }
+    ]
+  },
+  "agents": {
+    "agent-a": {
+      "max_amount": {
+        "value": "0.50",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "daily_cap": {
+        "value": "2.00",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "allowed_pay_to": [
+        "0x209693Bc6afc0C5328bA36FaF03C514EF312287C"
+      ],
+      "allowed_assets": [
+        {
+          "symbol": "USDC",
+          "decimals": 6,
+          "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "network": "eip155:8453"
+        }
+      ],
+      "allowed_networks": [
+        "eip155:8453"
+      ],
+      "unknown_payee": "deny",
+      "require_human_above": {
+        "value": "0.25",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "velocity": {
+        "windows": [
+          {
+            "window_seconds": 3600,
+            "max_count": 5
+          }
+        ]
+      }
+    }
+  }
+}

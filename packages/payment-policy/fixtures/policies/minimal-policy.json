@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "max_amount": {
+    "value": "0.05",
+    "asset": "USDC",
+    "decimals": 6
+  },
+  "allowed_pay_to": [
+    "0x209693Bc6afc0C5328bA36FaF03C514EF312287C"
+  ],
+  "allowed_assets": [
+    {
+      "symbol": "USDC",
+      "decimals": 6,
+      "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    }
+  ],
+  "allowed_networks": [
+    "eip155:8453"
+  ],
+  "max_timeout_seconds": 60,
+  "unknown_payee": "review"
+}

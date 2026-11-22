@@ -1,0 +1,54 @@
+{
+  "name": "@paystage/payment-policy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reference implementation of the draft x402 payment-policy extension: emit and parse the policy document, and evaluate a client's verdict against it. Depends on @paystage/policy rather than copying its vocabulary.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "x402",
+    "payment-policy",
+    "agent-payments",
+    "policy",
+    "specification",
+    "reference-implementation"
+  ],
+  "homepage": "https://paystage.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/base-buzz/paystage.git",
+    "directory": "packages/payment-policy"
+  },
+  "bugs": {
+    "url": "https://github.com/base-buzz/paystage/issues"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paystage/policy": "0.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4",
+    "vitest": "^4.1.12"
+  }
+}
