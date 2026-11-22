@@ -206,10 +206,12 @@ export default function ListsPage() {
         not mean is below. The figures are generated from the code that runs, so they cannot drift from what is shipped.
       </p>
       <p>
-        Circle&apos;s on-chain USDC <code>Blacklisted(address)</code> events on Base are enforced too: a payment on Base to
-        one of those addresses is refused with the reason code <code>payee_blacklisted_onchain</code>. That list covers
-        events from block {circle.fromBlock ?? "51,000,000"} onward only — events below that block are not covered by the
-        free RPC, so a non-match is not proof the address was never blacklisted.
+        Circle&apos;s on-chain USDC <code>Blacklisted(address)</code> and <code>UnBlacklisted(address)</code> events on
+        Base are enforced too: a payment on Base to an address whose <em>latest</em> event is a freeze is refused with
+        the reason code <code>payee_blacklisted_onchain</code>, and an address Circle later unfroze is not refused on
+        that basis. That list covers events from block {circle.fromBlock ?? "51,000,000"} onward only — events below that
+        block are not covered by the free RPC, so a non-match is not proof the address was never blacklisted, nor that
+        an unfreeze below that block does not exist.
       </p>
 
       <section className="lp-list-coverage" aria-labelledby="coverage-heading">
@@ -471,21 +473,27 @@ export default function ListsPage() {
               </td>
             </tr>
             <tr>
-              <th>Event</th>
+              <th>Events</th>
               <td>
                 <code>{circle.topicSignature}</code> <code>{circle.topic}</code>
+                <br />
+                <code>{circle.unblacklistedTopicSignature}</code> <code>{circle.unblacklistedTopic}</code>
               </td>
             </tr>
             <tr>
-              <th>Addresses blacklisted</th>
+              <th>Current state</th>
               <td>
-                {circle.addresses ?? "not collected"}{" "}
-                {circle.addresses !== null ? "distinct addresses in the tracked range" : ""}
+                {circle.addresses ?? "not collected"} addresses currently blacklisted (refused on Base);{" "}
+                {circle.unblacklisted ?? "not collected"} currently unblacklisted (a later Circle event lifted the
+                freeze). {circle.states?.length ?? 0} distinct addresses in the tracked range.
               </td>
             </tr>
             <tr>
-              <th>Events</th>
-              <td>{circle.events ?? "not collected"}</td>
+              <th>Events collected</th>
+              <td>
+                {circle.events ?? "not collected"} total — {circle.blacklistEvents ?? "?"} <code>Blacklisted</code>,{" "}
+                {circle.unblacklistEvents ?? "?"} <code>UnBlacklisted</code>
+              </td>
             </tr>
             <tr>
               <th>First event</th>
@@ -509,6 +517,14 @@ export default function ListsPage() {
                   </>
                 ) : (
                   "none in the tracked range"
+                )}
+                {circle.lastUnblacklistAt ? (
+                  <>
+                    {" "}
+                    · latest unfreeze {circle.lastUnblacklistAt.slice(0, 10)}
+                  </>
+                ) : (
+                  " · no UnBlacklisted event in the tracked range"
                 )}
               </td>
             </tr>
@@ -537,23 +553,63 @@ export default function ListsPage() {
             <tr>
               <th>Enforced</th>
               <td>
-                <strong>Yes, on Base.</strong> A payment whose network is Base (chain {circle.chainId}) to one of these{" "}
-                {circle.addresses} addresses is refused with the reason code <code>payee_blacklisted_onchain</code> and the
-                text <em>Circle blacklisted this address on Base (eip155:8453 USDC Blacklisted event) — a contract-level
+                <strong>Yes, on Base, for the latest event.</strong> A payment whose network is Base (chain{" "}
+                {circle.chainId}) to one of these {circle.addresses} currently blacklisted addresses is refused with the
+                reason code <code>payee_blacklisted_onchain</code> and the text{" "}
+                <em>Circle blacklisted this address on Base (eip155:8453 USDC Blacklisted event) — a contract-level
                 freeze by the issuer, not an OFAC listing</em>. The refusal names Circle&apos;s on-chain action, not a
-                sanctions claim. Coverage starts at block {circle.fromBlock ?? "51,000,000"};{" "}
-                <strong>events below block {circle.fromBlock ?? "51,000,000"} are not covered</strong>, so a non-match is not
-                clearance.
+                sanctions claim. An address whose later event is <code>UnBlacklisted</code> is not refused on this
+                basis, even though the freeze stays in the event history. Coverage starts at block{" "}
+                {circle.fromBlock ?? "51,000,000"};{" "}
+                <strong>events below block {circle.fromBlock ?? "51,000,000"} are not covered</strong>, so a non-match is
+                not clearance.
               </td>
             </tr>
           </tbody>
         </table>
         <p>
-          <strong>What it is not:</strong> it does not give OFAC a last-change date, and it is not a substitute for OFAC. A
-          Circle freeze is one company&apos;s action on one chain; it does not carry the legal effect of a sanctions listing, and
-          an address absent here is not cleared. The collector reads <code>Blacklisted</code> events only — there is no{" "}
-          <code>UnBlacklisted</code> feed yet, so an address Circle later unfroze would still be refused by this build.
+          <strong>What it is not:</strong> it does not give OFAC a last-change date, and it is not a substitute for OFAC.
+          A Circle freeze is one company&apos;s action on one chain; it does not carry the legal effect of a sanctions
+          listing, and an address absent here is not cleared. Both Circle events are read, and the latest one decides
+          the state: a later <code>UnBlacklisted</code> lifts this refusal while an OFAC listing still fails the
+          sanctions check independently. The rule is only as complete as the events the contract emits — if Circle
+          restores an address without emitting <code>UnBlacklisted</code>, this data cannot see it.
         </p>
+
+        <details className="lp-prose">
+          <summary>
+            Every address in the tracked range ({circle.states?.length ?? 0}), current state and the date of its last
+            event
+          </summary>
+          <table>
+            <thead>
+              <tr>
+                <th>Address</th>
+                <th>Current state</th>
+                <th>Last event</th>
+                <th>Block</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(circle.states ?? []).map((entry) => (
+                <tr key={entry.address}>
+                  <td>
+                    <code>{entry.address}</code>
+                  </td>
+                  <td>
+                    {entry.state === "blacklisted" ? (
+                      <strong>Blacklisted — refused on Base</strong>
+                    ) : (
+                      <>Unblacklisted — the freeze was lifted</>
+                    )}
+                  </td>
+                  <td>{entry.since ? entry.since.slice(0, 10) : "date not recorded in this copy"}</td>
+                  <td>{entry.blockNumber}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
       </section>
 
       <section>
@@ -585,10 +641,12 @@ export default function ListsPage() {
             and the block stops — the lists are replaced wholesale, not appended to.
           </li>
           <li>
-            <strong>One source is on-chain, and dated by the block.</strong> The Circle signal is read from USDC events on Base,
-            not downloaded from a feed. Its date is the block timestamp, and the collector appends events rather than replacing
-            the file, so an earlier entry cannot disappear because a later scan did not see it. Its coverage start is recorded
-            and printed above because free RPC access does not reach the deployment block.
+            <strong>One source is on-chain, and dated by the block.</strong> The Circle signal is read from USDC
+            <code>Blacklisted</code> and <code>UnBlacklisted</code> events on Base, not downloaded from a feed. Each
+            event&apos;s date is its block timestamp, and the collector appends events rather than replacing the file, so
+            an earlier event cannot disappear because a later scan did not see it. The latest event per address decides
+            the state, and the coverage start is recorded and printed above because free RPC access does not reach the
+            deployment block.
           </li>
         </ul>
       </section>
@@ -643,9 +701,10 @@ export default function ListsPage() {
           </li>
           <li>
             <strong>The Circle blacklist covers Base from block {circle.fromBlock ?? "51,000,000"} only.</strong> It is
-            enforced for payments on Base, and a hit is a hit, but events below that block are not covered by the free RPC:
-            absence from the list proves only that no event was seen in the covered range. It also has no{" "}
-            <code>UnBlacklisted</code> feed, so a later Circle unfreeze is not reflected and the address stays refused.
+            enforced for payments on Base, and a hit is a hit, but events below that block are not covered by the free
+            RPC: absence from the list proves only that no event was seen in the covered range. The latest{" "}
+            <code>Blacklisted</code>/<code>UnBlacklisted</code> event decides the state, so a visible unfreeze is
+            reflected; an unfreeze below the coverage start, or one Circle never emitted as an event, is not visible.
           </li>
           <li>
             <strong>Not a compliance product.</strong> This is not screening, onboarding, identity verification or legal

@@ -63,12 +63,28 @@ try {
 }
 const circleCounts = circleSnapshot?.counts ?? null;
 const circleCorpus = readFileSync(join(ROOT, "packages/preflight/src/circle-blacklist-addresses.ts"), "utf8");
-const circleAddresses = [...circleCorpus.matchAll(/^\s{2}"(0x[0-9a-f]{40})",$/gm)].map(([, address]) => address.toLowerCase());
+/**
+ * The corpus is generated as `{ address, state, since, blockNumber }` rows (#370), not a bare address list. Parse the
+ * rows so the count enforced and the state the page explains come from one artifact; a `state: "unblacklisted"` row is
+ * carried, but never counted as enforced.
+ */
+const circleStates = [...circleCorpus.matchAll(
+  /\{ address: "(0x[0-9a-f]{40})", state: "(blacklisted|unblacklisted)", since: (null|"[^"]*"), blockNumber: (\d+) \}/g,
+)].map(([, address, state, since, blockNumber]) => ({
+  address: address.toLowerCase(),
+  state,
+  since: since === "null" ? null : since.slice(1, -1),
+  blockNumber: Number(blockNumber),
+}));
+const circleAddresses = circleStates.filter((entry) => entry.state === "blacklisted").map((entry) => entry.address);
+const circleUnblacklisted = circleStates.filter((entry) => entry.state === "unblacklisted");
 const circleCorpusMeta = {
   collectedAt: /collected_at:\s*(\S+)/.exec(circleCorpus)?.[1] ?? null,
   coveredFromBlock: Number(/covered_from_block:\s*(\d+)/.exec(circleCorpus)?.[1] ?? NaN),
   coveredToBlock: Number(/covered_to_block:\s*(\d+)/.exec(circleCorpus)?.[1] ?? NaN),
   firstEventAt: /first_event_at:\s*(\S+)/.exec(circleCorpus)?.[1] ?? null,
+  lastEventAt: /last_event_at:\s*(\S+)/.exec(circleCorpus)?.[1] ?? null,
+  lastUnblacklistAt: /last_unblacklist_at:\s*(\S+)/.exec(circleCorpus)?.[1] ?? null,
   removed: Number(/removed:\s*(\d+)/.exec(circleCorpus)?.[1] ?? NaN),
 };
 if (circleAddresses.length === 0) {
@@ -77,13 +93,14 @@ if (circleAddresses.length === 0) {
 }
 // The corpus is what the evaluator enforces; the snapshot is what the page dates. They are written together by the
 // collector, so a mismatch means a half-refreshed tree, and the page must not paper over it.
-const snapshotEnforced = (circleSnapshot?.entries ?? [])
-  .filter((entry) => entry?.removed !== true)
-  .map((entry) => String(entry.address).toLowerCase());
-const snapshotEnforcedUnique = new Set(snapshotEnforced);
-if (circleSnapshot && snapshotEnforcedUnique.size !== circleAddresses.length) {
+const snapshotStates = circleSnapshot?.states ?? [];
+const snapshotEnforcedUnique = new Set(
+  snapshotStates.filter((entry) => entry?.state === "blacklisted").map((entry) => String(entry.address).toLowerCase()),
+);
+const snapshotUnblacklisted = snapshotStates.filter((entry) => entry?.state === "unblacklisted").length;
+if (circleSnapshot && (snapshotEnforcedUnique.size !== circleAddresses.length || snapshotUnblacklisted !== circleUnblacklisted.length)) {
   console.error(
-    `lists-manifest: Circle corpus has ${circleAddresses.length} enforced addresses but the page snapshot has ${snapshotEnforcedUnique.size} — re-run node /work/ops/bin/circle-blacklist.mjs --export-only`,
+    `lists-manifest: Circle corpus has ${circleAddresses.length} enforced / ${circleUnblacklisted.length} unblacklisted addresses but the page snapshot has ${snapshotEnforcedUnique.size} / ${snapshotUnblacklisted} — re-run node /work/ops/bin/circle-blacklist.mjs --export-only`,
   );
   process.exit(1);
 }
@@ -307,14 +324,22 @@ const manifest = {
     source: circleSnapshot ? `https://basescan.org/address/${circleSnapshot.contract}` : null,
     chainId: circleSnapshot?.chainId ?? null,
     contract: circleSnapshot?.contract ?? null,
-    topic: circleSnapshot?.topic ?? null,
-    topicSignature: circleSnapshot?.topicSignature ?? null,
+    topic: circleSnapshot?.topics?.blacklisted ?? circleSnapshot?.topic ?? null,
+    topicSignature: circleSnapshot?.topicSignatures?.blacklisted ?? circleSnapshot?.topicSignature ?? null,
+    unblacklistedTopic: circleSnapshot?.topics?.unblacklisted ?? null,
+    unblacklistedTopicSignature: circleSnapshot?.topicSignatures?.unblacklisted ?? null,
     events: circleCounts?.entries ?? null,
+    blacklistEvents: circleCounts?.blacklistEvents ?? null,
+    unblacklistEvents: circleCounts?.unblacklistEvents ?? null,
     addresses: circleAddresses.length,
+    unblacklisted: circleUnblacklisted.length,
+    /** Every address with a state row, for the page's per-address table. `since` is the last event's block timestamp. */
+    states: circleStates.map((entry) => ({ address: entry.address, state: entry.state, since: entry.since, blockNumber: entry.blockNumber })),
     firstEventAt: circleCounts?.firstEventAt ?? circleCorpusMeta.firstEventAt,
     firstEventBlock: circleCounts?.firstEventBlock ?? null,
-    lastEventAt: circleCounts?.lastEventAt ?? null,
+    lastEventAt: circleCounts?.lastEventAt ?? circleCorpusMeta.lastEventAt,
     lastEventBlock: circleCounts?.lastEventBlock ?? null,
+    lastUnblacklistAt: circleCounts?.lastUnblacklistAt ?? circleCorpusMeta.lastUnblacklistAt,
     fromBlock: circleSnapshot?.fromBlock ?? (Number.isSafeInteger(circleCorpusMeta.coveredFromBlock) ? circleCorpusMeta.coveredFromBlock : null),
     toBlock: circleSnapshot?.toBlock ?? (Number.isSafeInteger(circleCorpusMeta.coveredToBlock) ? circleCorpusMeta.coveredToBlock : null),
     completeSinceDeployment: circleSnapshot?.coverage?.completeSinceDeployment ?? null,
@@ -325,10 +350,10 @@ const manifest = {
     enforcedReason:
       "Circle blacklisted this address on Base (eip155:8453 USDC Blacklisted event) — a contract-level freeze by the issuer, not an OFAC listing",
     /**
-     * The collector reads `Blacklisted` only. It has no `UnBlacklisted` feed, so an address Circle later unfroze would
-     * still be refused by this build. The page states that limit rather than letting "enforced" read as a live balance.
+     * #370: both `Blacklisted` and `UnBlacklisted` are read, and the latest event per address decides the state. The
+     * page can therefore state that an unfreeze is reflected, not just that a freeze was once seen.
      */
-    delistingTracked: false,
+    delistingTracked: true,
     freshness: {
       upstreamChangedAt: circleCorpusMeta.collectedAt ?? circleSnapshot?.generatedAt ?? null,
       basis: "collection",
@@ -337,7 +362,7 @@ const manifest = {
     },
     sources: [
       {
-        name: "Circle USDC Blacklisted(address) events on Base",
+        name: "Circle USDC Blacklisted(address) and UnBlacklisted(address) events on Base",
         url: circleSnapshot ? `https://basescan.org/address/${circleSnapshot.contract}` : null,
         count: circleAddresses.length,
       },
@@ -357,7 +382,7 @@ const manifest = {
         : "no collection recorded in this build",
     },
     refresh:
-      "The hourly canary runs the collector beside OFAC: it appends new `Blacklisted` events, exports the evaluator corpus and this page snapshot, then regenerates the manifest. If the RPC scan fails it runs `--export-only`, so the last good list stays enforced rather than going stale. It reads `Blacklisted` events only — there is no `UnBlacklisted` feed yet, so an address Circle later unfroze would still be refused.",
+      "The hourly canary runs the collector beside OFAC: it appends new `Blacklisted` and `UnBlacklisted` events, exports the evaluator corpus and this page snapshot, then regenerates the manifest. If the RPC scan fails it runs `--export-only`, so the last good list stays enforced rather than going stale. The latest event per address decides the state, so a Circle unfreeze lifts the refusal instead of leaving it in place forever.",
   },
   drainers: {
     name: "Known drainers (curated)",

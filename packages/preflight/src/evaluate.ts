@@ -8,10 +8,11 @@ import {
 import { isKnownDrainer, isNonReceivable } from "./known-drainers.js";
 import { SANCTIONED_ADDRESSES } from "./sanctioned-addresses.js";
 import {
-  CIRCLE_BLACKLISTED_ADDRESSES,
+  CIRCLE_BLACKLIST_STATES,
   CIRCLE_BLACKLIST_CHAIN_ID,
   CIRCLE_BLACKLIST_COVERED_FROM_BLOCK,
 } from "./circle-blacklist-addresses.js";
+import { circleBlacklistVerdict } from "./circle-blacklist.js";
 import { verifiedPayeeFor } from "./verified-payees.js";
 import {
   currentSvmPeer,
@@ -36,7 +37,14 @@ const CIRCLE_COVERAGE_FROM = CIRCLE_BLACKLIST_COVERED_FROM_BLOCK.toLocaleString(
  * non-match proves only that no event was seen in the covered range. This sentence is in `not_checked` on every review
  * packet so a reader cannot mistake the list for chain-wide history.
  */
-const CIRCLE_BLACKLIST_NOT_CHECKED = `Circle USDC blacklist on Base: absence proves nothing — events below block ${CIRCLE_COVERAGE_FROM} are not covered by the free RPC, so a non-match is not proof the address was never blacklisted`;
+const CIRCLE_BLACKLIST_NOT_CHECKED = `Circle USDC blacklist on Base: absence proves nothing — events below block ${CIRCLE_COVERAGE_FROM} are not covered by the free RPC, so a non-match is not proof the address was never blacklisted, nor that it was never unfrozen`;
+
+/**
+ * #370: the latest event per address decides the state. `circleBlacklistVerdict` refuses only `blacklisted`, and
+ * returns the `unblacklisted` row so the transcript can say the freeze was lifted rather than that nothing was found.
+ * `CIRCLE_BLACKLISTED_ADDRESSES` stays exported from the corpus for readers/tests that want the enforced set alone.
+ */
+const circleVerdict = (payee: string) => circleBlacklistVerdict(CIRCLE_BLACKLIST_STATES, payee);
 
 export interface AcceptOption {
   scheme: string;
@@ -489,16 +497,25 @@ function evaluateAccept(
     // A refusal that misstates its basis is worse than a narrower list. The corpus holds Base events only, so a payee
     // on another chain is skipped rather than "not matched" — the list cannot see that chain.
     if (accept.network.toLowerCase() === CIRCLE_BLACKLIST_NETWORK) {
-      if (CIRCLE_BLACKLISTED_ADDRESSES.has(String(accept.payTo).toLowerCase())) {
+      const circle = circleVerdict(accept.payTo);
+      if (circle.refused) {
         return deny(
           "accept.payee_blacklisted_onchain",
           "Circle blacklisted this address on Base (eip155:8453 USDC Blacklisted event) — a contract-level freeze by the issuer, not an OFAC listing",
         );
       }
-      pass(
-        "accept.payee_blacklisted_onchain",
-        `payee is not in the covered range of Circle's Base USDC blacklist (blocks ${CIRCLE_COVERAGE_FROM} and later)`,
-      );
+      if (circle.state === "unblacklisted" && circle.entry) {
+        pass(
+          "accept.payee_blacklisted_onchain",
+          `Circle's latest on-chain event for this payee is UnBlacklisted at block ${circle.entry.blockNumber}` +
+            `${circle.entry.since ? ` (${circle.entry.since.slice(0, 10)})` : ""} — the freeze was lifted, so it is not refused on that basis`,
+        );
+      } else {
+        pass(
+          "accept.payee_blacklisted_onchain",
+          `payee is not in the covered range of Circle's Base USDC blacklist (blocks ${CIRCLE_COVERAGE_FROM} and later)`,
+        );
+      }
     } else {
       skip(
         "accept.payee_blacklisted_onchain",

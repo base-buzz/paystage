@@ -1,525 +1,1381 @@
 {
-  "generatedAt": "2026-11-22T10:34:48.066Z",
+  "generatedAt": "2026-11-22T14:21:39.450Z",
   "chainId": 8453,
   "contract": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
   "topic": "0xffa4e6181777692565cf28528fc88fd1516ea86b56da075235fa575af6a4b855",
   "topicSignature": "Blacklisted(address)",
+  "topics": {
+    "blacklisted": "0xffa4e6181777692565cf28528fc88fd1516ea86b56da075235fa575af6a4b855",
+    "unblacklisted": "0x117e3210bb9aa7d9baff172026820255c6f6c30ba8999d1c2fd88e2848137c4e"
+  },
+  "topicSignatures": {
+    "blacklisted": "Blacklisted(address)",
+    "unblacklisted": "UnBlacklisted(address)"
+  },
   "fromBlock": 51000000,
-  "toBlock": 60766560,
+  "toBlock": 60833405,
   "entries": [
     {
       "address": "0x0ede564e315f8e1803161a22e8404c624c35b1fb",
+      "event": "blacklisted",
+      "blockNumber": 51088253,
+      "logIndex": 155,
+      "txHash": "0x7f32d06615d5d66175e766547e153ac6f705ff3fd3bbc361fa72e9a72a98c7fc",
+      "at": "2026-09-09T14:57:33.000Z"
+    },
+    {
+      "address": "0x0f6ae73e9ced1a3fb5ff30a8ff702687a731769b",
+      "event": "blacklisted",
+      "blockNumber": 51088357,
+      "logIndex": 1043,
+      "txHash": "0x9fdb698e9f4e371354437e68bd8ea83d13e988e1a8e70aedc824d41b1ab14c76",
+      "at": "2026-09-09T15:01:01.000Z"
+    },
+    {
+      "address": "0xdca63d36e326fdcde1c6403ff3edf5d8ba7699ad",
+      "event": "blacklisted",
+      "blockNumber": 51088370,
+      "logIndex": 2259,
+      "txHash": "0x61b9b206e7d21597b28127f8e8adbe645bb904ff3966e346e085f045a06ed02a",
+      "at": "2026-09-09T15:01:27.000Z"
+    },
+    {
+      "address": "0x46ef4466249d1eb324b58be21cbadfb852dd6b7c",
+      "event": "blacklisted",
+      "blockNumber": 51088378,
+      "logIndex": 753,
+      "txHash": "0xf2761711d029d4b753491ae08ad363a04480033d431cbd8bd5d1909a32cc8e04",
+      "at": "2026-09-09T15:01:43.000Z"
+    },
+    {
+      "address": "0x55011219931443eede49ee3efa42b2264226fe98",
+      "event": "blacklisted",
+      "blockNumber": 51088408,
+      "logIndex": 356,
+      "txHash": "0x24a9f86138691536956b5f854ad0dc92080106001e5c62d2339197a126b7405a",
+      "at": "2026-09-09T15:02:43.000Z"
+    },
+    {
+      "address": "0x437c5cb414410bd4a628e4764ab61b7f44e6402f",
+      "event": "blacklisted",
+      "blockNumber": 51088463,
+      "logIndex": 72,
+      "txHash": "0x8e02421ab572028fec1e69ba7ae487ca5c12f609c2cf8c300427ee32c74cb7a6",
+      "at": "2026-09-09T15:04:33.000Z"
+    },
+    {
+      "address": "0xe4eacf8d5b0b68e6250d4f5710d24c9de5882a65",
+      "event": "blacklisted",
+      "blockNumber": 51088509,
+      "logIndex": 1538,
+      "txHash": "0xb49f15e22778de824d5dba670e06d7dc9bd7ad5ac5f7c4d11afb7891aac7908f",
+      "at": "2026-09-09T15:06:05.000Z"
+    },
+    {
+      "address": "0xf9d66d6842ae81cfb1b04f651a19798cdf1ee3a3",
+      "event": "blacklisted",
+      "blockNumber": 51088525,
+      "logIndex": 818,
+      "txHash": "0x9931332de776ffa8c8414ad20dd73c57cb3c5fa2d290c3695e0d661af92c88c0",
+      "at": "2026-09-09T15:06:37.000Z"
+    },
+    {
+      "address": "0x2eb686610c46545a118f5b8228cf1e46df242352",
+      "event": "blacklisted",
+      "blockNumber": 51088579,
+      "logIndex": 892,
+      "txHash": "0x609c00f629aa29104471882884689f2687292289799c1717bb0fb71c81eb7fb6",
+      "at": "2026-09-09T15:08:25.000Z"
+    },
+    {
+      "address": "0x265e9b86ab3310003587a32c7a27f75f670a72ed",
+      "event": "blacklisted",
+      "blockNumber": 51088649,
+      "logIndex": 402,
+      "txHash": "0xcfe2005ac028c59f4b93e96289c2e7127d82ef0c284583846412713910edd371",
+      "at": "2026-09-09T15:10:45.000Z"
+    },
+    {
+      "address": "0xfbd36c041070f28fd0498166be6494065bec5f0e",
+      "event": "blacklisted",
+      "blockNumber": 51088733,
+      "logIndex": 635,
+      "txHash": "0x661e683c1b6eb4171d78a9dac08b289d4605edc4382ac792658ab05d937e54e5",
+      "at": "2026-09-09T15:13:33.000Z"
+    },
+    {
+      "address": "0x67ab9ee65660fa10967722a7552e5e96e8192776",
+      "event": "blacklisted",
+      "blockNumber": 51088831,
+      "logIndex": 385,
+      "txHash": "0x4a375758f183cb90aae12ea35ae4f007df1a75ce4115849c05b282b708a2f98d",
+      "at": "2026-09-09T15:16:49.000Z"
+    },
+    {
+      "address": "0xe007afe5a5abfdf4efbbae239f42819b97e95e5d",
+      "event": "blacklisted",
+      "blockNumber": 51088841,
+      "logIndex": 668,
+      "txHash": "0x9ebbea6471c728c176e275dd7e634933a0f264a98e3c3e230687fb9dc501d115",
+      "at": "2026-09-09T15:17:09.000Z"
+    },
+    {
+      "address": "0x6396745d7a9236229d17684d826bf2792ed7d457",
+      "event": "blacklisted",
+      "blockNumber": 51088895,
+      "logIndex": 502,
+      "txHash": "0x0e0352412e807c4ab50a7124c4bca7c3ad32d6609b41e58080adfcb1d675796c",
+      "at": "2026-09-09T15:18:57.000Z"
+    },
+    {
+      "address": "0xc06198bd95b602889e5a770c80643b5b292526c3",
+      "event": "blacklisted",
+      "blockNumber": 51088899,
+      "logIndex": 50,
+      "txHash": "0x2d6d8402951ddf835efa0629c797c9df0ff363257289d6b1318fe17854489849",
+      "at": "2026-09-09T15:19:05.000Z"
+    },
+    {
+      "address": "0xe9d12c5d6954487fba2ce36a0b0ab5c8515dbb98",
+      "event": "blacklisted",
+      "blockNumber": 51089059,
+      "logIndex": 798,
+      "txHash": "0x7ab7a2dbf48f45df883761ee16b7d1b6771bb578eafa090cd7e21c852558e9ad",
+      "at": "2026-09-09T15:24:25.000Z"
+    },
+    {
+      "address": "0x712779ce813e780c08ad89f83153f2a503bf3b8f",
+      "event": "blacklisted",
+      "blockNumber": 51089320,
+      "logIndex": 20,
+      "txHash": "0xdff8b014d0f1b29a2a258269b2a6bee8a29a6537bbcc09403b3778ef5308dcaa",
+      "at": "2026-09-09T15:33:07.000Z"
+    },
+    {
+      "address": "0x502d46e39e61b60eaba79dd6a6270445c141b6f0",
+      "event": "blacklisted",
+      "blockNumber": 51089337,
+      "logIndex": 705,
+      "txHash": "0xc8d5ac542092300804be027db8d18af062a62f0a93fd4c1818eff953b8ad54fc",
+      "at": "2026-09-09T15:33:41.000Z"
+    },
+    {
+      "address": "0xa18ef3a679e2942596a67eb871845da89b7eeaa8",
+      "event": "blacklisted",
+      "blockNumber": 51089422,
+      "logIndex": 51,
+      "txHash": "0xf59765c2ddcb44a13b8e8cc6b675a35f73bc8dfe62296903716aa9156f48bf36",
+      "at": "2026-09-09T15:36:31.000Z"
+    },
+    {
+      "address": "0x4d4f1236d9951681ce944ce1ead15cb972a9cf2f",
+      "event": "blacklisted",
+      "blockNumber": 51089437,
+      "logIndex": 1001,
+      "txHash": "0xa1d976138c222f01c986739cf29b4e132967d4cf2c49bcb920d51e052ea76fe1",
+      "at": "2026-09-09T15:37:01.000Z"
+    },
+    {
+      "address": "0xc35033e93c38f5434de52d0d5f8f92f8a679cf1f",
+      "event": "blacklisted",
+      "blockNumber": 51089503,
+      "logIndex": 679,
+      "txHash": "0xc14b0c0cf60bf9a7d999b5ccb9ca01b419c389c492a36dcb8058dd4aa58cbd4f",
+      "at": "2026-09-09T15:39:13.000Z"
+    },
+    {
+      "address": "0xeeeef5ced57f622277935bd14b723345f7efee1c",
+      "event": "blacklisted",
+      "blockNumber": 51089586,
+      "logIndex": 1011,
+      "txHash": "0xb9d41cbac06510695710b2ba0474a6b5caffdca0b3b1dc44581e661c4df3b80f",
+      "at": "2026-09-09T15:41:59.000Z"
+    },
+    {
+      "address": "0xfabfd02cd685b83cc86aea83848d69439b54c720",
+      "event": "blacklisted",
+      "blockNumber": 51089704,
+      "logIndex": 1558,
+      "txHash": "0x22b6dcfe6c9a0f02b3f7746732bd3f61c9ba43fb2b0d93ba70d8466644277728",
+      "at": "2026-09-09T15:45:55.000Z"
+    },
+    {
+      "address": "0x48e5cb660dd19aea9d1b87a2859570192d40af10",
+      "event": "blacklisted",
+      "blockNumber": 51089757,
+      "logIndex": 781,
+      "txHash": "0x84050bd90f2b073c78f60344a0fea8c3642435fa748a5684b103499166d12664",
+      "at": "2026-09-09T15:47:41.000Z"
+    },
+    {
+      "address": "0xa669e919ee02d1dc6b2ddc2f4cc16fd18b11e9aa",
+      "event": "blacklisted",
+      "blockNumber": 51089764,
+      "logIndex": 715,
+      "txHash": "0x35517fdb687ee918d27fb0034e73f050db9b6c6da9bacb1aa2901423c7cb82dd",
+      "at": "2026-09-09T15:47:55.000Z"
+    },
+    {
+      "address": "0x4a33953b63657ea4f2701088704c107460787302",
+      "event": "blacklisted",
+      "blockNumber": 51089796,
+      "logIndex": 591,
+      "txHash": "0x7cab4d48c65b9cd60873e9ca14c8bae698373f161ef8238ab9c19a368986c58b",
+      "at": "2026-09-09T15:48:59.000Z"
+    },
+    {
+      "address": "0x8e4db52262cc6dbf7158cb57b2d8da67bd62cd91",
+      "event": "blacklisted",
+      "blockNumber": 51089841,
+      "logIndex": 313,
+      "txHash": "0xdbc2f2cfa802a4ff7a82d49efbacba8fc83419e34499a3f1ff91f057a0c3b3ae",
+      "at": "2026-09-09T15:50:29.000Z"
+    },
+    {
+      "address": "0x08a05b6634012ac46646bb1f04a7f52ed8bfe762",
+      "event": "blacklisted",
+      "blockNumber": 51089979,
+      "logIndex": 12,
+      "txHash": "0xaed5c8312c73e70a70782f6ab9873a2ee0b978bfd7d6558a423a7578508b8ca7",
+      "at": "2026-09-09T15:55:05.000Z"
+    },
+    {
+      "address": "0xaf8bcc21bfdcf2378d8f804d2b79264efe4e6b4a",
+      "event": "blacklisted",
+      "blockNumber": 51090043,
+      "logIndex": 85,
+      "txHash": "0xa7dd1c062818fbbc14c272513dc11608b4c2793537e522815280b91155706884",
+      "at": "2026-09-09T15:57:13.000Z"
+    },
+    {
+      "address": "0xc2d06dae23a6f772d0b49d5b4dccb501fc3862f4",
+      "event": "blacklisted",
+      "blockNumber": 51090160,
+      "logIndex": 752,
+      "txHash": "0xd78c3ffd5ad345275c83ac5f481d141678523cc6bd0b53cea9ff910b0dace1b8",
+      "at": "2026-09-09T16:01:07.000Z"
+    },
+    {
+      "address": "0xfe24ed2a9f9f02cdb715e85c3450b502912ee622",
+      "event": "blacklisted",
+      "blockNumber": 51090185,
+      "logIndex": 794,
+      "txHash": "0xf3776a6c970731f1fedced821a527813f58acfa7d7778f9d0ede21ce44a32d31",
+      "at": "2026-09-09T16:01:57.000Z"
+    },
+    {
+      "address": "0xeba36fb30acdc3eba9283e6514fff8a99149a63a",
+      "event": "blacklisted",
+      "blockNumber": 51090208,
+      "logIndex": 381,
+      "txHash": "0xecf3599b475f1ae91c5414ebbfba64d5003a6d10c6cd4a822f485044805075a3",
+      "at": "2026-09-09T16:02:43.000Z"
+    },
+    {
+      "address": "0xbb7aac3cf72810aeaebb07649d873f9a7e9701e1",
+      "event": "blacklisted",
+      "blockNumber": 51090303,
+      "logIndex": 579,
+      "txHash": "0x3beac902af3b619b91fe304ef03be1a254adda104846b1935d195ff8f0785bc1",
+      "at": "2026-09-09T16:05:53.000Z"
+    },
+    {
+      "address": "0xc275eb6d33797bc2e3dccd3c30afb042b1069bb6",
+      "event": "blacklisted",
+      "blockNumber": 51090490,
+      "logIndex": 517,
+      "txHash": "0x2333c3d9b0a7769807a5eaafbdb8039bb207d3091dea147b6b51483589b85985",
+      "at": "2026-09-09T16:12:07.000Z"
+    },
+    {
+      "address": "0x591c430024fce05a9d657d1fa3eba15109e48600",
+      "event": "blacklisted",
+      "blockNumber": 51090533,
+      "logIndex": 54,
+      "txHash": "0xdae9962a7d9d90673810a46b43db68e4cb5dc9e6e1d025511fea7087bca6b8bb",
+      "at": "2026-09-09T16:13:33.000Z"
+    },
+    {
+      "address": "0xf7c65e485eeb47fecea7c47315c97d61305d3def",
+      "event": "blacklisted",
+      "blockNumber": 51090600,
+      "logIndex": 651,
+      "txHash": "0x5e681b6e6f13c7b6db9801ad48b3bce81a9bbdaf340b89b613f5950951d48094",
+      "at": "2026-09-09T16:15:47.000Z"
+    },
+    {
+      "address": "0xdeedc6c3a269b07a05a0737d248c798ec7455440",
+      "event": "blacklisted",
+      "blockNumber": 51090611,
+      "logIndex": 82,
+      "txHash": "0x2577727409ee6717f60339e1d6bf038ecb28ef2f24a0915808069b11bde3e7f6",
+      "at": "2026-09-09T16:16:09.000Z"
+    },
+    {
+      "address": "0x7aa0cffa2ac86a7ea54c0c63866d98071c79f44e",
+      "event": "blacklisted",
+      "blockNumber": 51090706,
+      "logIndex": 55,
+      "txHash": "0xac61cff3d9aef0845cb78574aa5aa56ecd5ed83582e827393426fa20862e1329",
+      "at": "2026-09-09T16:19:19.000Z"
+    },
+    {
+      "address": "0x9138a1ef23019dba58acd3a221c442073c313c73",
+      "event": "blacklisted",
+      "blockNumber": 51090721,
+      "logIndex": 484,
+      "txHash": "0x829bfed0eee29e54e97f301312fc7f77694885ff8f43b49c4b225148b2b9aa7e",
+      "at": "2026-09-09T16:19:49.000Z"
+    },
+    {
+      "address": "0xf064109090e30203afffe233c9acefdbeee78099",
+      "event": "blacklisted",
+      "blockNumber": 51090925,
+      "logIndex": 729,
+      "txHash": "0x209bff9fecebcd53d5d0b5dec451c065af413d79feb1a795346fd7aba4904be3",
+      "at": "2026-09-09T16:26:37.000Z"
+    },
+    {
+      "address": "0xb84896db62780c6e3a04f1d5a3e91c7ad6cfd819",
+      "event": "blacklisted",
+      "blockNumber": 51090940,
+      "logIndex": 377,
+      "txHash": "0x9eace3d444092528849778df9e506543afe2eb51be9fd371d1a48be073bfbd70",
+      "at": "2026-09-09T16:27:07.000Z"
+    },
+    {
+      "address": "0xc0cdb1a32790dbed8536b904296283dcef82bf29",
+      "event": "blacklisted",
+      "blockNumber": 51090944,
+      "logIndex": 449,
+      "txHash": "0xee44c91a29b354ac458cba75e2fee9afe8d7258bd19e6bf8b5fb9ce9f41f5ee9",
+      "at": "2026-09-09T16:27:15.000Z"
+    },
+    {
+      "address": "0x386231af22383f533b959a6a1379f1e5cfc22989",
+      "event": "blacklisted",
+      "blockNumber": 51090945,
+      "logIndex": 389,
+      "txHash": "0x172c8611f32e51cfba3e347feb5d0efb873f57b2739f8c8ca7cba9fc6ad5c55a",
+      "at": "2026-09-09T16:27:17.000Z"
+    },
+    {
+      "address": "0x0decc02236cd75eb9c9bd63930c7638702e12df5",
+      "event": "blacklisted",
+      "blockNumber": 51090982,
+      "logIndex": 24,
+      "txHash": "0x1a01e6c93a8a8285e418af25924b2ac4215f58478d8db71c925a4d751c9ed84b",
+      "at": "2026-09-09T16:28:31.000Z"
+    },
+    {
+      "address": "0x1f09cb39c7949f1a18fcea1a3c584f718ef81933",
+      "event": "blacklisted",
+      "blockNumber": 51091046,
+      "logIndex": 21,
+      "txHash": "0x8a844ac1ccee6328c16ed0850ddc4bd16e8366498e98669c6288d0758cca87a8",
+      "at": "2026-09-09T16:30:39.000Z"
+    },
+    {
+      "address": "0x4c03d82270c117644a8001671c52111bdb15ee6d",
+      "event": "blacklisted",
+      "blockNumber": 51091131,
+      "logIndex": 39,
+      "txHash": "0x65a6c789d5f274968860b87c6a0b225425ec46b9d664d1642a73c304360824e9",
+      "at": "2026-09-09T16:33:29.000Z"
+    },
+    {
+      "address": "0xc05612c9f78a909886320628f3ee59dc7baffdfd",
+      "event": "blacklisted",
+      "blockNumber": 51091245,
+      "logIndex": 264,
+      "txHash": "0x0a62ff838bf8eed37fd2315e33bc55b50ae6e9f4f4b514c06725764063b0b8cf",
+      "at": "2026-09-09T16:37:17.000Z"
+    },
+    {
+      "address": "0x8926c7ce09f08731c51564e2ba714f800e23a65a",
+      "event": "blacklisted",
+      "blockNumber": 51091331,
+      "logIndex": 778,
+      "txHash": "0x0607945961a73efe18edb8d56aee5c1e2b2837e7762c6aac5910eaa96cb8c0bc",
+      "at": "2026-09-09T16:40:09.000Z"
+    },
+    {
+      "address": "0xfd34841893a1dc5c6af5b5e65818d82e219c1275",
+      "event": "blacklisted",
+      "blockNumber": 51091436,
+      "logIndex": 35,
+      "txHash": "0xedfdd2886a8715f6e088a2771ca434d270c00105f5ebb41d3b99203b76a25a43",
+      "at": "2026-09-09T16:43:39.000Z"
+    },
+    {
+      "address": "0xc4232d1bb5276a312b19414e11e2fc1e02a56463",
+      "event": "blacklisted",
+      "blockNumber": 51091473,
+      "logIndex": 286,
+      "txHash": "0x0dd0364d4279e3935581c147f62fcf8bbaa3ef87729abf5c292cfe548a642ca6",
+      "at": "2026-09-09T16:44:53.000Z"
+    },
+    {
+      "address": "0x04c3944f8fecc630e82910d5c4a2d00a795fa596",
+      "event": "blacklisted",
+      "blockNumber": 51091515,
+      "logIndex": 518,
+      "txHash": "0x169b40e0954d39add95236f8d67e0e2aa3ca563747a7f8dcd23212e2f97d0574",
+      "at": "2026-09-09T16:46:17.000Z"
+    },
+    {
+      "address": "0x7fea703f97cdf8d607513231f8f3310e56096863",
+      "event": "blacklisted",
+      "blockNumber": 51091557,
+      "logIndex": 833,
+      "txHash": "0x62a651872c742ba46774ebae810132047d9370c7617815740b26ce6b4cdfde9b",
+      "at": "2026-09-09T16:47:41.000Z"
+    },
+    {
+      "address": "0x601d77306917263f0ea2a8fa8a7516b3aa0a0a1f",
+      "event": "blacklisted",
+      "blockNumber": 51994667,
+      "logIndex": 884,
+      "txHash": "0xde29ef76e09d46b32b3b25d2eaab70cb1417e8da6c42362c2a5c73cde3559a26",
+      "at": "2026-09-30T14:31:21.000Z"
+    },
+    {
+      "address": "0x1b875107ba4d38a5a894ad3d4393d32821a39036",
+      "event": "blacklisted",
+      "blockNumber": 51994740,
+      "logIndex": 24,
+      "txHash": "0xf1415620209ec24c9f3c3c42b63c53da92a174b731aad4b943b8ec9ea51b4a3b",
+      "at": "2026-09-30T14:33:47.000Z"
+    },
+    {
+      "address": "0x5772f441155c532eb7d929ca079cb7e673a39286",
+      "event": "blacklisted",
+      "blockNumber": 51994762,
+      "logIndex": 711,
+      "txHash": "0x67a0fffd10f34a0aac44fe2d5fd6c401e4a80365cd33c8d270edc96711b95189",
+      "at": "2026-09-30T14:34:31.000Z"
+    },
+    {
+      "address": "0x0de9cff3cc48924e6c470e55c15fffd815827846",
+      "event": "blacklisted",
+      "blockNumber": 51994884,
+      "logIndex": 342,
+      "txHash": "0xacd1642997cdf9196eeb0efc26ddde47c03cc550c2614dbbd765a340666b54f7",
+      "at": "2026-09-30T14:38:35.000Z"
+    },
+    {
+      "address": "0x1e282186e56f0f4f96288426116c4449ed287490",
+      "event": "blacklisted",
+      "blockNumber": 51994921,
+      "logIndex": 236,
+      "txHash": "0x272a738b8d047447db12216cc933a591c6ed88336e5f3d6f5a057c1090e73f0a",
+      "at": "2026-09-30T14:39:49.000Z"
+    },
+    {
+      "address": "0xdf15822aceca390e21d9a44702c7ffc4cb2285e7",
+      "event": "blacklisted",
+      "blockNumber": 51995039,
+      "logIndex": 1793,
+      "txHash": "0x947ae1989de1680d173f762698b36dd9df695d2b7465800283b6167d42cdbc85",
+      "at": "2026-09-30T14:43:45.000Z"
+    },
+    {
+      "address": "0x2bc0c9ff62958b94241e0f0585b0f84e84e3cd8e",
+      "event": "blacklisted",
+      "blockNumber": 51995061,
+      "logIndex": 62,
+      "txHash": "0xcd0b3e0e208ecc1082293c50b7f1c1879e23e7f8de8862f433c5ca39c324b0f1",
+      "at": "2026-09-30T14:44:29.000Z"
+    },
+    {
+      "address": "0xea7afc65367dd5a870e1a0ddf376181b36e9c8ab",
+      "event": "blacklisted",
+      "blockNumber": 52259046,
+      "logIndex": 640,
+      "txHash": "0xf309be61a5826a6cc27209b66a78a6f4fe92949a084d99daabfe2ab53acf9d01",
+      "at": "2026-10-06T17:23:59.000Z"
+    },
+    {
+      "address": "0x572b48da5c3fff3c9230fc2115e575a5954866cb",
+      "event": "blacklisted",
+      "blockNumber": 52259076,
+      "logIndex": 205,
+      "txHash": "0x6f163c163ad3f3879a67f1b7ffe227298823ab7da5c92233d2c83ca1f7c4917f",
+      "at": "2026-10-06T17:24:59.000Z"
+    },
+    {
+      "address": "0x22c5fb75970fc1bbbd0fc76b76cdbfbd44b9dd83",
+      "event": "blacklisted",
+      "blockNumber": 52259106,
+      "logIndex": 248,
+      "txHash": "0xa248b911ccb89ee74356b4e2116f240c912284b1e9ef5732ba3526e351f9639c",
+      "at": "2026-10-06T17:25:59.000Z"
+    },
+    {
+      "address": "0xc3bdc27427ce1aa2b92c81bc8032918697bbc645",
+      "event": "blacklisted",
+      "blockNumber": 52355491,
+      "logIndex": 622,
+      "txHash": "0x05c2948cf7cb8950c14a13347dea8ba150861eeaf2103b30e0ba10676d6c3993",
+      "at": "2026-10-08T22:58:49.000Z"
+    },
+    {
+      "address": "0xffc4041cf54a41d4fef327a8b5d31b860a26492f",
+      "event": "blacklisted",
+      "blockNumber": 52920965,
+      "logIndex": 443,
+      "txHash": "0x93db82983ad877f630616be065a7d8ce0aab680cf97f82b0886195a00940b6ac",
+      "at": "2026-10-22T01:07:57.000Z"
+    },
+    {
+      "address": "0x12ea80238c7d805d003ce793594e92d84a6f4e8d",
+      "event": "blacklisted",
+      "blockNumber": 53204565,
+      "logIndex": 313,
+      "txHash": "0x4b8e6f5d7a78c05f3a2bafe61d161d514c93d9ad3bf4c2b0b51b6a4bf26bfa24",
+      "at": "2026-10-28T14:41:17.000Z"
+    },
+    {
+      "address": "0x1b95eaaefd716e47d29baa10b629866ad79e4213",
+      "event": "blacklisted",
+      "blockNumber": 53204608,
+      "logIndex": 1143,
+      "txHash": "0x95b647fa6550d81754a29bc08b0aa5b3374fa6ac233aa510f32b9d595030feb1",
+      "at": "2026-10-28T14:42:43.000Z"
+    },
+    {
+      "address": "0x3f7bac9d68a8e45d0b5654633eecafd4ec3d4fbe",
+      "event": "blacklisted",
+      "blockNumber": 53204664,
+      "logIndex": 410,
+      "txHash": "0x37d075e70578b6d20be5073ef81459d57de776c5485c8ca9d5e05281087d8256",
+      "at": "2026-10-28T14:44:35.000Z"
+    },
+    {
+      "address": "0x9c0605e0df7fdb655204b901b62be5a4bb89fdcc",
+      "event": "blacklisted",
+      "blockNumber": 53204733,
+      "logIndex": 94,
+      "txHash": "0x4fee659bafe8f39de15e6feae37b02743bee1cfb8a2eeabe4198210a841495a7",
+      "at": "2026-10-28T14:46:53.000Z"
+    },
+    {
+      "address": "0x761edd5e4546229a0bd35ae99b4d3d01cf4a3510",
+      "event": "blacklisted",
+      "blockNumber": 53204772,
+      "logIndex": 33,
+      "txHash": "0x0d99a90f730bb47f683c37327b98efb7b31ece75bd5d795969dbeed67ae4816d",
+      "at": "2026-10-28T14:48:11.000Z"
+    },
+    {
+      "address": "0xe4c9a7f68b1eba4508f54f07f7378847318dd1a3",
+      "event": "blacklisted",
+      "blockNumber": 53204940,
+      "logIndex": 62,
+      "txHash": "0xc916a814fa98b99d20f583373980d8498d2673f94c423476cecf610229debe7b",
+      "at": "2026-10-28T14:53:47.000Z"
+    },
+    {
+      "address": "0x9d76a551e7cebbba57155f77beca8c2971894502",
+      "event": "blacklisted",
+      "blockNumber": 53204994,
+      "logIndex": 116,
+      "txHash": "0x2fd2e222178dd31dbee736254a21b0575c0fc4b67e9ea24d2d50ffeab3a40097",
+      "at": "2026-10-28T14:55:35.000Z"
+    },
+    {
+      "address": "0xef2d50d0b3820e1305fcdabad65dbef5c5848aa4",
+      "event": "blacklisted",
+      "blockNumber": 53205091,
+      "logIndex": 8,
+      "txHash": "0x152fd95006d45cdcaf4ac22ab560808d06dde22201e013931c3c2cf7614c5ccf",
+      "at": "2026-10-28T14:58:49.000Z"
+    },
+    {
+      "address": "0x28c6c06298d514db089934071355e5743bf21d60",
+      "event": "blacklisted",
+      "blockNumber": 53264360,
+      "logIndex": 118,
+      "txHash": "0x6c5dbafbefe16c6cd2a247a8701e287f6e8d5b5d71f11ac20763934b19c40758",
+      "at": "2026-10-29T23:54:27.000Z"
+    },
+    {
+      "address": "0xee7ae85f2fe2239e27d9c1e23fffe168d63b4055",
+      "event": "blacklisted",
+      "blockNumber": 53264382,
+      "logIndex": 54,
+      "txHash": "0xce3222837b32d77b2862d9d58bce84f1fa241cc73d36d34bfc8544f130e5931a",
+      "at": "2026-10-29T23:55:11.000Z"
+    },
+    {
+      "address": "0xe485e7a70b1131216cb47ca4555c4bbb2c742478",
+      "event": "blacklisted",
+      "blockNumber": 53423521,
+      "logIndex": 494,
+      "txHash": "0x1fcb5880614a7dcfb3f0c9ae82cacc4acf6f4b1a33780d1bfc2cc5830155ed26",
+      "at": "2026-11-02T16:19:49.000Z"
+    },
+    {
+      "address": "0x8419e7824e785c4ac8d9d94a0093c437ab1ff320",
+      "event": "blacklisted",
+      "blockNumber": 53428281,
+      "logIndex": 643,
+      "txHash": "0x03e44ba200afb64469b8a0e996c0db10fdaa5849718e0d8d2257a15040dd1513",
+      "at": "2026-11-02T18:58:29.000Z"
+    },
+    {
+      "address": "0x1faaaf31ebba5dde7a2bf48e010e6434d730fa92",
+      "event": "blacklisted",
+      "blockNumber": 54023845,
+      "logIndex": 1,
+      "txHash": "0xc90a5532be83c8346997b2cb7c2ebbea8dec9ecda8854c5e837752154a21d7fa",
+      "at": "2026-11-06T19:59:04.000Z"
+    },
+    {
+      "address": "0x538947722f7ca77098803112fa3d188b054b5456",
+      "event": "blacklisted",
+      "blockNumber": 54024590,
+      "logIndex": 37,
+      "txHash": "0x2ce5cba4bda66c598784641a4265ee7b4c85001774c062de553925f24456ae69",
+      "at": "2026-11-06T20:01:33.000Z"
+    },
+    {
+      "address": "0x5b39ebcd59f7b5071fa35b16f068f0ea243d3bf3",
+      "event": "blacklisted",
+      "blockNumber": 54025236,
+      "logIndex": 3,
+      "txHash": "0x9bec81011a4a7921dcd161d0c9c3e8a710f8891876221627b13ff4ad5814e049",
+      "at": "2026-11-06T20:03:42.000Z"
+    },
+    {
+      "address": "0x5d048eb6877ce03deb35c48c6550def1c05961b8",
+      "event": "blacklisted",
+      "blockNumber": 54025384,
+      "logIndex": 8,
+      "txHash": "0x22b1c85548788d7990878d09fd516fda002509670a4daac8817dad5e793c124c",
+      "at": "2026-11-06T20:04:12.000Z"
+    },
+    {
+      "address": "0x78b3ad18b66c41f766bbf452a609d004a2b2a1e1",
+      "event": "blacklisted",
+      "blockNumber": 54026419,
+      "logIndex": 44,
+      "txHash": "0xcc625f092cf01e87267ab7673fd2025f8c76f27e2bd3cd808ac50b5f2fd03087",
+      "at": "2026-11-06T20:07:39.000Z"
+    },
+    {
+      "address": "0xdc8cb80786ed2823e5d6cdf22bd542db5b5b4b96",
+      "event": "blacklisted",
+      "blockNumber": 54027332,
+      "logIndex": 89,
+      "txHash": "0x4f96dba9da90048139c57ad77d9d0c1950b1b7a4469c0b145479559cf7bcf629",
+      "at": "2026-11-06T20:10:42.000Z"
+    },
+    {
+      "address": "0x17e7b121c25c23e1b967bfda72b7b45cab5b51e5",
+      "event": "blacklisted",
+      "blockNumber": 54090977,
+      "logIndex": 0,
+      "txHash": "0x32199c14ae4b605595c4eb0e9cc1be8ab2e976884441a2856516337dd1fe6229",
+      "at": "2026-11-06T23:42:51.000Z"
+    },
+    {
+      "address": "0xdb0845207e61e132d3153358966b552284c194b5",
+      "event": "blacklisted",
+      "blockNumber": 59546604,
+      "logIndex": 15,
+      "txHash": "0x707697a0dfaede67958f6fd5a71fd4f49037b0323840deef9bcb90a4bb37c742",
+      "at": "2026-11-19T14:48:16.000Z"
+    }
+  ],
+  "states": [
+    {
+      "address": "0x04c3944f8fecc630e82910d5c4a2d00a795fa596",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:46:17.000Z",
+      "blockNumber": 51091515,
+      "logIndex": 518,
+      "txHash": "0x169b40e0954d39add95236f8d67e0e2aa3ca563747a7f8dcd23212e2f97d0574"
+    },
+    {
+      "address": "0x08a05b6634012ac46646bb1f04a7f52ed8bfe762",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:55:05.000Z",
+      "blockNumber": 51089979,
+      "logIndex": 12,
+      "txHash": "0xaed5c8312c73e70a70782f6ab9873a2ee0b978bfd7d6558a423a7578508b8ca7"
+    },
+    {
+      "address": "0x0de9cff3cc48924e6c470e55c15fffd815827846",
+      "state": "blacklisted",
+      "since": "2026-09-30T14:38:35.000Z",
+      "blockNumber": 51994884,
+      "logIndex": 342,
+      "txHash": "0xacd1642997cdf9196eeb0efc26ddde47c03cc550c2614dbbd765a340666b54f7"
+    },
+    {
+      "address": "0x0decc02236cd75eb9c9bd63930c7638702e12df5",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:28:31.000Z",
+      "blockNumber": 51090982,
+      "logIndex": 24,
+      "txHash": "0x1a01e6c93a8a8285e418af25924b2ac4215f58478d8db71c925a4d751c9ed84b"
+    },
+    {
+      "address": "0x0ede564e315f8e1803161a22e8404c624c35b1fb",
+      "state": "blacklisted",
+      "since": "2026-09-09T14:57:33.000Z",
       "blockNumber": 51088253,
       "logIndex": 155,
       "txHash": "0x7f32d06615d5d66175e766547e153ac6f705ff3fd3bbc361fa72e9a72a98c7fc"
     },
     {
       "address": "0x0f6ae73e9ced1a3fb5ff30a8ff702687a731769b",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:01:01.000Z",
       "blockNumber": 51088357,
       "logIndex": 1043,
       "txHash": "0x9fdb698e9f4e371354437e68bd8ea83d13e988e1a8e70aedc824d41b1ab14c76"
     },
     {
-      "address": "0xdca63d36e326fdcde1c6403ff3edf5d8ba7699ad",
-      "blockNumber": 51088370,
-      "logIndex": 2259,
-      "txHash": "0x61b9b206e7d21597b28127f8e8adbe645bb904ff3966e346e085f045a06ed02a"
-    },
-    {
-      "address": "0x46ef4466249d1eb324b58be21cbadfb852dd6b7c",
-      "blockNumber": 51088378,
-      "logIndex": 753,
-      "txHash": "0xf2761711d029d4b753491ae08ad363a04480033d431cbd8bd5d1909a32cc8e04"
-    },
-    {
-      "address": "0x55011219931443eede49ee3efa42b2264226fe98",
-      "blockNumber": 51088408,
-      "logIndex": 356,
-      "txHash": "0x24a9f86138691536956b5f854ad0dc92080106001e5c62d2339197a126b7405a"
-    },
-    {
-      "address": "0x437c5cb414410bd4a628e4764ab61b7f44e6402f",
-      "blockNumber": 51088463,
-      "logIndex": 72,
-      "txHash": "0x8e02421ab572028fec1e69ba7ae487ca5c12f609c2cf8c300427ee32c74cb7a6"
-    },
-    {
-      "address": "0xe4eacf8d5b0b68e6250d4f5710d24c9de5882a65",
-      "blockNumber": 51088509,
-      "logIndex": 1538,
-      "txHash": "0xb49f15e22778de824d5dba670e06d7dc9bd7ad5ac5f7c4d11afb7891aac7908f"
-    },
-    {
-      "address": "0xf9d66d6842ae81cfb1b04f651a19798cdf1ee3a3",
-      "blockNumber": 51088525,
-      "logIndex": 818,
-      "txHash": "0x9931332de776ffa8c8414ad20dd73c57cb3c5fa2d290c3695e0d661af92c88c0"
-    },
-    {
-      "address": "0x2eb686610c46545a118f5b8228cf1e46df242352",
-      "blockNumber": 51088579,
-      "logIndex": 892,
-      "txHash": "0x609c00f629aa29104471882884689f2687292289799c1717bb0fb71c81eb7fb6"
-    },
-    {
-      "address": "0x265e9b86ab3310003587a32c7a27f75f670a72ed",
-      "blockNumber": 51088649,
-      "logIndex": 402,
-      "txHash": "0xcfe2005ac028c59f4b93e96289c2e7127d82ef0c284583846412713910edd371"
-    },
-    {
-      "address": "0xfbd36c041070f28fd0498166be6494065bec5f0e",
-      "blockNumber": 51088733,
-      "logIndex": 635,
-      "txHash": "0x661e683c1b6eb4171d78a9dac08b289d4605edc4382ac792658ab05d937e54e5"
-    },
-    {
-      "address": "0x67ab9ee65660fa10967722a7552e5e96e8192776",
-      "blockNumber": 51088831,
-      "logIndex": 385,
-      "txHash": "0x4a375758f183cb90aae12ea35ae4f007df1a75ce4115849c05b282b708a2f98d"
-    },
-    {
-      "address": "0xe007afe5a5abfdf4efbbae239f42819b97e95e5d",
-      "blockNumber": 51088841,
-      "logIndex": 668,
-      "txHash": "0x9ebbea6471c728c176e275dd7e634933a0f264a98e3c3e230687fb9dc501d115"
-    },
-    {
-      "address": "0x6396745d7a9236229d17684d826bf2792ed7d457",
-      "blockNumber": 51088895,
-      "logIndex": 502,
-      "txHash": "0x0e0352412e807c4ab50a7124c4bca7c3ad32d6609b41e58080adfcb1d675796c"
-    },
-    {
-      "address": "0xc06198bd95b602889e5a770c80643b5b292526c3",
-      "blockNumber": 51088899,
-      "logIndex": 50,
-      "txHash": "0x2d6d8402951ddf835efa0629c797c9df0ff363257289d6b1318fe17854489849"
-    },
-    {
-      "address": "0xe9d12c5d6954487fba2ce36a0b0ab5c8515dbb98",
-      "blockNumber": 51089059,
-      "logIndex": 798,
-      "txHash": "0x7ab7a2dbf48f45df883761ee16b7d1b6771bb578eafa090cd7e21c852558e9ad"
-    },
-    {
-      "address": "0x712779ce813e780c08ad89f83153f2a503bf3b8f",
-      "blockNumber": 51089320,
-      "logIndex": 20,
-      "txHash": "0xdff8b014d0f1b29a2a258269b2a6bee8a29a6537bbcc09403b3778ef5308dcaa"
-    },
-    {
-      "address": "0x502d46e39e61b60eaba79dd6a6270445c141b6f0",
-      "blockNumber": 51089337,
-      "logIndex": 705,
-      "txHash": "0xc8d5ac542092300804be027db8d18af062a62f0a93fd4c1818eff953b8ad54fc"
-    },
-    {
-      "address": "0xa18ef3a679e2942596a67eb871845da89b7eeaa8",
-      "blockNumber": 51089422,
-      "logIndex": 51,
-      "txHash": "0xf59765c2ddcb44a13b8e8cc6b675a35f73bc8dfe62296903716aa9156f48bf36"
-    },
-    {
-      "address": "0x4d4f1236d9951681ce944ce1ead15cb972a9cf2f",
-      "blockNumber": 51089437,
-      "logIndex": 1001,
-      "txHash": "0xa1d976138c222f01c986739cf29b4e132967d4cf2c49bcb920d51e052ea76fe1"
-    },
-    {
-      "address": "0xc35033e93c38f5434de52d0d5f8f92f8a679cf1f",
-      "blockNumber": 51089503,
-      "logIndex": 679,
-      "txHash": "0xc14b0c0cf60bf9a7d999b5ccb9ca01b419c389c492a36dcb8058dd4aa58cbd4f"
-    },
-    {
-      "address": "0xeeeef5ced57f622277935bd14b723345f7efee1c",
-      "blockNumber": 51089586,
-      "logIndex": 1011,
-      "txHash": "0xb9d41cbac06510695710b2ba0474a6b5caffdca0b3b1dc44581e661c4df3b80f"
-    },
-    {
-      "address": "0xfabfd02cd685b83cc86aea83848d69439b54c720",
-      "blockNumber": 51089704,
-      "logIndex": 1558,
-      "txHash": "0x22b6dcfe6c9a0f02b3f7746732bd3f61c9ba43fb2b0d93ba70d8466644277728"
-    },
-    {
-      "address": "0x48e5cb660dd19aea9d1b87a2859570192d40af10",
-      "blockNumber": 51089757,
-      "logIndex": 781,
-      "txHash": "0x84050bd90f2b073c78f60344a0fea8c3642435fa748a5684b103499166d12664"
-    },
-    {
-      "address": "0xa669e919ee02d1dc6b2ddc2f4cc16fd18b11e9aa",
-      "blockNumber": 51089764,
-      "logIndex": 715,
-      "txHash": "0x35517fdb687ee918d27fb0034e73f050db9b6c6da9bacb1aa2901423c7cb82dd"
-    },
-    {
-      "address": "0x4a33953b63657ea4f2701088704c107460787302",
-      "blockNumber": 51089796,
-      "logIndex": 591,
-      "txHash": "0x7cab4d48c65b9cd60873e9ca14c8bae698373f161ef8238ab9c19a368986c58b"
-    },
-    {
-      "address": "0x8e4db52262cc6dbf7158cb57b2d8da67bd62cd91",
-      "blockNumber": 51089841,
-      "logIndex": 313,
-      "txHash": "0xdbc2f2cfa802a4ff7a82d49efbacba8fc83419e34499a3f1ff91f057a0c3b3ae"
-    },
-    {
-      "address": "0x08a05b6634012ac46646bb1f04a7f52ed8bfe762",
-      "blockNumber": 51089979,
-      "logIndex": 12,
-      "txHash": "0xaed5c8312c73e70a70782f6ab9873a2ee0b978bfd7d6558a423a7578508b8ca7"
-    },
-    {
-      "address": "0xaf8bcc21bfdcf2378d8f804d2b79264efe4e6b4a",
-      "blockNumber": 51090043,
-      "logIndex": 85,
-      "txHash": "0xa7dd1c062818fbbc14c272513dc11608b4c2793537e522815280b91155706884"
-    },
-    {
-      "address": "0xc2d06dae23a6f772d0b49d5b4dccb501fc3862f4",
-      "blockNumber": 51090160,
-      "logIndex": 752,
-      "txHash": "0xd78c3ffd5ad345275c83ac5f481d141678523cc6bd0b53cea9ff910b0dace1b8"
-    },
-    {
-      "address": "0xfe24ed2a9f9f02cdb715e85c3450b502912ee622",
-      "blockNumber": 51090185,
-      "logIndex": 794,
-      "txHash": "0xf3776a6c970731f1fedced821a527813f58acfa7d7778f9d0ede21ce44a32d31"
-    },
-    {
-      "address": "0xeba36fb30acdc3eba9283e6514fff8a99149a63a",
-      "blockNumber": 51090208,
-      "logIndex": 381,
-      "txHash": "0xecf3599b475f1ae91c5414ebbfba64d5003a6d10c6cd4a822f485044805075a3"
-    },
-    {
-      "address": "0xbb7aac3cf72810aeaebb07649d873f9a7e9701e1",
-      "blockNumber": 51090303,
-      "logIndex": 579,
-      "txHash": "0x3beac902af3b619b91fe304ef03be1a254adda104846b1935d195ff8f0785bc1"
-    },
-    {
-      "address": "0xc275eb6d33797bc2e3dccd3c30afb042b1069bb6",
-      "blockNumber": 51090490,
-      "logIndex": 517,
-      "txHash": "0x2333c3d9b0a7769807a5eaafbdb8039bb207d3091dea147b6b51483589b85985"
-    },
-    {
-      "address": "0x591c430024fce05a9d657d1fa3eba15109e48600",
-      "blockNumber": 51090533,
-      "logIndex": 54,
-      "txHash": "0xdae9962a7d9d90673810a46b43db68e4cb5dc9e6e1d025511fea7087bca6b8bb"
-    },
-    {
-      "address": "0xf7c65e485eeb47fecea7c47315c97d61305d3def",
-      "blockNumber": 51090600,
-      "logIndex": 651,
-      "txHash": "0x5e681b6e6f13c7b6db9801ad48b3bce81a9bbdaf340b89b613f5950951d48094"
-    },
-    {
-      "address": "0xdeedc6c3a269b07a05a0737d248c798ec7455440",
-      "blockNumber": 51090611,
-      "logIndex": 82,
-      "txHash": "0x2577727409ee6717f60339e1d6bf038ecb28ef2f24a0915808069b11bde3e7f6"
-    },
-    {
-      "address": "0x7aa0cffa2ac86a7ea54c0c63866d98071c79f44e",
-      "blockNumber": 51090706,
-      "logIndex": 55,
-      "txHash": "0xac61cff3d9aef0845cb78574aa5aa56ecd5ed83582e827393426fa20862e1329"
-    },
-    {
-      "address": "0x9138a1ef23019dba58acd3a221c442073c313c73",
-      "blockNumber": 51090721,
-      "logIndex": 484,
-      "txHash": "0x829bfed0eee29e54e97f301312fc7f77694885ff8f43b49c4b225148b2b9aa7e"
-    },
-    {
-      "address": "0xf064109090e30203afffe233c9acefdbeee78099",
-      "blockNumber": 51090925,
-      "logIndex": 729,
-      "txHash": "0x209bff9fecebcd53d5d0b5dec451c065af413d79feb1a795346fd7aba4904be3"
-    },
-    {
-      "address": "0xb84896db62780c6e3a04f1d5a3e91c7ad6cfd819",
-      "blockNumber": 51090940,
-      "logIndex": 377,
-      "txHash": "0x9eace3d444092528849778df9e506543afe2eb51be9fd371d1a48be073bfbd70"
-    },
-    {
-      "address": "0xc0cdb1a32790dbed8536b904296283dcef82bf29",
-      "blockNumber": 51090944,
-      "logIndex": 449,
-      "txHash": "0xee44c91a29b354ac458cba75e2fee9afe8d7258bd19e6bf8b5fb9ce9f41f5ee9"
-    },
-    {
-      "address": "0x386231af22383f533b959a6a1379f1e5cfc22989",
-      "blockNumber": 51090945,
-      "logIndex": 389,
-      "txHash": "0x172c8611f32e51cfba3e347feb5d0efb873f57b2739f8c8ca7cba9fc6ad5c55a"
-    },
-    {
-      "address": "0x0decc02236cd75eb9c9bd63930c7638702e12df5",
-      "blockNumber": 51090982,
-      "logIndex": 24,
-      "txHash": "0x1a01e6c93a8a8285e418af25924b2ac4215f58478d8db71c925a4d751c9ed84b"
-    },
-    {
-      "address": "0x1f09cb39c7949f1a18fcea1a3c584f718ef81933",
-      "blockNumber": 51091046,
-      "logIndex": 21,
-      "txHash": "0x8a844ac1ccee6328c16ed0850ddc4bd16e8366498e98669c6288d0758cca87a8"
-    },
-    {
-      "address": "0x4c03d82270c117644a8001671c52111bdb15ee6d",
-      "blockNumber": 51091131,
-      "logIndex": 39,
-      "txHash": "0x65a6c789d5f274968860b87c6a0b225425ec46b9d664d1642a73c304360824e9"
-    },
-    {
-      "address": "0xc05612c9f78a909886320628f3ee59dc7baffdfd",
-      "blockNumber": 51091245,
-      "logIndex": 264,
-      "txHash": "0x0a62ff838bf8eed37fd2315e33bc55b50ae6e9f4f4b514c06725764063b0b8cf"
-    },
-    {
-      "address": "0x8926c7ce09f08731c51564e2ba714f800e23a65a",
-      "blockNumber": 51091331,
-      "logIndex": 778,
-      "txHash": "0x0607945961a73efe18edb8d56aee5c1e2b2837e7762c6aac5910eaa96cb8c0bc"
-    },
-    {
-      "address": "0xfd34841893a1dc5c6af5b5e65818d82e219c1275",
-      "blockNumber": 51091436,
-      "logIndex": 35,
-      "txHash": "0xedfdd2886a8715f6e088a2771ca434d270c00105f5ebb41d3b99203b76a25a43"
-    },
-    {
-      "address": "0xc4232d1bb5276a312b19414e11e2fc1e02a56463",
-      "blockNumber": 51091473,
-      "logIndex": 286,
-      "txHash": "0x0dd0364d4279e3935581c147f62fcf8bbaa3ef87729abf5c292cfe548a642ca6"
-    },
-    {
-      "address": "0x04c3944f8fecc630e82910d5c4a2d00a795fa596",
-      "blockNumber": 51091515,
-      "logIndex": 518,
-      "txHash": "0x169b40e0954d39add95236f8d67e0e2aa3ca563747a7f8dcd23212e2f97d0574"
-    },
-    {
-      "address": "0x7fea703f97cdf8d607513231f8f3310e56096863",
-      "blockNumber": 51091557,
-      "logIndex": 833,
-      "txHash": "0x62a651872c742ba46774ebae810132047d9370c7617815740b26ce6b4cdfde9b"
-    },
-    {
-      "address": "0x601d77306917263f0ea2a8fa8a7516b3aa0a0a1f",
-      "blockNumber": 51994667,
-      "logIndex": 884,
-      "txHash": "0xde29ef76e09d46b32b3b25d2eaab70cb1417e8da6c42362c2a5c73cde3559a26"
-    },
-    {
-      "address": "0x1b875107ba4d38a5a894ad3d4393d32821a39036",
-      "blockNumber": 51994740,
-      "logIndex": 24,
-      "txHash": "0xf1415620209ec24c9f3c3c42b63c53da92a174b731aad4b943b8ec9ea51b4a3b"
-    },
-    {
-      "address": "0x5772f441155c532eb7d929ca079cb7e673a39286",
-      "blockNumber": 51994762,
-      "logIndex": 711,
-      "txHash": "0x67a0fffd10f34a0aac44fe2d5fd6c401e4a80365cd33c8d270edc96711b95189"
-    },
-    {
-      "address": "0x0de9cff3cc48924e6c470e55c15fffd815827846",
-      "blockNumber": 51994884,
-      "logIndex": 342,
-      "txHash": "0xacd1642997cdf9196eeb0efc26ddde47c03cc550c2614dbbd765a340666b54f7"
-    },
-    {
-      "address": "0x1e282186e56f0f4f96288426116c4449ed287490",
-      "blockNumber": 51994921,
-      "logIndex": 236,
-      "txHash": "0x272a738b8d047447db12216cc933a591c6ed88336e5f3d6f5a057c1090e73f0a"
-    },
-    {
-      "address": "0xdf15822aceca390e21d9a44702c7ffc4cb2285e7",
-      "blockNumber": 51995039,
-      "logIndex": 1793,
-      "txHash": "0x947ae1989de1680d173f762698b36dd9df695d2b7465800283b6167d42cdbc85"
-    },
-    {
-      "address": "0x2bc0c9ff62958b94241e0f0585b0f84e84e3cd8e",
-      "blockNumber": 51995061,
-      "logIndex": 62,
-      "txHash": "0xcd0b3e0e208ecc1082293c50b7f1c1879e23e7f8de8862f433c5ca39c324b0f1"
-    },
-    {
-      "address": "0xea7afc65367dd5a870e1a0ddf376181b36e9c8ab",
-      "blockNumber": 52259046,
-      "logIndex": 640,
-      "txHash": "0xf309be61a5826a6cc27209b66a78a6f4fe92949a084d99daabfe2ab53acf9d01"
-    },
-    {
-      "address": "0x572b48da5c3fff3c9230fc2115e575a5954866cb",
-      "blockNumber": 52259076,
-      "logIndex": 205,
-      "txHash": "0x6f163c163ad3f3879a67f1b7ffe227298823ab7da5c92233d2c83ca1f7c4917f"
-    },
-    {
-      "address": "0x22c5fb75970fc1bbbd0fc76b76cdbfbd44b9dd83",
-      "blockNumber": 52259106,
-      "logIndex": 248,
-      "txHash": "0xa248b911ccb89ee74356b4e2116f240c912284b1e9ef5732ba3526e351f9639c"
-    },
-    {
-      "address": "0xc3bdc27427ce1aa2b92c81bc8032918697bbc645",
-      "blockNumber": 52355491,
-      "logIndex": 622,
-      "txHash": "0x05c2948cf7cb8950c14a13347dea8ba150861eeaf2103b30e0ba10676d6c3993"
-    },
-    {
-      "address": "0xffc4041cf54a41d4fef327a8b5d31b860a26492f",
-      "blockNumber": 52920965,
-      "logIndex": 443,
-      "txHash": "0x93db82983ad877f630616be065a7d8ce0aab680cf97f82b0886195a00940b6ac"
-    },
-    {
       "address": "0x12ea80238c7d805d003ce793594e92d84a6f4e8d",
+      "state": "blacklisted",
+      "since": "2026-10-28T14:41:17.000Z",
       "blockNumber": 53204565,
       "logIndex": 313,
       "txHash": "0x4b8e6f5d7a78c05f3a2bafe61d161d514c93d9ad3bf4c2b0b51b6a4bf26bfa24"
     },
     {
+      "address": "0x17e7b121c25c23e1b967bfda72b7b45cab5b51e5",
+      "state": "blacklisted",
+      "since": "2026-11-06T23:42:51.000Z",
+      "blockNumber": 54090977,
+      "logIndex": 0,
+      "txHash": "0x32199c14ae4b605595c4eb0e9cc1be8ab2e976884441a2856516337dd1fe6229"
+    },
+    {
+      "address": "0x1b875107ba4d38a5a894ad3d4393d32821a39036",
+      "state": "blacklisted",
+      "since": "2026-09-30T14:33:47.000Z",
+      "blockNumber": 51994740,
+      "logIndex": 24,
+      "txHash": "0xf1415620209ec24c9f3c3c42b63c53da92a174b731aad4b943b8ec9ea51b4a3b"
+    },
+    {
       "address": "0x1b95eaaefd716e47d29baa10b629866ad79e4213",
+      "state": "blacklisted",
+      "since": "2026-10-28T14:42:43.000Z",
       "blockNumber": 53204608,
       "logIndex": 1143,
       "txHash": "0x95b647fa6550d81754a29bc08b0aa5b3374fa6ac233aa510f32b9d595030feb1"
     },
     {
-      "address": "0x3f7bac9d68a8e45d0b5654633eecafd4ec3d4fbe",
-      "blockNumber": 53204664,
-      "logIndex": 410,
-      "txHash": "0x37d075e70578b6d20be5073ef81459d57de776c5485c8ca9d5e05281087d8256"
+      "address": "0x1e282186e56f0f4f96288426116c4449ed287490",
+      "state": "blacklisted",
+      "since": "2026-09-30T14:39:49.000Z",
+      "blockNumber": 51994921,
+      "logIndex": 236,
+      "txHash": "0x272a738b8d047447db12216cc933a591c6ed88336e5f3d6f5a057c1090e73f0a"
     },
     {
-      "address": "0x9c0605e0df7fdb655204b901b62be5a4bb89fdcc",
-      "blockNumber": 53204733,
-      "logIndex": 94,
-      "txHash": "0x4fee659bafe8f39de15e6feae37b02743bee1cfb8a2eeabe4198210a841495a7"
-    },
-    {
-      "address": "0x761edd5e4546229a0bd35ae99b4d3d01cf4a3510",
-      "blockNumber": 53204772,
-      "logIndex": 33,
-      "txHash": "0x0d99a90f730bb47f683c37327b98efb7b31ece75bd5d795969dbeed67ae4816d"
-    },
-    {
-      "address": "0xe4c9a7f68b1eba4508f54f07f7378847318dd1a3",
-      "blockNumber": 53204940,
-      "logIndex": 62,
-      "txHash": "0xc916a814fa98b99d20f583373980d8498d2673f94c423476cecf610229debe7b"
-    },
-    {
-      "address": "0x9d76a551e7cebbba57155f77beca8c2971894502",
-      "blockNumber": 53204994,
-      "logIndex": 116,
-      "txHash": "0x2fd2e222178dd31dbee736254a21b0575c0fc4b67e9ea24d2d50ffeab3a40097"
-    },
-    {
-      "address": "0xef2d50d0b3820e1305fcdabad65dbef5c5848aa4",
-      "blockNumber": 53205091,
-      "logIndex": 8,
-      "txHash": "0x152fd95006d45cdcaf4ac22ab560808d06dde22201e013931c3c2cf7614c5ccf"
-    },
-    {
-      "address": "0x28c6c06298d514db089934071355e5743bf21d60",
-      "blockNumber": 53264360,
-      "logIndex": 118,
-      "txHash": "0x6c5dbafbefe16c6cd2a247a8701e287f6e8d5b5d71f11ac20763934b19c40758"
-    },
-    {
-      "address": "0xee7ae85f2fe2239e27d9c1e23fffe168d63b4055",
-      "blockNumber": 53264382,
-      "logIndex": 54,
-      "txHash": "0xce3222837b32d77b2862d9d58bce84f1fa241cc73d36d34bfc8544f130e5931a"
-    },
-    {
-      "address": "0xe485e7a70b1131216cb47ca4555c4bbb2c742478",
-      "blockNumber": 53423521,
-      "logIndex": 494,
-      "txHash": "0x1fcb5880614a7dcfb3f0c9ae82cacc4acf6f4b1a33780d1bfc2cc5830155ed26"
-    },
-    {
-      "address": "0x8419e7824e785c4ac8d9d94a0093c437ab1ff320",
-      "blockNumber": 53428281,
-      "logIndex": 643,
-      "txHash": "0x03e44ba200afb64469b8a0e996c0db10fdaa5849718e0d8d2257a15040dd1513"
+      "address": "0x1f09cb39c7949f1a18fcea1a3c584f718ef81933",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:30:39.000Z",
+      "blockNumber": 51091046,
+      "logIndex": 21,
+      "txHash": "0x8a844ac1ccee6328c16ed0850ddc4bd16e8366498e98669c6288d0758cca87a8"
     },
     {
       "address": "0x1faaaf31ebba5dde7a2bf48e010e6434d730fa92",
+      "state": "blacklisted",
+      "since": "2026-11-06T19:59:04.000Z",
       "blockNumber": 54023845,
       "logIndex": 1,
       "txHash": "0xc90a5532be83c8346997b2cb7c2ebbea8dec9ecda8854c5e837752154a21d7fa"
     },
     {
+      "address": "0x22c5fb75970fc1bbbd0fc76b76cdbfbd44b9dd83",
+      "state": "blacklisted",
+      "since": "2026-10-06T17:25:59.000Z",
+      "blockNumber": 52259106,
+      "logIndex": 248,
+      "txHash": "0xa248b911ccb89ee74356b4e2116f240c912284b1e9ef5732ba3526e351f9639c"
+    },
+    {
+      "address": "0x265e9b86ab3310003587a32c7a27f75f670a72ed",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:10:45.000Z",
+      "blockNumber": 51088649,
+      "logIndex": 402,
+      "txHash": "0xcfe2005ac028c59f4b93e96289c2e7127d82ef0c284583846412713910edd371"
+    },
+    {
+      "address": "0x28c6c06298d514db089934071355e5743bf21d60",
+      "state": "blacklisted",
+      "since": "2026-10-29T23:54:27.000Z",
+      "blockNumber": 53264360,
+      "logIndex": 118,
+      "txHash": "0x6c5dbafbefe16c6cd2a247a8701e287f6e8d5b5d71f11ac20763934b19c40758"
+    },
+    {
+      "address": "0x2bc0c9ff62958b94241e0f0585b0f84e84e3cd8e",
+      "state": "blacklisted",
+      "since": "2026-09-30T14:44:29.000Z",
+      "blockNumber": 51995061,
+      "logIndex": 62,
+      "txHash": "0xcd0b3e0e208ecc1082293c50b7f1c1879e23e7f8de8862f433c5ca39c324b0f1"
+    },
+    {
+      "address": "0x2eb686610c46545a118f5b8228cf1e46df242352",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:08:25.000Z",
+      "blockNumber": 51088579,
+      "logIndex": 892,
+      "txHash": "0x609c00f629aa29104471882884689f2687292289799c1717bb0fb71c81eb7fb6"
+    },
+    {
+      "address": "0x386231af22383f533b959a6a1379f1e5cfc22989",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:27:17.000Z",
+      "blockNumber": 51090945,
+      "logIndex": 389,
+      "txHash": "0x172c8611f32e51cfba3e347feb5d0efb873f57b2739f8c8ca7cba9fc6ad5c55a"
+    },
+    {
+      "address": "0x3f7bac9d68a8e45d0b5654633eecafd4ec3d4fbe",
+      "state": "blacklisted",
+      "since": "2026-10-28T14:44:35.000Z",
+      "blockNumber": 53204664,
+      "logIndex": 410,
+      "txHash": "0x37d075e70578b6d20be5073ef81459d57de776c5485c8ca9d5e05281087d8256"
+    },
+    {
+      "address": "0x437c5cb414410bd4a628e4764ab61b7f44e6402f",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:04:33.000Z",
+      "blockNumber": 51088463,
+      "logIndex": 72,
+      "txHash": "0x8e02421ab572028fec1e69ba7ae487ca5c12f609c2cf8c300427ee32c74cb7a6"
+    },
+    {
+      "address": "0x46ef4466249d1eb324b58be21cbadfb852dd6b7c",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:01:43.000Z",
+      "blockNumber": 51088378,
+      "logIndex": 753,
+      "txHash": "0xf2761711d029d4b753491ae08ad363a04480033d431cbd8bd5d1909a32cc8e04"
+    },
+    {
+      "address": "0x48e5cb660dd19aea9d1b87a2859570192d40af10",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:47:41.000Z",
+      "blockNumber": 51089757,
+      "logIndex": 781,
+      "txHash": "0x84050bd90f2b073c78f60344a0fea8c3642435fa748a5684b103499166d12664"
+    },
+    {
+      "address": "0x4a33953b63657ea4f2701088704c107460787302",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:48:59.000Z",
+      "blockNumber": 51089796,
+      "logIndex": 591,
+      "txHash": "0x7cab4d48c65b9cd60873e9ca14c8bae698373f161ef8238ab9c19a368986c58b"
+    },
+    {
+      "address": "0x4c03d82270c117644a8001671c52111bdb15ee6d",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:33:29.000Z",
+      "blockNumber": 51091131,
+      "logIndex": 39,
+      "txHash": "0x65a6c789d5f274968860b87c6a0b225425ec46b9d664d1642a73c304360824e9"
+    },
+    {
+      "address": "0x4d4f1236d9951681ce944ce1ead15cb972a9cf2f",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:37:01.000Z",
+      "blockNumber": 51089437,
+      "logIndex": 1001,
+      "txHash": "0xa1d976138c222f01c986739cf29b4e132967d4cf2c49bcb920d51e052ea76fe1"
+    },
+    {
+      "address": "0x502d46e39e61b60eaba79dd6a6270445c141b6f0",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:33:41.000Z",
+      "blockNumber": 51089337,
+      "logIndex": 705,
+      "txHash": "0xc8d5ac542092300804be027db8d18af062a62f0a93fd4c1818eff953b8ad54fc"
+    },
+    {
       "address": "0x538947722f7ca77098803112fa3d188b054b5456",
+      "state": "blacklisted",
+      "since": "2026-11-06T20:01:33.000Z",
       "blockNumber": 54024590,
       "logIndex": 37,
       "txHash": "0x2ce5cba4bda66c598784641a4265ee7b4c85001774c062de553925f24456ae69"
     },
     {
+      "address": "0x55011219931443eede49ee3efa42b2264226fe98",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:02:43.000Z",
+      "blockNumber": 51088408,
+      "logIndex": 356,
+      "txHash": "0x24a9f86138691536956b5f854ad0dc92080106001e5c62d2339197a126b7405a"
+    },
+    {
+      "address": "0x572b48da5c3fff3c9230fc2115e575a5954866cb",
+      "state": "blacklisted",
+      "since": "2026-10-06T17:24:59.000Z",
+      "blockNumber": 52259076,
+      "logIndex": 205,
+      "txHash": "0x6f163c163ad3f3879a67f1b7ffe227298823ab7da5c92233d2c83ca1f7c4917f"
+    },
+    {
+      "address": "0x5772f441155c532eb7d929ca079cb7e673a39286",
+      "state": "blacklisted",
+      "since": "2026-09-30T14:34:31.000Z",
+      "blockNumber": 51994762,
+      "logIndex": 711,
+      "txHash": "0x67a0fffd10f34a0aac44fe2d5fd6c401e4a80365cd33c8d270edc96711b95189"
+    },
+    {
+      "address": "0x591c430024fce05a9d657d1fa3eba15109e48600",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:13:33.000Z",
+      "blockNumber": 51090533,
+      "logIndex": 54,
+      "txHash": "0xdae9962a7d9d90673810a46b43db68e4cb5dc9e6e1d025511fea7087bca6b8bb"
+    },
+    {
       "address": "0x5b39ebcd59f7b5071fa35b16f068f0ea243d3bf3",
+      "state": "blacklisted",
+      "since": "2026-11-06T20:03:42.000Z",
       "blockNumber": 54025236,
       "logIndex": 3,
       "txHash": "0x9bec81011a4a7921dcd161d0c9c3e8a710f8891876221627b13ff4ad5814e049"
     },
     {
       "address": "0x5d048eb6877ce03deb35c48c6550def1c05961b8",
+      "state": "blacklisted",
+      "since": "2026-11-06T20:04:12.000Z",
       "blockNumber": 54025384,
       "logIndex": 8,
       "txHash": "0x22b1c85548788d7990878d09fd516fda002509670a4daac8817dad5e793c124c"
     },
     {
+      "address": "0x601d77306917263f0ea2a8fa8a7516b3aa0a0a1f",
+      "state": "blacklisted",
+      "since": "2026-09-30T14:31:21.000Z",
+      "blockNumber": 51994667,
+      "logIndex": 884,
+      "txHash": "0xde29ef76e09d46b32b3b25d2eaab70cb1417e8da6c42362c2a5c73cde3559a26"
+    },
+    {
+      "address": "0x6396745d7a9236229d17684d826bf2792ed7d457",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:18:57.000Z",
+      "blockNumber": 51088895,
+      "logIndex": 502,
+      "txHash": "0x0e0352412e807c4ab50a7124c4bca7c3ad32d6609b41e58080adfcb1d675796c"
+    },
+    {
+      "address": "0x67ab9ee65660fa10967722a7552e5e96e8192776",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:16:49.000Z",
+      "blockNumber": 51088831,
+      "logIndex": 385,
+      "txHash": "0x4a375758f183cb90aae12ea35ae4f007df1a75ce4115849c05b282b708a2f98d"
+    },
+    {
+      "address": "0x712779ce813e780c08ad89f83153f2a503bf3b8f",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:33:07.000Z",
+      "blockNumber": 51089320,
+      "logIndex": 20,
+      "txHash": "0xdff8b014d0f1b29a2a258269b2a6bee8a29a6537bbcc09403b3778ef5308dcaa"
+    },
+    {
+      "address": "0x761edd5e4546229a0bd35ae99b4d3d01cf4a3510",
+      "state": "blacklisted",
+      "since": "2026-10-28T14:48:11.000Z",
+      "blockNumber": 53204772,
+      "logIndex": 33,
+      "txHash": "0x0d99a90f730bb47f683c37327b98efb7b31ece75bd5d795969dbeed67ae4816d"
+    },
+    {
       "address": "0x78b3ad18b66c41f766bbf452a609d004a2b2a1e1",
+      "state": "blacklisted",
+      "since": "2026-11-06T20:07:39.000Z",
       "blockNumber": 54026419,
       "logIndex": 44,
       "txHash": "0xcc625f092cf01e87267ab7673fd2025f8c76f27e2bd3cd808ac50b5f2fd03087"
     },
     {
+      "address": "0x7aa0cffa2ac86a7ea54c0c63866d98071c79f44e",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:19:19.000Z",
+      "blockNumber": 51090706,
+      "logIndex": 55,
+      "txHash": "0xac61cff3d9aef0845cb78574aa5aa56ecd5ed83582e827393426fa20862e1329"
+    },
+    {
+      "address": "0x7fea703f97cdf8d607513231f8f3310e56096863",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:47:41.000Z",
+      "blockNumber": 51091557,
+      "logIndex": 833,
+      "txHash": "0x62a651872c742ba46774ebae810132047d9370c7617815740b26ce6b4cdfde9b"
+    },
+    {
+      "address": "0x8419e7824e785c4ac8d9d94a0093c437ab1ff320",
+      "state": "blacklisted",
+      "since": "2026-11-02T18:58:29.000Z",
+      "blockNumber": 53428281,
+      "logIndex": 643,
+      "txHash": "0x03e44ba200afb64469b8a0e996c0db10fdaa5849718e0d8d2257a15040dd1513"
+    },
+    {
+      "address": "0x8926c7ce09f08731c51564e2ba714f800e23a65a",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:40:09.000Z",
+      "blockNumber": 51091331,
+      "logIndex": 778,
+      "txHash": "0x0607945961a73efe18edb8d56aee5c1e2b2837e7762c6aac5910eaa96cb8c0bc"
+    },
+    {
+      "address": "0x8e4db52262cc6dbf7158cb57b2d8da67bd62cd91",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:50:29.000Z",
+      "blockNumber": 51089841,
+      "logIndex": 313,
+      "txHash": "0xdbc2f2cfa802a4ff7a82d49efbacba8fc83419e34499a3f1ff91f057a0c3b3ae"
+    },
+    {
+      "address": "0x9138a1ef23019dba58acd3a221c442073c313c73",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:19:49.000Z",
+      "blockNumber": 51090721,
+      "logIndex": 484,
+      "txHash": "0x829bfed0eee29e54e97f301312fc7f77694885ff8f43b49c4b225148b2b9aa7e"
+    },
+    {
+      "address": "0x9c0605e0df7fdb655204b901b62be5a4bb89fdcc",
+      "state": "blacklisted",
+      "since": "2026-10-28T14:46:53.000Z",
+      "blockNumber": 53204733,
+      "logIndex": 94,
+      "txHash": "0x4fee659bafe8f39de15e6feae37b02743bee1cfb8a2eeabe4198210a841495a7"
+    },
+    {
+      "address": "0x9d76a551e7cebbba57155f77beca8c2971894502",
+      "state": "blacklisted",
+      "since": "2026-10-28T14:55:35.000Z",
+      "blockNumber": 53204994,
+      "logIndex": 116,
+      "txHash": "0x2fd2e222178dd31dbee736254a21b0575c0fc4b67e9ea24d2d50ffeab3a40097"
+    },
+    {
+      "address": "0xa18ef3a679e2942596a67eb871845da89b7eeaa8",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:36:31.000Z",
+      "blockNumber": 51089422,
+      "logIndex": 51,
+      "txHash": "0xf59765c2ddcb44a13b8e8cc6b675a35f73bc8dfe62296903716aa9156f48bf36"
+    },
+    {
+      "address": "0xa669e919ee02d1dc6b2ddc2f4cc16fd18b11e9aa",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:47:55.000Z",
+      "blockNumber": 51089764,
+      "logIndex": 715,
+      "txHash": "0x35517fdb687ee918d27fb0034e73f050db9b6c6da9bacb1aa2901423c7cb82dd"
+    },
+    {
+      "address": "0xaf8bcc21bfdcf2378d8f804d2b79264efe4e6b4a",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:57:13.000Z",
+      "blockNumber": 51090043,
+      "logIndex": 85,
+      "txHash": "0xa7dd1c062818fbbc14c272513dc11608b4c2793537e522815280b91155706884"
+    },
+    {
+      "address": "0xb84896db62780c6e3a04f1d5a3e91c7ad6cfd819",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:27:07.000Z",
+      "blockNumber": 51090940,
+      "logIndex": 377,
+      "txHash": "0x9eace3d444092528849778df9e506543afe2eb51be9fd371d1a48be073bfbd70"
+    },
+    {
+      "address": "0xbb7aac3cf72810aeaebb07649d873f9a7e9701e1",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:05:53.000Z",
+      "blockNumber": 51090303,
+      "logIndex": 579,
+      "txHash": "0x3beac902af3b619b91fe304ef03be1a254adda104846b1935d195ff8f0785bc1"
+    },
+    {
+      "address": "0xc05612c9f78a909886320628f3ee59dc7baffdfd",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:37:17.000Z",
+      "blockNumber": 51091245,
+      "logIndex": 264,
+      "txHash": "0x0a62ff838bf8eed37fd2315e33bc55b50ae6e9f4f4b514c06725764063b0b8cf"
+    },
+    {
+      "address": "0xc06198bd95b602889e5a770c80643b5b292526c3",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:19:05.000Z",
+      "blockNumber": 51088899,
+      "logIndex": 50,
+      "txHash": "0x2d6d8402951ddf835efa0629c797c9df0ff363257289d6b1318fe17854489849"
+    },
+    {
+      "address": "0xc0cdb1a32790dbed8536b904296283dcef82bf29",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:27:15.000Z",
+      "blockNumber": 51090944,
+      "logIndex": 449,
+      "txHash": "0xee44c91a29b354ac458cba75e2fee9afe8d7258bd19e6bf8b5fb9ce9f41f5ee9"
+    },
+    {
+      "address": "0xc275eb6d33797bc2e3dccd3c30afb042b1069bb6",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:12:07.000Z",
+      "blockNumber": 51090490,
+      "logIndex": 517,
+      "txHash": "0x2333c3d9b0a7769807a5eaafbdb8039bb207d3091dea147b6b51483589b85985"
+    },
+    {
+      "address": "0xc2d06dae23a6f772d0b49d5b4dccb501fc3862f4",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:01:07.000Z",
+      "blockNumber": 51090160,
+      "logIndex": 752,
+      "txHash": "0xd78c3ffd5ad345275c83ac5f481d141678523cc6bd0b53cea9ff910b0dace1b8"
+    },
+    {
+      "address": "0xc35033e93c38f5434de52d0d5f8f92f8a679cf1f",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:39:13.000Z",
+      "blockNumber": 51089503,
+      "logIndex": 679,
+      "txHash": "0xc14b0c0cf60bf9a7d999b5ccb9ca01b419c389c492a36dcb8058dd4aa58cbd4f"
+    },
+    {
+      "address": "0xc3bdc27427ce1aa2b92c81bc8032918697bbc645",
+      "state": "blacklisted",
+      "since": "2026-10-08T22:58:49.000Z",
+      "blockNumber": 52355491,
+      "logIndex": 622,
+      "txHash": "0x05c2948cf7cb8950c14a13347dea8ba150861eeaf2103b30e0ba10676d6c3993"
+    },
+    {
+      "address": "0xc4232d1bb5276a312b19414e11e2fc1e02a56463",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:44:53.000Z",
+      "blockNumber": 51091473,
+      "logIndex": 286,
+      "txHash": "0x0dd0364d4279e3935581c147f62fcf8bbaa3ef87729abf5c292cfe548a642ca6"
+    },
+    {
+      "address": "0xdb0845207e61e132d3153358966b552284c194b5",
+      "state": "blacklisted",
+      "since": "2026-11-19T14:48:16.000Z",
+      "blockNumber": 59546604,
+      "logIndex": 15,
+      "txHash": "0x707697a0dfaede67958f6fd5a71fd4f49037b0323840deef9bcb90a4bb37c742"
+    },
+    {
       "address": "0xdc8cb80786ed2823e5d6cdf22bd542db5b5b4b96",
+      "state": "blacklisted",
+      "since": "2026-11-06T20:10:42.000Z",
       "blockNumber": 54027332,
       "logIndex": 89,
       "txHash": "0x4f96dba9da90048139c57ad77d9d0c1950b1b7a4469c0b145479559cf7bcf629"
     },
     {
-      "address": "0x17e7b121c25c23e1b967bfda72b7b45cab5b51e5",
-      "blockNumber": 54090977,
-      "logIndex": 0,
-      "txHash": "0x32199c14ae4b605595c4eb0e9cc1be8ab2e976884441a2856516337dd1fe6229"
+      "address": "0xdca63d36e326fdcde1c6403ff3edf5d8ba7699ad",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:01:27.000Z",
+      "blockNumber": 51088370,
+      "logIndex": 2259,
+      "txHash": "0x61b9b206e7d21597b28127f8e8adbe645bb904ff3966e346e085f045a06ed02a"
     },
     {
-      "address": "0xdb0845207e61e132d3153358966b552284c194b5",
-      "blockNumber": 59546604,
-      "logIndex": 15,
-      "txHash": "0x707697a0dfaede67958f6fd5a71fd4f49037b0323840deef9bcb90a4bb37c742"
+      "address": "0xdeedc6c3a269b07a05a0737d248c798ec7455440",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:16:09.000Z",
+      "blockNumber": 51090611,
+      "logIndex": 82,
+      "txHash": "0x2577727409ee6717f60339e1d6bf038ecb28ef2f24a0915808069b11bde3e7f6"
+    },
+    {
+      "address": "0xdf15822aceca390e21d9a44702c7ffc4cb2285e7",
+      "state": "blacklisted",
+      "since": "2026-09-30T14:43:45.000Z",
+      "blockNumber": 51995039,
+      "logIndex": 1793,
+      "txHash": "0x947ae1989de1680d173f762698b36dd9df695d2b7465800283b6167d42cdbc85"
+    },
+    {
+      "address": "0xe007afe5a5abfdf4efbbae239f42819b97e95e5d",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:17:09.000Z",
+      "blockNumber": 51088841,
+      "logIndex": 668,
+      "txHash": "0x9ebbea6471c728c176e275dd7e634933a0f264a98e3c3e230687fb9dc501d115"
+    },
+    {
+      "address": "0xe485e7a70b1131216cb47ca4555c4bbb2c742478",
+      "state": "blacklisted",
+      "since": "2026-11-02T16:19:49.000Z",
+      "blockNumber": 53423521,
+      "logIndex": 494,
+      "txHash": "0x1fcb5880614a7dcfb3f0c9ae82cacc4acf6f4b1a33780d1bfc2cc5830155ed26"
+    },
+    {
+      "address": "0xe4c9a7f68b1eba4508f54f07f7378847318dd1a3",
+      "state": "blacklisted",
+      "since": "2026-10-28T14:53:47.000Z",
+      "blockNumber": 53204940,
+      "logIndex": 62,
+      "txHash": "0xc916a814fa98b99d20f583373980d8498d2673f94c423476cecf610229debe7b"
+    },
+    {
+      "address": "0xe4eacf8d5b0b68e6250d4f5710d24c9de5882a65",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:06:05.000Z",
+      "blockNumber": 51088509,
+      "logIndex": 1538,
+      "txHash": "0xb49f15e22778de824d5dba670e06d7dc9bd7ad5ac5f7c4d11afb7891aac7908f"
+    },
+    {
+      "address": "0xe9d12c5d6954487fba2ce36a0b0ab5c8515dbb98",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:24:25.000Z",
+      "blockNumber": 51089059,
+      "logIndex": 798,
+      "txHash": "0x7ab7a2dbf48f45df883761ee16b7d1b6771bb578eafa090cd7e21c852558e9ad"
+    },
+    {
+      "address": "0xea7afc65367dd5a870e1a0ddf376181b36e9c8ab",
+      "state": "blacklisted",
+      "since": "2026-10-06T17:23:59.000Z",
+      "blockNumber": 52259046,
+      "logIndex": 640,
+      "txHash": "0xf309be61a5826a6cc27209b66a78a6f4fe92949a084d99daabfe2ab53acf9d01"
+    },
+    {
+      "address": "0xeba36fb30acdc3eba9283e6514fff8a99149a63a",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:02:43.000Z",
+      "blockNumber": 51090208,
+      "logIndex": 381,
+      "txHash": "0xecf3599b475f1ae91c5414ebbfba64d5003a6d10c6cd4a822f485044805075a3"
+    },
+    {
+      "address": "0xee7ae85f2fe2239e27d9c1e23fffe168d63b4055",
+      "state": "blacklisted",
+      "since": "2026-10-29T23:55:11.000Z",
+      "blockNumber": 53264382,
+      "logIndex": 54,
+      "txHash": "0xce3222837b32d77b2862d9d58bce84f1fa241cc73d36d34bfc8544f130e5931a"
+    },
+    {
+      "address": "0xeeeef5ced57f622277935bd14b723345f7efee1c",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:41:59.000Z",
+      "blockNumber": 51089586,
+      "logIndex": 1011,
+      "txHash": "0xb9d41cbac06510695710b2ba0474a6b5caffdca0b3b1dc44581e661c4df3b80f"
+    },
+    {
+      "address": "0xef2d50d0b3820e1305fcdabad65dbef5c5848aa4",
+      "state": "blacklisted",
+      "since": "2026-10-28T14:58:49.000Z",
+      "blockNumber": 53205091,
+      "logIndex": 8,
+      "txHash": "0x152fd95006d45cdcaf4ac22ab560808d06dde22201e013931c3c2cf7614c5ccf"
+    },
+    {
+      "address": "0xf064109090e30203afffe233c9acefdbeee78099",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:26:37.000Z",
+      "blockNumber": 51090925,
+      "logIndex": 729,
+      "txHash": "0x209bff9fecebcd53d5d0b5dec451c065af413d79feb1a795346fd7aba4904be3"
+    },
+    {
+      "address": "0xf7c65e485eeb47fecea7c47315c97d61305d3def",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:15:47.000Z",
+      "blockNumber": 51090600,
+      "logIndex": 651,
+      "txHash": "0x5e681b6e6f13c7b6db9801ad48b3bce81a9bbdaf340b89b613f5950951d48094"
+    },
+    {
+      "address": "0xf9d66d6842ae81cfb1b04f651a19798cdf1ee3a3",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:06:37.000Z",
+      "blockNumber": 51088525,
+      "logIndex": 818,
+      "txHash": "0x9931332de776ffa8c8414ad20dd73c57cb3c5fa2d290c3695e0d661af92c88c0"
+    },
+    {
+      "address": "0xfabfd02cd685b83cc86aea83848d69439b54c720",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:45:55.000Z",
+      "blockNumber": 51089704,
+      "logIndex": 1558,
+      "txHash": "0x22b6dcfe6c9a0f02b3f7746732bd3f61c9ba43fb2b0d93ba70d8466644277728"
+    },
+    {
+      "address": "0xfbd36c041070f28fd0498166be6494065bec5f0e",
+      "state": "blacklisted",
+      "since": "2026-09-09T15:13:33.000Z",
+      "blockNumber": 51088733,
+      "logIndex": 635,
+      "txHash": "0x661e683c1b6eb4171d78a9dac08b289d4605edc4382ac792658ab05d937e54e5"
+    },
+    {
+      "address": "0xfd34841893a1dc5c6af5b5e65818d82e219c1275",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:43:39.000Z",
+      "blockNumber": 51091436,
+      "logIndex": 35,
+      "txHash": "0xedfdd2886a8715f6e088a2771ca434d270c00105f5ebb41d3b99203b76a25a43"
+    },
+    {
+      "address": "0xfe24ed2a9f9f02cdb715e85c3450b502912ee622",
+      "state": "blacklisted",
+      "since": "2026-09-09T16:01:57.000Z",
+      "blockNumber": 51090185,
+      "logIndex": 794,
+      "txHash": "0xf3776a6c970731f1fedced821a527813f58acfa7d7778f9d0ede21ce44a32d31"
+    },
+    {
+      "address": "0xffc4041cf54a41d4fef327a8b5d31b860a26492f",
+      "state": "blacklisted",
+      "since": "2026-10-22T01:07:57.000Z",
+      "blockNumber": 52920965,
+      "logIndex": 443,
+      "txHash": "0x93db82983ad877f630616be065a7d8ce0aab680cf97f82b0886195a00940b6ac"
     }
   ],
   "counts": {
     "entries": 84,
+    "blacklistEvents": 84,
+    "unblacklistEvents": 0,
     "addresses": 84,
+    "blacklisted": 84,
+    "unblacklisted": 0,
     "removed": 0,
     "firstEventBlock": 51088253,
     "firstEventAt": "2026-09-09T14:57:33.000Z",
     "lastEventBlock": 59546604,
-    "lastEventAt": "2026-11-19T14:48:16.000Z"
+    "lastEventAt": "2026-11-19T14:48:16.000Z",
+    "lastUnblacklistBlock": null,
+    "lastUnblacklistAt": null
   },
   "coverage": {
     "deploymentBlock": 2797221,

@@ -2,9 +2,11 @@ import { describe, it, expect } from "vitest";
 import { evaluatePayment } from "../src/evaluate.js";
 import {
   CIRCLE_BLACKLISTED_ADDRESSES,
+  CIRCLE_BLACKLIST_STATES,
   CIRCLE_BLACKLIST_CHAIN_ID,
   CIRCLE_BLACKLIST_COVERED_FROM_BLOCK,
 } from "../src/circle-blacklist-addresses.js";
+import { circleBlacklistVerdict } from "../src/circle-blacklist.js";
 import { SANCTIONED_ADDRESSES } from "../src/sanctioned-addresses.js";
 
 /**
@@ -110,5 +112,76 @@ describe("Circle USDC blacklist on Base (#369)", () => {
     expect(line).not.toMatch(/complete|entire history|chain-wide/i);
     // The positive check line names the same range, so "no match" is not read as chain-wide either.
     expect(result.packet!.checked.join(" ")).toMatch(/covered range \(blocks 51,000,000 and later\)/);
+  });
+});
+
+/**
+ * #370: both Circle topics, and the latest event wins.
+ *
+ * The fixture below is a state list, not a chain read: one address frozen, one unfrozen, one unfrozen but OFAC-listed.
+ * It exercises the evaluator's rule with the states the collector would generate, including the case the done-when names
+ * — an address with a later `UnBlacklisted` passes the Circle check and still fails the OFAC check when OFAC lists it.
+ */
+describe("Circle latest-event state (#370)", () => {
+  const FROZEN = "0x00000000000000000000000000000000000000f1";
+  const UNFROZEN = "0x00000000000000000000000000000000000000f2";
+  const DATE = "2026-11-20T00:00:00.000Z";
+  const FIXTURE_STATES = [
+    { address: FROZEN, state: "blacklisted", since: "2026-11-01T00:00:00.000Z", blockNumber: 60_000_001 },
+    { address: UNFROZEN, state: "unblacklisted", since: DATE, blockNumber: 60_000_002 },
+  ] as const;
+
+  it("refuses only a blacklisted state; an unfrozen address passes the Circle check", () => {
+    expect(circleBlacklistVerdict(FIXTURE_STATES, FROZEN)).toMatchObject({ refused: true, state: "blacklisted" });
+    expect(circleBlacklistVerdict(FIXTURE_STATES, FROZEN.toUpperCase().replace("0X", "0x"))).toMatchObject({
+      refused: true,
+      state: "blacklisted",
+    });
+    const verdict = circleBlacklistVerdict(FIXTURE_STATES, UNFROZEN);
+    expect(verdict.refused).toBe(false);
+    expect(verdict.state).toBe("unblacklisted");
+    expect(verdict.entry?.since).toBe(DATE);
+    expect(circleBlacklistVerdict(FIXTURE_STATES, NOT_LISTED).state).toBe("none");
+  });
+
+  it("an unfrozen fixture passes Circle but still fails OFAC when OFAC lists it", () => {
+    // OFAC wins independently of the Circle state: this is the sentence the backlog's done-when asks for.
+    const sanctioned = [...SANCTIONED_ADDRESSES][0]!;
+    const fixture = [{ address: sanctioned, state: "unblacklisted", since: DATE, blockNumber: 60_000_003 }] as const;
+    expect(circleBlacklistVerdict(fixture, sanctioned).refused).toBe(false);
+
+    const result = evaluatePayment(challenge(sanctioned) as never, policy(sanctioned) as never);
+    expect(result.decision).toBe("do_not_pay");
+    expect(result.reasons.join(" ")).toMatch(/sanctioned address \(OFAC SDN\)/);
+    expect(result.reasons.join(" ")).not.toMatch(/Circle blacklisted/);
+    expect(result.steps.find((step) => step.rule === "accept.sanctions")?.outcome).toBe("fail");
+  });
+
+  it("keeps the generated corpus and the enforced set consistent: every blacklisted row is enforced, no unfrozen row is", () => {
+    expect(CIRCLE_BLACKLIST_STATES.length).toBeGreaterThan(50);
+    for (const entry of CIRCLE_BLACKLIST_STATES) {
+      expect(CIRCLE_BLACKLISTED_ADDRESSES.has(entry.address)).toBe(entry.state === "blacklisted");
+      expect(Number.isSafeInteger(entry.blockNumber)).toBe(true);
+    }
+    // The corpus carries a date for every state row; without it the page cannot show the last event.
+    for (const entry of CIRCLE_BLACKLIST_STATES) {
+      if (entry.state === "unblacklisted") expect(entry.since).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    }
+  });
+
+  it("a live unfrozen address is not refused by the Circle rule, and its pass names the unfreeze", () => {
+    const unfrozen = CIRCLE_BLACKLIST_STATES.find(
+      (entry) => entry.state === "unblacklisted" && !SANCTIONED_ADDRESSES.has(entry.address),
+    );
+    // The rule must still be exercised on live data when the covered range contains a usable unfreeze; the fixture
+    // above covers the shape, this covers the shipped corpus.
+    if (unfrozen) {
+      const result = evaluatePayment(challenge(unfrozen.address) as never, policy(unfrozen.address) as never);
+      expect(result.decision).toBe("pay");
+      const step = result.steps.find((s) => s.rule === "accept.payee_blacklisted_onchain");
+      expect(step?.outcome).toBe("pass");
+      expect(step?.detail).toMatch(/UnBlacklisted at block/);
+      if (unfrozen.since) expect(step?.detail).toContain(unfrozen.since.slice(0, 10));
+    }
   });
 });
