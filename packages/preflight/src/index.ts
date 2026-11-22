@@ -9,6 +9,7 @@ export type {
   EvaluateResult,
   ReviewPacket,
   ReviewPacketOptions,
+  ExpectedClaim,
 } from "./evaluate.js";
 export { normalizePaymentRequired } from "./normalize.js";
 // The Solana requirement checks and the optional `@x402/svm` peer. A host that wants the

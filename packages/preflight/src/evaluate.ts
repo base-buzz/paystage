@@ -41,6 +41,25 @@ export interface PaymentRequest {
   resource?: PaymentResource;
 }
 
+/**
+ * What a catalogue or directory claims a payment should be (#365).
+ *
+ * A catalogue entry is a claim with a timestamp, not the endpoint's own words: 2 of 56 live challenges in the #158
+ * measurement named a payee the catalogue did not, and one asked 4.5× the catalogue price. This is the caller's
+ * opportunity to hand the evaluator that claim so the two can be compared at pay time.
+ *
+ * Every field is optional and absent fields are not compared — a directory that only knows the payee must not be read
+ * as making a claim about the price. `amount` is atomic, matching `AcceptOption.amount`, because that is what the
+ * catalogue inventory stores and converting it here would add a second unit ambiguity.
+ */
+export interface ExpectedClaim {
+  payTo?: string;
+  /** ATOMIC, like `AcceptOption.amount`. */
+  amount?: string;
+  network?: string;
+  asset?: string;
+}
+
 export type Decision = "pay" | "review" | "do_not_pay";
 export type AcceptStatus = "pay" | "review" | "do_not_pay";
 
@@ -157,6 +176,16 @@ export interface ReviewPacketOptions {
   paymentIdentifier?: string;
   /** Whether the replay check actually ran. False with an identifier means an earlier rule returned review. */
   paymentIdentifierChecked?: boolean;
+  /**
+   * Whether the catalogue comparison (#365) actually ran. Set only when an `expected` claim was supplied *and* the
+   * accept reached the comparison, so `not_checked` never implies a comparison that an earlier refusal skipped.
+   */
+  expectedCompared?: boolean;
+  /**
+   * Replaces the default `Pay <amount> to <payee>?` question. Used when the review is about a catalogue mismatch:
+   * asking "pay 0.05 USDC?" of a case whose point is "the catalogue said 0.011" hides the actual decision.
+   */
+  question?: string;
 }
 
 function eq(a: string, b: string): boolean {
@@ -179,6 +208,93 @@ function networkMatches(allowed: string, actual: string): boolean {
  */
 function addressEq(network: string, a: string, b: string): boolean {
   return isSolanaNetwork(network) ? a === b : eq(a, b);
+}
+
+type ExpectedField = "payTo" | "amount" | "network" | "asset";
+
+interface ExpectedMismatch {
+  field: ExpectedField;
+  /** The evaluator's own sentence, naming both values; this is what lands in `reasons`. */
+  reason: string;
+}
+
+/**
+ * `actual / expected` as `4.5×`, rounded to one decimal place with integer math.
+ *
+ * One decimal is enough to see the war-tracker case (50 000 / 11 000 = 4.545… → 4.5×) and small enough that the
+ * reason stays a sentence. A zero catalogue price has no multiple; saying so is honest, inventing infinity is not.
+ */
+function multiplePhrase(expected: bigint, actual: bigint): string {
+  if (expected === 0n) return "the catalogue price is zero, so no multiple exists";
+  const tenths = (actual * 20n + expected) / (2n * expected);
+  const whole = tenths / 10n;
+  const fraction = tenths % 10n;
+  const multiple = fraction === 0n ? `${whole}×` : `${whole}.${fraction}×`;
+  return `${multiple} the catalogue price`;
+}
+
+/**
+ * Compare the challenge against the catalogue claim, field by field.
+ *
+ * Only fields the claim actually carries are compared. Payee and asset use `addressEq` so Solana base58 values stay
+ * case-sensitive; network is an exact CAIP-2 id. An unparseable catalogue amount is a mismatch the evaluator cannot
+ * measure rather than a pass, because a catalogue that cannot be read is not a catalogue that agreed.
+ */
+function expectedMismatches(
+  accept: AcceptOption,
+  expected: ExpectedClaim,
+  amount: bigint,
+): ExpectedMismatch[] {
+  const mismatches: ExpectedMismatch[] = [];
+
+  if (expected.payTo !== undefined && !addressEq(accept.network, expected.payTo, accept.payTo)) {
+    mismatches.push({
+      field: "payTo",
+      reason: `catalogue payee ${expected.payTo} differs from challenge payee ${accept.payTo}`,
+    });
+  }
+
+  if (expected.amount !== undefined) {
+    let expectedAmount: bigint | undefined;
+    try {
+      expectedAmount = BigInt(expected.amount);
+    } catch {
+      expectedAmount = undefined;
+    }
+    if (expectedAmount === undefined) {
+      mismatches.push({
+        field: "amount",
+        reason: `catalogue amount ${expected.amount} is not an atomic integer, so it cannot be compared with challenge amount ${accept.amount} atomic`,
+      });
+    } else if (expectedAmount !== amount) {
+      mismatches.push({
+        field: "amount",
+        reason: `catalogue amount ${expected.amount} atomic differs from challenge amount ${accept.amount} atomic — the challenge asks ${multiplePhrase(expectedAmount, amount)}`,
+      });
+    }
+  }
+
+  if (expected.network !== undefined && !eq(expected.network, accept.network)) {
+    mismatches.push({
+      field: "network",
+      reason: `catalogue network ${expected.network} differs from challenge network ${accept.network}`,
+    });
+  }
+
+  if (expected.asset !== undefined && !addressEq(accept.network, expected.asset, accept.asset)) {
+    mismatches.push({
+      field: "asset",
+      reason: `catalogue asset ${expected.asset} differs from challenge asset ${accept.asset}`,
+    });
+  }
+
+  return mismatches;
+}
+
+/** One question for a person: the disagreement itself, not the challenge's amount. */
+function expectedQuestion(accept: AcceptOption, expected: ExpectedClaim, amount: bigint): string {
+  const mismatches = expectedMismatches(accept, expected, amount);
+  return `Catalogue mismatch: ${mismatches.map((m) => m.reason).join("; ")}. Pay the challenge on its terms anyway?`;
 }
 
 function findAsset(
@@ -204,6 +320,7 @@ function evaluateAccept(
   record: RecordStep,
   acceptIndex: number,
   svmPeer: SvmValidationPeer | null,
+  expected: ExpectedClaim | undefined,
 ): AcceptResult {
   const reasons: string[] = [];
   const pass = (rule: string, detail: string): void => {
@@ -382,6 +499,38 @@ function evaluateAccept(
   pass("accept.payee_allowlist", `payTo ${accept.payTo} is in allowed_pay_to`);
 
   /**
+   * Rule 7c2: the challenge agrees with what the catalogue claimed (#365).
+   *
+   * Run after the hard-denies and the allowlist — a drainer, a malformed address or an amount over `max_amount` is a
+   * stronger refusal than a catalogue disagreement and must not be downgraded to `review`. A mismatch is `review`,
+   * not `do_not_pay`: a provider may legitimately rotate its payee or change its price, and the honest case this
+   * comparison exists to surface is exactly the one a person should be allowed to confirm.
+   *
+   * When no `expected` claim is supplied the rule does not run at all — not even a `skip` step — so a pre-#365
+   * verdict is byte-identical.
+   */
+  if (expected !== undefined) {
+    const mismatches = expectedMismatches(accept, expected, amount);
+    if (mismatches.length > 0) {
+      for (const mismatch of mismatches) {
+        reasons.push(mismatch.reason);
+        record({
+          rule: `accept.expected.${mismatch.field}`,
+          scope: "accept",
+          accept_index: acceptIndex,
+          outcome: "review",
+          detail: mismatch.reason,
+        });
+      }
+      return { accept, status: "review", reasons };
+    }
+    pass(
+      "accept.expected",
+      "challenge payee, amount, network and asset agree with every field the catalogue claim supplied",
+    );
+  }
+
+  /**
    * Rule 7c: the payee matches the host's verified record, when we have one (#133 → #164).
    *
    * A challenge names both `resource` and `payTo`, and nothing ties them together: an endpoint can put any host in `resource` and
@@ -553,6 +702,7 @@ export function buildReviewPacket(
   const verifiedPayeeReview = reason.includes("differs from the verified address");
   const requireHumanReview = reason.includes("require_human_above");
   const replayReview = reason.includes("payment_identifier");
+  const expectedReview = reason.startsWith("catalogue ");
   const reachedVerifiedPayee = options.allRulesRan === true || verifiedPayeeReview || requireHumanReview || replayReview;
   const reachedRequireHuman = options.allRulesRan === true || requireHumanReview || replayReview;
 
@@ -622,6 +772,12 @@ export function buildReviewPacket(
     }
   }
 
+  if (options.expectedCompared) {
+    notChecked.push(
+      "catalogue trustworthiness: a matching catalogue is not an honest payee — it says the address is the one the catalogue meant, nothing about whether that address is trustworthy",
+    );
+  }
+
   if (policy.require_human_above && reachedRequireHuman) {
     const threshold = humanToAtomic(policy.require_human_above.value, policy.require_human_above.decimals);
     checked.push(
@@ -629,7 +785,7 @@ export function buildReviewPacket(
     );
   } else if (policy.require_human_above) {
     notChecked.push(
-      "require_human_above: skipped — an earlier payee rule returned review before the amount threshold was reached",
+      `require_human_above: skipped — ${expectedReview ? "the catalogue comparison" : "an earlier payee rule"} returned review before the amount threshold was reached`,
     );
   } else {
     notChecked.push("require_human_above: not configured — no amount above which a human is required");
@@ -702,7 +858,8 @@ export function buildReviewPacket(
     checked,
     not_checked: notChecked,
     decision: {
-      question: `Pay ${human} ${symbol} to ${accept.payTo} on ${accept.network}?`,
+      question:
+        options.question ?? `Pay ${human} ${symbol} to ${accept.payTo} on ${accept.network}?`,
       options: ["pay", "do_not_pay"],
     },
   };
@@ -732,6 +889,14 @@ export interface EvaluateOptions {
    * explicitly models an absent peer. An injected peer must expose the same two helpers.
    */
   svmPeer?: SvmValidationPeer | null;
+  /**
+   * What a catalogue or directory claims about this payment (#365).
+   *
+   * When absent, no comparison runs and the verdict is exactly the pre-#365 verdict. When present, every field the
+   * claim supplies is compared against each accept, and a disagreement makes that accept `review` with a reason
+   * naming both values — a catalogue payee that differs from the challenge payee is the failure this exists for.
+   */
+  expected?: ExpectedClaim;
 }
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -881,7 +1046,7 @@ export function evaluatePayment(
   const svmPeer =
     options.svmPeer === undefined ? currentSvmPeer() : options.svmPeer;
   const acceptResults = pr.accepts.map((a, index) =>
-    evaluateAccept(a, effective, pr.resource, record, index, svmPeer),
+    evaluateAccept(a, effective, pr.resource, record, index, svmPeer, options.expected),
   );
 
   const payAccepts = acceptResults
@@ -1032,6 +1197,22 @@ export function evaluatePayment(
   // Rule 13: the case for a human, on `review` only. A `pay` is for the agent and a
   // `do_not_pay` already carries the reasons it was refused; neither needs a packet,
   // and attaching one would make the three verdicts look interchangeable.
+  //
+  // The catalogue rule runs after the payee allowlist, so a selected accept that passed that
+  // allowlist is the only one where the comparison actually ran. Computing that here keeps the
+  // packet's `not_checked` honest when an earlier rule returned review.
+  const expectedReachedSelected =
+    options.expected !== undefined &&
+    selectedAccept !== undefined &&
+    effective.allowed_pay_to.some((p) => addressEq(selectedAccept.network, p, selectedAccept.payTo));
+  const catalogueQuestion =
+    decision === "review" &&
+    selectedAccept !== undefined &&
+    options.expected !== undefined &&
+    expectedReachedSelected &&
+    expectedMismatches(selectedAccept, options.expected, amountOf(selectedAccept)).length > 0
+      ? expectedQuestion(selectedAccept, options.expected, amountOf(selectedAccept))
+      : undefined;
   const packet =
     decision === "review" && selectedAccept
       ? buildReviewPacket(
@@ -1043,6 +1224,8 @@ export function evaluatePayment(
             ...(agent !== undefined ? { agentId: agent } : {}),
             ...(identifier !== undefined ? { paymentIdentifier: identifier } : {}),
             paymentIdentifierChecked: replayChecked,
+            ...(expectedReachedSelected ? { expectedCompared: true } : {}),
+            ...(catalogueQuestion !== undefined ? { question: catalogueQuestion } : {}),
           },
         )
       : undefined;

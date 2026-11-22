@@ -8,6 +8,7 @@ export type {
   EvaluateResult,
   ReviewPacket,
   ReviewPacketOptions,
+  ExpectedClaim,
 } from "./evaluate.js";
 
 /** @deprecated alias */
