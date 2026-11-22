@@ -54,6 +54,8 @@ export interface MarketDemandRow {
 export interface MarketSupplyRow {
   run_date?: string | null;
   payees?: number | string | null;
+  /** Sorted payee strings written by the collector; absent/[] on rows that predate the column. */
+  payee_set?: unknown;
   [key: string]: unknown;
 }
 

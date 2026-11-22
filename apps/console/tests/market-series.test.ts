@@ -7,6 +7,7 @@ import {
   NO_COMPARABLE_DAY,
   SERIES_WINDOW_DAYS,
   buildMarketSeries,
+  buildPayeeDelta,
   buildSeries,
   concentrationNotice,
   concentrationOf,
@@ -14,6 +15,9 @@ import {
   formatMetricDelta,
   formatMetricValue,
   normalizeRunDate,
+  payeeDeltaAddresses,
+  payeeDeltaSummary,
+  payeeSetOf,
   seriesSegments,
   topPayees,
   topTenAccepts,
@@ -43,6 +47,7 @@ function supply(
       { payee: "0xpayee-a", accepts: 30, resources: 30, hosts: 2 },
       { payee: "0xpayee-b", accepts: 20, resources: 20, hosts: 1 },
     ],
+    payee_set: Array.from({ length: 40 }, (_, i) => `0xpayee-${i.toString().padStart(2, "0")}`),
     ...overrides,
   };
 }
@@ -362,6 +367,103 @@ describe("input normalisation", () => {
     expect(series.ready).toBe(false);
     expect(series.metrics.coverage.delta.value).toBeNull();
     expect(series.metrics.coverage.delta.reason).toBe("no measured day yet");
+  });
+});
+
+
+describe("payee turnover: new and gone against the previous consecutive day", () => {
+  it("counts new and gone payees between two consecutive days", () => {
+    const rows = [
+      supply("2026-11-20", { payees: 3, payee_set: ["0xa", "0xb", "0xc"] }),
+      supply("2026-11-21", { payees: 4, payee_set: ["0xb", "0xc", "0xd", "0xe"] }),
+    ];
+    const delta = buildPayeeDelta(rows);
+    expect(delta.comparable).toBe(true);
+    expect(delta.from).toBe("2026-11-20");
+    expect(delta.to).toBe("2026-11-21");
+    expect(delta.newPayees).toEqual(["0xd", "0xe"]);
+    expect(delta.gonePayees).toEqual(["0xa"]);
+    expect(payeeDeltaSummary(delta)).toBe("2 new payees, 1 gone since 2026-11-20");
+  });
+
+  it("refuses a payee delta across a gap instead of borrowing the older day", () => {
+    const delta = buildPayeeDelta([
+      supply("2026-11-19", { payees: 1, payee_set: ["0xa"] }),
+      supply("2026-11-21", { payees: 1, payee_set: ["0xb"] }),
+    ]);
+    expect(delta.comparable).toBe(false);
+    expect(delta.from).toBe("2026-11-20");
+    expect(delta.to).toBe("2026-11-21");
+    expect(delta.newPayees).toEqual([]);
+    expect(delta.gonePayees).toEqual([]);
+    expect(delta.reason).toContain("2026-11-20");
+    expect(payeeDeltaSummary(delta)).toBe(NO_COMPARABLE_DAY);
+  });
+
+  it("treats a payee present on both days as neither new nor gone", () => {
+    const delta = buildPayeeDelta([
+      supply("2026-11-20", { payees: 2, payee_set: ["0xsame", "0xold"] }),
+      supply("2026-11-21", { payees: 2, payee_set: ["0xsame", "0xnew"] }),
+    ]);
+    expect(delta.comparable).toBe(true);
+    expect(delta.newPayees).toEqual(["0xnew"]);
+    expect(delta.gonePayees).toEqual(["0xold"]);
+    expect(delta.newPayees).not.toContain("0xsame");
+    expect(delta.gonePayees).not.toContain("0xsame");
+
+    const identical = buildPayeeDelta([
+      supply("2026-11-20", { payees: 1, payee_set: ["0xsame"] }),
+      supply("2026-11-21", { payees: 1, payee_set: ["0xsame"] }),
+    ]);
+    expect(identical.newPayees).toEqual([]);
+    expect(identical.gonePayees).toEqual([]);
+    expect(payeeDeltaSummary(identical)).toBe("0 new payees, 0 gone since 2026-11-20");
+  });
+
+  it("does not read a pre-column empty set on a populated row as every payee gone", () => {
+    const delta = buildPayeeDelta([
+      supply("2026-11-20", { payees: 1, payee_set: ["0xa"] }),
+      supply("2026-11-21", { payees: 1324, payee_set: [] }),
+    ]);
+    expect(delta.comparable).toBe(false);
+    expect(delta.gonePayees).toEqual([]);
+    expect(delta.reason).toContain("no readable payee set");
+    expect(payeeDeltaSummary(delta)).toBe(NO_COMPARABLE_DAY);
+  });
+
+  it("keeps an oversized set out of the markup without crashing the panel", () => {
+    const many = Array.from({ length: 5000 }, (_, i) => `0x${i.toString(16).padStart(40, "0")}`);
+    const rows = [
+      supply("2026-11-20", { payees: 0, payee_set: [] }),
+      supply("2026-11-21", { payees: many.length, payee_set: many }),
+    ];
+    const delta = buildPayeeDelta(rows);
+    expect(delta.newPayees).toHaveLength(5000);
+    const { shown, more } = payeeDeltaAddresses(delta.newPayees);
+    expect(shown).toHaveLength(5);
+    expect(more).toBe(4995);
+
+    const markup = renderToStaticMarkup(createElement(MarketSupplyPanel, { rows, reason: null }));
+    expect(markup).toContain("5,000 new payees, 0 gone since 2026-11-20");
+    expect(markup).toContain("+4,995 more");
+    expect(markup).not.toContain(many[many.length - 1]!);
+  });
+
+  it("renders the sentence and the first addresses on the supply panel", () => {
+    const rows = [
+      supply("2026-11-21", { payees: 3, payee_set: ["0xkeep", "0xnew1", "0xnew2"] }),
+      supply("2026-11-20", { payees: 2, payee_set: ["0xkeep", "0xgone1"] }),
+    ];
+    const markup = renderToStaticMarkup(createElement(MarketSupplyPanel, { rows, reason: null }));
+    expect(markup).toContain("2 new payees, 1 gone since 2026-11-20");
+    expect(markup).toContain("0xnew1");
+    expect(markup).toContain("0xgone1");
+  });
+
+  it("normalises an unordered, de-duplicated payee_set", () => {
+    expect(payeeSetOf({ payee_set: ["0xb", "0xa", "0xa", " 0xc ", 7] })).toEqual(["0xa", "0xb", "0xc"]);
+    expect(payeeSetOf({ payee_set: null })).toBeNull();
+    expect(payeeSetOf({})).toBeNull();
   });
 });
 

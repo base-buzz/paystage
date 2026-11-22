@@ -1,5 +1,13 @@
 import type { CSSProperties } from "react";
-import { buildSeries, concentrationOf, concentrationNotice, topPayees } from "@/lib/market-series";
+import {
+  buildPayeeDelta,
+  buildSeries,
+  concentrationOf,
+  concentrationNotice,
+  payeeDeltaAddresses,
+  payeeDeltaSummary,
+  topPayees,
+} from "@/lib/market-series";
 import type { MarketSupplyRow } from "@/lib/market-demand";
 
 /**
@@ -21,6 +29,31 @@ const LABEL_STYLE: CSSProperties = {
 
 function shortAddress(address: string): string {
   return address.length > 18 ? `${address.slice(0, 8)}…${address.slice(-6)}` : address;
+}
+
+function PayeeAddressLine({ label, addresses }: { label: string; addresses: string[] }) {
+  if (addresses.length === 0) {
+    return (
+      <p style={{ margin: "2px 0 0", fontSize: 12.5, opacity: 0.75 }}>
+        {label}: none.
+      </p>
+    );
+  }
+  const { shown, more } = payeeDeltaAddresses(addresses);
+  return (
+    <p style={{ margin: "2px 0 0", fontSize: 12.5, lineHeight: 1.7, opacity: 0.85 }}>
+      {label}:{" "}
+      {shown.map((address, index) => (
+        <span key={address}>
+          {index > 0 ? ", " : ""}
+          <code style={{ fontFamily: "ui-monospace, monospace", fontSize: 11.5 }} title={address}>
+            {address}
+          </code>
+        </span>
+      ))}
+      {more > 0 ? ` +${more.toLocaleString("en-US")} more` : ""}
+    </p>
+  );
 }
 
 export function MarketSupplyPanel({ rows, reason }: { rows: MarketSupplyRow[]; reason: string | null }) {
@@ -47,6 +80,7 @@ export function MarketSupplyPanel({ rows, reason }: { rows: MarketSupplyRow[]; r
   }
 
   const top = topPayees(row);
+  const payeeDelta = buildPayeeDelta(rows, row);
   const accepts = Number(row.accepts);
   const runDate = String(row.run_date);
 
@@ -98,6 +132,29 @@ export function MarketSupplyPanel({ rows, reason }: { rows: MarketSupplyRow[]; r
           </tbody>
         </table>
       )}
+
+      <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid rgba(128,128,128,0.25)" }}>
+        <div style={LABEL_STYLE}>Payee turnover · since the previous consecutive day</div>
+        {payeeDelta.comparable ? (
+          <>
+            <p style={{ margin: "4px 0 0", fontSize: 14.5, lineHeight: 1.55 }}>
+              <strong>{payeeDeltaSummary(payeeDelta)}</strong>
+            </p>
+            <PayeeAddressLine label="New" addresses={payeeDelta.newPayees} />
+            <PayeeAddressLine label="Gone" addresses={payeeDelta.gonePayees} />
+            <p style={{ margin: "6px 0 0", fontSize: 11.5, opacity: 0.55, lineHeight: 1.5 }}>
+              Matched on the exact payee strings the catalogue returned. A walk that lost a page, or an address the
+              catalogue re-cased, would show up here as new or gone; the set is only as complete as that day&apos;s
+              catalogue read.
+            </p>
+          </>
+        ) : (
+          <p style={{ margin: "4px 0 0", fontSize: 13, lineHeight: 1.6 }}>
+            <strong>no comparable day</strong> — {payeeDelta.reason}. New and gone payees are not counted across a
+            missing day.
+          </p>
+        )}
+      </div>
 
       <p style={{ marginTop: 8, fontSize: 11.5, opacity: 0.55, lineHeight: 1.5 }}>
         Read {runDate}; {Number.isFinite(accepts) ? accepts.toLocaleString("en-US") : "?"} accepts in the catalogue

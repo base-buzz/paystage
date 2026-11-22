@@ -364,6 +364,157 @@ export function topTenAccepts(row: MarketSupplyRow | null | undefined): number |
   return top.reduce((sum, payee) => sum + payee.accepts, 0);
 }
 
+/** How many addresses of each side the panel prints before it says "+N more". */
+export const PAYEE_ADDRESSES_SHOWN = 5;
+
+/** A set difference over two consecutive catalogue days, or an explicit refusal. */
+export interface PayeeDelta {
+  /** True only when both days have a stored, readable payee set and are consecutive calendar days. */
+  comparable: boolean;
+  /** Date compared against; null when there is no measured day. */
+  from: string | null;
+  /** Date the delta describes. */
+  to: string | null;
+  /** Payees in `to` that are not in `from`, sorted. Empty when not comparable. */
+  newPayees: string[];
+  /** Payees in `from` that are not in `to`, sorted. Empty when not comparable. */
+  gonePayees: string[];
+  /** Why there is no set difference, phrased for a reader. Null when comparable. */
+  reason: string | null;
+}
+
+/**
+ * The payee strings a supply row stored.
+ *
+ * `payee_set` is written by the collector as a sorted array. The order is not trusted here and non-string entries are
+ * dropped, so one malformed element cannot make the whole set unreadable — but the result is sorted and de-duplicated
+ * so equality never depends on the writer. Returns null when the field is absent or not an array.
+ */
+export function payeeSetOf(row: MarketSupplyRow | null | undefined): string[] | null {
+  const raw = row?.payee_set;
+  if (!Array.isArray(raw)) return null;
+  const seen = new Set<string>();
+  for (const entry of raw) {
+    if (typeof entry !== "string") continue;
+    const payee = entry.trim();
+    if (payee !== "") seen.add(payee);
+  }
+  return [...seen].sort();
+}
+
+/**
+ * A stored set that can be read as a measurement.
+ *
+ * The migration added `payee_set` with `default '[]'`, so a row written before the column existed has an empty array
+ * while its `payees` count is positive. That is missing data, not an empty market: it must produce no delta rather than
+ * "every payee left". An empty set is only readable when the row also counted zero payees.
+ */
+function readablePayeeSet(row: MarketSupplyRow | null | undefined): string[] | null {
+  const set = payeeSetOf(row);
+  if (set === null) return null;
+  const counted = numeric(row?.payees);
+  // An empty array beside a positive count is the pre-migration default, not a market that emptied.
+  if (set.length === 0 && (counted === null || counted > 0)) return null;
+  // If the row says how many payees it counted, the stored set must agree. A shorter set would silently make the
+  // missing members look "gone" (or skip them as "new"), so it is unreadable rather than partially comparable.
+  if (counted !== null && counted !== set.length) return null;
+  return set;
+}
+
+function emptyPayeeDelta(reason: string): PayeeDelta {
+  return { comparable: false, from: null, to: null, newPayees: [], gonePayees: [], reason };
+}
+
+/**
+ * New and gone payees against the previous **consecutive** calendar day.
+ *
+ * This is the one delta that cannot be derived from `top_payees`: a set difference needs the whole set, so the
+ * collector stores it. The rule is the same as every other metric in this module — the previous day must have a row,
+ * and the pair must be consecutive. A gap returns `comparable: false` with a reason; it never subtracts 19 November
+ * from 21 November and calls the difference "today". Exact strings only: an address that changed case counts as both
+ * new and gone, which is why the panel says the match is on the catalogue's strings.
+ */
+export function buildPayeeDelta(rows: MarketSupplyRow[], latestRow?: MarketSupplyRow | null): PayeeDelta {
+  const byDate = rowsByDate(rows);
+  const dates = [...byDate.keys()].sort();
+  if (dates.length === 0 && latestRow == null) return emptyPayeeDelta("no measured day yet");
+
+  const to = normalizeRunDate(latestRow?.run_date) ?? dates[dates.length - 1] ?? null;
+  if (to === null) return emptyPayeeDelta("no measured day yet");
+  const latest = latestRow ?? byDate.get(to) ?? null;
+  const current = readablePayeeSet(latest);
+  if (current === null) {
+    return {
+      comparable: false,
+      from: addDays(to, -1),
+      to,
+      newPayees: [],
+      gonePayees: [],
+      reason: `${to} has no readable payee set (the row predates the stored set, or its payee_set is malformed)`,
+    };
+  }
+
+  const from = addDays(to, -1);
+  const previousRow = byDate.get(from) ?? null;
+  if (previousRow === null) {
+    return {
+      comparable: false,
+      from,
+      to,
+      newPayees: [],
+      gonePayees: [],
+      reason: `no row for ${from}, the previous calendar day`,
+    };
+  }
+  const previous = readablePayeeSet(previousRow);
+  if (previous === null) {
+    return {
+      comparable: false,
+      from,
+      to,
+      newPayees: [],
+      gonePayees: [],
+      reason: `${from} has no readable payee set (the row predates the stored set, or its payee_set is malformed)`,
+    };
+  }
+
+  const currentSet = new Set(current);
+  const previousSet = new Set(previous);
+  return {
+    comparable: true,
+    from,
+    to,
+    newPayees: current.filter((payee) => !previousSet.has(payee)),
+    gonePayees: previous.filter((payee) => !currentSet.has(payee)),
+    reason: null,
+  };
+}
+
+/**
+ * The sentence the panel prints: "N new payees, M gone since <date>".
+ *
+ * Counts are the size of the set difference, not a stored count — a stored count cannot name the addresses a reader
+ * might want to check. Not comparable renders the same cell text as every other delta.
+ */
+export function payeeDeltaSummary(delta: PayeeDelta): string {
+  if (!delta.comparable) return NO_COMPARABLE_DAY;
+  const added = delta.newPayees.length;
+  const removed = delta.gonePayees.length;
+  return `${added.toLocaleString("en-US")} new payee${added === 1 ? "" : "s"}, ${removed.toLocaleString(
+    "en-US",
+  )} gone since ${delta.from}`;
+}
+
+/** The first few addresses of one side, plus how many the panel is not printing. */
+export function payeeDeltaAddresses(
+  addresses: string[],
+  limit: number = PAYEE_ADDRESSES_SHOWN,
+): { shown: string[]; more: number } {
+  const cap = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : PAYEE_ADDRESSES_SHOWN;
+  const shown = addresses.slice(0, cap);
+  return { shown, more: Math.max(0, addresses.length - shown.length) };
+}
+
 /**
  * Coverage for one demand row against the catalogue row for the **same date**.
  *
