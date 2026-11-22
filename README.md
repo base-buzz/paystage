@@ -209,8 +209,8 @@ without asking us, so the jobs that keep this useful — re-reading a spec, re-c
 rejecting payments — are the jobs agents are best at. The loop runs on a cycle measured in hours; it does not claim to outrun an
 exploit, and a 24-hour loop would not be that claim.
 
-**Who pays, so far.** Part of the development inference comes from **Google for Startups credits** — an award of usage, not funding, and
-with no endorsement implied. The provenance and the boundaries of that statement are in [`docs/funding.md`](docs/funding.md)
+**Who pays, so far.** The project runs on a mix of **credits and free model access** — Google for Startups credits, Cloudflare credits, and
+NVIDIA's free tier, which is what the long-running loops execute on. All three are usage, not funding, and none implies an endorsement. The provenance and the boundaries of that statement are in [`docs/funding.md`](docs/funding.md)
 in the ops repository; the amount and expiry are not disclosed because they have not been stated anywhere this project can cite.
 
 **Sustainability, stated as a condition rather than a promise.** The work runs on inference budget and operator time. If paid calls
