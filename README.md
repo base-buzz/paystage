@@ -246,6 +246,13 @@ built for several rails from the outset. **PayStage is not a member of that stru
 neutrality the structure creates. Sources: [Linux Foundation press release, 14 July 2026](https://www.linuxfoundation.org/press/linux-foundation-announces-operational-launch-of-x402-foundation-to-standardize-internet-native-payments-for-ai-agents-and-applications) ·
 [`TSC.md`](https://github.com/x402-foundation/x402/blob/main/TSC.md) — both read 2026-11-22.
 
+The specification already draws the shape without filling it: the client can refuse before anything is signed — `onBeforePaymentCreation`, whose hook may
+return `{ abort: true, reason }` ([`x402Client.ts`](https://github.com/x402-foundation/x402/blob/main/typescript/packages/core/src/client/x402Client.ts)) — and the
+record has three defined homes, the [offer-and-receipt extension](https://github.com/x402-foundation/x402/blob/main/specs/extensions/extension-offer-and-receipt.md),
+[`payment_identifier`](https://github.com/x402-foundation/x402/blob/main/specs/extensions/payment_identifier.md) and the
+[bazaar discovery extension](https://github.com/x402-foundation/x402/blob/main/specs/extensions/bazaar.md). Where a decision can be refused, and where the evidence
+lives, are both specified. **Who occupies that seat is not** — and that is a commercial question, not a standards one.
+
 We are **not claiming the protocol requires us**. The protocol makes room for an independent adjudicator, and the value of that room grows as more
 value moves through rails no single company controls.
 
