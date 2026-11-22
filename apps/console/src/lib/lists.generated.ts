@@ -108,10 +108,16 @@ export const LISTS = {
     "name": "OFAC SDN — Digital Currency Address, ETH",
     "publisher": "US Department of the Treasury, Office of Foreign Assets Control",
     "source": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML",
-    "retrieved": "2026-11-16T08:03:59.717Z",
+    "retrieved": "2026-11-22T09:48:26.837Z",
+    "lastChangeAt": null,
+    "lastChangeFields": [],
+    "firstFetchedAt": "2026-11-22T09:44:47.311Z",
+    "detectorFetchedAt": "2026-11-22T09:45:43.782Z",
+    "lastModified": "Fri, 20 Nov 2026 20:32:28 GMT",
+    "changedSinceCopy": false,
     "addresses": 123,
     "maxAgeDays": 45,
-    "refresh": "A sync job rewrites the generated file from SDN.XML; the weekly release check fails when it is older than 45 days."
+    "refresh": "The hourly canary hashes SDN.XML's Last-Modified and body and refreshes this file when either moves; the 45-day check is a floor and reads the list's last change, not only its age."
   },
   "drainers": {
     "name": "Known drainers (curated)",

@@ -18,17 +18,26 @@ import { LISTS } from "@/lib/lists.generated";
 export const metadata: Metadata = {
   title: "Deny lists",
   description:
-    "The sanctions and drainer lists PayStage checks before a payment is allowed: sources, retrieval dates, counts, refresh cadence and the limits of exact-address matching.",
+    "The sanctions and drainer lists PayStage checks before a payment is allowed: sources, retrieval and last-change dates, counts, refresh cadence and the limits of exact-address matching.",
 };
 
 const ageDays = (iso: string): number => Math.floor((Date.now() - Date.parse(iso)) / 86_400_000);
+const changedLabel = (fields: readonly string[]): string =>
+  fields.length === 2 ? "last-modified and body" : fields.join(" and ");
 
 export default function ListsPage() {
   const ofac = LISTS.ofac;
+  // `lists.generated.ts` is emitted `as const`; today's snapshot has no recorded change, so `null` would otherwise be
+  // narrowed to `never` and the "a change may arrive later" branch would not type-check.
+  const ofacLastChangeAt = ofac.lastChangeAt as string | null;
+  const ofacLastChangeFields = ofac.lastChangeFields as readonly string[];
+  const ofacFirstFetchedAt = ofac.firstFetchedAt as string | null;
   const drainers = LISTS.drainers;
   const sinks = LISTS.nonReceivable;
   const ofacAge = ageDays(ofac.retrieved);
-  const ofacStale = ofacAge > ofac.maxAgeDays;
+  // An old retrieval is only stale if the upstream body moved. The detector proves "unchanged" with a body hash; when
+  // that proof is absent (no snapshot), fall back to the age window rather than assuming the list is current.
+  const ofacStale = ofacAge > ofac.maxAgeDays && ofac.changedSinceCopy !== false;
   const total = ofac.addresses + drainers.addresses + sinks.addresses;
 
   return (
@@ -36,7 +45,7 @@ export default function ListsPage() {
       <h1>Deny lists</h1>
       <p className="lp-lead">
         Every payment this product evaluates is checked against {total} addresses across three lists before it can be allowed.
-        Each list, who publishes it, when this copy was retrieved, and what the check does and does not mean is below. The
+        Each list, who publishes it, when this copy was retrieved, when its upstream feed last changed, and what the check does and does not mean is below. The
         figures are generated from the code that runs, so they cannot drift from what is shipped.
       </p>
 
@@ -72,8 +81,35 @@ export default function ListsPage() {
                     {" "}
                     — older than the {ofac.maxAgeDays}-day window. Treat this build&apos;s sanctions coverage as stale.
                   </strong>
+                ) : ofacAge > ofac.maxAgeDays ? (
+                  <span>
+                    {" "}
+                    — older than the {ofac.maxAgeDays}-day window, but the upstream list has not changed since this copy,
+                    so the data is current.
+                  </span>
                 ) : (
                   <span> — inside the {ofac.maxAgeDays}-day window</span>
+                )}
+              </td>
+            </tr>
+            <tr>
+              <th>Last change</th>
+              <td>
+                {ofacLastChangeAt ? (
+                  <>
+                    {ofacLastChangeAt.slice(0, 10)}
+                    {ofacLastChangeFields.length ? ` — ${changedLabel(ofacLastChangeFields)}` : ""}
+                    {ofac.changedSinceCopy ? (
+                      <strong style={{ color: "var(--lp-red, #b91c1c)" }}>
+                        {" "}
+                        — newer than this build&apos;s copy; the next release carries it.
+                      </strong>
+                    ) : null}
+                  </>
+                ) : ofacFirstFetchedAt ? (
+                  <>No change observed since the change detector&apos;s first fetch on {ofacFirstFetchedAt.slice(0, 10)}.</>
+                ) : (
+                  <>Not recorded — the change detector has not run against this build.</>
                 )}
               </td>
             </tr>
@@ -117,6 +153,12 @@ export default function ListsPage() {
             ))}
           </tbody>
         </table>
+        <p>
+          <strong>These are review dates, not an upstream last-change.</strong> The drainer list is curated from the sources
+          below; it has no publisher feed to watch, so there is no last-modified date to hash and no honest way to state
+          one. A change is noticed when a source is re-read, not on a schedule. That gap is a missing discovery mechanism,
+          not a claim that nothing changed.
+        </p>
         <p>
           <strong>Effect:</strong> hard deny with the reason <code>known drainer</code>. Separate from the sanctions check
           because the fact is different — a sanctioned address may make paying <em>you</em> the problem, a drainer takes the
@@ -173,9 +215,16 @@ export default function ListsPage() {
             time.
           </li>
           <li>
-            <strong>Dated.</strong> Each list carries the date its copy was retrieved. The sanctions list has a{" "}
-            {ofac.maxAgeDays}-day staleness window, and the release check fails when it is exceeded — a build that cannot prove
-            its list is recent does not ship.
+            <strong>Dated twice.</strong> Each list carries the date its copy was retrieved, and the sanctions list also
+            carries the date its upstream file last changed. Those are different facts: the first says when we fetched, the
+            second says when the publisher edited. The {ofac.maxAgeDays}-day window is a floor — a copy over that age is only
+            marked stale when the upstream body has moved.
+          </li>
+          <li>
+            <strong>Change-detected on an hourly run.</strong> The hourly canary hashes SDN.XML&apos;s{" "}
+            <code>Last-Modified</code> and body, and refreshes the list when either moves. A newly added address is therefore
+            noticed on the next hourly run rather than up to {ofac.maxAgeDays} days later. The dates above come from that
+            detector&apos;s snapshot, not from a typed number.
           </li>
           <li>
             <strong>Reviewed into the repository.</strong> Source URL, retrieval date and the publisher&apos;s own naming are

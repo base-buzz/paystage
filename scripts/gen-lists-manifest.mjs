@@ -23,6 +23,24 @@ const ofacCount = (sanctioned.match(/^\s{2}"0x[0-9a-f]{40}",$/gm) ?? []).length;
 const ofacFetched = /fetched_at:\s*([0-9T:.-]+Z)/.exec(sanctioned)?.[1] ?? null;
 const ofacSource = /Source:\s*(.+)/.exec(sanctioned)?.[1]?.trim() ?? null;
 const ofacUrl = /(https:\/\/sanctionslistservice[^\s]+)/.exec(sanctioned)?.[1] ?? null;
+const ofacSourceSha256 = /source_sha256:\s*([0-9a-f]{64})/.exec(sanctioned)?.[1] ?? null;
+
+/**
+ * The last *change*, from the ops change detector's snapshot (`apps/console/src/lib/list-freshness.json`).
+ *
+ * The page used to know only when the copy was retrieved, which cannot distinguish "nobody refreshed it" from "the
+ * publisher has not changed it". The snapshot is written by `bin/list-change-detect.mjs` in the ops tree and copied
+ * here on a detected change; when it is absent the page says "not recorded" rather than guessing a date.
+ */
+let listFreshness = null;
+try {
+  listFreshness = JSON.parse(readFileSync(join(ROOT, "apps/console/src/lib/list-freshness.json"), "utf8"));
+} catch {
+  listFreshness = null;
+}
+const ofacFreshness = listFreshness?.lists?.["ofac-sdn"] ?? null;
+const changedSinceCopy =
+  ofacFreshness?.sha256 && ofacSourceSha256 ? ofacFreshness.sha256 !== ofacSourceSha256 : null;
 
 /** `SOURCES` is a literal array of {name, url, retrieved} — parse it rather than duplicating the list by hand. */
 const sourceBlocks = [...drainers.matchAll(/\{\s*name:\s*"([^"]+)",\s*\n\s*url:\s*"([^"]+)",\s*\n\s*retrieved:\s*"([^"]+)",/g)].map(
@@ -62,9 +80,16 @@ const manifest = {
     publisher: "US Department of the Treasury, Office of Foreign Assets Control",
     source: ofacUrl,
     retrieved: ofacFetched,
+    lastChangeAt: ofacFreshness?.lastChangeAt ?? null,
+    lastChangeFields: ofacFreshness?.lastChangeFields ?? [],
+    firstFetchedAt: ofacFreshness?.firstFetchedAt ?? null,
+    detectorFetchedAt: ofacFreshness?.fetchedAt ?? null,
+    lastModified: ofacFreshness?.lastModified ?? null,
+    changedSinceCopy,
     addresses: ofacCount,
     maxAgeDays: 45,
-    refresh: "A sync job rewrites the generated file from SDN.XML; the weekly release check fails when it is older than 45 days.",
+    refresh:
+      "The hourly canary hashes SDN.XML's Last-Modified and body and refreshes this file when either moves; the 45-day check is a floor and reads the list's last change, not only its age.",
   },
   drainers: {
     name: "Known drainers (curated)",
