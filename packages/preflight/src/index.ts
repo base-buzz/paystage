@@ -41,6 +41,7 @@ export type {
   AcceptEvaluation,
 } from "./types.js";
 export { isKnownDrainer, isNonReceivable, KNOWN_DRAINERS, NON_RECEIVABLE, SOURCES } from "./known-drainers.js";
+export { SANCTIONED_ADDRESSES } from "./sanctioned-addresses.js";
 export {
   buildEvidenceBundle,
   canonicalize as canonicalizeEvidence,
