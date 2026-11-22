@@ -1,13 +1,13 @@
 {
- "generatedAt": "2026-11-21T18:00:03.351Z",
+ "generatedAt": "2026-11-22T18:00:04.311Z",
  "source": "docs/backlog.md",
  "counts": {
-  "total": 240,
-  "open": 47,
-  "done": 193
+  "total": 254,
+  "open": 35,
+  "done": 219
  },
  "droppedForSafety": 0,
- "redactedFields": 6,
+ "redactedFields": 8,
  "duplicateNumbers": 0,
  "items": [
   {
@@ -713,9 +713,9 @@
   {
    "n": 73,
    "title": "Ops: the loop survives a container restart",
-   "done": false,
+   "done": true,
    "size": null,
-   "summary": "**premise corrected 2026-11-19, and the gap is smaller than recorded.** Schedules do not \"live in the container\" in the fragile sense: they live in the DSH store (~/.dsh/storages/schedule.json, 21 tasks) and are replayed on boot, and the soak has its own fifte…",
+   "summary": "recovered by the watchdog without a session doing anything, and schedules replayed from the DSH store across them — so \"a container restart is recovered\" is now observed, not inferred.…",
    "doneWhen": "after a host reboot with no session open, node bin/pipeline-status.mjs is green within fifteen minutes; the evidence line goes in host-queue row 4, not here",
    "gate": null,
    "ref": null
@@ -1035,9 +1035,9 @@
    "title": "Base Builder Codes — support added, code needed",
    "done": false,
    "size": "S",
-   "summary": "**revised 2026-11-14** (#177): the original reasoning (\"we never sign, so we cannot attribute\") is right for *observed* volume and wrong for volume we *cause*.…",
+   "summary": "",
    "doneWhen": null,
-   "gate": null,
+   "gate": "operator` — the one missing thing is a string only Dave can issue. revised 2026-11-14 (#177): the original",
    "ref": null
   },
   {
@@ -1473,12 +1473,12 @@
   {
    "n": 158,
    "title": "Measure how much of the x402 supply side is self-checkable at all",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "the wedge depends on agents needing a third party. If sellers published payee history and price stability, an agent could check unaided.…",
+   "summary": "**56 of 100 sampled hosts are self-checkable unaided** — and **56 of 56 among hosts that answered with a challenge at all**. Unreachable is its own category (0 in this sample), never folded into \"not self-checkable\".…",
    "doneWhen": "the share is measured and stated, with the method in the file",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-22 (ops 83af750, report `docs/state/self-checkable-2026-11-22"
   },
   {
    "n": 159,
@@ -1545,7 +1545,7 @@
    "title": "The enforceable form is the client hook, not the MCP tool",
    "done": false,
    "size": "M",
-   "summary": "**external** — the done-when is an outcome only third parties can produce (\"two clients ship the guard as their default pre-sign step, or the record says none will\"), and neither half is decidable today.…",
+   "summary": "**blocked on the operator** until an upstream answers —",
    "doneWhen": "at least two third-party clients or frameworks ship the guard as their default pre-sign step, or the record says plainly that none will",
    "gate": null,
    "ref": null
@@ -1703,12 +1703,12 @@
   {
    "n": 181,
    "title": "Zero-dependency evaluator",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "proposed 2026-11-17 from the supply-chain argument in 179. Measured before agreeing, because the honest scope is narrower than \"make every package zero-dependency\".…",
+   "summary": "(583 non-comment lines) replace it, and zod stays a **devDependency** as the differential oracle — a frozen pre-swap schema. **the safety net, not the swap, is the deliverable**: **10,680 documents** (16 seeds, 107 targeted boundary docs, 10,557 deterministic…",
    "doneWhen": "npm ls --all for @paystage/preflight resolves **zero** dependencies, @paystage/policy too, the full test suites pass unchanged, and the README states the split (evaluator zero / server inherits zod) with the command to check it",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-22 (repo ab7c1d4, docs 95b8d6f): zod is gone from policy and preflight runtime; hand-written guards"
   },
   {
    "n": 182,
@@ -1933,12 +1933,12 @@
   {
    "n": 309,
    "title": "A zero-spend local quickstart",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "**built 2026-11-20 (repo 39e543d), blocked on a release train.** packages/preflight/src/demo.ts evaluates four bundled challenges against a policy defined in the file and prints verdict + the evaluator's own reason code;…",
+   "summary": "evaluates four bundled challenges against a policy defined in the file and prints verdict + the evaluator's own reason code; 0.055 s, no fs/network/env, 28 lines, works under env -i.…",
    "doneWhen": "npx -y @paystage/preflight demo evaluates one bundled challenge and prints pay/review/do_not_pay with the rule that fired, offline, in under 30 seconds",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-22 (verified): npx -y @paystage/preflight demo prints an offline demo and exits 0; npm latest is 0"
   },
   {
    "n": 310,
@@ -1965,7 +1965,7 @@
    "title": "What an agent does after it decides",
    "done": false,
    "size": "M",
-   "summary": "**built 2026-11-21 (3c902e4), waiting for the next two weekly runs.** The probe's v3 prompt asks for would_search_for (0–3 literal queries), would_install (package|plugin|script|none) and why_not, with the decision block untouched;…",
+   "summary": "**not before 2026-11-23** — built 2026-11-21 (3c902e4); the only missing evidence is two real v3 runs, and the probe fires daily, so 2026-11-22 and 2026-11-23 produce them.…",
    "doneWhen": "the prompt records would_search_for, would_install (package|plugin|script|none) and why_not, and two weekly runs are comparable",
    "gate": null,
    "ref": null
@@ -2037,25 +2037,25 @@
    "size": "S",
    "summary": "root cause was **not** time, locale or randomness. SiweStub read process.env.NEXT_PUBLIC_SIWE_ENABLED in a client module: Next inlines NEXT_PUBLIC_ only when it is set at build time, while @opennextjs/cloudflare copies the Worker's request-time variables onto…",
    "doneWhen": "node /work/ops/bin/page-audit.mjs reports zero console errors on /console **and** the named exception is removed from KNOWN_CONSOLE_ERRORS",
-   "gate": null,
+   "gate": "master — a version bump, tag and publish is the push identity's, not a worker's",
    "ref": null
   },
   {
    "n": 320,
    "title": "Market demand, measured daily",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "/lab shows what sellers ask and nothing about what they receive. Build a daily on-chain measurement into market_demand: transfers and value to the top 25 Base payees by listing count, distinct payers, repeat payers, payment-size p50/p90, and the coverage ratio…",
+   "summary": "chain-wide baseline from the same window, coverage (distinct_payees_paid ÷ market_supply.payees for the same date), distinct and repeat payers, p50/p90, window and date.…",
    "doneWhen": "the daily run writes a row, /lab renders the coverage number with the method beside it, and a failed RPC leaves yesterday's row rather than writing a zero",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-21 (repo 5e6dcac): /lab renders the newest market_demand row — payee transfers, value, the"
   },
   {
    "n": 321,
    "title": "Market supply as a daily series, with the top ten visible",
    "done": false,
    "size": "M",
-   "summary": "supply has one snapshot and no trend. market_supply per day: resources, accepts, payees, hosts, median/p90 price, bare-label share, **top-10 payees** (accepts, resources, hosts), network mix, and deltas against the previous day (new/gone resources and payees).…",
+   "summary": "**built 2026-11-22** (repo 673b9eb + 2cca432, 78c3336); **not before 2026-11-27** for the seven-row half. Shipped: the gap-aware series and top-10 table (#322), and the missing metric…",
    "doneWhen": "seven consecutive daily rows exist, /lab shows the top-10 table and three deltas, and a missing day is rendered as a gap rather than interpolated",
    "gate": null,
    "ref": null
@@ -2065,9 +2065,9 @@
    "title": "The market series needs seven days before it draws a line",
    "done": false,
    "size": null,
-   "summary": "the two new tables hold one row each. A trend line through one point, or a delta against nothing, is the hollow metric this project exists to argue against, so the page shows today's value and says nothing about movement until there are seven consecutive days.…",
+   "summary": "**not before 2026-11-27** — the series is built and pushed 2026-11-22 (5c46e7d); the remaining half is six more collector runs, which the daily collector produces on its own.…",
    "doneWhen": "seven rows exist and the page draws four deltas plus coverage; a day with no row shows a break, not a zero",
-   "gate": null,
+   "gate": "waiting (not before the seventh daily row) · M · numbers: 17,451 resources · 1,226 payees · 19,619 chain transfers vs 1 payee paid in a 2,000-block window",
    "ref": null
   },
   {
@@ -2103,9 +2103,9 @@
   {
    "n": 326,
    "title": "Channel attribution: which listing actually sent anyone",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "there is no utm_, no ?from=, no referrer capture anywhere in apps/console or apps/hosted; the client_package/client_version columns answer which SDK version called, not which directory sent them.…",
+   "summary": "20261121170000_events_channel.sql adds events.channel text. Until it is applied, /lab correctly reports a **failed read rather than zero** for the channel panel, and telemetry keeps recording because channel sits on the existing drop allowlist.…",
    "doneWhen": "seven listing URLs carry a channel, the column exists, and /lab renders the per-channel counts",
    "gate": null,
    "ref": null
@@ -2172,18 +2172,18 @@
   },
   {
    "n": 333,
-   "title": "## Three packages were published broken, and the check that found them was written today (2026-11-18)",
-   "done": false,
+   "title": "Three packages were published broken, and the check that found them was written today",
+   "done": true,
    "size": null,
-   "summary": "@paystage/preflight@0.5.1, @paystage/x-evm@0.1.2 and @paystage/ai-sdk@0.1.3 all had version documents on npm and no working artifact: 0.5.1's tarball 404s, and the other two were published without the dist/ their own main points at, so every import failed with…",
+   "summary": "serve real tarballs (preflight 0.5.3, x-evm 0.1.4, ai-sdk 0.1.5) and assert-artifact passes for the latter two. **re-verification found the next thing**, which is why it was worth running rather than trusting the row: preflight@0.5.3 is now **FAIL…",
    "doneWhen": null,
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-18, re-verified 2026-11-21: all three now"
   },
   {
    "n": 334,
-   "title": "## npm search: keywords bought rank on one query and nothing on the sentence ones (2026-11-19)",
-   "done": false,
+   "title": "**## npm search: keywords bought rank on one query and nothing on the sentence ones (2026-11-19)",
+   "done": true,
    "size": null,
    "summary": "Measured, not assumed. Six buyer queries, two channels: | channel | before keywords | after mcp 0.8.15 / x402-guard 0.4.10 | |---|---|---| | npm | 3-4 of 6, ranks 1-3 | 3 of 6, but **\"x402 guard\" moved 3 → 1** | | mcp-registry | 0 of 6 | 0 of 6 (search is name…",
    "doneWhen": null,
@@ -2223,12 +2223,12 @@
   {
    "n": 338,
    "title": "The discovery probe silently shrank its own sample",
-   "done": false,
+   "done": true,
    "size": "S",
-   "summary": "npm answered 429 to the six queries sent back to back, the probe treated a failed query as a missing one, and the headline went from 4/12 to 3/10. Those are not the same measurement, and the ratio chart on /lab cannot tell the difference…",
+   "summary": "treated a failed query as a missing one, and the headline went from 4/12 to 3/10. Those are not the same measurement, and the ratio chart on /lab cannot tell the difference — a rate limit looked like a regression in discoverability.…",
    "doneWhen": "the row carries planned / measured / excluded, and /lab shows coverage beside the ratio",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-22 (verified): the probe writes planned/measured/excluded into every run (today: 12/12/0 in `docs/state/discovery/2026-11-21"
   },
   {
    "n": 339,
@@ -2252,23 +2252,23 @@
   },
   {
    "n": 341,
-   "title": "@paystage/receipt-verify — checking a receipt should not require installing the server",
-   "done": false,
+   "title": "@paystage/receipt-verify — checking a receipt without trusting us",
+   "done": true,
    "size": "S",
-   "summary": "**landed 2026-11-20** (repo 92125df, packages/receipt-verify, private: true); **publishing is still blocked on the npm Trusted Publisher**.…",
+   "summary": "packages/receipt-verify, private: true); **publishing is still blocked on the npm Trusted Publisher**. Earlier triage parked it as a patch because the manifest check requires every packages/ entry in the public PACKAGE_VERSIONS;…",
    "doneWhen": "the package is published, and its test verifies a receipt produced by the live hosted endpoint with only the receipt and a fetch — no server import",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-22 (verified): npm view @paystage/receipt-verify version = 0"
   },
   {
    "n": 342,
    "title": "@paystage/payment-policy — make the policy draft adoptable before it merges",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "the spec draft (x402-foundation #4279) has no implementation; a package with emitPolicy/parsePolicy/evaluateVerdict on the existing schema is what lets someone who is not us try it, and what makes \"our gate is a reference implementation\" a checkable sentence r…",
+   "summary": "private: true package with emitPolicy / parsePolicy / evaluateVerdict, depending on @paystage/policy rather than forking a second vocabulary. 37 tests.…",
    "doneWhen": "the package round-trips a policy through emit→parse with zero loss, evaluateVerdict returns the four documented verdicts on fixtures, and the spec draft's example policy is a test input verbatim",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-22 (repo a36e5a7, ops 51809d7): @paystage/payment-policy exists as a"
   },
   {
    "n": 343,
@@ -2283,12 +2283,12 @@
   {
    "n": 344,
    "title": "@paystage/solana — we cannot evaluate 28% of the catalogue",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "6,742 of the accepts in the 2026-11-19 inventory are Solana, and the gate answers unsupported for all of them. Scope is narrow: validate the four assertions @x402/svm makes, as an optional peer, not a new chain module.…",
+   "summary": "do_not_pay naming the failed rule. The four checks are the **client-side assertions in @x402/svm@2.32.0's ExactSvmScheme.createPaymentPayload**…",
    "doneWhen": "a Solana-shaped payment is evaluated in a test with the four assertions covered, the package declares @x402/svm as an optional peer, and the verdict for a non-Solana payment is unchanged",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-21 (repo 4443a0f): a Solana-shaped payment_required is evaluated and a violation is a"
   },
   {
    "n": 345,
@@ -2303,12 +2303,12 @@
   {
    "n": 346,
    "title": "The registry namespace is split, and the OIDC half is one release behind",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "xyz.paystage/* is written only by the manual registry-dns.yml (needs MCP_REGISTRY_KEY), while release.yml publishes io.github.base-buzz/* via github-oidc. Measured 2026-11-20: repo/npm mcp 0.8.16, preflight 0.5.3; io.github.base-buzz 0.8.15 / 0.5.2;…",
+   "summary": "everywhere — server cards, mcpName fields, agent manifest, llms.txt, the lander and the integrations record — and xyz.paystage is frozen published state.…",
    "doneWhen": "one namespace is canonical — either release.yml also publishes xyz.paystage on a stable tag, or the DNS namespace is retired and every document names io.github.base-buzz — and the checker reports the same version for both while they exist",
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-21 (repo 8b0b460), taking the retire branch: `io"
   },
   {
    "n": 347,
@@ -2403,12 +2403,152 @@
   {
    "n": 356,
    "title": "Collect the payee observations the classifier reads",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "#310 shipped the categoriser and an honest empty page (/wallets/<address> on the hosted app, /wallets?address= in the console), but **no collector exists**, so the table is empty, every page says \"no observations recorded for this address\", and the migration i…",
+   "summary": "classifier's field names and the shipped lists from this repo, so there is no second vocabulary to drift. **real address, real reads**: ▮ (the top Base payee, 1,012 listings) produced **7 observations from 5 named sourc…",
    "doneWhen": "a real address has ≥3 observations from ≥2 sources with dates, the page renders them with provenance, and one deliberately conflicting pair is kept as a disagreement rather than resolved",
    "gate": null,
+   "ref": "done 2026-11-22 (repo efed51a): `bin/payee-collect"
+  },
+  {
+   "n": 357,
+   "title": "Our starter tells users to install a package seven months stale",
+   "done": true,
+   "size": null,
+   "summary": "starter/README.md:43 and starter/agentkit/agent.ts:8 both read npm i @paystage/x402-guard x402-fetch. measured: x402-fetch last published **2026-04-16 (219 days)**, version 1.2.0, not deprecated…",
+   "doneWhen": "grep -rn \"x402-fetch\" starter/ returns nothing, and a reader following the starter installs only packages that are current (or the README says why a pin is deliberate)",
+   "gate": null,
+   "ref": "done 2026-11-22 (repo 538c6d3): `starter/README"
+  },
+  {
+   "n": 358,
+   "title": "preflight 0.5.3 diverges from HEAD — bump, tag, publish",
+   "done": true,
+   "size": "S",
+   "summary": "assert-artifact @paystage/preflight 0.5.4 → *\"is what the repo says\"*. Tags v2026.11.21-preflight-0.5.4 (failed) and -r2 (published).…",
+   "doneWhen": "packages/preflight/package.json reads 0.5.4, assert-artifact @paystage/preflight 0.5.4 passes after the tag publishes, and PKGS/PACKAGE_VERSIONS agree",
+   "gate": "master — a bump, tag and publish is the push identity's, not a worker's",
+   "ref": "done 2026-11-21: npm view @paystage/preflight version → 0"
+  },
+  {
+   "n": 359,
+   "title": "The note published into a scratch draft titled \"x\", and the ledger recorded yesterday's URL",
+   "done": true,
+   "size": "M",
+   "summary": "stole focus after one keystroke — x stayed in the title, 402 notes — 2026-11-22## The numbers leaked into the body, and the recorder printed the previous note's URL from an /archive fallback.…",
+   "doneWhen": "a clean run publishes a post whose slug contains the NZ date, the ledger records the URL the API returned, and a run that would adopt a mismatched draft exits non-zero instead of publishing",
+   "gate": null,
+   "ref": "done 2026-11-22 (ops 19188e3, ledger 5a69bc8): the root cause was a composer that"
+  },
+  {
+   "n": 360,
+   "title": "The telemetry retry was written for the failure that still happened",
+   "done": true,
+   "size": "S",
+   "summary": "message, so exec()[1] was undefined, the 400 fell through, and **no retry, no row** — the deployed build contained the retry all along (703e449 is an ancestor of the freezing deploy af65cb9, checked with merge-base --is-ancestor), so \"predates\" was false.…",
+   "doneWhen": "a test forces a PGRST204 for a droppable column against a table without it and asserts **a row still lands** and that only that column is dropped (telemetry-retry.test.ts, done)",
+   "gate": null,
+   "ref": "done 2026-11-21 (repo 815d504): the detector matched PostgREST's bare code before its"
+  },
+  {
+   "n": 361,
+   "title": "P0 — the off-peak policy was built on a window DeepSeek no longer uses",
+   "done": true,
+   "size": null,
+   "summary": "the provider's published rule and the checker now judges **cron patterns over a full week** rather than only the next fire; partly fixed: the operator supplied DeepSeek's current rule and the pricing page confirms it…",
+   "doneWhen": "the checker honours each record's own zone (with a test that a UTC-configured daily inside the band passes), the Coordinator's four are cron inside the window or their owner has recorded why not, and check-schedule-windows covers **every**…",
+   "gate": null,
+   "ref": "done 2026-11-22 (ops 4a73f90, 5132298 + this commit): the policy, the clock and the checker implement"
+  },
+  {
+   "n": 362,
+   "title": "Lists: detect change, not age",
+   "done": false,
+   "size": "M",
+   "summary": "**A1 shipped 2026-11-22** (repo 2667e64, ops 1bf81b5), **A2 shipped** (6b0cabe, d1a70f0), **A3 shipped** (760c285), **A4 waits on the operator** (the payee_observations migration). Proposed 2026-11-22 by the research session, four small parts.…",
+   "doneWhen": "the lists page states each list's last-change date, and a change in SDN.XML is detected within one hourly run",
+   "gate": "operator`: the heuristic needs the `payee_observations` table, whose migration is written but",
    "ref": null
+  },
+  {
+   "n": 363,
+   "title": "/lists as a page with coverage, not just counts",
+   "done": true,
+   "size": "M",
+   "summary": "because a precise count without a denominator reads as completeness. Four duplicates are removed across lists (Circle∩OFAC 3, Circle∩drainers 1, lowercased first);…",
+   "doneWhen": "the page renders coverage and freshness **from generated data, not typed numbers**",
+   "gate": null,
+   "ref": "done 2026-11-22 (repo 1fd6166): 17"
+  },
+  {
+   "n": 364,
+   "title": "A background page on x402, leading with the acquirer analogy",
+   "done": true,
+   "size": "M",
+   "summary": "the most work — the two jobs (card authorisation vs settlement, the facilitator as acquirer), the code that waited (**RFC 2068 and RFC 9110 both reserve 402**, verified against the RFC text itself, and the page explicitly refuses the unverifiable \"first seriou…",
+   "doneWhen": "the page exists, every claim links a source, and the **analogy section comes before the history** because it does more work",
+   "gate": null,
+   "ref": "done 2026-11-22 (repo 8684a8a): /why, unlisted and noindex, with six sections in the order that does"
+  },
+  {
+   "n": 365,
+   "title": "A catalogue is not a payee: verify the address at pay time, and record mismatches",
+   "done": true,
+   "size": "S",
+   "summary": "(payTo, amount in atomic units, network, asset) carries what a catalogue claims; when any supplied field disagrees with the live challenge the verdict is **review with a reason naming both values**…",
+   "doneWhen": "a fixture with a catalogue payee different from the challenge payee returns review naming both, and a live run records at least one drift row per day when any exists",
+   "gate": null,
+   "ref": "done 2026-11-22 (repo dd19e9b): an optional expected input"
+  },
+  {
+   "n": 366,
+   "title": "The wallet matrix, as a dated comparison with a source per cell",
+   "done": true,
+   "size": "M",
+   "summary": "**18 yes · 6 no · 0 n/a · 16 unassessed of 40**. The sixteen blanks are the deliverable: vendor documentation does not answer \"does it name the rule that fired\", and filling those by inference is the claim class this project spent the week deleting.…",
+   "doneWhen": "the page renders from a data file where every cell has { mark, source, read_date } or unassessed, and check-comparison-freshness (see #367) passes",
+   "gate": null,
+   "ref": "done 2026-11-22 (repo dde02e2): /compare, ten capability rows × four columns,"
+  },
+  {
+   "n": 367,
+   "title": "A comparison page cannot rot: every row carries last_verified, and staleness fails the build",
+   "done": true,
+   "size": "S",
+   "summary": "docs/state/comparisons/*.json and fails when any cell is unsourced, undated, dated in the future, or read more than **90 days** ago. Wired into pipeline-status as comparison-freshness, which reports \"no comparison data yet…",
+   "doneWhen": "a row back-dated past 90 days turns the page warning on and fails the check, proved with a fixture",
+   "gate": null,
+   "ref": "done 2026-11-22 (ops): `bin/check-comparison-freshness"
+  },
+  {
+   "n": 368,
+   "title": "The four-article series, as writing that waits for the queue",
+   "done": false,
+   "size": "M",
+   "summary": "**needs a fresh session** — four long pieces are more prose than one tick should hold, and each needs its own sourced pass. Planned 2026-11-22 with the peer session; writing, not engineering. (1) *A payment has two jobs*…",
+   "doneWhen": "four posts exist, each with sources inline, and article 2's governance claims match the README footnote line for line",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 369,
+   "title": "Enforce the Circle blacklist, so the page stops saying \"collected, not yet enforced\"",
+   "done": true,
+   "size": "S",
+   "summary": "Circle-blacklisted payee on Base with **its own reason code**, accept.payee_blacklisted_onchain — *\"a contract-level freeze by the issuer, not an OFAC listing\"* — because a refusal that misstates its legal basis is worse than a narrower list.…",
+   "doneWhen": "a fixture address from circle-blacklist.json is refused with the Circle reason, the page says enforced and names the coverage limit, and the generated list is refreshed by the same hourly path as OFAC",
+   "gate": null,
+   "ref": "done 2026-11-22 (repo b8c003e, ops 417d95c): the verdict refuses a"
+  },
+  {
+   "n": 370,
+   "title": "Read UnBlacklisted, so a Circle unfreeze stops being refused forever",
+   "done": true,
+   "size": "S",
+   "summary": "eth_getLogs per chunk (topic ▮, keccak256(\"UnBlacklisted(address)\") — capital B, Unblacklisted hashes differently and would have matched nothing), and **the latest event per address decides the state**. blacklisted refuses;…",
+   "doneWhen": "a fixture address with a later UnBlacklisted passes the Circle check and still fails an OFAC check, and the merge is order-stable across replays",
+   "gate": null,
+   "ref": "done 2026-11-22 (repo 71ffe81, ops 6360064): both topics are fetched in one"
   }
  ]
 }
