@@ -5,7 +5,7 @@
  * should be signed. The gate is registered on the client hook, so it runs on every payment rather than when the model
  * remembers to ask.
  *
- *   npm i @paystage/x402-guard x402-fetch
+ *   npm i @paystage/x402-guard
  *
  * The wallet address below is the only edit: everything else is the policy.
  */

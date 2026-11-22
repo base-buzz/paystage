@@ -40,7 +40,7 @@ AgentKit owns the wallet; PayStage owns the decision. [`agentkit/agent.ts`](agen
 the client hook so it runs on **every** payment, not only when the model remembers:
 
 ```bash
-npm i @paystage/x402-guard x402-fetch
+npm i @paystage/x402-guard
 ```
 
 Edit `allowed_pay_to`, and the same policy is enforced before anything is signed.
