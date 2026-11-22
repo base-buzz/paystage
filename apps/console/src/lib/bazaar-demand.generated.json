@@ -1,0 +1,11 @@
+{
+  "measuredAt": "2026-11-22T20:49:12.421Z",
+  "sampledFrom": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources (first 5 page(s) of 100, in the API's own order)",
+  "pagesRead": 5,
+  "resources": 500,
+  "withCounters": 500,
+  "totalCalls30d": 1114606,
+  "uniquePayers30d": 33404,
+  "medianCalls30d": 41,
+  "note": "calls, not settled payments, and not revenue — the field is l30DaysTotalCalls and the docs do not define whether refused or retried calls count"
+}

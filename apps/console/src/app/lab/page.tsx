@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import "../landing.css";
+import { DemandSourcesPanel } from "@/components/DemandSourcesPanel";
 import { MarketDemandPanel } from "@/components/MarketDemandPanel";
 import { MarketMovementPanel } from "@/components/MarketMovementPanel";
+import { BAZAAR_DEMAND } from "@/lib/bazaar-demand";
 import { MarketSupplyPanel } from "@/components/MarketSupplyPanel";
 import { ChannelAttributionPanel } from "@/components/ChannelAttributionPanel";
 import { groupByChannel } from "@/lib/channel-counts";
@@ -484,6 +486,11 @@ export default async function LabPage() {
         <h2 style={{ fontSize: 15, margin: 0, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.65 }}>
           What sellers receive, measured daily
         </h2>
+        {/*
+          #375: the walked figure and Bazaar's counter sit side by side, each with its definition. They are not a ratio
+          and not a trend — one is a block-window transfer count, the other a sampled 30-day call count.
+        */}
+        <DemandSourcesPanel view={demandView} bazaar={BAZAAR_DEMAND} />
         <MarketMovementPanel series={marketSeries} reason={marketSeriesReason} />
         <MarketDemandPanel view={demandView} />
       </section>

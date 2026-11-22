@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-22T22:41:36.999Z",
+  "generatedAt": "2026-11-22T23:26:47.298Z",
   "chainId": 8453,
   "contract": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
   "topic": "0xffa4e6181777692565cf28528fc88fd1516ea86b56da075235fa575af6a4b855",
@@ -13,7 +13,7 @@
     "unblacklisted": "UnBlacklisted(address)"
   },
   "fromBlock": 51000000,
-  "toBlock": 60984604,
+  "toBlock": 60998156,
   "entries": [
     {
       "address": "0x0ede564e315f8e1803161a22e8404c624c35b1fb",

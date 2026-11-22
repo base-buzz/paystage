@@ -215,6 +215,9 @@ try {
     "check-client-manifests.mjs",
     "check-agent-surfaces.mjs --live",
     "gen-lists-manifest.mjs --check",
+    // The Bazaar snapshot's source lives on the ops volume, so this one runs only where that volume is mounted and
+    // exits 2 (not silently green) when it is not — GitHub's checkout has no /work/ops, so it stays out of ci.yml.
+    "gen-bazaar-demand.mjs --check",
     "check-drainer-citations.mjs",
     "gen-integrations.mjs --check",
     "check-integrations-grading.mjs",
