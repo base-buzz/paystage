@@ -696,7 +696,7 @@ export default async function LabPage() {
                       </table>
                     ) : null}
                     <p style={{ marginTop: 8, fontSize: 12.5, opacity: 0.6 }}>
-                      Zero flagged is not a clean bill of health: our lists are 23 curated addresses against {String(summary.payees ?? "?")}{" "}
+                      Zero flagged is not a clean bill of health: our lists are 24 curated addresses against {String(summary.payees ?? "?")}{" "}
                       payees. The coverage fact that matters is how much of this market a policy cannot express at all — Solana and bare
                       network labels are counted here, not averaged away.
                     </p>

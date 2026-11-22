@@ -74,7 +74,7 @@ export default function StateOfX402() {
         ))}
       </div>
       <p>
-        <strong>Zero flagged is not a clean bill of health.</strong> It means no payee in this catalogue matches one of 23 curated, cited
+        <strong>Zero flagged is not a clean bill of health.</strong> It means no payee in this catalogue matches one of 24 curated, cited
         addresses — a 2% hit rate would be the surprising number. The finding worth carrying is the coverage one:{" "}
         <strong>6,742 accepts are on Solana</strong> and 1,704 use a bare <code>base</code> label instead of a CAIP-2 identifier, so a
         large share of this market sits outside what an EVM-and-CAIP-2 policy can express at all.

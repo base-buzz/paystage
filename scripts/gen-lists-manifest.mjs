@@ -63,8 +63,132 @@ const sourceBlocks = [...drainers.matchAll(/\{\s*name:\s*"([^"]+)",\s*\n\s*url:\
   ([, name, url, retrieved]) => ({ name, url, retrieved }),
 );
 
-const drainerCount = (drainers.match(/^\s{2}"0x[0-9a-f]{40}",$/gm) ?? []).length;
 const nonReceivable = [...drainers.matchAll(/^\s{2}"(0x[0-9a-f]{40})",\s*$/gm)].map(([, a]) => a).slice(-2);
+
+/** The address sets, for the coverage dedupe. Read from the same files the evaluator ships, never retyped. */
+const ofacAddresses = [...sanctioned.matchAll(/"(0x[0-9a-f]{40})"/g)].map(([, address]) => address.toLowerCase());
+const drainerBlock = drainers.slice(drainers.indexOf("export const KNOWN_DRAINERS"), drainers.indexOf("export const NON_RECEIVABLE"));
+const drainerAddresses = [...drainerBlock.matchAll(/"(0x[0-9a-f]{40})"/g)].map(([, address]) => address.toLowerCase());
+// Count the parsed set, not the prettiest line shape: three entries carry an inline `// share` comment and the old
+// line-based regex silently read the list as 23 rather than 24.
+const drainerCount = drainerAddresses.length;
+const sinkAddresses = nonReceivable.map((address) => address.toLowerCase());
+const circleAddresses = (circleSnapshot?.entries ?? []).map((entry) => String(entry.address).toLowerCase());
+
+/**
+ * Per-source counts for the drainer list.
+ *
+ * The file cites a source in the comment above each entry, and that citation is the only place the attribution exists —
+ * there is no `source` field on an address. Parsing the nearest preceding citation is the honest derivation; an entry
+ * with no recognisable citation is counted as unattributed rather than assigned to a publisher by guesswork.
+ */
+const sourceByUrl = new Map(sourceBlocks.map((source) => [source.url, source.name]));
+const drainerSourceCounts = sourceBlocks.map((source) => ({ ...source, count: 0 }));
+const drainerCountByName = new Map(drainerSourceCounts.map((source) => [source.name, source]));
+let currentSource = "Unattributed (curated)";
+for (const line of drainerBlock.split("\n")) {
+  const text = line.trim();
+  if (text.startsWith("//")) {
+    const cited = /https?:\/\/\S+/.exec(text)?.[0]?.replace(/[.,;)]$/, "") ?? null;
+    if (cited && sourceByUrl.has(cited)) currentSource = sourceByUrl.get(cited);
+    else if (/MEW darklist/i.test(text)) currentSource = sourceBlocks[0]?.name ?? currentSource;
+    continue;
+  }
+  if (/^"0x[0-9a-f]{40}",?(?:\s*\/\/.*)?$/.test(text)) {
+    const row = drainerCountByName.get(currentSource);
+    if (row) row.count += 1;
+    else drainerSourceCounts.push({ name: currentSource, url: null, retrieved: null, count: 1 });
+  }
+}
+const drainerContributingSources = drainerSourceCounts.filter((source) => source.count > 0);
+
+/** The newest supply-catalogue reading, copied into the repo by `scripts/gen-catalogue-snapshot.mjs`. */
+let catalogue = null;
+try {
+  catalogue = JSON.parse(readFileSync(join(ROOT, "apps/console/src/lib/catalogue.json"), "utf8"));
+} catch {
+  catalogue = null;
+}
+const cataloguePayees =
+  catalogue && Number.isInteger(Number(catalogue.payees)) && Number(catalogue.payees) > 0 ? Number(catalogue.payees) : null;
+
+/** Lowercased union, preserving the first list that contributed an address. */
+function unionOf(lists) {
+  const seen = new Map();
+  for (const [id, addresses] of lists) {
+    for (const address of addresses) if (!seen.has(address)) seen.set(address, id);
+  }
+  return seen;
+}
+
+const allAddresses = unionOf([
+  ["ofac", ofacAddresses],
+  ["drainers", drainerAddresses],
+  ["nonReceivable", sinkAddresses],
+  ["circleBlacklist", circleAddresses],
+]);
+const enforcedAddresses = unionOf([
+  ["ofac", ofacAddresses],
+  ["drainers", drainerAddresses],
+  ["nonReceivable", sinkAddresses],
+]);
+const listShapes = [
+  { id: "ofac", label: "OFAC SDN", addresses: ofacAddresses },
+  { id: "drainers", label: "Known drainers", addresses: drainerAddresses },
+  { id: "nonReceivable", label: "Non-receivable sinks", addresses: sinkAddresses },
+  { id: "circleBlacklist", label: "Circle blacklist", addresses: circleAddresses },
+];
+const coveragePerList = [];
+const coverageSeen = new Map();
+const rawCoverageTotal = listShapes.reduce((sum, list) => sum + new Set(list.addresses).size, 0);
+for (const list of listShapes) {
+  const unique = new Set(list.addresses);
+  const overlaps = new Set();
+  let contribution = 0;
+  for (const address of unique) {
+    const owner = coverageSeen.get(address);
+    if (owner) overlaps.add(owner);
+    else {
+      coverageSeen.set(address, list.id);
+      contribution += 1;
+    }
+  }
+  coveragePerList.push({
+    id: list.id,
+    label: list.label,
+    count: unique.size,
+    uniqueContribution: contribution,
+    overlapsWith: [...overlaps],
+  });
+}
+const coverageNumerator = allAddresses.size;
+const coveragePercent = cataloguePayees === null ? null : (coverageNumerator / cataloguePayees) * 100;
+
+const ofacLastModifiedIso = ofacFreshness?.lastModified ? new Date(ofacFreshness.lastModified).toISOString() : null;
+const ofacFreshnessAt = ofacFreshness?.lastChangeAt ?? ofacLastModifiedIso ?? ofacFreshness?.firstFetchedAt ?? null;
+const ofacFreshnessBasis = ofacFreshness?.lastChangeAt
+  ? "last-change"
+  : ofacLastModifiedIso
+    ? "last-modified"
+    : ofacFreshness?.firstFetchedAt
+      ? "first-fetch"
+      : "none";
+const drainerReviewedAt =
+  sourceBlocks
+    .map((source) => source.retrieved)
+    .filter(Boolean)
+    .sort()
+    .at(-1) ?? null;
+
+/** The refresh strip's facts. `failed` is only claimed when a state file records it; otherwise the result is unknown. */
+const ofacRefreshFailed = Boolean(listFreshness?.error);
+const ofacRefreshResult = ofacRefreshFailed
+  ? String(listFreshness.error)
+  : changedSinceCopy === true
+    ? "upstream changed since this copy — the next release carries it"
+    : ofacFreshness
+      ? "unchanged — no body or Last-Modified move since the previous check"
+      : "no detector record in this build";
 
 /**
  * The positive list, from the same registry the evaluator uses.
@@ -91,8 +215,31 @@ const verifiedPayees = services
 const manifest = {
   verifiedPayees,
   generatedAt: new Date().toISOString().slice(0, 10),
+  /**
+   * The denominator and the deduplicated numerator, generated so the page cannot print a precise count without
+   * stating the population it is precise against.
+   */
+  coverage: {
+    numerator: coverageNumerator,
+    rawTotal: rawCoverageTotal,
+    duplicatesRemoved: rawCoverageTotal - coverageNumerator,
+    dedupedAcrossLists: true,
+    perList: coveragePerList,
+    denominator: cataloguePayees,
+    denominatorKind: "distinct payees in the supply catalogue",
+    ratio: cataloguePayees === null ? null : coverageNumerator / cataloguePayees,
+    percent: coveragePercent,
+    enforcedNumerator: enforcedAddresses.size,
+    collectedOnly: coverageNumerator - enforcedAddresses.size,
+    catalogueSnapshot: catalogue?.snapshot ?? null,
+    catalogueMeasuredAt: catalogue?.measuredAt ?? null,
+    catalogueSource: catalogue?.source ?? null,
+    catalogueRows: catalogue?.rows ?? null,
+    catalogueTotalAdvertised: catalogue?.totalAdvertised ?? null,
+  },
   ofac: {
     name: "OFAC SDN — Digital Currency Address, ETH",
+    monogram: "OF",
     publisher: "US Department of the Treasury, Office of Foreign Assets Control",
     source: ofacUrl,
     retrieved: ofacFetched,
@@ -104,11 +251,27 @@ const manifest = {
     changedSinceCopy,
     addresses: ofacCount,
     maxAgeDays: 45,
+    freshness: {
+      upstreamChangedAt: ofacFreshnessAt,
+      basis: ofacFreshnessBasis,
+      reviewedAt: null,
+      hasUpstreamFeed: true,
+    },
+    sources: [{ name: "US Treasury OFAC", url: ofacUrl, count: ofacCount }],
+    growth: { retrievals: ofacFetched ? [{ at: ofacFetched, count: ofacCount }] : [] },
+    refreshInfo: {
+      command: "node /work/ops/bin/ofac-sync.mjs",
+      where: "hourly canary — bin/canary-digest.sh",
+      lastRunAt: ofacFreshness?.fetchedAt ?? null,
+      status: ofacRefreshFailed ? "failed" : ofacFreshness ? "ok" : "unknown",
+      lastResult: ofacRefreshResult,
+    },
     refresh:
       "The hourly canary hashes SDN.XML's Last-Modified and body and refreshes this file when either moves; the 45-day check is a floor and reads the list's last change, not only its age.",
   },
   circleBlacklist: {
     name: "Circle USDC blacklist — on-chain Base events",
+    monogram: "CB",
     publisher: "Circle Internet Financial",
     source: circleSnapshot ? `https://basescan.org/address/${circleSnapshot.contract}` : null,
     chainId: circleSnapshot?.chainId ?? null,
@@ -127,17 +290,77 @@ const manifest = {
     coverageNote: circleSnapshot?.coverage?.note ?? null,
     collectedAt: circleSnapshot?.generatedAt ?? null,
     enforced: false,
+    freshness: {
+      upstreamChangedAt: circleSnapshot?.generatedAt ?? null,
+      basis: "collection",
+      reviewedAt: null,
+      hasUpstreamFeed: true,
+    },
+    sources: [
+      {
+        name: "Circle USDC Blacklisted(address) events on Base",
+        url: circleSnapshot ? `https://basescan.org/address/${circleSnapshot.contract}` : null,
+        count: circleAddresses.length,
+      },
+    ],
+    growth: {
+      retrievals: circleSnapshot?.generatedAt ? [{ at: circleSnapshot.generatedAt, count: circleAddresses.length }] : [],
+    },
+    refreshInfo: {
+      command: "node /work/ops/bin/circle-blacklist.mjs",
+      where: "manual — no scheduled job wired",
+      lastRunAt: circleSnapshot?.generatedAt ?? null,
+      status: circleSnapshot ? "ok" : "unknown",
+      lastResult: circleSnapshot
+        ? `collected ${circleAddresses.length} distinct addresses across blocks ${circleSnapshot.fromBlock}–${circleSnapshot.toBlock}`
+        : "no collection recorded in this build",
+    },
     refresh:
       "Re-run `node bin/circle-blacklist.mjs`; the collector appends new events and never drops an old one. No scheduled run is wired yet.",
   },
   drainers: {
     name: "Known drainers (curated)",
+    monogram: "DR",
     addresses: drainerCount,
     sources: sourceBlocks,
+    sourceCounts: drainerContributingSources,
+    contributingSources: drainerContributingSources.length,
+    freshness: {
+      upstreamChangedAt: null,
+      basis: "review",
+      reviewedAt: drainerReviewedAt,
+      hasUpstreamFeed: false,
+    },
+    growth: {
+      retrievals: drainerReviewedAt ? [{ at: drainerReviewedAt, count: drainerCount }] : [],
+    },
+    refreshInfo: {
+      command: "curated in packages/preflight/src/known-drainers.ts",
+      where: "repository — no scheduled fetch",
+      lastRunAt: drainerReviewedAt,
+      status: "unknown",
+      lastResult: "the list is edited with cited sources, not fetched from a feed",
+    },
   },
   nonReceivable: {
     name: "Non-receivable sinks",
+    monogram: "NR",
     addresses: nonReceivable.length,
+    sources: [{ name: "Protocol sinks (burn and zero address)", url: null, count: nonReceivable.length }],
+    freshness: {
+      upstreamChangedAt: null,
+      basis: "none",
+      reviewedAt: null,
+      hasUpstreamFeed: false,
+    },
+    growth: { retrievals: [] },
+    refreshInfo: {
+      command: "curated in packages/preflight/src/known-drainers.ts",
+      where: "repository — no scheduled fetch",
+      lastRunAt: null,
+      status: "unknown",
+      lastResult: "the sinks are a fixed protocol constant, not fetched from a feed",
+    },
   },
 };
 
@@ -161,4 +384,6 @@ if (process.argv.includes("--check")) {
 }
 
 writeFileSync(OUT, body);
-console.log(`lists-manifest: wrote ${OUT} — OFAC ${ofacCount}, drainers ${drainerCount}, sinks ${nonReceivable.length}, sources ${sourceBlocks.length}`);
+console.log(
+  `lists-manifest: wrote ${OUT} — OFAC ${ofacCount}, drainers ${drainerCount}, sinks ${nonReceivable.length}, sources ${sourceBlocks.length}, coverage ${coverageNumerator}/${cataloguePayees ?? "no denominator"}`,
+);

@@ -2,6 +2,17 @@ import type { Metadata } from "next";
 import "../landing.css";
 import Link from "next/link";
 import { LISTS } from "@/lib/lists.generated";
+import {
+  buildGrowth,
+  freshnessView,
+  growthLabel,
+  refreshLine,
+  sourceBar,
+  sparklinePoints,
+  type FreshnessInput,
+  type RefreshInfo,
+  type SourceCount,
+} from "@/lib/list-coverage";
 
 /**
  * /lists — the deny lists this product actually checks, with their provenance.
@@ -25,6 +36,95 @@ const ageDays = (iso: string): number => Math.floor((Date.now() - Date.parse(iso
 const changedLabel = (fields: readonly string[]): string =>
   fields.length === 2 ? "last-modified and body" : fields.join(" and ");
 
+/** One card's generated inputs. Nothing below is typed into JSX. */
+interface ListCard {
+  id: string;
+  monogram: string;
+  name: string;
+  addresses: number;
+  freshness: FreshnessInput;
+  sources: readonly SourceCount[];
+  /** Retrieval dates already stored; one point renders as a count, not a line. */
+  retrievals: readonly { at: string; count: number }[];
+  refresh: RefreshInfo;
+}
+
+const basisLabel = (basis: FreshnessInput["basis"]): string =>
+  ({
+    "last-change": "last upstream change",
+    "last-modified": "publisher Last-Modified",
+    "first-fetch": "first watched fetch (no change observed)",
+    "last-event": "last on-chain event",
+    collection: "last collection",
+    review: "curation review",
+    none: "no date",
+  })[basis] ?? "date basis not recorded";
+
+function Freshness({ card, now }: { card: ListCard; now: number }) {
+  const view = freshnessView(card.freshness, now);
+  if (view.kind === "reviewed") {
+    return (
+      <span className="lp-list-chip lp-list-chip-review" title={view.label}>
+        {view.label}
+      </span>
+    );
+  }
+  return (
+    <span className={`lp-list-chip lp-list-chip-${view.tone}`} title={`${basisLabel(view.basis)}: ${view.at.slice(0, 10)}`}>
+      {view.label}
+      <span className="lp-list-chip-basis">{basisLabel(view.basis)}</span>
+    </span>
+  );
+}
+
+function SourceStack({ card }: { card: ListCard }) {
+  const bar = sourceBar(card.sources);
+  return (
+    <div className="lp-list-source">
+      <div
+        className="lp-list-source-bar"
+        role="img"
+        aria-label={
+          bar.singleSource
+            ? `single source: ${bar.slices[0]?.name ?? "unnamed"}, ${bar.total} entries`
+            : `${bar.contributing} sources, ${bar.total} entries`
+        }
+      >
+        {bar.slices.map((slice, index) => (
+          <span
+            key={slice.name}
+            className={`lp-list-source-slice lp-list-source-slice-${index % 6}`}
+            style={{ width: `${slice.percent}%` }}
+            title={`${slice.name}: ${slice.count} (${slice.percent.toFixed(1)}%)`}
+          />
+        ))}
+      </div>
+      <p className="lp-list-caption">
+        {bar.singleSource
+          ? `Single source — ${bar.slices[0]?.name ?? "unnamed publisher"}, ${bar.total} entries.`
+          : `${bar.contributing} contributing sources across ${bar.total} entries.`}
+      </p>
+    </div>
+  );
+}
+
+function Growth({ card }: { card: ListCard }) {
+  const series = buildGrowth(card.retrievals);
+  const points = sparklinePoints(series);
+  return (
+    <div className="lp-list-growth">
+      <p className="lp-list-caption">{growthLabel(series, card.addresses)}</p>
+      {series.drawLine ? (
+        <svg viewBox="0 0 100 28" preserveAspectRatio="none" role="img" aria-label={growthLabel(series, card.addresses)}>
+          <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        </svg>
+      ) : (
+        <div className="lp-list-growth-empty">one sample, not a trend</div>
+      )}
+    </div>
+  );
+}
+
 export default function ListsPage() {
   const ofac = LISTS.ofac;
   // `lists.generated.ts` is emitted `as const`; today's snapshot has no recorded change, so `null` would otherwise be
@@ -45,21 +145,142 @@ export default function ListsPage() {
   // An old retrieval is only stale if the upstream body moved. The detector proves "unchanged" with a body hash; when
   // that proof is absent (no snapshot), fall back to the age window rather than assuming the list is current.
   const ofacStale = ofacAge > ofac.maxAgeDays && ofac.changedSinceCopy !== false;
-  const total = ofac.addresses + drainers.addresses + sinks.addresses;
+
+  /** The generated coverage figures. `as const` makes a null snapshot narrow to `never`, so keep the null branch typed. */
+  const coverage = LISTS.coverage;
+  const coverageDenominator = coverage.denominator as number | null;
+  const coveragePercent = coverage.percent as number | null;
+  const now = Date.now();
+
+  const cards: ListCard[] = [
+    {
+      id: "ofac",
+      monogram: ofac.monogram,
+      name: ofac.name,
+      addresses: ofac.addresses,
+      freshness: ofac.freshness,
+      sources: ofac.sources,
+      retrievals: ofac.growth.retrievals,
+      refresh: ofac.refreshInfo,
+    },
+    {
+      id: "drainers",
+      monogram: drainers.monogram,
+      name: drainers.name,
+      addresses: drainers.addresses,
+      freshness: drainers.freshness,
+      sources: drainers.sourceCounts,
+      retrievals: drainers.growth.retrievals,
+      refresh: drainers.refreshInfo,
+    },
+    {
+      id: "circleBlacklist",
+      monogram: circle.monogram,
+      name: circle.name,
+      addresses: circle.addresses as number,
+      freshness: circle.freshness,
+      sources: circle.sources,
+      retrievals: circle.growth.retrievals,
+      refresh: circle.refreshInfo,
+    },
+    {
+      id: "nonReceivable",
+      monogram: sinks.monogram,
+      name: sinks.name,
+      addresses: sinks.addresses,
+      freshness: sinks.freshness,
+      sources: sinks.sources,
+      retrievals: sinks.growth.retrievals,
+      refresh: sinks.refreshInfo,
+    },
+  ];
 
   return (
     <main className="lp-wrap lp-prose">
       <h1>Deny lists</h1>
       <p className="lp-lead">
-        Every payment this product evaluates is checked against {total} addresses across three lists before it can be allowed.
-        Each list, who publishes it, when this copy was retrieved, when its upstream feed last changed, and what the check does and does not mean is below. The
-        figures are generated from the code that runs, so they cannot drift from what is shipped.
+        Every payment this product evaluates is checked against {coverage.enforcedNumerator} addresses, and{" "}
+        {coverage.numerator} unique addresses across {coverage.perList.length} lists are collected. Against the{" "}
+        {coverageDenominator ?? "unavailable"} payees in the supply catalogue that is{" "}
+        {coveragePercent === null ? "no computable coverage" : `${coveragePercent.toFixed(1)}%`}. Each list, who publishes it,
+        when this copy was retrieved, when its upstream feed last changed, and what the check does and does not mean is below.
+        The figures are generated from the code that runs, so they cannot drift from what is shipped.
       </p>
       <p>
         There is one more source that is not a list and is not yet a check: Circle&apos;s on-chain USDC{" "}
         <code>Blacklisted(address)</code> events on Base. It is collected and dated below, and this build does not yet refuse
         payments to those addresses.
       </p>
+
+      <section className="lp-list-coverage" aria-labelledby="coverage-heading">
+        <h2 id="coverage-heading">Coverage against the catalogue</h2>
+        <div className="lp-list-coverage-head">
+          <p className="lp-list-coverage-big">
+            {coverage.numerator}
+            <span className="lp-list-coverage-denominator"> / {coverageDenominator ?? "no denominator"} payees</span>
+          </p>
+          <p className="lp-list-coverage-percent">{coveragePercent === null ? "no denominator in this build" : `${coveragePercent.toFixed(1)}%`}</p>
+        </div>
+        <div
+          className="lp-list-coverage-track"
+          role="img"
+          aria-label={
+            coveragePercent === null
+              ? `${coverage.numerator} unique addresses; no catalogue denominator`
+              : `${coverage.numerator} of ${coverageDenominator} catalogue payees, ${coveragePercent.toFixed(1)} percent`
+          }
+        >
+          <span
+            className="lp-list-coverage-fill"
+            style={{ width: `${Math.max(coveragePercent ?? 0, 0.4)}%` }}
+          />
+        </div>
+        <p className="lp-list-caption">
+          {coverage.numerator} unique addresses from {coverage.perList.length} lists after deduplicating across lists
+          ({coverage.rawTotal} entries before dedupe; {coverage.duplicatesRemoved} duplicates removed). Of those,{" "}
+          {coverage.enforcedNumerator} are enforced today and {coverage.collectedOnly} are Circle events collected but not yet
+          enforced. The denominator is {coverage.denominatorKind}
+          {coverage.catalogueSnapshot ? ` (${coverage.catalogueSnapshot}, measured ${String(coverage.catalogueMeasuredAt).slice(0, 10)})` : ""}.
+        </p>
+      </section>
+
+      <section aria-labelledby="cards-heading">
+        <h2 id="cards-heading">Each list, and how fresh it is</h2>
+        <div className="lp-list-cards">
+          {cards.map((card) => (
+            <article className="lp-list-card" key={card.id}>
+              <div className="lp-list-card-head">
+                <span className="lp-list-monogram" aria-hidden="true">
+                  {card.monogram}
+                </span>
+                <div>
+                  <h3>{card.name}</h3>
+                  <p className="lp-list-count">{card.addresses} entries</p>
+                </div>
+              </div>
+              <Freshness card={card} now={now} />
+              <SourceStack card={card} />
+              <Growth card={card} />
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="refresh-heading">
+        <h2 id="refresh-heading">How this refreshes</h2>
+        <div className="lp-list-refresh">
+          {cards.map((card) => (
+            <div className="lp-list-refresh-row" id={`refresh-${card.id}`} key={card.id}>
+              <p className="lp-list-refresh-name">{card.name}</p>
+              <code>{card.refresh.command}</code>
+              <p className="lp-list-refresh-where">{card.refresh.where}</p>
+              <p className={card.refresh.status === "failed" ? "lp-list-refresh-result lp-list-refresh-failed" : "lp-list-refresh-result"}>
+                {refreshLine(card.refresh)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section>
         <h2>What is checked</h2>
@@ -141,8 +362,8 @@ export default function ListsPage() {
 
         <h3>{drainers.name}</h3>
         <p>
-          {drainers.addresses} addresses compiled from {drainers.sources.length} sources, each entry carrying the advisory or
-          dataset it came from. The curation policy and extension process live in the repository; the sources below are the
+          {drainers.addresses} addresses compiled from {drainers.contributingSources} contributing sources (
+          {drainers.sources.length} consulted), each entry carrying the advisory or dataset it came from. The curation policy and extension process live in the repository; the sources below are the
           record of where each address originated.
         </p>
         <table>

@@ -104,8 +104,59 @@ export const LISTS = {
     }
   ],
   "generatedAt": "2026-11-22",
+  "coverage": {
+    "numerator": 229,
+    "rawTotal": 233,
+    "duplicatesRemoved": 4,
+    "dedupedAcrossLists": true,
+    "perList": [
+      {
+        "id": "ofac",
+        "label": "OFAC SDN",
+        "count": 123,
+        "uniqueContribution": 123,
+        "overlapsWith": []
+      },
+      {
+        "id": "drainers",
+        "label": "Known drainers",
+        "count": 24,
+        "uniqueContribution": 24,
+        "overlapsWith": []
+      },
+      {
+        "id": "nonReceivable",
+        "label": "Non-receivable sinks",
+        "count": 2,
+        "uniqueContribution": 2,
+        "overlapsWith": []
+      },
+      {
+        "id": "circleBlacklist",
+        "label": "Circle blacklist",
+        "count": 84,
+        "uniqueContribution": 80,
+        "overlapsWith": [
+          "ofac",
+          "drainers"
+        ]
+      }
+    ],
+    "denominator": 1321,
+    "denominatorKind": "distinct payees in the supply catalogue",
+    "ratio": 0.17335352006056018,
+    "percent": 17.335352006056016,
+    "enforcedNumerator": 149,
+    "collectedOnly": 80,
+    "catalogueSnapshot": "2026-11-21.json",
+    "catalogueMeasuredAt": "2026-11-21T12:22:56.470Z",
+    "catalogueSource": "https://facilitator.payai.network/discovery/resources",
+    "catalogueRows": 24473,
+    "catalogueTotalAdvertised": 17833
+  },
   "ofac": {
     "name": "OFAC SDN — Digital Currency Address, ETH",
+    "monogram": "OF",
     "publisher": "US Department of the Treasury, Office of Foreign Assets Control",
     "source": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML",
     "retrieved": "2026-11-22T09:48:26.837Z",
@@ -117,10 +168,39 @@ export const LISTS = {
     "changedSinceCopy": false,
     "addresses": 123,
     "maxAgeDays": 45,
+    "freshness": {
+      "upstreamChangedAt": "2026-11-20T20:32:28.000Z",
+      "basis": "last-modified",
+      "reviewedAt": null,
+      "hasUpstreamFeed": true
+    },
+    "sources": [
+      {
+        "name": "US Treasury OFAC",
+        "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML",
+        "count": 123
+      }
+    ],
+    "growth": {
+      "retrievals": [
+        {
+          "at": "2026-11-22T09:48:26.837Z",
+          "count": 123
+        }
+      ]
+    },
+    "refreshInfo": {
+      "command": "node /work/ops/bin/ofac-sync.mjs",
+      "where": "hourly canary — bin/canary-digest.sh",
+      "lastRunAt": "2026-11-22T09:45:43.782Z",
+      "status": "ok",
+      "lastResult": "unchanged — no body or Last-Modified move since the previous check"
+    },
     "refresh": "The hourly canary hashes SDN.XML's Last-Modified and body and refreshes this file when either moves; the 45-day check is a floor and reads the list's last change, not only its age."
   },
   "circleBlacklist": {
     "name": "Circle USDC blacklist — on-chain Base events",
+    "monogram": "CB",
     "publisher": "Circle Internet Financial",
     "source": "https://basescan.org/address/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
     "chainId": 8453,
@@ -139,11 +219,40 @@ export const LISTS = {
     "coverageNote": "archive history before block 51000000 is not served by the public RPC; entries before that block are absent, not empty",
     "collectedAt": "2026-11-22T10:34:48.066Z",
     "enforced": false,
+    "freshness": {
+      "upstreamChangedAt": "2026-11-22T10:34:48.066Z",
+      "basis": "collection",
+      "reviewedAt": null,
+      "hasUpstreamFeed": true
+    },
+    "sources": [
+      {
+        "name": "Circle USDC Blacklisted(address) events on Base",
+        "url": "https://basescan.org/address/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "count": 84
+      }
+    ],
+    "growth": {
+      "retrievals": [
+        {
+          "at": "2026-11-22T10:34:48.066Z",
+          "count": 84
+        }
+      ]
+    },
+    "refreshInfo": {
+      "command": "node /work/ops/bin/circle-blacklist.mjs",
+      "where": "manual — no scheduled job wired",
+      "lastRunAt": "2026-11-22T10:34:48.066Z",
+      "status": "ok",
+      "lastResult": "collected 84 distinct addresses across blocks 51000000–60766560"
+    },
     "refresh": "Re-run `node bin/circle-blacklist.mjs`; the collector appends new events and never drops an old one. No scheduled run is wired yet."
   },
   "drainers": {
     "name": "Known drainers (curated)",
-    "addresses": 23,
+    "monogram": "DR",
+    "addresses": 24,
     "sources": [
       {
         "name": "MyEtherWallet ethereum-lists address darklist",
@@ -195,10 +304,112 @@ export const LISTS = {
         "url": "https://www.0xcert.com/advisory/0xCERT-2026-0309",
         "retrieved": "2026-11-07"
       }
-    ]
+    ],
+    "sourceCounts": [
+      {
+        "name": "MyEtherWallet ethereum-lists address darklist",
+        "url": "https://github.com/MyEtherWallet/ethereum-lists/blob/master/src/addresses/addresses-darklist.json",
+        "retrieved": "2026-11-02",
+        "count": 9
+      },
+      {
+        "name": "0xCERT IOC address feed (Base incidents incl. 0xCERT-2026-0230)",
+        "url": "https://www.0xcert.com/iocs",
+        "retrieved": "2026-11-02",
+        "count": 2
+      },
+      {
+        "name": "Matcha Meta / CryptoTimes SwapNet approval-drain advisory",
+        "url": "https://www.cryptotimes.io/2026/01/26/security-alert-matcha-meta-flags-swapnet-bug-as-over-16-8m-is-drained/",
+        "retrieved": "2026-11-02",
+        "count": 1
+      },
+      {
+        "name": "Chainabuse contract-exploit reports (Base EIP-7702 / USDC drains)",
+        "url": "https://chainabuse.com/category/contract-exploit",
+        "retrieved": "2026-11-02",
+        "count": 3
+      },
+      {
+        "name": "Chainabuse address report (Base USDC theft Jul 2026)",
+        "url": "https://chainabuse.com/address/0x2cff890f0378a11913b6129b2e97417a2c302680",
+        "retrieved": "2026-11-02",
+        "count": 1
+      },
+      {
+        "name": "0xCERT advisory 0xCERT-2026-0292 (Step Drainer payout wallets, per Bitquery)",
+        "url": "https://www.0xcert.com/advisory/0xCERT-2026-0292",
+        "retrieved": "2026-11-05",
+        "count": 3
+      },
+      {
+        "name": "0xCERT advisories 0xCERT-2026-0303 / 0xCERT-2026-0308 (Mercado Bitcoin incident; confirmed by Mercado Bitcoin, Base per Bitquery)",
+        "url": "https://www.0xcert.com/advisory/0xCERT-2026-0303",
+        "retrieved": "2026-11-05",
+        "count": 1
+      },
+      {
+        "name": "0xCERT advisory 0xCERT-2026-0314 (Loopscale attack campaign; EVM addresses named by Loopscale)",
+        "url": "https://www.0xcert.com/advisory/0xCERT-2026-0314",
+        "retrieved": "2026-11-07",
+        "count": 2
+      },
+      {
+        "name": "0xCERT advisory 0xCERT-2026-0309 (CoreVault exploit; attacker EOA and exploit contract, BNB Chain per CertiK)",
+        "url": "https://www.0xcert.com/advisory/0xCERT-2026-0309",
+        "retrieved": "2026-11-07",
+        "count": 2
+      }
+    ],
+    "contributingSources": 9,
+    "freshness": {
+      "upstreamChangedAt": null,
+      "basis": "review",
+      "reviewedAt": "2026-11-07",
+      "hasUpstreamFeed": false
+    },
+    "growth": {
+      "retrievals": [
+        {
+          "at": "2026-11-07",
+          "count": 24
+        }
+      ]
+    },
+    "refreshInfo": {
+      "command": "curated in packages/preflight/src/known-drainers.ts",
+      "where": "repository — no scheduled fetch",
+      "lastRunAt": "2026-11-07",
+      "status": "unknown",
+      "lastResult": "the list is edited with cited sources, not fetched from a feed"
+    }
   },
   "nonReceivable": {
     "name": "Non-receivable sinks",
-    "addresses": 2
+    "monogram": "NR",
+    "addresses": 2,
+    "sources": [
+      {
+        "name": "Protocol sinks (burn and zero address)",
+        "url": null,
+        "count": 2
+      }
+    ],
+    "freshness": {
+      "upstreamChangedAt": null,
+      "basis": "none",
+      "reviewedAt": null,
+      "hasUpstreamFeed": false
+    },
+    "growth": {
+      "retrievals": []
+    },
+    "refreshInfo": {
+      "command": "curated in packages/preflight/src/known-drainers.ts",
+      "where": "repository — no scheduled fetch",
+      "lastRunAt": null,
+      "status": "unknown",
+      "lastResult": "the sinks are a fixed protocol constant, not fetched from a feed"
+    }
   }
 } as const;
