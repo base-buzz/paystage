@@ -238,6 +238,14 @@ produces a record anyone can verify without trusting us. That is what this is, a
 the rule that fired, receipts signed with a published key, and the sanctions and drainer lists published so the reasons can be inspected rather
 than believed.
 
+**Governance, sourced.** The x402 Foundation was announced for launch in April 2026 and became operational on **14 July 2026**, when Coinbase
+completed its contribution of the protocol to the Linux Foundation, with **40 member organisations** at launch — premier members include Adyen,
+AWS, American Express, Circle, Cloudflare, Coinbase, Fiserv, Google, Mastercard, Monad Foundation, MoonPay, Ripple, Shopify, the Solana and Stellar
+development foundations, Stripe and Visa. The charter covers *"payment types ranging from traditional cards to stablecoins"*, so the governance was
+built for several rails from the outset. **PayStage is not a member of that structure**; it is an independent checker that benefits from the
+neutrality the structure creates. Sources: [Linux Foundation press release, 14 July 2026](https://www.linuxfoundation.org/press/linux-foundation-announces-operational-launch-of-x402-foundation-to-standardize-internet-native-payments-for-ai-agents-and-applications) ·
+[`TSC.md`](https://github.com/x402-foundation/x402/blob/main/TSC.md) — both read 2026-11-22.
+
 We are **not claiming the protocol requires us**. The protocol makes room for an independent adjudicator, and the value of that room grows as more
 value moves through rails no single company controls.
 
