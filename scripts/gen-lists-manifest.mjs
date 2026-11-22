@@ -49,6 +49,11 @@ const changedSinceCopy =
  * Unlike OFAC, this is not a feed with a Last-Modified header: the event's date is the block's timestamp, so the page
  * can state a real first-event date. But it is also not a full history on a free RPC — the collector records which block
  * its coverage starts at and why, and the page must repeat that limit rather than let the count read as chain-wide.
+ *
+ * The *enforced* set is read from the generated corpus the evaluator imports
+ * (`packages/preflight/src/circle-blacklist-addresses.ts`), not from this snapshot: the page's count must be the set the
+ * code actually checks, or it would describe a list the product does not ship. The snapshot supplies provenance and the
+ * event dates; the corpus supplies membership (#369).
  */
 let circleSnapshot = null;
 try {
@@ -57,6 +62,32 @@ try {
   circleSnapshot = null;
 }
 const circleCounts = circleSnapshot?.counts ?? null;
+const circleCorpus = readFileSync(join(ROOT, "packages/preflight/src/circle-blacklist-addresses.ts"), "utf8");
+const circleAddresses = [...circleCorpus.matchAll(/^\s{2}"(0x[0-9a-f]{40})",$/gm)].map(([, address]) => address.toLowerCase());
+const circleCorpusMeta = {
+  collectedAt: /collected_at:\s*(\S+)/.exec(circleCorpus)?.[1] ?? null,
+  coveredFromBlock: Number(/covered_from_block:\s*(\d+)/.exec(circleCorpus)?.[1] ?? NaN),
+  coveredToBlock: Number(/covered_to_block:\s*(\d+)/.exec(circleCorpus)?.[1] ?? NaN),
+  firstEventAt: /first_event_at:\s*(\S+)/.exec(circleCorpus)?.[1] ?? null,
+  removed: Number(/removed:\s*(\d+)/.exec(circleCorpus)?.[1] ?? NaN),
+};
+if (circleAddresses.length === 0) {
+  console.error("lists-manifest: the Circle corpus has no addresses — refusing to publish a count of zero");
+  process.exit(1);
+}
+// The corpus is what the evaluator enforces; the snapshot is what the page dates. They are written together by the
+// collector, so a mismatch means a half-refreshed tree, and the page must not paper over it.
+const snapshotEnforced = (circleSnapshot?.entries ?? [])
+  .filter((entry) => entry?.removed !== true)
+  .map((entry) => String(entry.address).toLowerCase());
+const snapshotEnforcedUnique = new Set(snapshotEnforced);
+if (circleSnapshot && snapshotEnforcedUnique.size !== circleAddresses.length) {
+  console.error(
+    `lists-manifest: Circle corpus has ${circleAddresses.length} enforced addresses but the page snapshot has ${snapshotEnforcedUnique.size} — re-run node /work/ops/bin/circle-blacklist.mjs --export-only`,
+  );
+  process.exit(1);
+}
+
 
 /** `SOURCES` is a literal array of {name, url, retrieved} — parse it rather than duplicating the list by hand. */
 const sourceBlocks = [...drainers.matchAll(/\{\s*name:\s*"([^"]+)",\s*\n\s*url:\s*"([^"]+)",\s*\n\s*retrieved:\s*"([^"]+)",/g)].map(
@@ -73,7 +104,6 @@ const drainerAddresses = [...drainerBlock.matchAll(/"(0x[0-9a-f]{40})"/g)].map((
 // line-based regex silently read the list as 23 rather than 24.
 const drainerCount = drainerAddresses.length;
 const sinkAddresses = nonReceivable.map((address) => address.toLowerCase());
-const circleAddresses = (circleSnapshot?.entries ?? []).map((entry) => String(entry.address).toLowerCase());
 
 /**
  * Per-source counts for the drainer list.
@@ -121,17 +151,16 @@ function unionOf(lists) {
   return seen;
 }
 
-const allAddresses = unionOf([
+const enforcedAddresses = unionOf([
   ["ofac", ofacAddresses],
   ["drainers", drainerAddresses],
   ["nonReceivable", sinkAddresses],
   ["circleBlacklist", circleAddresses],
 ]);
-const enforcedAddresses = unionOf([
-  ["ofac", ofacAddresses],
-  ["drainers", drainerAddresses],
-  ["nonReceivable", sinkAddresses],
-]);
+// Every list on this page is now enforced by the evaluator (#369 moved Circle from collected to enforced), so the
+// collected union and the enforced union are the same set. They stay separate names because a future collected-only
+// list must show up as a gap rather than silently joining the coverage numerator.
+const allAddresses = enforcedAddresses;
 const listShapes = [
   { id: "ofac", label: "OFAC SDN", addresses: ofacAddresses },
   { id: "drainers", label: "Known drainers", addresses: drainerAddresses },
@@ -273,25 +302,35 @@ const manifest = {
     name: "Circle USDC blacklist — on-chain Base events",
     monogram: "CB",
     publisher: "Circle Internet Financial",
+    sourceId: "circle-blacklist",
+    chainName: "Base",
     source: circleSnapshot ? `https://basescan.org/address/${circleSnapshot.contract}` : null,
     chainId: circleSnapshot?.chainId ?? null,
     contract: circleSnapshot?.contract ?? null,
     topic: circleSnapshot?.topic ?? null,
     topicSignature: circleSnapshot?.topicSignature ?? null,
     events: circleCounts?.entries ?? null,
-    addresses: circleCounts?.addresses ?? null,
-    firstEventAt: circleCounts?.firstEventAt ?? null,
+    addresses: circleAddresses.length,
+    firstEventAt: circleCounts?.firstEventAt ?? circleCorpusMeta.firstEventAt,
     firstEventBlock: circleCounts?.firstEventBlock ?? null,
     lastEventAt: circleCounts?.lastEventAt ?? null,
     lastEventBlock: circleCounts?.lastEventBlock ?? null,
-    fromBlock: circleSnapshot?.fromBlock ?? null,
-    toBlock: circleSnapshot?.toBlock ?? null,
+    fromBlock: circleSnapshot?.fromBlock ?? (Number.isSafeInteger(circleCorpusMeta.coveredFromBlock) ? circleCorpusMeta.coveredFromBlock : null),
+    toBlock: circleSnapshot?.toBlock ?? (Number.isSafeInteger(circleCorpusMeta.coveredToBlock) ? circleCorpusMeta.coveredToBlock : null),
     completeSinceDeployment: circleSnapshot?.coverage?.completeSinceDeployment ?? null,
     coverageNote: circleSnapshot?.coverage?.note ?? null,
-    collectedAt: circleSnapshot?.generatedAt ?? null,
-    enforced: false,
+    collectedAt: circleCorpusMeta.collectedAt ?? circleSnapshot?.generatedAt ?? null,
+    enforced: true,
+    enforcedBy: "preflight accept.payee_blacklisted_onchain",
+    enforcedReason:
+      "Circle blacklisted this address on Base (eip155:8453 USDC Blacklisted event) — a contract-level freeze by the issuer, not an OFAC listing",
+    /**
+     * The collector reads `Blacklisted` only. It has no `UnBlacklisted` feed, so an address Circle later unfroze would
+     * still be refused by this build. The page states that limit rather than letting "enforced" read as a live balance.
+     */
+    delistingTracked: false,
     freshness: {
-      upstreamChangedAt: circleSnapshot?.generatedAt ?? null,
+      upstreamChangedAt: circleCorpusMeta.collectedAt ?? circleSnapshot?.generatedAt ?? null,
       basis: "collection",
       reviewedAt: null,
       hasUpstreamFeed: true,
@@ -304,19 +343,21 @@ const manifest = {
       },
     ],
     growth: {
-      retrievals: circleSnapshot?.generatedAt ? [{ at: circleSnapshot.generatedAt, count: circleAddresses.length }] : [],
+      retrievals: (circleCorpusMeta.collectedAt ?? circleSnapshot?.generatedAt)
+        ? [{ at: circleCorpusMeta.collectedAt ?? circleSnapshot.generatedAt, count: circleAddresses.length }]
+        : [],
     },
     refreshInfo: {
       command: "node /work/ops/bin/circle-blacklist.mjs",
-      where: "manual — no scheduled job wired",
-      lastRunAt: circleSnapshot?.generatedAt ?? null,
+      where: "hourly canary — bin/canary-digest.sh (same run as OFAC)",
+      lastRunAt: circleCorpusMeta.collectedAt ?? circleSnapshot?.generatedAt ?? null,
       status: circleSnapshot ? "ok" : "unknown",
       lastResult: circleSnapshot
-        ? `collected ${circleAddresses.length} distinct addresses across blocks ${circleSnapshot.fromBlock}–${circleSnapshot.toBlock}`
+        ? `enforced ${circleAddresses.length} distinct addresses across blocks ${circleSnapshot.fromBlock}–${circleSnapshot.toBlock}`
         : "no collection recorded in this build",
     },
     refresh:
-      "Re-run `node bin/circle-blacklist.mjs`; the collector appends new events and never drops an old one. No scheduled run is wired yet.",
+      "The hourly canary runs the collector beside OFAC: it appends new `Blacklisted` events, exports the evaluator corpus and this page snapshot, then regenerates the manifest. If the RPC scan fails it runs `--export-only`, so the last good list stays enforced rather than going stale. It reads `Blacklisted` events only — there is no `UnBlacklisted` feed yet, so an address Circle later unfroze would still be refused.",
   },
   drainers: {
     name: "Known drainers (curated)",

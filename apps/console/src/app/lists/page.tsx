@@ -199,17 +199,17 @@ export default function ListsPage() {
     <main className="lp-wrap lp-prose">
       <h1>Deny lists</h1>
       <p className="lp-lead">
-        Every payment this product evaluates is checked against {coverage.enforcedNumerator} addresses, and{" "}
-        {coverage.numerator} unique addresses across {coverage.perList.length} lists are collected. Against the{" "}
-        {coverageDenominator ?? "unavailable"} payees in the supply catalogue that is{" "}
-        {coveragePercent === null ? "no computable coverage" : `${coveragePercent.toFixed(1)}%`}. Each list, who publishes it,
-        when this copy was retrieved, when its upstream feed last changed, and what the check does and does not mean is below.
-        The figures are generated from the code that runs, so they cannot drift from what is shipped.
+        Every payment this product evaluates is checked against {coverage.enforcedNumerator} unique addresses across{" "}
+        {coverage.perList.length} lists. Against the {coverageDenominator ?? "unavailable"} payees in the supply catalogue
+        that is {coveragePercent === null ? "no computable coverage" : `${coveragePercent.toFixed(1)}%`}. Each list, who
+        publishes it, when this copy was retrieved, when its upstream feed last changed, and what the check does and does
+        not mean is below. The figures are generated from the code that runs, so they cannot drift from what is shipped.
       </p>
       <p>
-        There is one more source that is not a list and is not yet a check: Circle&apos;s on-chain USDC{" "}
-        <code>Blacklisted(address)</code> events on Base. It is collected and dated below, and this build does not yet refuse
-        payments to those addresses.
+        Circle&apos;s on-chain USDC <code>Blacklisted(address)</code> events on Base are enforced too: a payment on Base to
+        one of those addresses is refused with the reason code <code>payee_blacklisted_onchain</code>. That list covers
+        events from block {circle.fromBlock ?? "51,000,000"} onward only — events below that block are not covered by the
+        free RPC, so a non-match is not proof the address was never blacklisted.
       </p>
 
       <section className="lp-list-coverage" aria-labelledby="coverage-heading">
@@ -237,9 +237,9 @@ export default function ListsPage() {
         </div>
         <p className="lp-list-caption">
           {coverage.numerator} unique addresses from {coverage.perList.length} lists after deduplicating across lists
-          ({coverage.rawTotal} entries before dedupe; {coverage.duplicatesRemoved} duplicates removed). Of those,{" "}
-          {coverage.enforcedNumerator} are enforced today and {coverage.collectedOnly} are Circle events collected but not yet
-          enforced. The denominator is {coverage.denominatorKind}
+          ({coverage.rawTotal} entries before dedupe; {coverage.duplicatesRemoved} duplicates removed). All{" "}
+          {coverage.enforcedNumerator} are enforced by the preflight evaluator; Circle&apos;s {circle.addresses} on-chain
+          entries were the last list to move from collected to enforced. The denominator is {coverage.denominatorKind}
           {coverage.catalogueSnapshot ? ` (${coverage.catalogueSnapshot}, measured ${String(coverage.catalogueMeasuredAt).slice(0, 10)})` : ""}.
         </p>
       </section>
@@ -440,7 +440,9 @@ export default function ListsPage() {
       </section>
 
       <section>
-        <h2>On-chain signal — collected, not yet enforced</h2>
+        <h2>
+          On-chain signal — enforced: {circle.addresses} addresses, coverage from block {circle.fromBlock ?? "51,000,000"}
+        </h2>
 
         <h3>{circle.name}</h3>
         <p>
@@ -535,9 +537,13 @@ export default function ListsPage() {
             <tr>
               <th>Enforced</th>
               <td>
-                <strong>Not yet.</strong> This build ingests and dates the events; the preflight verdict does not read them, so an
-                address here is not refused by PayStage today. It is shown because the event is real and public, not because the
-                check is shipped.
+                <strong>Yes, on Base.</strong> A payment whose network is Base (chain {circle.chainId}) to one of these{" "}
+                {circle.addresses} addresses is refused with the reason code <code>payee_blacklisted_onchain</code> and the
+                text <em>Circle blacklisted this address on Base (eip155:8453 USDC Blacklisted event) — a contract-level
+                freeze by the issuer, not an OFAC listing</em>. The refusal names Circle&apos;s on-chain action, not a
+                sanctions claim. Coverage starts at block {circle.fromBlock ?? "51,000,000"};{" "}
+                <strong>events below block {circle.fromBlock ?? "51,000,000"} are not covered</strong>, so a non-match is not
+                clearance.
               </td>
             </tr>
           </tbody>
@@ -545,7 +551,8 @@ export default function ListsPage() {
         <p>
           <strong>What it is not:</strong> it does not give OFAC a last-change date, and it is not a substitute for OFAC. A
           Circle freeze is one company&apos;s action on one chain; it does not carry the legal effect of a sanctions listing, and
-          an address absent here is not cleared.
+          an address absent here is not cleared. The collector reads <code>Blacklisted</code> events only — there is no{" "}
+          <code>UnBlacklisted</code> feed yet, so an address Circle later unfroze would still be refused by this build.
         </p>
       </section>
 
@@ -635,9 +642,10 @@ export default function ListsPage() {
             Absence of a match is not evidence that a counterparty is safe.
           </li>
           <li>
-            <strong>The Circle blacklist is not enforced yet.</strong> This build collects and dates Circle&apos;s on-chain
-            <code>Blacklisted</code> events; it does not refuse a payment to one. Treat the section above as evidence the signal
-            is being read, not as coverage.
+            <strong>The Circle blacklist covers Base from block {circle.fromBlock ?? "51,000,000"} only.</strong> It is
+            enforced for payments on Base, and a hit is a hit, but events below that block are not covered by the free RPC:
+            absence from the list proves only that no event was seen in the covered range. It also has no{" "}
+            <code>UnBlacklisted</code> feed, so a later Circle unfreeze is not reflected and the address stays refused.
           </li>
           <li>
             <strong>Not a compliance product.</strong> This is not screening, onboarding, identity verification or legal

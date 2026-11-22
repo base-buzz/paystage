@@ -146,8 +146,8 @@ export const LISTS = {
     "denominatorKind": "distinct payees in the supply catalogue",
     "ratio": 0.17335352006056018,
     "percent": 17.335352006056016,
-    "enforcedNumerator": 149,
-    "collectedOnly": 80,
+    "enforcedNumerator": 229,
+    "collectedOnly": 0,
     "catalogueSnapshot": "2026-11-21.json",
     "catalogueMeasuredAt": "2026-11-21T12:22:56.470Z",
     "catalogueSource": "https://facilitator.payai.network/discovery/resources",
@@ -202,6 +202,8 @@ export const LISTS = {
     "name": "Circle USDC blacklist — on-chain Base events",
     "monogram": "CB",
     "publisher": "Circle Internet Financial",
+    "sourceId": "circle-blacklist",
+    "chainName": "Base",
     "source": "https://basescan.org/address/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
     "chainId": 8453,
     "contract": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
@@ -218,7 +220,10 @@ export const LISTS = {
     "completeSinceDeployment": false,
     "coverageNote": "archive history before block 51000000 is not served by the public RPC; entries before that block are absent, not empty",
     "collectedAt": "2026-11-22T10:34:48.066Z",
-    "enforced": false,
+    "enforced": true,
+    "enforcedBy": "preflight accept.payee_blacklisted_onchain",
+    "enforcedReason": "Circle blacklisted this address on Base (eip155:8453 USDC Blacklisted event) — a contract-level freeze by the issuer, not an OFAC listing",
+    "delistingTracked": false,
     "freshness": {
       "upstreamChangedAt": "2026-11-22T10:34:48.066Z",
       "basis": "collection",
@@ -242,12 +247,12 @@ export const LISTS = {
     },
     "refreshInfo": {
       "command": "node /work/ops/bin/circle-blacklist.mjs",
-      "where": "manual — no scheduled job wired",
+      "where": "hourly canary — bin/canary-digest.sh (same run as OFAC)",
       "lastRunAt": "2026-11-22T10:34:48.066Z",
       "status": "ok",
-      "lastResult": "collected 84 distinct addresses across blocks 51000000–60766560"
+      "lastResult": "enforced 84 distinct addresses across blocks 51000000–60766560"
     },
-    "refresh": "Re-run `node bin/circle-blacklist.mjs`; the collector appends new events and never drops an old one. No scheduled run is wired yet."
+    "refresh": "The hourly canary runs the collector beside OFAC: it appends new `Blacklisted` events, exports the evaluator corpus and this page snapshot, then regenerates the manifest. If the RPC scan fails it runs `--export-only`, so the last good list stays enforced rather than going stale. It reads `Blacklisted` events only — there is no `UnBlacklisted` feed yet, so an address Circle later unfroze would still be refused."
   },
   "drainers": {
     "name": "Known drainers (curated)",

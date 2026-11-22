@@ -7,6 +7,11 @@ import {
 } from "@paystage/policy";
 import { isKnownDrainer, isNonReceivable } from "./known-drainers.js";
 import { SANCTIONED_ADDRESSES } from "./sanctioned-addresses.js";
+import {
+  CIRCLE_BLACKLISTED_ADDRESSES,
+  CIRCLE_BLACKLIST_CHAIN_ID,
+  CIRCLE_BLACKLIST_COVERED_FROM_BLOCK,
+} from "./circle-blacklist-addresses.js";
 import { verifiedPayeeFor } from "./verified-payees.js";
 import {
   currentSvmPeer,
@@ -17,6 +22,21 @@ import {
   validateSolanaAccept,
   type SvmValidationPeer,
 } from "./solana.js";
+
+/** Base mainnet — the chain Circle's USDC contract, and therefore this corpus, covers. */
+const CIRCLE_BLACKLIST_NETWORK = `eip155:${CIRCLE_BLACKLIST_CHAIN_ID}`;
+/** `51000000` → `51,000,000`; the block is read from the generated corpus, never retyped. */
+const CIRCLE_COVERAGE_FROM = CIRCLE_BLACKLIST_COVERED_FROM_BLOCK.toLocaleString("en-US");
+
+/**
+ * The coverage limit that has to travel with the Circle check.
+ *
+ * A hit is a hit: an address in the set was blacklisted by Circle on Base, and that fact does not depend on the scan
+ * window. Absence is different. The free RPC cannot reach blocks below 51,000,000, so the collector starts there, and a
+ * non-match proves only that no event was seen in the covered range. This sentence is in `not_checked` on every review
+ * packet so a reader cannot mistake the list for chain-wide history.
+ */
+const CIRCLE_BLACKLIST_NOT_CHECKED = `Circle USDC blacklist on Base: absence proves nothing — events below block ${CIRCLE_COVERAGE_FROM} are not covered by the free RPC, so a non-match is not proof the address was never blacklisted`;
 
 export interface AcceptOption {
   scheme: string;
@@ -463,6 +483,28 @@ function evaluateAccept(
       return deny("accept.sanctions", "sanctioned address (OFAC SDN)");
     }
     pass("accept.sanctions", "payee is not on the OFAC SDN list");
+
+    // Rule 7b2: Circle's on-chain USDC blacklist on Base (#369). Its own reason code because the fact is different:
+    // Circle froze this address at its own contract, which is not an OFAC listing and must never be described as one.
+    // A refusal that misstates its basis is worse than a narrower list. The corpus holds Base events only, so a payee
+    // on another chain is skipped rather than "not matched" — the list cannot see that chain.
+    if (accept.network.toLowerCase() === CIRCLE_BLACKLIST_NETWORK) {
+      if (CIRCLE_BLACKLISTED_ADDRESSES.has(String(accept.payTo).toLowerCase())) {
+        return deny(
+          "accept.payee_blacklisted_onchain",
+          "Circle blacklisted this address on Base (eip155:8453 USDC Blacklisted event) — a contract-level freeze by the issuer, not an OFAC listing",
+        );
+      }
+      pass(
+        "accept.payee_blacklisted_onchain",
+        `payee is not in the covered range of Circle's Base USDC blacklist (blocks ${CIRCLE_COVERAGE_FROM} and later)`,
+      );
+    } else {
+      skip(
+        "accept.payee_blacklisted_onchain",
+        `the Circle USDC blacklist in this package holds Base (${CIRCLE_BLACKLIST_NETWORK}) events; it was not applied to this ${accept.network} payee`,
+      );
+    }
   } else {
     // The drainer and sanctions lists hold EVM addresses. Saying "no match" for a Solana payee
     // would claim a check that cannot see this chain, so the transcript records the skip.
@@ -477,6 +519,10 @@ function evaluateAccept(
     skip(
       "accept.sanctions",
       "the OFAC SDN list in this package holds EVM addresses; it was not applied to this Solana payee",
+    );
+    skip(
+      "accept.payee_blacklisted_onchain",
+      "the Circle USDC blacklist in this package holds Base (eip155:8453) EVM events; it was not applied to this Solana payee",
     );
   }
 
@@ -727,7 +773,7 @@ export function buildReviewPacket(
     checked.push(`SVM payee: ${accept.payTo} is a 32-byte base58 address`);
     checked.push(`SVM amount: ${accept.amount} is an unsigned integer inside the SPL Token u64 range`);
     notChecked.push(
-      "known-drainer, non-receivable and OFAC SDN lists: these lists hold EVM addresses, so they were not applied to this Solana payee",
+      "known-drainer, non-receivable, OFAC SDN and Circle Base blacklist: these lists hold EVM addresses, so they were not applied to this Solana payee",
     );
     notChecked.push(
       "mint existence and token program: not checked — the evaluator makes no RPC calls; @x402/svm reads the mint account before signing",
@@ -746,6 +792,16 @@ export function buildReviewPacket(
   } else {
     checked.push(`payee shape: ${accept.payTo} is a 20-byte hex address`);
     checked.push("known-drainer, non-receivable and OFAC SDN lists: no match");
+    if (accept.network.toLowerCase() === CIRCLE_BLACKLIST_NETWORK) {
+      checked.push(
+        `Circle USDC blacklist on Base: no match in the covered range (blocks ${CIRCLE_COVERAGE_FROM} and later)`,
+      );
+      notChecked.push(CIRCLE_BLACKLIST_NOT_CHECKED);
+    } else {
+      notChecked.push(
+        `Circle USDC blacklist: holds Base (${CIRCLE_BLACKLIST_NETWORK}) events only, so it was not applied to this ${accept.network} payee`,
+      );
+    }
     checked.push(
       payeeAllowed
         ? "payee allowlist: matched"
