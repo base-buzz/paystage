@@ -10,6 +10,7 @@ import {
   summaryLine,
   type Cell,
 } from "@/lib/wallet-matrix";
+import { FOUNDATION_TABLE_URL, FOUNDATION_UTILITIES } from "@/lib/foundation-utilities";
 
 /**
  * `/compare` — the wallet matrix (#366), rendered entirely from
@@ -189,6 +190,57 @@ export default function ComparePage() {
           columns: {mostlyUnassessed.map((row) => row.capability).join(" · ")}. Those are not rows where the
           products were measured and failed. They are rows where their documentation does not answer the
           question — and a mark invented to fill that gap would be the least defensible cell on the page.
+        </p>
+      </section>
+
+      <section aria-labelledby="utilities-heading">
+        <h2 id="utilities-heading">The other utilities in the Foundation&apos;s table</h2>
+        <p>
+          The x402 Foundation&apos;s third-party utilities table lists the entries below in this lane. We read each
+          project&apos;s own documentation on 24 November 2026. Each row states what it does that we do not, and what
+          we do that it does not. Cells marked <code>unassessed</code> are questions their documentation does not
+          answer — a documentation gap, not a finding that the check is missing.
+        </p>
+        <div className="lp-compare-scroll">
+          <table className="lp-compare-table lp-utility-table">
+            <caption>
+              Read 24 November 2026 from the Foundation&apos;s table and each project&apos;s own documentation. The
+              name in each row links to that project&apos;s docs.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Tool</th>
+                <th scope="col">It does this that we do not</th>
+                <th scope="col">We do this that it does not</th>
+              </tr>
+            </thead>
+            <tbody>
+              {FOUNDATION_UTILITIES.map((tool) => (
+                <tr key={tool.name}>
+                  <th scope="row">
+                    <a className="lp-utility-name" href={tool.url} target="_blank" rel="noreferrer noopener">
+                      {tool.name}
+                    </a>
+                    <span className="lp-utility-date">read {tool.readDate}</span>
+                  </th>
+                  <td>{tool.theirs}</td>
+                  <td>{tool.ours}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="lp-compare-note">
+          <strong>What we are not.</strong> We are not a monitoring service, an uptime or delivery oracle, a wallet, a
+          facilitator or a seller. A <code>pay</code> verdict means the payment matched your policy; it does not mean
+          the seller will deliver.
+        </p>
+        <p className="lp-compare-note">
+          <a href={FOUNDATION_TABLE_URL} target="_blank" rel="noreferrer noopener">
+            The Foundation&apos;s third-party utilities table
+          </a>{" "}
+          is the list this section answers. Every description above is the project&apos;s own wording or a direct
+          paraphrase, with the date it was read.
         </p>
       </section>
 

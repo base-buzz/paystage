@@ -2858,4 +2858,38 @@ html[data-theme="light"] .lp-aurora span,
   .lp-compare-table td {
     padding: 10px 9px;
   }
+
+  .lp-utility-table {
+    min-width: 700px;
+  }
+}
+
+.lp-utility-table tbody th {
+  width: 18%;
+}
+
+.lp-utility-table td {
+  width: 41%;
+}
+
+.lp-utility-name {
+  display: block;
+  color: var(--lp-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--lp-line);
+  text-underline-offset: 2px;
+}
+
+.lp-utility-name:hover {
+  color: var(--lp-mint);
+}
+
+.lp-utility-date {
+  display: block;
+  margin-top: 4px;
+  color: var(--lp-faint);
+  font-size: 11px;
+  font-weight: 400;
 }
