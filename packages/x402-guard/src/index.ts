@@ -95,6 +95,8 @@ export interface GuardResult {
 /** Decode the x402 v2 `payment-required` header without taking a dependency on x402-fetch. */
 export { PAYSTAGE_BUILDER_CODE, BUILDER_CODE_PATTERN, assertBuilderCode } from "./builder-code.js";
 
+export { isCorrectChallenge, type CorrectChallenge } from "./challenge-predicate.js";
+
 export function decodePaymentRequiredHeader(value: string | null): unknown {
   if (!value) return null;
   try {
