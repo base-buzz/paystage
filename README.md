@@ -145,6 +145,9 @@ npm run build -w @paystage/preflight && node examples/run.mjs
 
 Four challenges against one policy, four verdicts with reasons — no network, no keys. See [examples/](examples/).
 
+The same evaluator deciding a 402 before anything is signed, with the `pay` / `review` / `do_not_pay`
+transcript checked into the repo: [`docs/demo.md`](docs/demo.md).
+
 A copyable paid seller endpoint — gate first, Bazaar schema, idempotent retries, signed receipt — is one
 file: [`examples/seller/seller.mjs`](examples/seller/seller.mjs). It is a reference to copy, not a
 service we host.
