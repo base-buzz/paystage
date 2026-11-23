@@ -123,7 +123,8 @@ export function checkedSellersSummaries(snapshot: CheckedSellersSnapshot): strin
   const { aggregate } = snapshot;
   const { sample, result } = aggregate;
   return [
-    `${formatCount(sample.entries)} entries sampled from a ${formatCount(sample.catalogueEntries)}-entry catalogue`,
+    `${formatCount(sample.entries)} entries sampled from a ${formatCount(sample.catalogueEntries)}-entry catalogue — and the total moves in both directions: 40,157 on 23 Nov, 40,114 at 17:33Z, 40,111 at 18:02Z, because the index expires entries as well as adding them`,
+
     `${formatCount(result.correct402)} of ${formatCount(result.topEntries)} endpoints answered a correct 402`,
     `${formatCount(result.priceMatched)} of ${formatCount(result.priceCompared)} price comparisons matched where both prices were known`,
     `${formatCount(result.hostsCarryingTopEntries)} hosts carry all ${formatCount(result.topEntries)} entries`,
