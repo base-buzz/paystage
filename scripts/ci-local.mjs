@@ -218,6 +218,8 @@ try {
     // The Bazaar snapshot's source lives on the ops volume, so this one runs only where that volume is mounted and
     // exits 2 (not silently green) when it is not — GitHub's checkout has no /work/ops, so it stays out of ci.yml.
     "gen-bazaar-demand.mjs --check",
+    // Same mount rule as the Bazaar snapshot: the research record is on the ops volume and exits 2 when absent.
+    "gen-checked-sellers.mjs --check",
     "check-drainer-citations.mjs",
     "check-listing-tools.mjs",
     "gen-integrations.mjs --check",

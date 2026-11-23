@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "../landing.css";
 import Link from "next/link";
 import { LISTS } from "@/lib/lists.generated";
+import { CheckedSellersPanel } from "@/components/CheckedSellersPanel";
 import {
   buildGrowth,
   freshnessView,
@@ -29,7 +30,7 @@ import {
 export const metadata: Metadata = {
   title: "Deny lists",
   description:
-    "The sanctions and drainer lists PayStage checks before a payment is allowed, plus Circle's on-chain USDC blacklist events: sources, retrieval and last-change dates, counts, refresh cadence and the limits of exact-address matching.",
+    "The sanctions and drainer lists PayStage checks before a payment is allowed, plus Circle's on-chain USDC blacklist events: sources, retrieval and last-change dates, counts, refresh cadence and the limits of exact-address matching. Also a dated, read-only probe of the top of Bazaar's x402 catalogue: which endpoints answer a correct 402 and at what price.",
 };
 
 const ageDays = (iso: string): number => Math.floor((Date.now() - Date.parse(iso)) / 86_400_000);
@@ -479,6 +480,8 @@ export default function ListsPage() {
           verdict, truthful reason — paying one destroys the money rather than losing it to a thief.
         </p>
       </section>
+
+      <CheckedSellersPanel />
 
       <section>
         <h2>

@@ -1,0 +1,143 @@
+{
+  "verifiedOn": "2026-11-23",
+  "timeZone": "NZDT",
+  "method": "GET probe, POST retry once on an error status",
+  "aggregate": {
+    "sample": {
+      "pages": 50,
+      "perPage": 100,
+      "entries": 5000,
+      "catalogueEntries": 40154
+    },
+    "rankingField": "quality.l30DaysTotalCalls",
+    "topEntries": 100,
+    "callsMax": 1687627,
+    "callsMin": 850,
+    "probes": {
+      "getProbes": 100,
+      "postRetries": 25,
+      "endpointRequests": 125,
+      "indexPages": 50,
+      "totalRequests": 175,
+      "requestCap": 200
+    },
+    "result": {
+      "correct402": 97,
+      "no402": 1,
+      "error": 2,
+      "priceCompared": 74,
+      "priceMatched": 74,
+      "hostsCarryingTopEntries": 34,
+      "topEntries": 100,
+      "mcpNonResponsivePercent": 26
+    },
+    "tail": {
+      "path": "/mcp",
+      "entries": 153,
+      "sampled": 2000
+    }
+  },
+  "rowsNamed": 9,
+  "entriesCoveredByName": 63,
+  "rows": [
+    {
+      "host": "console.ax1.vc",
+      "calls30d": 1687627,
+      "endpointsChecked": 1,
+      "endpointsCorrect": 1,
+      "challengeCorrect": true,
+      "verifiedOn": "2026-11-23",
+      "method": "GET probe, POST retry once on an error status",
+      "priceMatched": null,
+      "screening": null
+    },
+    {
+      "host": "www.api-xpay.com",
+      "calls30d": 548761,
+      "endpointsChecked": 9,
+      "endpointsCorrect": 9,
+      "challengeCorrect": true,
+      "verifiedOn": "2026-11-23",
+      "method": "GET probe, POST retry once on an error status",
+      "priceMatched": null,
+      "screening": null
+    },
+    {
+      "host": "ax1-new.vercel.app",
+      "calls30d": 198923,
+      "endpointsChecked": 1,
+      "endpointsCorrect": 1,
+      "challengeCorrect": true,
+      "verifiedOn": "2026-11-23",
+      "method": "GET probe, POST retry once on an error status",
+      "priceMatched": null,
+      "screening": null
+    },
+    {
+      "host": "agent.pocket.network",
+      "calls30d": 119707,
+      "endpointsChecked": 29,
+      "endpointsCorrect": 29,
+      "challengeCorrect": true,
+      "verifiedOn": "2026-11-23",
+      "method": "GET probe, POST retry once on an error status",
+      "priceMatched": null,
+      "screening": null
+    },
+    {
+      "host": "x402.clashofcoins.com",
+      "calls30d": 103975,
+      "endpointsChecked": 1,
+      "endpointsCorrect": 1,
+      "challengeCorrect": true,
+      "verifiedOn": "2026-11-23",
+      "method": "GET probe, POST retry once on an error status",
+      "priceMatched": null,
+      "screening": null
+    },
+    {
+      "host": "blockrun.ai",
+      "calls30d": 82086,
+      "endpointsChecked": 6,
+      "endpointsCorrect": 6,
+      "challengeCorrect": true,
+      "verifiedOn": "2026-11-23",
+      "method": "GET probe, POST retry once on an error status",
+      "priceMatched": null,
+      "screening": null
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "calls30d": 65839,
+      "endpointsChecked": 12,
+      "endpointsCorrect": 12,
+      "challengeCorrect": true,
+      "verifiedOn": "2026-11-23",
+      "method": "GET probe, POST retry once on an error status",
+      "priceMatched": null,
+      "screening": null
+    },
+    {
+      "host": "stableenrich.dev",
+      "calls30d": 61944,
+      "endpointsChecked": 3,
+      "endpointsCorrect": 3,
+      "challengeCorrect": true,
+      "verifiedOn": "2026-11-23",
+      "method": "GET probe, POST retry once on an error status",
+      "priceMatched": null,
+      "screening": null
+    },
+    {
+      "host": "api.zerion.io",
+      "calls30d": 57605,
+      "endpointsChecked": 1,
+      "endpointsCorrect": 1,
+      "challengeCorrect": true,
+      "verifiedOn": "2026-11-23",
+      "method": "GET probe, POST retry once on an error status",
+      "priceMatched": null,
+      "screening": null
+    }
+  ]
+}
