@@ -175,3 +175,16 @@ client.onBeforePaymentCreation(paystageClientHook({ policy }));
 The hook runs before the payment payload exists, so a refusal aborts the batch before anything is signed. Verified against
 `@circle-fin/x402-batching@4.0.0` type definitions in `tests/circle-batching.test.ts` — if their context shape changes, that
 test fails here instead of in someone's signing loop.
+
+## `onReview` — the default that contradicts our own skill, documented rather than changed
+
+`review` means the policy found something worth a human's attention (an unknown payee, an unusual amount) but did not refuse.
+**`options.onReview` defaults to `"pay"` (`src/index.ts:168`): a `review` verdict is let through with the reason attached.**
+
+That contradicts the instruction we give agents in `packages/skill/SKILL.md` — *"`review` means stop and ask"* — and it is the wrong default on the merits: a
+caller who omits an option has not chosen a policy, so paying on `review` is the guard inventing authority for them. It is documented here, and pinned by
+`tests/onreview-default.test.ts`, because **changing it is a semver-visible break** and a default that flips under a patch release is worse than a wrong
+default written down.
+
+**Slated for the next major:** default to `"refuse"`, update `SKILL.md` and this section in the same commit, and put the reason in the changelog — *a caller that
+omits the option has not chosen to pay.*
