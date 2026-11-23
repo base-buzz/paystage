@@ -47,13 +47,14 @@ function tempRegistry(mutate: (value: Registry) => void): string {
   return file;
 }
 
-function run(file?: string) {
+function run(file?: string, research?: string) {
   return spawnSync(process.execPath, [CHECK, "--measurements"], {
     encoding: "utf8",
     env: {
       ...process.env,
       PAYSTAGE_MEASUREMENTS_ASOF: TODAY,
       ...(file ? { PAYSTAGE_MEASUREMENTS: file } : {}),
+      ...(research ? { PAYSTAGE_RESEARCH_FILES: research } : {}),
     },
     timeout: 60_000,
   });
@@ -125,5 +126,45 @@ describe("the checker fails where the registry would rot", () => {
     const result = run(file);
     expect(result.status).toBe(1);
     expect(result.stdout).toContain("DemandSourcesPanel.tsx renders totalCalls30d = 1114606");
+  });
+});
+
+describe("research files need a registry entry for every table/bold figure", () => {
+  const researchFile = (body: string): string => {
+    const file = join(mkdtempSync(join(tmpdir(), "research-")), "notes.md");
+    writeFileSync(file, body);
+    return file;
+  };
+
+  it("fails on a bolded number with no entry, naming the file and the number", () => {
+    const file = researchFile("# Notes\n\nA **9,876** endpoint sample.\n");
+    const result = run(undefined, file);
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("notes.md");
+    expect(result.stdout).toContain("bold span number 9,876 (9876)");
+    expect(result.stdout).toContain("no registry entry");
+  });
+
+  it("passes when the table/bold number has a registry entry", () => {
+    const file = researchFile("| Figure | Value |\n|---|---|\n| Base-USDC resources | **37,316** |\n");
+    const result = run(undefined, file);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("research numbers covered (1 table/bold figures");
+  });
+
+  it("allowlists years, HTTP status codes, row/line numbers and addresses", () => {
+    const file = researchFile(
+      [
+        "| Kind | Value |",
+        "|---|---|",
+        "| Year | **2026** |",
+        "| Status | **404** |",
+        "| Row | row 1,234 |",
+        "| Address | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |",
+      ].join("\n") + "\n",
+    );
+    const result = run(undefined, file);
+    expect(result.status).toBe(0);
+    expect(result.stdout).not.toContain("no registry entry");
   });
 });

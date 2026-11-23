@@ -44,8 +44,13 @@ const MEASUREMENTS_ASOF = process.env.PAYSTAGE_MEASUREMENTS_ASOF
   ? Date.parse(process.env.PAYSTAGE_MEASUREMENTS_ASOF)
   : Date.now();
 
+const RESEARCH_FILES = process.env.PAYSTAGE_RESEARCH_FILES;
+const RESEARCH_NUMBER =
+  /(?<![\w:.\-^])(?:\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d{3,}(?:\.\d+)?)(?![\w:])/g;
+
 if (measurementsOnly) {
   checkMeasurements();
+  checkResearchNumbers();
   if (process.argv.includes('--json')) {
     console.log(JSON.stringify({ ok: problems.length === 0, passed: ok, problems }, null, 2));
   } else {
@@ -488,8 +493,162 @@ function checkMeasurements() {
   }
 }
 
+/**
+ * Research-file coverage (#395).
+ *
+ * The page-surface check above walks every numeric leaf in a generated data file. The research prose in `docs/*.md`
+ * carries numbers too — the two misses this row was filed for were the rho sample (37,316 resources) and the busiest
+ * entry's calls — and those files were not scanned at all. This is deliberately the narrow rule, not "every number in
+ * prose":
+ *
+ *   - only a number in a **table cell** or a **bold span** is a claim a reader is meant to take away; prose may quote
+ *     a figure that the surrounding sentence qualifies, and flagging it was the noise the #388 kill criterion warned
+ *     about;
+ *   - years 1900–2100, HTTP status codes 100–599, row/line references and hex/addresses are allowlisted, because they
+ *     are not measurements of a population;
+ *   - a number passes when the registry has an entry with that value. The registry entry, not the page, is the place
+ *     the population is recorded.
+ *
+ * The scan lives here for the same reason the measurement check does: one checker, one ledger. `--measurements` and a
+ * plain run both execute it, so CI and the console tests see the same rule.
+ */
+/**
+ * Resolve the research corpus. Production is every top-level `docs/*.md`; the env override exists so the tests can
+ * point at a temporary file instead of mutating the checked-in docs.
+ */
+function researchFiles() {
+  const resolveOne = (path) => {
+    const full = path.startsWith("/") ? path : join(ROOT, path);
+    let st;
+    try {
+      st = statSync(full);
+    } catch {
+      return [];
+    }
+    if (!st.isDirectory()) return [path];
+    return readdirSync(full)
+      .filter((entry) => entry.endsWith(".md"))
+      .map((entry) => join(path, entry));
+  };
+  if (RESEARCH_FILES) return RESEARCH_FILES.split(",").map((p) => p.trim()).filter(Boolean).flatMap(resolveOne);
+  return readdirSync(join(ROOT, "docs"))
+    .filter((entry) => entry.endsWith(".md"))
+    .map((entry) => join("docs", entry));
+}
+
+/** Values already in the ledger. A number passes coverage when its population is recorded there. */
+function registeredNumbers() {
+  try {
+    const registry = JSON.parse(readFileSync(MEASUREMENTS_FILE, "utf8"));
+    return new Set(
+      (registry.entries ?? [])
+        .filter((entry) => typeof entry?.value === "number" && Number.isFinite(entry.value))
+        .map((entry) => entry.value),
+    );
+  } catch {
+    // checkMeasurements already reports an unreadable registry; do not duplicate the failure.
+    return null;
+  }
+}
+
+/**
+ * The allowlist is about *what kind of token* this is, not a list of values. A year is a label; an HTTP status is a
+ * protocol constant; a row/line number points at another document; an address is an identifier. None describes a
+ * population, so none needs a registry row.
+ */
+function allowlistedNumber(raw, value, before) {
+  const plain = raw.replace(/,/g, "");
+  if (/^\d{4}$/.test(plain) && value >= 1900 && value <= 2100) return "year";
+  if (/^\d{3}$/.test(plain) && value >= 100 && value <= 599) return "HTTP status code";
+  if (/(?:\brow|\bline)\s*[:#]?\s*$/i.test(before)) return "row/line number";
+  if (/(?:#|L)$/.test(before)) return "row/line reference";
+  // A hex address: the token sits inside a 0x-prefixed run (the number regex itself refuses to start mid-word, so this
+  // catches a bare digit run that begins right after `0x`).
+  if (/0x[0-9a-fA-F]*$/i.test(before)) return "hex/address";
+  return null;
+}
+
+/** Table cells and bold spans on one line, with their offsets so a bold number inside a table is not counted twice. */
+function claimSpans(line) {
+  const spans = [];
+  if (/^\s*\|/.test(line)) {
+    // Separator row (`| --- | :---: |`) is structure, not a claim.
+    if (/^\s*\|?[\s:|-]+\|?\s*$/.test(line)) return spans;
+    let offset = 0;
+    for (const cell of line.split("|").slice(1, -1)) {
+      const at = line.indexOf(cell, offset);
+      if (at === -1) continue;
+      spans.push({ text: cell, at, kind: "table cell" });
+      offset = at + cell.length;
+    }
+  }
+  for (const match of line.matchAll(/\*\*([^*]+)\*\*/g)) {
+    spans.push({ text: match[1], at: match.index + 2, kind: "bold span" });
+  }
+  for (const match of line.matchAll(/__([^_]+)__/g)) {
+    spans.push({ text: match[1], at: match.index + 2, kind: "bold span" });
+  }
+  return spans;
+}
+
+function checkResearchNumbers() {
+  const values = registeredNumbers();
+  if (values === null) return;
+  const files = researchFiles();
+  let scanned = 0;
+  let allowlisted = 0;
+
+  for (const file of files) {
+    const full = file.startsWith("/") ? file : join(ROOT, file);
+    let text;
+    try {
+      text = readFileSync(full, "utf8");
+    } catch {
+      continue;
+    }
+    const lines = text.split("\n");
+    let inFence = false;
+    lines.forEach((line, index) => {
+      if (/^\s*(?:```|~~~)/.test(line)) {
+        inFence = !inFence;
+        return;
+      }
+      // Code samples and comments are examples, not claims; a table or bold span inside one is not rendered prose.
+      if (inFence || /^\s*<!--/.test(line)) return;
+
+      const seen = new Set();
+      for (const span of claimSpans(line)) {
+        for (const match of span.text.matchAll(RESEARCH_NUMBER)) {
+          const raw = match[0];
+          const value = Number(raw.replace(/,/g, ""));
+          if (!Number.isFinite(value)) continue;
+          const absolute = span.at + match.index;
+          if (seen.has(absolute)) continue;
+          seen.add(absolute);
+          scanned++;
+
+          // A registry row is the strongest proof; the allowlist is only for tokens that are not measurements at all.
+          if (values.has(value)) continue;
+          const why = allowlistedNumber(raw, value, line.slice(0, absolute));
+          if (why) {
+            allowlisted++;
+            continue;
+          }
+          problems.push(
+            `research ${file}:${index + 1} has a ${span.kind} number ${raw} (${value}) with no registry entry — ` +
+              `add name, value, population, n, measured_at, command and refresh_days to docs/state/measurements.json`,
+          );
+        }
+      }
+    });
+  }
+
+  ok.push(`research numbers covered (${scanned} table/bold figures in ${files.length} docs, ${allowlisted} allowlisted)`);
+}
+
 checkMermaidVerdicts();
 checkMeasurements();
+checkResearchNumbers();
 
 const payload = { ok: problems.length === 0, tools: tools.length, passed: ok, problems };
 if (process.argv.includes('--json')) {

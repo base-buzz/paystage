@@ -1,5 +1,5 @@
 {
- "$comment": "Every number PayStage publishes, with the population it describes and the command that reproduces it. Enforced by scripts/check-claims.mjs: an entry older than refresh_days fails, and a numeric leaf rendered by a declared surface with no entry here fails. `source` paths under /work/ops are not in a clean checkout; those entries are freshness-checked only. Values are copied from the named source files, never typed from memory.",
+ "$comment": "Every number PayStage publishes, with the population it describes and the command that reproduces it. Enforced by scripts/check-claims.mjs: an entry older than refresh_days fails; a numeric leaf rendered by a declared surface with no entry here fails; and a 3+ digit number in a table cell or bold span in docs/*.md with no entry here fails too (years, HTTP status codes, row/line references and hex/addresses are allowlisted). `source` paths under /work/ops are not in a clean checkout; those entries are freshness-checked only. Values are copied from the named source files, never typed from memory.",
  "decision": "Extend scripts/check-claims.mjs; do not add a second checker. check-claims is already the one place a published number is policed, it already runs in ci.yml and ci-local, and the #388 kill criterion said to extend it if it fits. A second ledger would be two places for the same fact to drift.",
  "version": 1,
  "surfaces": [
@@ -646,6 +646,56 @@
    "refresh_days": 30,
    "source": "/work/ops/docs/state/bazaar-rank-2026-11-23.json",
    "page": "apps/console/src/app/lists/page.tsx"
+  },
+  {
+   "name": "pricing.calls30d",
+   "value": 3534,
+   "population": "hosted calls in the 30 days to 2026-11-16, including the project's own canary traffic; telemetry count, not settled payments",
+   "n": 3534,
+   "measured_at": "2026-11-16",
+   "command": "manual telemetry query recorded in docs/pricing.md on 2026-11-16; no repo script exists for this export",
+   "refresh_days": 30,
+   "page": "docs/pricing.md"
+  },
+  {
+   "name": "pricing.averageCallsPerActiveDay",
+   "value": 208,
+   "population": "hosted calls in the 30 days to 2026-11-16 divided by the 17 days with at least one call; includes the project's own canary traffic",
+   "n": 17,
+   "measured_at": "2026-11-16",
+   "command": "manual telemetry query recorded in docs/pricing.md on 2026-11-16; no repo script exists for this export",
+   "refresh_days": 30,
+   "page": "docs/pricing.md"
+  },
+  {
+   "name": "pricing.medianLatencyMs7d",
+   "value": 120,
+   "population": "median hosted-call latency in milliseconds over the 7 days to 2026-11-16",
+   "n": 342,
+   "measured_at": "2026-11-16",
+   "command": "manual telemetry query recorded in docs/pricing.md on 2026-11-16; no repo script exists for this export",
+   "refresh_days": 30,
+   "page": "docs/pricing.md"
+  },
+  {
+   "name": "pricing.latencySampleSize",
+   "value": 342,
+   "population": "hosted calls in the 7-day window to 2026-11-16 used for the 120 ms median latency",
+   "n": 342,
+   "measured_at": "2026-11-16",
+   "command": "manual telemetry query recorded in docs/pricing.md on 2026-11-16; no repo script exists for this export",
+   "refresh_days": 30,
+   "page": "docs/pricing.md"
+  },
+  {
+   "name": "pricing.breakEvenCallsPerMonth",
+   "value": 2500,
+   "population": "derived break-even volume: the $5.00 Workers Paid base fee divided by the $0.002 per-call price; arithmetic, not a measurement",
+   "n": 1,
+   "measured_at": "2026-11-16",
+   "command": "arithmetic shown in docs/pricing.md: $5.00 / $0.002",
+   "refresh_days": 90,
+   "page": "docs/pricing.md"
   }
  ]
 }
