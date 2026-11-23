@@ -80,8 +80,12 @@ export default function PrivacyPage() {
       <h2>What it does not record</h2>
       <ul>
         <li>
-          <strong>No IP address.</strong> The free tier counts calls per IP to enforce its daily allowance, but that
-          count lives in the Worker's memory and is never written to the database.
+          <strong>No IP address, and the free-tier counter is approximate on purpose.</strong> The daily allowance is
+          counted per IP <em>inside one Worker isolate</em>, in that isolate's memory, and is never written to the
+          database. A shared counter would have to live somewhere, and every option turned an address into a stored
+          record; so the allowance is deliberately per isolate and therefore approximate at the edges — a caller who
+          spreads across isolates may get a little more than the allowance, which we accept rather than keep a log
+          that identifies people.
         </li>
         <li>
           <strong>No email address, name or password.</strong> Account creation is optional and uses a wallet signature,
