@@ -3,8 +3,8 @@
  *
  * Source: US Treasury SDN list, "Digital Currency Address - ETH" entries.
  * https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML
- * fetched_at: 2026-11-22T09:48:26.837Z
- * source_sha256: 8a8e2c8b2fd2d56dcb8be01a3f82ef795f00887124fe15ed4acd6abe410135c5
+ * fetched_at: 2026-11-23T22:21:14.712Z
+ * source_sha256: 6ffb23f8c0b92518f15317010ec1d41a96bda876760690e5c76da8f38221e0a9
  *
  * Refresh with `node /work/ops/bin/ofac-sync.mjs`. The hourly canary detects a changed SDN.XML and runs this
  * sync; the 45-day check is a floor, and it reads the list's last change rather than only its age.
@@ -137,4 +137,4 @@ export const SANCTIONED_ADDRESSES: ReadonlySet<string> = new Set([
 ]);
 
 /** When this list was generated, so a verdict can say how stale its screening is. */
-export const SANCTIONED_FETCHED_AT = "2026-11-22T09:48:26.837Z";
+export const SANCTIONED_FETCHED_AT = "2026-11-23T22:21:14.712Z";

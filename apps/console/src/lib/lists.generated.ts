@@ -159,18 +159,21 @@ export const LISTS = {
     "monogram": "OF",
     "publisher": "US Department of the Treasury, Office of Foreign Assets Control",
     "source": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML",
-    "retrieved": "2026-11-22T09:48:26.837Z",
-    "lastChangeAt": null,
-    "lastChangeFields": [],
+    "retrieved": "2026-11-23T22:21:14.712Z",
+    "lastChangeAt": "2026-11-23T17:41:05.622Z",
+    "lastChangeFields": [
+      "last-modified",
+      "body"
+    ],
     "firstFetchedAt": "2026-11-22T09:44:47.311Z",
-    "detectorFetchedAt": "2026-11-22T09:45:43.782Z",
-    "lastModified": "Fri, 20 Nov 2026 20:32:28 GMT",
+    "detectorFetchedAt": "2026-11-23T22:22:16.705Z",
+    "lastModified": "Mon, 23 Nov 2026 17:32:51 GMT",
     "changedSinceCopy": false,
     "addresses": 123,
     "maxAgeDays": 45,
     "freshness": {
-      "upstreamChangedAt": "2026-11-20T20:32:28.000Z",
-      "basis": "last-modified",
+      "upstreamChangedAt": "2026-11-23T17:41:05.622Z",
+      "basis": "last-change",
       "reviewedAt": null,
       "hasUpstreamFeed": true
     },
@@ -184,7 +187,7 @@ export const LISTS = {
     "growth": {
       "retrievals": [
         {
-          "at": "2026-11-22T09:48:26.837Z",
+          "at": "2026-11-23T22:21:14.712Z",
           "count": 123
         }
       ]
@@ -192,7 +195,7 @@ export const LISTS = {
     "refreshInfo": {
       "command": "node /work/ops/bin/ofac-sync.mjs",
       "where": "hourly canary — bin/canary-digest.sh",
-      "lastRunAt": "2026-11-22T09:45:43.782Z",
+      "lastRunAt": "2026-11-23T22:22:16.705Z",
       "status": "ok",
       "lastResult": "unchanged — no body or Last-Modified move since the previous check"
     },
