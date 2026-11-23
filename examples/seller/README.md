@@ -25,7 +25,9 @@ support promise attached to it.
    `x-paystage-idempotent-replay: true`. The seller records **one** simulated settlement, not two.
 5. **The price is the measured median.** `$0.009` (9,000 atomic USDC) from the 2026-11-22 supply
    snapshot: 13,305 Base-USDC rows, median 9,000. The server prints whether it used a snapshot, the
-   env var, or the built-in measured fallback.
+   env var, or the built-in measured fallback. The median is a neutral default, not a demand claim:
+   the 2026-11-23 full-catalogue test found no usable relationship between advertised price and
+   observed calls (see [Median: source and value](#median-source-and-value)).
 6. **The receipt verifies.** It uses the existing PayStage receipt format, is signed with an ephemeral
    **test** P-256 key generated at startup, served at `/receipts/<id>`, and its public key is served at
    `/.well-known/paystage-receipt-key.json`. `@paystage/receipt-verify` checks it with no network.
@@ -66,6 +68,24 @@ built-in value. It always prints which source it used.
 
 If you copy this file, replace that measurement with your own price. Pricing at the median is a
 default for an example, not a recommendation.
+
+### What the median is not: demand
+
+The 2026-11-23 test walked the whole discovery index (39,978 entries, 40 pages of 1,000, 40
+requests; 37,316 Base-USDC resources on 3,114 hosts) and compared each advertised price with
+`quality.l30DaysTotalCalls`:
+
+- **Spearman ρ = −0.024** (95% CI −0.035 to −0.014; ρ² ≈ 0.0006). At n = 37,316 that is
+  distinguishable from zero, and far too small to price against.
+- Median calls by price decile, cheapest to dearest: **1, 1, 1, 2, 1, 2, 1, 3, 1, 1**.
+- In the 5,000 most-called resources, **ρ = 0.0009 (p = 0.95)**, and the median price was **$0.005
+  in both the lowest and the highest call decile** (0.003–0.005 across all ten).
+- Prices span $0.00001 to $1,000 (median $0.005); calls per resource are mostly 1.
+
+**So: price does not appear to drive calls, and we do not know what does.** That is a descriptive
+result, not proof of no relationship: the test would have seen |ρ| ≥ ~0.015, and it says nothing
+about causality, quality, or the listings whose counters read 1. The median stays the example's
+default; it is not evidence that charging it — or anything else — produces calls.
 
 ## Idempotency
 
