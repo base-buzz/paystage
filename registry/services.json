@@ -25,7 +25,7 @@
     "name": "PayStage Evaluate",
     "url": "https://api.paystage.xyz/v1/evaluate_mcp_payment",
     "network": "eip155:8453",
-    "description": "Evaluates a proposed x402 payment against a local policy and returns pay, review or do_not_pay with the rule that fired.",
+    "description": "Evaluates a proposed x402 payment against a local policy and returns pay, review or do_not_pay with the rule that fired. Ten MCP tools behind this endpoint: evaluate_mcp_payment, list_outstanding_auths, evaluate_outstanding_auths, evaluate_hip3_trade, evaluate_velocity, verify_receipt, decode_payment_required, validate_policy, request_testnet_funds, evaluate_batch.",
     "price": "$0.002 per call",
     "asset": "USDC",
     "payTo": "0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE",

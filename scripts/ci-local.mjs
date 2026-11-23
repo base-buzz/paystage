@@ -219,6 +219,7 @@ try {
     // exits 2 (not silently green) when it is not — GitHub's checkout has no /work/ops, so it stays out of ci.yml.
     "gen-bazaar-demand.mjs --check",
     "check-drainer-citations.mjs",
+    "check-listing-tools.mjs",
     "gen-integrations.mjs --check",
     "check-integrations-grading.mjs",
     "gen-verified-payees.mjs --check",
