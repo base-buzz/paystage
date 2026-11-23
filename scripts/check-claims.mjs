@@ -13,7 +13,7 @@
  * It reads the truth from source — not from a built artefact, not from the live site — so it runs
  * before the thing it checks could have been deployed.
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, extname, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -22,6 +22,43 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const problems = [];
 const ok = [];
+
+/**
+ * Measurement registry (#388) — the numbers, not the copy.
+ *
+ * The checks above compare a *word* on a page against the code. This one compares a *number* against the population that
+ * produced it: `docs/state/measurements.json` carries name, value, population, n, measured_at, command and refresh_days.
+ * Two failures follow from that, and both are the divergence this row was filed for:
+ *
+ *   - an entry older than its own `refresh_days` (the 34-vs-33 host count and the "97%" predicate both outlived their run);
+ *   - a numeric leaf in a declared page surface with no entry (a number living without its population).
+ *
+ * This lives in check-claims rather than a second checker because check-claims is already the one place a published number
+ * is policed before it ships; the kill criterion for #388 said to extend it, and a second ledger would be two places to drift.
+ */
+const measurementsOnly = process.argv.includes('--measurements');
+const MEASUREMENTS_FILE =
+  process.env.PAYSTAGE_MEASUREMENTS ?? join(ROOT, 'docs/state/measurements.json');
+/** Tests pin the clock here; production uses the wall clock. */
+const MEASUREMENTS_ASOF = process.env.PAYSTAGE_MEASUREMENTS_ASOF
+  ? Date.parse(process.env.PAYSTAGE_MEASUREMENTS_ASOF)
+  : Date.now();
+
+if (measurementsOnly) {
+  checkMeasurements();
+  if (process.argv.includes('--json')) {
+    console.log(JSON.stringify({ ok: problems.length === 0, passed: ok, problems }, null, 2));
+  } else {
+    for (const line of ok) console.log(`  ok    ${line}`);
+    for (const line of problems) console.log(`  FAIL  ${line}`);
+    console.log(
+      problems.length === 0
+        ? `\nmeasurements: clean (${ok.at(-1) ?? 'registry read'})`
+        : `\nmeasurements: ${problems.length} problem(s)`,
+    );
+  }
+  process.exit(problems.length === 0 ? 0 : 1);
+}
 
 /** Truth: the tools the package actually registers. */
 function registeredTools() {
@@ -270,7 +307,189 @@ function checkMermaidVerdicts() {
   if (problems.length === 0) ok.push(`mermaid matches the evaluators (${blocks.length} block(s), shows ${payment.join(", ")})`);
 }
 
+/**
+ * Read a generated surface. JSON files parse as-is; `lists.generated.ts` is parsed by extracting the named object literal
+ * (`"coverage": { ... }`) with a brace walk, so no TypeScript parser and no new dependency is needed.
+ */
+function surfaceObject(file, roots) {
+  const full = file.startsWith('/') ? file : join(ROOT, file);
+  const text = readFileSync(full, 'utf8');
+  if (file.endsWith('.json')) return JSON.parse(text);
+  const out = {};
+  for (const root of roots) {
+    const key = root.split('.')[0];
+    const marker = `"${key}":`;
+    const at = text.indexOf(marker);
+    if (at === -1) throw new Error(`no ${marker} in ${file}`);
+    const brace = text.indexOf('{', at);
+    let depth = 0;
+    let end = -1;
+    for (let i = brace; i < text.length; i++) {
+      if (text[i] === '{') depth++;
+      else if (text[i] === '}') {
+        depth--;
+        if (depth === 0) {
+          end = i + 1;
+          break;
+        }
+      }
+    }
+    if (end === -1) throw new Error(`unterminated ${marker} in ${file}`);
+    out[key] = JSON.parse(text.slice(brace, end));
+  }
+  return out;
+}
+
+/** Dotted-path lookup. `array.length` is a rendered number in its own right. */
+function readPath(value, path) {
+  let current = value;
+  for (const part of path.split('.')) {
+    if (current === null || current === undefined) return undefined;
+    if (part === 'length' && Array.isArray(current)) {
+      current = current.length;
+      continue;
+    }
+    current = current[part];
+  }
+  return current;
+}
+
+/** Every finite number in an object, with its dotted path. Arrays keep their indices, so a registry entry can name one row. */
+function numericLeaves(value, prefix, out) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    out.push([prefix, value]);
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => numericLeaves(item, `${prefix}.${index}`, out));
+    return;
+  }
+  if (value && typeof value === 'object') {
+    for (const [key, child] of Object.entries(value)) numericLeaves(child, `${prefix}.${key}`, out);
+  }
+}
+
+function checkMeasurements() {
+  let registry;
+  try {
+    registry = JSON.parse(readFileSync(MEASUREMENTS_FILE, 'utf8'));
+  } catch (error) {
+    problems.push(
+      `cannot read the measurement registry at ${MEASUREMENTS_FILE} — ${String(error).slice(0, 90)}. Every published number needs an entry there.`,
+    );
+    return;
+  }
+
+  const entries = Array.isArray(registry.entries) ? registry.entries : [];
+  if (entries.length === 0) {
+    problems.push('docs/state/measurements.json has no entries — a page number cannot be checked against an empty registry');
+    return;
+  }
+
+  const REQUIRED = ['name', 'value', 'population', 'n', 'measured_at', 'command', 'refresh_days'];
+  const names = new Set();
+  const registered = new Set();
+  let coveredPageNumbers = 0;
+  let stale = 0;
+
+  entries.forEach((entry, index) => {
+    const label = typeof entry?.name === 'string' && entry.name.trim() ? entry.name : `entry #${index + 1}`;
+    for (const field of REQUIRED) {
+      if (entry?.[field] === undefined || entry[field] === null || entry[field] === '') {
+        problems.push(`measurement "${label}" is missing "${field}"`);
+      }
+    }
+    if (names.has(label)) problems.push(`measurement "${label}" is registered twice`);
+    names.add(label);
+
+    if (typeof entry?.value !== 'number' || !Number.isFinite(entry.value)) {
+      problems.push(`measurement "${label}" has a non-numeric value`);
+    }
+    if (!Number.isInteger(entry?.n) || entry.n <= 0) {
+      problems.push(`measurement "${label}" needs a positive integer n (the sample size or denominator)`);
+    }
+    if (typeof entry?.refresh_days !== 'number' || !(entry.refresh_days > 0)) {
+      problems.push(`measurement "${label}" needs a positive refresh_days`);
+    }
+
+    const measuredAt = Date.parse(entry?.measured_at);
+    if (Number.isNaN(measuredAt)) {
+      problems.push(`measurement "${label}" has an unreadable measured_at: ${entry?.measured_at}`);
+    } else if (Number.isFinite(MEASUREMENTS_ASOF)) {
+      const ageDays = (MEASUREMENTS_ASOF - measuredAt) / 86_400_000;
+      if (ageDays > entry.refresh_days) {
+        stale++;
+        problems.push(
+          `measurement "${label}" is stale on ${entry.page ?? 'a published page'}: measured ${entry.measured_at} ` +
+            `(${Math.floor(ageDays)} days ago) against refresh_days ${entry.refresh_days} — re-run \`${entry.command}\` ` +
+            `and update docs/state/measurements.json`,
+        );
+      }
+    }
+
+    if (entry?.source && entry?.json_path) {
+      const key = `${entry.source}::${entry.json_path}`;
+      registered.add(key);
+      const full = entry.source.startsWith('/') ? entry.source : join(ROOT, entry.source);
+      if (existsSync(full)) {
+        try {
+          const actual = readPath(surfaceObject(entry.source, [entry.json_path]), entry.json_path);
+          if (actual === undefined) {
+            problems.push(
+              `measurement "${label}" points at ${entry.source} ${entry.json_path}, which no longer exists — the page and the registry disagree`,
+            );
+          } else if (typeof actual !== 'number' || Math.abs(actual - entry.value) > 1e-9) {
+            problems.push(
+              `measurement "${label}" says ${entry.value}, but ${entry.source} ${entry.json_path} is ${actual} — ` +
+                `the registry has drifted from the page's own data`,
+            );
+          }
+        } catch (error) {
+          problems.push(`measurement "${label}" cannot read its source ${entry.source} — ${String(error).slice(0, 80)}`);
+        }
+      }
+    }
+
+    if (entry?.page && !existsSync(join(ROOT, entry.page))) {
+      problems.push(`measurement "${label}" names the page ${entry.page}, which does not exist`);
+    }
+  });
+
+  for (const surface of registry.surfaces ?? []) {
+    if (!surface?.file || !Array.isArray(surface.roots)) continue;
+    let object;
+    try {
+      object = surfaceObject(surface.file, surface.roots);
+    } catch (error) {
+      problems.push(`cannot read the page surface ${surface.file} — ${String(error).slice(0, 90)}`);
+      continue;
+    }
+    for (const root of surface.roots) {
+      const value = readPath(object, root);
+      if (value === undefined) {
+        problems.push(`the page surface ${surface.file} no longer has "${root}" — update docs/state/measurements.json`);
+        continue;
+      }
+      const leaves = [];
+      numericLeaves(value, root, leaves);
+      coveredPageNumbers += leaves.length;
+      for (const [path, number] of leaves) {
+        if (registered.has(`${surface.file}::${path}`)) continue;
+        problems.push(
+          `page ${surface.page ?? surface.file} renders ${path} = ${number} (${surface.file}) but ` +
+            `docs/state/measurements.json has no entry for it — add name, value, population, n, measured_at, command and refresh_days`,
+        );
+      }
+    }
+  }
+
+  if (stale === 0) {
+    ok.push(`${entries.length} measurements registered, ${coveredPageNumbers} page numbers covered, 0 stale`);
+  }
+}
+
 checkMermaidVerdicts();
+checkMeasurements();
 
 const payload = { ok: problems.length === 0, tools: tools.length, passed: ok, problems };
 if (process.argv.includes('--json')) {

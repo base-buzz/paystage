@@ -211,6 +211,8 @@ try {
 
   // The checks CI runs as separate steps.
   for (const check of [
+    // Also enforces docs/state/measurements.json (#388): a registry entry past refresh_days, or a number a page
+    // renders with no entry, is red here — the registry is committed, so this works in a clean checkout.
     "check-claims.mjs",
     "check-client-manifests.mjs",
     "check-agent-surfaces.mjs --live",
