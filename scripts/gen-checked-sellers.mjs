@@ -123,6 +123,23 @@ const rows = [...section.matchAll(/^\|\s*([^|\n]+?)\s*\|\s*(\d+)\/(\d+)\s*\|\s*(
   };
 });
 
+/**
+ * Fail loudly when the record stops carrying the aggregate.
+ *
+ * 2026-11-23: after the research record was corrected (34 → 33 hosts) and re-worded, this generator wrote a record with **no aggregate block** — no host count, no
+ * correct-402 count, no price comparison — while `--check` still reported the committed file as merely "out of date". Regenerating would have removed numbers from the
+ * published page, which is worse than a build failure. #387's rule: derive it or refuse, never silently drop it.
+ */
+for (const [name, value] of Object.entries({
+  "correct-402 count": correct,
+  "price-comparison counts": price,
+  "host concentration": hosts,
+})) {
+  if (value === null) {
+    fail(1, `checked-sellers: the record no longer carries the ${name} — the aggregate would lose a published number, so this refuses instead of writing it`);
+  }
+}
+
 if (rows.length === 0) {
   fail(1, "checked-sellers: the top-of-market table has no parsable host rows");
 }

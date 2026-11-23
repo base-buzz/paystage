@@ -77,7 +77,7 @@ describe("the page names its verification date and method", () => {
     expect(html).toContain("Method.");
     expect(html).toContain("50 pages × 100 entries = 5,000");
     expect(html).toContain("175 requests in all, inside the 200 cap");
-    expect(html).toContain("34 hosts carry all 100 entries");
+    expect(html).toContain("33 hosts carry all 100 entries");
     expect(html).toContain("about 26% of listed MCP servers never answer");
     expect(html).toContain("differentiates at the top and says nothing about the tail");
     expect(html).toContain("not a ranking of quality and not an endorsement");
