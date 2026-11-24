@@ -147,6 +147,48 @@ const velocity: Schema = {
 };
 
 /**
+ * Risk-based friction (#414). Shape only — the evaluator decides which threshold fires and names it.
+ *
+ * At least one threshold is required: a `step_up` block with no thresholds would be a rule that can never fire,
+ * which reads as protection while doing nothing. `answers` is a non-empty list because a step-up answerable only
+ * by a human is the outage the design constraint forbids.
+ */
+const stepUp: Schema = {
+  kind: "object",
+  fields: [
+    { key: "amount_above", schema: amountSpec, optional: true },
+    { key: "unknown_payee", schema: { kind: "boolean" }, optional: true },
+    { key: "first_payment_from_payer", schema: { kind: "boolean" }, optional: true },
+    {
+      key: "answers",
+      schema: {
+        kind: "array",
+        element: {
+          kind: "enum",
+          values: ["pre_signed_allowance", "second_key", "bounded_auto_approve"],
+        },
+        min: 1,
+      },
+      optional: true,
+    },
+  ],
+  refine: (value, sink) => {
+    if (
+      value.amount_above === undefined &&
+      value.unknown_payee !== true &&
+      value.first_payment_from_payer !== true
+    ) {
+      sink.soft({
+        code: "custom",
+        path: ["step_up"],
+        message:
+          "step_up needs at least one threshold: amount_above, unknown_payee, or first_payment_from_payer",
+      });
+    }
+  },
+};
+
+/**
  * Per-agent overlays. Shape is validated here; the *narrowing* rule is enforced in
  * `resolveAgentPolicy`, because it needs the surrounding policy to compare against.
  */
@@ -199,6 +241,7 @@ const POLICY_FIELDS: readonly Field[] = [
    */
   { key: "time_window", schema: timeWindow, optional: true },
   { key: "require_human_above", schema: amountSpec, optional: true },
+  { key: "step_up", schema: stepUp, optional: true },
   { key: "unknown_payee", schema: { kind: "enum", values: ["review", "deny"] } },
   {
     key: "max_auth_validity_seconds",
@@ -225,12 +268,13 @@ const policyRefine: Refinement = (value, sink: SchemaSink): void => {
   for (const [field, spec] of [
     ["max_amount", policy.max_amount],
     ["daily_cap", policy.daily_cap],
+    ["step_up.amount_above", policy.step_up?.amount_above],
   ] as const) {
     if (spec === undefined) continue;
     if (decimalPlaces(spec.value) > spec.decimals) {
       sink.soft({
         code: "custom",
-        path: [field, "value"],
+        path: [...field.split("."), "value"],
         message: `${field}.value "${spec.value}" has more decimal places than ${field}.decimals (${spec.decimals})`,
       });
     }

@@ -89,6 +89,26 @@ const velocityWindowSchema = z.object({
   per_payee_max_amount: velocityAmountSchema.optional(),
 });
 
+/** Risk-based friction (#414); mirrors the hand-written `stepUp` schema. */
+const stepUpSchema = z
+  .object({
+    amount_above: amountSpecSchema.optional(),
+    unknown_payee: z.boolean().optional(),
+    first_payment_from_payer: z.boolean().optional(),
+    answers: z
+      .array(z.enum(["pre_signed_allowance", "second_key", "bounded_auto_approve"]))
+      .min(1)
+      .optional(),
+  })
+  .refine(
+    (s) =>
+      s.amount_above !== undefined || s.unknown_payee === true || s.first_payment_from_payer === true,
+    {
+      message:
+        "step_up needs at least one threshold: amount_above, unknown_payee, or first_payment_from_payer",
+    },
+  );
+
 /**
  * Cross-field checks. These exist because each one was a live hole:
  *
@@ -121,6 +141,7 @@ const BasePolicySchema = z.object({
    */
   time_window: timeWindowSchema.optional(),
   require_human_above: amountSpecSchema.optional(),
+  step_up: stepUpSchema.optional(),
   unknown_payee: z.enum(["review", "deny"]),
   max_auth_validity_seconds: z.number().int().positive().optional(),
   allowed_spenders: z.array(evmAddressSchema).optional(),
@@ -161,12 +182,13 @@ export const PolicySchema = BasePolicySchema.superRefine((p, ctx) => {
   for (const [field, spec] of [
     ["max_amount", p.max_amount],
     ["daily_cap", p.daily_cap],
+    ["step_up.amount_above", p.step_up?.amount_above],
   ] as const) {
     if (spec === undefined) continue;
     if (places(spec.value) > spec.decimals) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: [field, "value"],
+        path: [...field.split("."), "value"],
         message: `${field}.value "${spec.value}" has more decimal places than ${field}.decimals (${spec.decimals})`,
       });
     }

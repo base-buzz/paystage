@@ -28,9 +28,25 @@ function readFixture(path) {
 
 const strict = readFixture("examples/policies/strict.json");
 const reviewPolicy = { ...strict, unknown_payee: "review" };
+/**
+ * The caller owns the payer's history (#414). This demo pays the allowlisted payee from a payer that has paid it
+ * before, so the small payment crosses no step-up; the unknown payee has no such record, so it does.
+ */
 const CASES = [
-  { name: "pay", fixture: "examples/challenges/allowed.json", policy: strict, expected: "pay" },
-  { name: "review", fixture: "examples/challenges/unknown-payee.json", policy: reviewPolicy, expected: "review" },
+  {
+    name: "pay",
+    fixture: "examples/challenges/allowed.json",
+    policy: strict,
+    expected: "pay",
+    history: { payees: ["0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE"], paymentCount: 3 },
+  },
+  {
+    name: "review",
+    fixture: "examples/challenges/unknown-payee.json",
+    policy: reviewPolicy,
+    expected: "review",
+    history: { payees: [], paymentCount: 3 },
+  },
   { name: "do_not_pay", fixture: "examples/challenges/over-cap.json", policy: strict, expected: "do_not_pay" },
 ];
 const ruleOf = (result) =>
@@ -43,7 +59,9 @@ console.log("case        verdict      rule                          challenge");
 let failed = 0;
 for (const testCase of CASES) {
   const challenge = readFixture(testCase.fixture);
-  const result = evaluatePayment(challenge, testCase.policy);
+  const result = testCase.history
+    ? evaluatePayment(challenge, testCase.policy, { paymentHistory: testCase.history })
+    : evaluatePayment(challenge, testCase.policy);
   const rule = ruleOf(result);
   const ok = result.decision === testCase.expected;
   if (!ok) failed += 1;

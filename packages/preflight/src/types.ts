@@ -9,6 +9,9 @@ export type {
   ReviewPacket,
   ReviewPacketOptions,
   ExpectedClaim,
+  StepUpRequirement,
+  StepUpTrigger,
+  PaymentHistory,
 } from "./evaluate.js";
 
 /** @deprecated alias */

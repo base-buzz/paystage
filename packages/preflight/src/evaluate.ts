@@ -4,6 +4,7 @@ import {
   resolveAgentPolicy,
   type Policy,
   type Asset,
+  type StepUpAnswer,
 } from "@paystage/policy";
 import { isKnownDrainer, isNonReceivable } from "./known-drainers.js";
 import { SANCTIONED_ADDRESSES } from "./sanctioned-addresses.js";
@@ -91,10 +92,59 @@ export interface ExpectedClaim {
 export type Decision = "pay" | "review" | "do_not_pay";
 export type AcceptStatus = "pay" | "review" | "do_not_pay";
 
+/**
+ * The non-interactive answers a step-up offers when a policy does not narrow them (#414).
+ *
+ * All three are pre-arranged by the principal *before* the agent runs; none needs a browser at decision time. The
+ * human approval path is always a fallback, never the only path — a step-up that only a person can answer turns a
+ * seller's 402 into an outage.
+ */
+export const DEFAULT_STEP_UP_ANSWERS: readonly StepUpAnswer[] = Object.freeze([
+  "pre_signed_allowance",
+  "second_key",
+  "bounded_auto_approve",
+]);
+
+/** Which threshold turned a would-be `pay` into a `review` (#414). The reason string starts with this id. */
+export type StepUpTrigger = "step_up.amount" | "step_up.unknown_payee" | "step_up.first_payment";
+
+/**
+ * The requirement a step-up review carries: what fired, how the principal may answer without a browser, and the
+ * human fallback. This is data on the existing `review` verdict, not a fourth verdict.
+ */
+export interface StepUpRequirement {
+  schema: "paystage.step-up.v1";
+  trigger: StepUpTrigger;
+  /** The threshold that fired, in the policy's own units or the novelty condition it named. */
+  threshold: string;
+  /** Non-interactive answers the principal pre-authorised; never empty. */
+  answers: StepUpAnswer[];
+  /** The interactive path. Always available, always the fallback. */
+  fallback: "human";
+}
+
+/**
+ * What the caller knows about the payer's own payment history (#414).
+ *
+ * The evaluator is stateless, so novelty is only knowable if the caller records it. Absent history is **not** "no
+ * novelty" — it is "no evidence", and the novelty thresholds fire because a step-up that silently disappears when
+ * the caller forgets an input is worse than one that asks.
+ *
+ * EVM payees are compared case-insensitively, Solana addresses exactly, matching the rest of the evaluator.
+ */
+export interface PaymentHistory {
+  /** Payee addresses this payer has settled a payment to before. */
+  payees: readonly string[];
+  /** How many settled payments this payer has made. `0` is the cold start. */
+  paymentCount: number;
+}
+
 export interface AcceptResult {
   accept: AcceptOption;
   status: AcceptStatus;
   reasons: string[];
+  /** Present only when a `step_up` threshold produced this `review` (#414). */
+  stepUp?: StepUpRequirement;
 }
 
 /**
@@ -150,6 +200,14 @@ export interface EvaluateResult {
    * than being invented here.
    */
   packet?: ReviewPacket;
+  /**
+   * The step-up requirement when the selected `review` came from a policy `step_up` threshold (#414).
+   *
+   * It names the trigger, the threshold and the non-interactive answers the principal pre-authorised. It is not a
+   * fourth verdict: `decision` is still `review`, and an integration that only knows `pay` / `review` /
+   * `do_not_pay` loses nothing.
+   */
+  stepUp?: StepUpRequirement;
 }
 
 /**
@@ -168,7 +226,7 @@ export interface ReviewPacket {
     atomic: string;
     share: {
       /** Which policy ceiling the share is measured against; null when none applies. */
-      of: "max_amount" | "require_human_above" | null;
+      of: "max_amount" | "require_human_above" | "step_up.amount" | null;
       /** The denominator, named in the policy's own units; "unknown" when no cap applies. */
       denominator: string;
       /** amount / denominator as a percentage; "unknown" when there is no denominator. */
@@ -184,6 +242,8 @@ export interface ReviewPacket {
     origin?: string;
   };
   rule: string;
+  /** Present when this review is a step-up: which threshold fired and how it can be answered. */
+  step_up?: StepUpRequirement;
   checked: string[];
   not_checked: string[];
   decision: {
@@ -200,6 +260,8 @@ export interface ReviewPacketOptions {
   networkChecks?: boolean;
   /** Set when the evaluator's own verdict was `pay`, so every local rule did run before the host's extra check. */
   allRulesRan?: boolean;
+  /** The step-up requirement, when the reason is a `step_up` threshold (#414). */
+  stepUp?: StepUpRequirement;
   agentId?: string;
   paymentIdentifier?: string;
   /** Whether the replay check actually ran. False with an identifier means an earlier rule returned review. */
@@ -218,6 +280,15 @@ export interface ReviewPacketOptions {
 
 function eq(a: string, b: string): boolean {
   return a.toLowerCase() === b.toLowerCase();
+}
+
+/** A reason produced by a `step_up` rule starts with its trigger id; keep that check in one place. */
+function reasonIncludesStepUp(reason: string): boolean {
+  return (
+    reason.includes("step_up.amount") ||
+    reason.includes("step_up.unknown_payee") ||
+    reason.includes("step_up.first_payment")
+  );
 }
 
 /**
@@ -349,6 +420,7 @@ function evaluateAccept(
   acceptIndex: number,
   svmPeer: SvmValidationPeer | null,
   expected: ExpectedClaim | undefined,
+  history: PaymentHistory | undefined,
 ): AcceptResult {
   const reasons: string[] = [];
   const pass = (rule: string, detail: string): void => {
@@ -367,6 +439,25 @@ function evaluateAccept(
     record({ rule, scope: "accept", accept_index: acceptIndex, outcome: "review", detail });
     return { accept, status: "review", reasons };
   };
+  const stepUp = policy.step_up;
+  const stepUpAnswers = stepUp?.answers ?? [...DEFAULT_STEP_UP_ANSWERS];
+  const requirement = (trigger: StepUpTrigger, threshold: string): StepUpRequirement => ({
+    schema: "paystage.step-up.v1",
+    trigger,
+    threshold,
+    answers: stepUpAnswers,
+    fallback: "human",
+  });
+  const holdStepUp = (rule: string, detail: string, req: StepUpRequirement): AcceptResult => {
+    reasons.push(detail);
+    record({ rule, scope: "accept", accept_index: acceptIndex, outcome: "review", detail });
+    return { accept, status: "review", reasons, stepUp: req };
+  };
+  /** Whether the payer's own record includes this payee. Absent history is no evidence, so this is false. */
+  const payeeSeen = (payee: string): boolean =>
+    history?.payees.some((known) => addressEq(accept.network, known, payee)) ?? false;
+  /** A missing count is no evidence of prior payments, so it reads as the cold start. */
+  const firstPayment = (): boolean => history === undefined || history.paymentCount === 0;
 
   // Rule 2: network allowlist
   const networkAllowed = policy.allowed_networks.some((n) =>
@@ -554,6 +645,19 @@ function evaluateAccept(
         `payTo ${accept.payTo} not in allowed_pay_to (deny)`,
       );
     }
+    /**
+     * An unknown payee is already a `review` under `unknown_payee: "review"`. When the policy configures
+     * `step_up.unknown_payee`, that review becomes a step-up: the reason names the novelty threshold and the result
+     * carries the principal's non-interactive answers. The decision is unchanged — still `review` — and a deny stays
+     * a deny above; step-up can add attestation, never permission.
+     */
+    if (stepUp?.unknown_payee && !payeeSeen(accept.payTo)) {
+      return holdStepUp(
+        "accept.step_up.unknown_payee",
+        `step_up.unknown_payee: payTo ${accept.payTo} is not in allowed_pay_to and the payer has no recorded payment to it — a new payee needs the principal's attestation`,
+        requirement("step_up.unknown_payee", `0 recorded payments to ${accept.payTo}`),
+      );
+    }
     return hold(
       "accept.payee_allowlist",
       `payTo ${accept.payTo} not in allowed_pay_to (review)`,
@@ -633,6 +737,75 @@ function evaluateAccept(
     }
   } else {
     skip("accept.verified_payee", "the challenge has no resource.url, so there is no host to compare the payee against");
+  }
+
+  /**
+   * Rule 7d: step_up — friction only where risk is (#414).
+   *
+   * Runs after the permission checks (a drainer, a sanctioned address or a payee outside a deny policy is still a
+   * refusal) and before `require_human_above`, so a threshold that the principal can answer without a browser is
+   * offered before the human-only path. Every reason starts with the trigger id, which is what makes the threshold
+   * that fired legible in a log without a second vocabulary.
+   */
+  if (stepUp) {
+    if (stepUp.amount_above) {
+      const spec = stepUp.amount_above;
+      if (!eq(spec.asset, asset.symbol)) {
+        skip(
+          "accept.step_up.amount",
+          `step_up.amount_above not applied: the threshold is denominated in ${spec.asset}, the challenge asset is ${asset.symbol}`,
+        );
+      } else {
+        const threshold = humanToAtomic(spec.value, spec.decimals);
+        if (amount > threshold) {
+          return holdStepUp(
+            "accept.step_up.amount",
+            `step_up.amount: amount ${atomicToHuman(amount, asset.decimals)} ${asset.symbol} exceeds step_up.amount_above ${spec.value} ${spec.asset}`,
+            requirement("step_up.amount", `${spec.value} ${spec.asset}`),
+          );
+        }
+        pass(
+          "accept.step_up.amount",
+          `amount ${atomicToHuman(amount, asset.decimals)} ${asset.symbol} is at or under step_up.amount_above ${spec.value} ${spec.asset}`,
+        );
+      }
+    } else {
+      skip("accept.step_up.amount", "no step_up.amount_above configured");
+    }
+
+    if (stepUp.first_payment_from_payer) {
+      if (firstPayment()) {
+        const recorded = history?.paymentCount ?? 0;
+        return holdStepUp(
+          "accept.step_up.first_payment",
+          `step_up.first_payment: the payer has ${recorded} recorded settled payment${recorded === 1 ? "" : "s"} — the first payment needs the principal's attestation`,
+          requirement("step_up.first_payment", `${recorded} prior settled payments from this payer`),
+        );
+      }
+      pass(
+        "accept.step_up.first_payment",
+        `the payer has ${history!.paymentCount} recorded settled payments, so this is not its first`,
+      );
+    } else {
+      skip("accept.step_up.first_payment", "no step_up.first_payment_from_payer configured");
+    }
+
+    if (stepUp.unknown_payee) {
+      if (!payeeSeen(accept.payTo)) {
+        const recorded = history?.payees.length ?? 0;
+        return holdStepUp(
+          "accept.step_up.unknown_payee",
+          `step_up.unknown_payee: payTo ${accept.payTo} is not among the payer's ${recorded} recorded payees — the first payment to this payee needs the principal's attestation`,
+          requirement("step_up.unknown_payee", `0 recorded payments to ${accept.payTo}`),
+        );
+      }
+      pass(
+        "accept.step_up.unknown_payee",
+        `payTo ${accept.payTo} is in the payer's recorded payment history`,
+      );
+    } else {
+      skip("accept.step_up.unknown_payee", "no step_up.unknown_payee configured");
+    }
   }
 
   // Rule 8: require_human_above
@@ -716,8 +889,18 @@ function shareOfCap(
   const symbol = asset?.symbol ?? policy.max_amount.asset;
   const decimals = asset?.decimals ?? policy.max_amount.decimals;
   const maxApplies = eq(policy.max_amount.asset, symbol);
+  const stepUpFired =
+    policy.step_up?.amount_above !== undefined && reason.includes("step_up.amount");
   const requireFired = policy.require_human_above !== undefined && reason.includes("require_human_above");
 
+  if (stepUpFired && policy.step_up?.amount_above) {
+    const cap = policy.step_up.amount_above;
+    return {
+      of: "step_up.amount",
+      denominator: `${cap.value} ${cap.asset}`,
+      ratio: percentOf(amount, humanToAtomic(cap.value, cap.decimals)),
+    };
+  }
   if (requireFired && policy.require_human_above) {
     const cap = policy.require_human_above;
     return {
@@ -764,9 +947,18 @@ export function buildReviewPacket(
   const unknownPayeeReview = reason.includes("not in allowed_pay_to");
   const verifiedPayeeReview = reason.includes("differs from the verified address");
   const requireHumanReview = reason.includes("require_human_above");
+  const stepUpReview = reasonIncludesStepUp(reason);
+  /** A step-up that runs after the payee checks (rule 7d) did reach the verified-payee registry; the rule-7
+   *  unknown-payee step-up returned before it. */
+  const stepUpAfterPayeeReview = stepUpReview && !reason.includes("not in allowed_pay_to");
   const replayReview = reason.includes("payment_identifier");
   const expectedReview = reason.startsWith("catalogue ");
-  const reachedVerifiedPayee = options.allRulesRan === true || verifiedPayeeReview || requireHumanReview || replayReview;
+  const reachedVerifiedPayee =
+    options.allRulesRan === true ||
+    verifiedPayeeReview ||
+    requireHumanReview ||
+    stepUpAfterPayeeReview ||
+    replayReview;
   const reachedRequireHuman = options.allRulesRan === true || requireHumanReview || replayReview;
 
   checked.push(`network: ${accept.network} is in allowed_networks`);
@@ -835,7 +1027,7 @@ export function buildReviewPacket(
         }
       } else {
         notChecked.push(
-          `payee-vs-host verification: skipped — ${unknownPayeeReview ? "the payee allowlist" : "an earlier rule"} returned review before the registry was consulted`,
+          `payee-vs-host verification: skipped — ${unknownPayeeReview ? "the payee allowlist (or its step-up)" : "an earlier rule"} returned review before the registry was consulted`,
         );
       }
     } else {
@@ -862,6 +1054,82 @@ export function buildReviewPacket(
     );
   } else {
     notChecked.push("require_human_above: not configured — no amount above which a human is required");
+  }
+
+  // Step-up (#414): only described when the policy configures it. Emitting a line for an absent rule would change
+  // every pre-#414 packet, and the evaluator's existing baselines are pinned byte-for-byte. Each line says whether
+  // the check ran: the evaluator returns at the first review, so a threshold after the one that fired must not be
+  // reported as checked.
+  if (policy.step_up) {
+    const su = policy.step_up;
+    const amountFired = reason.includes("step_up.amount");
+    const unknownFired = reason.includes("step_up.unknown_payee");
+    const firstFired = reason.includes("step_up.first_payment");
+    const earlierReview = !stepUpReview;
+
+    if (su.amount_above) {
+      if (eq(su.amount_above.asset, symbol)) {
+        const threshold = humanToAtomic(su.amount_above.value, su.amount_above.decimals);
+        if (amountFired) {
+          checked.push(
+            `step-up amount: crossed at ${su.amount_above.value} ${su.amount_above.asset}`,
+          );
+        } else if (earlierReview) {
+          notChecked.push(
+            "step-up amount: not checked — an earlier rule returned review before the amount threshold",
+          );
+        } else {
+          checked.push(
+            `step-up amount: not crossed at ${su.amount_above.value} ${su.amount_above.asset}`,
+          );
+        }
+      } else {
+        notChecked.push(
+          `step-up amount: not applied — the threshold is denominated in ${su.amount_above.asset}, the challenge asset is ${symbol}`,
+        );
+      }
+    } else {
+      notChecked.push("step-up amount: not configured");
+    }
+
+    if (su.unknown_payee) {
+      if (unknownFired) {
+        checked.push("step-up payee novelty: fired — the payer has no recorded payment to this payee");
+      } else if (earlierReview) {
+        notChecked.push(
+          "step-up payee novelty: not checked — an earlier rule returned review before the novelty check",
+        );
+      } else {
+        notChecked.push(
+          "step-up payee novelty: not checked — an earlier step-up threshold returned review first",
+        );
+      }
+    } else {
+      notChecked.push("step-up payee novelty: not configured");
+    }
+
+    if (su.first_payment_from_payer) {
+      if (firstFired) {
+        checked.push("step-up first payment: fired — the payer has no recorded settled payment");
+      } else if (earlierReview) {
+        notChecked.push(
+          "step-up first payment: not checked — an earlier rule returned review before the cold-start check",
+        );
+      } else {
+        notChecked.push(
+          "step-up first payment: not checked — an earlier step-up threshold returned review first",
+        );
+      }
+    } else {
+      notChecked.push("step-up first payment: not configured");
+    }
+
+    checked.push(
+      `step-up answers: ${(su.answers ?? DEFAULT_STEP_UP_ANSWERS).join(", ")} — each answerable without a browser; human approval is the fallback`,
+    );
+    notChecked.push(
+      "step-up attestation: not checked — the evaluator names the requirement; it does not verify the allowance, co-signature or auto-approve that answers it",
+    );
   }
 
   if (policy.agents) {
@@ -928,6 +1196,7 @@ export function buildReviewPacket(
       ...(origin ? { origin } : {}),
     },
     rule: reason,
+    ...(options.stepUp ? { step_up: options.stepUp } : {}),
     checked,
     not_checked: notChecked,
     decision: {
@@ -946,6 +1215,15 @@ export interface EvaluateOptions {
   agentId?: string;
   /** Injectable clock, so a time-window test does not depend on when it runs. */
   now?: Date;
+  /**
+   * What the caller knows about this payer's payment history (#414).
+   *
+   * Required in practice for `step_up.unknown_payee` and `step_up.first_payment_from_payer`: the evaluator is
+   * stateless and cannot invent the payer's past. When omitted, both novelty conditions are treated as unmet (every
+   * payee is unseen, the payer has made no recorded payments), so the novelty step-ups fire rather than silently
+   * passing — see `PaymentHistory`.
+   */
+  paymentHistory?: PaymentHistory;
   /**
    * The client-supplied payment identifier from the x402 payment-identifier extension.
    *
@@ -1119,7 +1397,16 @@ export function evaluatePayment(
   const svmPeer =
     options.svmPeer === undefined ? currentSvmPeer() : options.svmPeer;
   const acceptResults = pr.accepts.map((a, index) =>
-    evaluateAccept(a, effective, pr.resource, record, index, svmPeer, options.expected),
+    evaluateAccept(
+      a,
+      effective,
+      pr.resource,
+      record,
+      index,
+      svmPeer,
+      options.expected,
+      options.paymentHistory,
+    ),
   );
 
   const payAccepts = acceptResults
@@ -1146,6 +1433,12 @@ export function evaluatePayment(
   const selectedIndex = selectedAccept
     ? acceptResults.findIndex((r) => r.accept === selectedAccept)
     : -1;
+  /**
+   * The step-up requirement travels with the selected review, if that review was a step-up. It never changes the
+   * verdict: `decision` remains `review`, and this is the machine-readable form of the threshold that fired.
+   */
+  const selectedStepUp =
+    decision === "review" && selectedIndex >= 0 ? acceptResults[selectedIndex]?.stepUp : undefined;
   record({
     rule: "result.select",
     scope: "result",
@@ -1299,6 +1592,7 @@ export function evaluatePayment(
             paymentIdentifierChecked: replayChecked,
             ...(expectedReachedSelected ? { expectedCompared: true } : {}),
             ...(catalogueQuestion !== undefined ? { question: catalogueQuestion } : {}),
+            ...(selectedStepUp ? { stepUp: selectedStepUp } : {}),
           },
         )
       : undefined;
@@ -1312,6 +1606,7 @@ export function evaluatePayment(
     summary,
     steps,
     dailyCapNote,
+    ...(selectedStepUp ? { stepUp: selectedStepUp } : {}),
     ...(packet ? { packet } : {}),
   };
 }

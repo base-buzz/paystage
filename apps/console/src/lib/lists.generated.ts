@@ -731,16 +731,16 @@ export const LISTS = {
     "lastEventBlock": 59546604,
     "lastUnblacklistAt": "null",
     "fromBlock": 51000000,
-    "toBlock": 61398794,
+    "toBlock": 61434790,
     "completeSinceDeployment": false,
     "coverageNote": "archive history before block 51000000 is not served by the public RPC; entries before that block are absent, not empty",
-    "collectedAt": "2026-11-23T21:42:15.031Z",
+    "collectedAt": "2026-11-23T23:42:14.213Z",
     "enforced": true,
     "enforcedBy": "preflight accept.payee_blacklisted_onchain",
     "enforcedReason": "Circle blacklisted this address on Base (eip155:8453 USDC Blacklisted event) — a contract-level freeze by the issuer, not an OFAC listing",
     "delistingTracked": true,
     "freshness": {
-      "upstreamChangedAt": "2026-11-23T21:42:15.031Z",
+      "upstreamChangedAt": "2026-11-23T23:42:14.213Z",
       "basis": "collection",
       "reviewedAt": null,
       "hasUpstreamFeed": true
@@ -755,7 +755,7 @@ export const LISTS = {
     "growth": {
       "retrievals": [
         {
-          "at": "2026-11-23T21:42:15.031Z",
+          "at": "2026-11-23T23:42:14.213Z",
           "count": 84
         }
       ]
@@ -763,9 +763,9 @@ export const LISTS = {
     "refreshInfo": {
       "command": "node /work/ops/bin/circle-blacklist.mjs",
       "where": "hourly canary — bin/canary-digest.sh (same run as OFAC)",
-      "lastRunAt": "2026-11-23T21:42:15.031Z",
+      "lastRunAt": "2026-11-23T23:42:14.213Z",
       "status": "ok",
-      "lastResult": "enforced 84 distinct addresses across blocks 51000000–61398794"
+      "lastResult": "enforced 84 distinct addresses across blocks 51000000–61434790"
     },
     "refresh": "The hourly canary runs the collector beside OFAC: it appends new `Blacklisted` and `UnBlacklisted` events, exports the evaluator corpus and this page snapshot, then regenerates the manifest. If the RPC scan fails it runs `--export-only`, so the last good list stays enforced rather than going stale. The latest event per address decides the state, so a Circle unfreeze lifts the refusal instead of leaving it in place forever."
   },

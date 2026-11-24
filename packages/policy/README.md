@@ -43,6 +43,13 @@ const policy = parsePolicy({
   allowed_pay_to: ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
   max_timeout_seconds: 300,
   unknown_payee: "review",
+  // Optional step-up (#414): a large or novel payment becomes `review`, answerable by the principal without a
+  // browser. `answers` defaults to all three non-interactive methods; human approval is only the fallback.
+  step_up: {
+    amount_above: { value: "0.02", asset: "USDC", decimals: 6 },
+    unknown_payee: true,
+    answers: ["pre_signed_allowance", "second_key", "bounded_auto_approve"],
+  },
 });
 
 // Load and validate from disk.

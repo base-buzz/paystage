@@ -96,8 +96,29 @@ CAIP-2 identifiers.
 | Verdict       | Meaning                                                                 |
 | ------------- | ----------------------------------------------------------------------- |
 | `pay`         | Within policy — safe to proceed automatically.                          |
-| `review`      | Allowed but above a human threshold — ask a human before paying.        |
+| `review`      | Needs stronger attestation before paying: a `step_up` threshold, an unknown payee under `review`, or `require_human_above`. The reason names the rule; a step-up lists the principal's non-browser answers, with a person as the fallback. |
 | `do_not_pay`  | Violates policy (network, asset, payTo, amount, timeout, or malformed). |
+
+## Step-up (`step_up`)
+
+Risk-based friction: a payment that is small and to a payee the payer has paid before goes through; a large or
+novel one returns `review` with the threshold in the reason.
+
+```json
+"step_up": {
+  "amount_above": { "value": "0.02", "asset": "USDC", "decimals": 6 },
+  "unknown_payee": true,
+  "first_payment_from_payer": false,
+  "answers": ["pre_signed_allowance", "second_key", "bounded_auto_approve"]
+}
+```
+
+Reasons begin with the trigger id: `step_up.amount: ...`, `step_up.unknown_payee: ...`,
+`step_up.first_payment: ...`. The result's `stepUp` object (and the review packet's `step_up`) carries the
+trigger, the threshold, the non-interactive `answers` and `fallback: "human"`. Pass
+`paymentHistory: { payees, paymentCount }` to `evaluatePayment`; the evaluator is stateless, and absent history is
+treated as no evidence, so novelty thresholds fire rather than silently passing. `step_up` does not add a fourth
+verdict: it is a reason for `review`.
 
 ## Solana
 

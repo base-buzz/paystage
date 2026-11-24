@@ -21,8 +21,19 @@ describes money already spent.
 A verdict returned before the signature is still actionable. `evaluatePayment`
 returns `pay`, `review`, or `do_not_pay`, with the rule that fired —
 [`packages/preflight/src/evaluate.ts`](../packages/preflight/src/evaluate.ts).
-`review` routes to a human above `require_human_above`; `do_not_pay` stops the
-call. Neither outcome exists once settlement has occurred.
+`do_not_pay` stops the call. Neither outcome exists once settlement has occurred.
+
+`review` is the middle verdict: the payment is not refused, but it needs stronger
+attestation before it is signed. Two policy rules produce it. `require_human_above`
+always asks a person. `step_up` (#414) asks only where risk is — a payment above
+`step_up.amount_above`, a payee the payer has not recorded paying, or the payer's
+first payment — and the reason names the threshold that fired (`step_up.amount`,
+`step_up.unknown_payee`, `step_up.first_payment`). A step-up is answerable by the
+principal **without a browser**: a pre-signed allowance, a second key, or a bounded
+auto-approve, listed in `step_up.answers` and carried on the result as
+`stepUp.answers`. Human approval is the fallback (`stepUp.fallback: "human"`), not
+the only path. The evaluator names the requirement; it does not verify the
+allowance or co-signature — that belongs to the signer.
 
 The check also has to be local. The hosted evaluate endpoint is documented as
 "read-only and idempotent — it evaluates, it does not settle"

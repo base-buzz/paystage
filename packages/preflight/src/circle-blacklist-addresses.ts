@@ -7,9 +7,9 @@
  * Event: Blacklisted(address), topic 0xffa4e6181777692565cf28528fc88fd1516ea86b56da075235fa575af6a4b855
  * Event: UnBlacklisted(address), topic 0x117e3210bb9aa7d9baff172026820255c6f6c30ba8999d1c2fd88e2848137c4e
  * contract: 0x833589fcd6edb6e08f4c7c32d4f71b54bda02913
- * collected_at: 2026-11-23T21:42:15.031Z
+ * collected_at: 2026-11-23T23:42:14.213Z
  * covered_from_block: 51000000
- * covered_to_block: 61398794
+ * covered_to_block: 61434790
  * first_event_at: 2026-09-09T14:57:33.000Z
  * last_event_at: 2026-11-19T14:48:16.000Z
  * last_unblacklist_at: null
@@ -17,7 +17,7 @@
  * blacklisted: 84
  * unblacklisted: 0
  * removed: 0
- * state_sha256: 8e813918111ea4e671eb645ca3f716070e574a9c43369fe3e98fd18e2b6a2348
+ * state_sha256: f8cbfb18e33351834271d15c9164d07605a47ddb1ee6e8ee83da4c70ad7e7b33
  *
  * Refresh with `node /work/ops/bin/circle-blacklist.mjs`; the hourly canary runs it beside OFAC and exports this file.
  * Addresses are lowercased; comparison is on the lowercased payee. This file holds Base (eip155:8453) events only.
@@ -135,7 +135,7 @@ export const CIRCLE_BLACKLISTED_ADDRESSES: ReadonlySet<string> = new Set(
 );
 
 /** When this corpus was exported, so a verdict can say how stale its screening is. */
-export const CIRCLE_BLACKLIST_FETCHED_AT = "2026-11-23T21:42:15.031Z";
+export const CIRCLE_BLACKLIST_FETCHED_AT = "2026-11-23T23:42:14.213Z";
 
 /** Base mainnet — the only chain this corpus covers; the evaluator applies it to that CAIP-2 network only. */
 export const CIRCLE_BLACKLIST_CHAIN_ID = 8453;

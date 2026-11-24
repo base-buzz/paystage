@@ -25,9 +25,13 @@ one that fails is a check.
 
 | Path | What it is |
 |---|---|
-| `policies/strict.json` | one policy: 0.05 USDC cap, a single allowed payee, unknown payees denied |
+| `policies/strict.json` | one policy: 0.05 USDC cap, a single allowed payee, unknown payees denied, and `step_up` above 0.01 USDC or for a new payee |
 | `challenges/*.json` | four x402 v2 payment challenges, one per interesting outcome |
 | `run.mjs` | evaluates each challenge against the policy and asserts the verdict |
+
+`run.mjs` also supplies the payer's recorded history for the allowed case, because the novelty step-up is a
+function of what the payer has done before; without history, a payee is treated as unseen (see
+[`docs/why-preflight.md`](../docs/why-preflight.md)).
 
 ## Why these four cases
 

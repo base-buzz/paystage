@@ -97,10 +97,11 @@ flowchart TD
 
 `do_not_pay` is a real refusal, not a warning: a payee on the known-drainer or OFAC list, an
 over-cap amount, a wrong network or asset, a policy that denies the payee, or a challenge that
-cannot be parsed. `review` is the narrow middle — a payee the policy has no opinion about, under a
-policy that chose `unknown_payee: "review"` over the stricter default. Both verdicts and the branch
-logic are in [packages/preflight/src/evaluate.ts](packages/preflight/src/evaluate.ts); the hook that
-uses them is [packages/x402-guard/src/index.ts](packages/x402-guard/src/index.ts).
+cannot be parsed. `review` is the narrow middle — a payee the policy has no opinion about, or a payment over a
+`step_up` threshold; either way the review names the rule, and a step-up lists the principal's non-browser answers
+with human approval as the fallback. Both verdicts and the branch logic are in
+[packages/preflight/src/evaluate.ts](packages/preflight/src/evaluate.ts); the hook that uses them is
+[packages/x402-guard/src/index.ts](packages/x402-guard/src/index.ts).
 
 Try it without installing anything:
 
@@ -291,11 +292,14 @@ gates, here is the mapping — the semantics line up more closely than the names
 | PayStage | Meaning | Same intent elsewhere |
 |---|---|---|
 | `pay` | within policy — sign and send | DingDawg `ELIGIBLE` · Black_Wall `GO` · MandatePay `authorize` |
-| `review` | a human should look before paying | DingDawg `STEP_UP` · Black_Wall `HOLD` · MandatePay `challenge` |
+| `review` | stronger attestation before paying — a step-up the principal can answer without a browser | DingDawg `STEP_UP` · Black_Wall `HOLD` · MandatePay `challenge` |
 | `do_not_pay` | refuse — a rule fired, and it is named | DingDawg `DENY` · Black_Wall `STOP` · MandatePay `deny` |
 
 One difference worth knowing: `review` is a **policy instruction**, not an oversight. `onReview: "pay"` treats
-it as permission, `"refuse"` treats it as a block — the gate never decides that for you.
+it as permission, `"refuse"` treats it as a block — the gate never decides that for you. A `step_up` block makes
+the instruction specific: the reason names the threshold (`step_up.amount`, `step_up.unknown_payee`,
+`step_up.first_payment`) and the result lists the principal's pre-arranged non-browser answers — a pre-signed
+allowance, a second key, or a bounded auto-approve. Human approval is the fallback.
 
 [How this compares](docs/compare.md) with the four closest things in this lane — including what each has that we do not.
 

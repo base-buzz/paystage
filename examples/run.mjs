@@ -18,6 +18,14 @@ import { evaluatePayment } from "../packages/preflight/dist/evaluate.js";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const read = (p) => JSON.parse(readFileSync(join(HERE, p), "utf8"));
 const policy = read("policies/strict.json");
+/**
+ * The payer's own history, supplied by the caller (#414). The allowed case is a payee this payer has paid before,
+ * so it crosses no novelty step-up. The other cases never reach the step-up rule — they are refused earlier.
+ */
+const HISTORY = {
+  payees: ["0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE"],
+  paymentCount: 3,
+};
 
 const CASES = [
   ["over-cap", "challenges/over-cap.json", "do_not_pay", /exceeds max_amount/],
@@ -34,7 +42,7 @@ console.log("policy: examples/policies/strict.json  (0.05 USDC cap, one allowed 
 console.log("  case            decision       reason");
 
 for (const [name, file, expected, pattern] of CASES) {
-  const result = evaluatePayment(read(file), policy);
+  const result = evaluatePayment(read(file), policy, { paymentHistory: HISTORY });
   const reason = result.reasons?.[0] ?? "—";
   const ok = result.decision === expected && (pattern === null || pattern.test(reason));
   if (!ok) failed += 1;

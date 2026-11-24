@@ -72,7 +72,13 @@ a citation; it is deliberately precise rather than exhaustive.
 addresses the Treasury publishes, regenerated from their own feed.
 
 **verdict** — the answer: `pay`, `review` or `do_not_pay` for payments; `allow`, `review`, `do_not_trade` for trades.
-`review` is an instruction to a human, not an error.
+`review` means the payment needs stronger attestation before it is signed — not that a human must be interrupted.
+The policy's `step_up` block says which non-interactive answers count; a person is the fallback.
+
+**step-up** — a `review` triggered by a `step_up` threshold: amount above X, a payee the payer has not recorded
+paying, or the payer's first payment. The reason names the threshold (`step_up.amount`, `step_up.unknown_payee`,
+`step_up.first_payment`) and the result lists the principal's pre-arranged answers — a pre-signed allowance, a
+second key, or a bounded auto-approve — so the agent can continue without a browser.
 
 **reason codes** — the rule that fired, as a stable string, e.g. `amount 1.00 USDC exceeds max_amount 0.05 USDC`. This
 is what makes a refusal arguable instead of mysterious.

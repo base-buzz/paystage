@@ -35,6 +35,7 @@ describe("zero-loss policy round-trip", () => {
       "allow_uncapped_assets",
       "time_window",
       "require_human_above",
+      "step_up",
       "max_auth_validity_seconds",
       "allowed_spenders",
       "disallow_unlimited_approvals",

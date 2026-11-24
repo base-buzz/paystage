@@ -7,5 +7,10 @@
   "allowed_networks": ["eip155:8453"],
   "allowed_pay_to": ["0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE"],
   "max_timeout_seconds": 300,
-  "unknown_payee": "deny"
+  "unknown_payee": "deny",
+  "step_up": {
+    "amount_above": { "value": "0.01", "asset": "USDC", "decimals": 6 },
+    "unknown_payee": true,
+    "answers": ["pre_signed_allowance", "second_key", "bounded_auto_approve"]
+  }
 }

@@ -51,6 +51,20 @@
     "asset": "USDC",
     "decimals": 6
   },
+  "step_up": {
+    "amount_above": {
+      "value": "0.02",
+      "asset": "USDC",
+      "decimals": 6
+    },
+    "unknown_payee": true,
+    "first_payment_from_payer": true,
+    "answers": [
+      "pre_signed_allowance",
+      "second_key",
+      "bounded_auto_approve"
+    ]
+  },
   "unknown_payee": "review",
   "max_auth_validity_seconds": 3600,
   "allowed_spenders": [

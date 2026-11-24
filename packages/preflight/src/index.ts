@@ -10,7 +10,11 @@ export type {
   ReviewPacket,
   ReviewPacketOptions,
   ExpectedClaim,
+  StepUpRequirement,
+  StepUpTrigger,
+  PaymentHistory,
 } from "./evaluate.js";
+export { DEFAULT_STEP_UP_ANSWERS } from "./evaluate.js";
 export { normalizePaymentRequired } from "./normalize.js";
 // The Solana requirement checks and the optional `@x402/svm` peer. A host that wants the
 // peer's own tables calls `loadSvmPeer()` once at start-up; without it the built-in copies

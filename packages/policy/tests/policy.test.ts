@@ -91,6 +91,56 @@ describe("parsePolicy", () => {
     ]);
     expect(policy.disallow_unlimited_approvals).toBe(true);
   });
+
+  it("parses a step_up block with all three thresholds and non-interactive answers", () => {
+    const policy = parsePolicy({
+      ...validPolicy,
+      step_up: {
+        amount_above: { value: "0.02", asset: "USDC", decimals: 6 },
+        unknown_payee: true,
+        first_payment_from_payer: false,
+        answers: ["pre_signed_allowance", "second_key", "bounded_auto_approve"],
+      },
+    });
+
+    expect(policy.step_up?.amount_above?.value).toBe("0.02");
+    expect(policy.step_up?.unknown_payee).toBe(true);
+    expect(policy.step_up?.first_payment_from_payer).toBe(false);
+    expect(policy.step_up?.answers).toHaveLength(3);
+  });
+
+  it("rejects a step_up block that cannot fire", () => {
+    expect(() => parsePolicy({ ...validPolicy, step_up: {} })).toThrow(
+      /step_up needs at least one threshold/,
+    );
+  });
+
+  it("rejects an empty step_up.answers list", () => {
+    expect(() =>
+      parsePolicy({
+        ...validPolicy,
+        step_up: { amount_above: { value: "0.02", asset: "USDC", decimals: 6 }, answers: [] },
+      }),
+    ).toThrow(/too_small/);
+  });
+
+  it("rejects an answer that is not a non-interactive method", () => {
+    expect(() =>
+      parsePolicy({
+        ...validPolicy,
+        step_up: { unknown_payee: true, answers: ["browser"] },
+      }),
+    ).toThrow(/Invalid option/);
+  });
+
+  it("rejects a step_up amount with more decimal places than its decimals", () => {
+    expect(() =>
+      parsePolicy({
+        ...validPolicy,
+        step_up: { amount_above: { value: "0.0000001", asset: "USDC", decimals: 6 } },
+      }),
+    ).toThrow(/step_up\.amount_above\.value/);
+  });
 });
 
 describe("amount conversion", () => {
