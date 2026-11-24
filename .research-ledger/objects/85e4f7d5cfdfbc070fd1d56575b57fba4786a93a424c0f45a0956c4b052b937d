@@ -1,0 +1,16 @@
+Plugins
+Build a plugin
+Docs
+Submit a plugin
+Bring reusable skills and MCP integrations to the ChatGPT plugin directory. Upload a package, check its findings, and submit it for review.
+Submission guide
+Upload your plugin ZIP
+Upload the ZIP containing your listing details, skills, and MCP configuration.
+Complete automated checks
+Resolve blocking metadata and skill findings. Upload a revised ZIP for package changes, or update your MCP server and rescan.
+Submit for review
+Once required checks pass, submit for human review. Other findings can be reviewed with your submission.
+Publish your plugin
+Once approved, publish when you’re ready.
+Upload new or existing plugin
+Compress your plugin folder into a .zip file before uploading

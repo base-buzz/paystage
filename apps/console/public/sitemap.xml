@@ -5,7 +5,8 @@
   well-known path, not from a crawler sitemap, so they are deliberately absent
   here — listing them was the old mistake: two of them 404'd in production.
 
-  Keep in sync with apps/console/src/app/page.tsx (/) and console/page.tsx.
+  Keep in sync with the public footer and the legal pages under
+  apps/console/src/app: /, /console, /privacy, /terms, /support, /contact.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -20,6 +21,21 @@
   </url>
   <url>
     <loc>https://paystage.xyz/privacy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://paystage.xyz/terms</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://paystage.xyz/support</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://paystage.xyz/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>

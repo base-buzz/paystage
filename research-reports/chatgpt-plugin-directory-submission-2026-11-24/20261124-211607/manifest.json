@@ -1,0 +1,165 @@
+{
+  "schema": "dsh-research-report/v1",
+  "title": "ChatGPT plugin directory — current submission path and the gate that stops PayStage (2026-11-24)",
+  "topic": "chatgpt-plugin-directory-submission-2026-11-24",
+  "generatedAt": "2026-11-24T21:16:07.264Z",
+  "generator": "dsh-research-report 0.3.27",
+  "reportFile": "report.md",
+  "reportSha256": "2bb9988420db55df33b2c0c718dd8d53a5dccaf9ecc64a40b44eadc152c6fca2",
+  "configFingerprint": "65da3cb263fff2f3",
+  "evidence": [
+    {
+      "id": "ev-26bcf5be8f99",
+      "sha256": "26bcf5be8f99d36d1cc4866e78cef4821ef71eafe9100df5dacb537f69ce1623",
+      "origin": "ops/docs/backlog.md",
+      "title": "Backlog row 350 (ChatGPT Apps listing) — prior sweep, 2026-11-21",
+      "capturedAt": "2026-11-24T21:15:41.718Z",
+      "bytes": 437392
+    },
+    {
+      "id": "ev-ac0ff9ce679a",
+      "sha256": "ac0ff9ce679af59556ab44b77ba4a1c93af2c482409e92146b2ab0f099933813",
+      "origin": "https://developers.openai.com/plugins/deploy/submission.md",
+      "title": "OpenAI Developers — Upload and submit your plugin (fetched 2026-11-24)",
+      "capturedAt": "2026-11-24T21:15:41.921Z",
+      "bytes": 55840
+    },
+    {
+      "id": "ev-b15fc899bd8f",
+      "sha256": "b15fc899bd8f57c20905dd3c36bce63c0b6ebe1b366011764c742f3b02a448b3",
+      "origin": "https://developers.openai.com/plugins/deploy/app-review.md",
+      "title": "OpenAI Developers — Remote MCP server review requirements (fetched 2026-11-24)",
+      "capturedAt": "2026-11-24T21:15:42.142Z",
+      "bytes": 21988
+    },
+    {
+      "id": "ev-4dda02480edb",
+      "sha256": "4dda02480edbbd3e97ee524699aecbbee5dc943fb9ff9991bc1ab0ee05ecf13b",
+      "origin": "https://developers.openai.com/plugins/plugin-guidelines.md",
+      "title": "OpenAI Developers — Plugin guidelines (fetched 2026-11-24)",
+      "capturedAt": "2026-11-24T21:15:42.301Z",
+      "bytes": 19274
+    },
+    {
+      "id": "ev-46ec08ca72bb",
+      "sha256": "46ec08ca72bb040f658680e13a3820f40246af752d3650c6cbb06d94ac89a912",
+      "origin": "session://platform.openai.com/settings/organization/general",
+      "title": "OpenAI Platform → Settings → Organization → General → Verifications, captured 2026-11-24 21:2x UTC from the signed-in browser session (innerText, no edits)",
+      "capturedAt": "2026-11-24T21:15:45.293Z",
+      "bytes": 356
+    },
+    {
+      "id": "ev-85e4f7d5cfdf",
+      "sha256": "85e4f7d5cfdfbc070fd1d56575b57fba4786a93a424c0f45a0956c4b052b937d",
+      "origin": "session://platform.openai.com/plugins",
+      "title": "OpenAI Platform → Plugins dashboard, captured 2026-11-24 from the signed-in browser session (org \"Personal\", innerText, no edits)",
+      "capturedAt": "2026-11-24T21:15:45.299Z",
+      "bytes": 734
+    },
+    {
+      "id": "ev-33bde099af84",
+      "sha256": "33bde099af8414ee5d443016200a356a49fcd1ba4516a294222060196ff05c34",
+      "origin": "https://paystage.xyz/privacy",
+      "title": "PayStage privacy policy page (2026-11-24)",
+      "capturedAt": "2026-11-24T21:15:45.392Z",
+      "bytes": 25294
+    }
+  ],
+  "claims": [
+    {
+      "id": "c11",
+      "text": "The public submission surface is the Plugins dashboard at platform.openai.com/plugins, whose steps are \"Upload your plugin ZIP\", \"Complete automated checks\", \"Submit for review\" and \"Publish your plugin\".",
+      "evidenceIds": [
+        "ev-ac0ff9ce679a",
+        "ev-85e4f7d5cfdf"
+      ]
+    },
+    {
+      "id": "c12",
+      "text": "Identity verification is mandatory before submission: \"All plugin submissions must come from verified individuals or organizations\" and \"Publishing under an unverified individual or business name will result in rejection.\"",
+      "evidenceIds": [
+        "ev-b15fc899bd8f",
+        "ev-4dda02480edb"
+      ]
+    },
+    {
+      "id": "c13",
+      "text": "The signed-in organization holds no verification: the Individual row still says \"You are verifying as a solo developer.\" beside a Start button, and the flow opens \"Start ID Check\" with an identity check using our partner Persona.",
+      "evidenceIds": [
+        "ev-46ec08ca72bb"
+      ]
+    },
+    {
+      "id": "c14",
+      "text": "For an MCP-backed listing \"all four listing URLs are required\": websiteURL, supportURL, privacyPolicyURL and termsOfServiceURL.",
+      "evidenceIds": [
+        "ev-ac0ff9ce679a"
+      ]
+    },
+    {
+      "id": "c15",
+      "text": "Review needs \"exactly five positive and three negative cases\", a reviewer-accessible demo recording URL, and reviewer credentials if sign-in is required.",
+      "evidenceIds": [
+        "ev-ac0ff9ce679a",
+        "ev-b15fc899bd8f"
+      ]
+    },
+    {
+      "id": "c16",
+      "text": "PayStage already meets the privacy-policy field: https://paystage.xyz/privacy states there are \"no tracking cookies and no pixels\" and enumerates recorded fields, recipients and removal.",
+      "evidenceIds": [
+        "ev-33bde099af84"
+      ]
+    },
+    {
+      "id": "c17",
+      "text": "Row 350 recorded \"account + review, no money stated\" and \"gate: none\", having read the catalogue rather than the submission portal.",
+      "evidenceIds": [
+        "ev-26bcf5be8f99"
+      ]
+    }
+  ],
+  "verdicts": [
+    {
+      "claimId": "c11",
+      "status": "verified",
+      "note": "4 citation(s) located verbatim in the bound snapshot(s)"
+    },
+    {
+      "claimId": "c12",
+      "status": "insufficient",
+      "note": "insufficient evidence: citation(s) not found in bound evidence: \"Publishing under an unverified individual or business name will result in rejection.\""
+    },
+    {
+      "claimId": "c13",
+      "status": "verified",
+      "note": "2 citation(s) located verbatim in the bound snapshot(s)"
+    },
+    {
+      "claimId": "c14",
+      "status": "verified",
+      "note": "1 citation(s) located verbatim in the bound snapshot(s)"
+    },
+    {
+      "claimId": "c15",
+      "status": "verified",
+      "note": "1 citation(s) located verbatim in the bound snapshot(s)"
+    },
+    {
+      "claimId": "c16",
+      "status": "verified",
+      "note": "1 citation(s) located verbatim in the bound snapshot(s)"
+    },
+    {
+      "claimId": "c17",
+      "status": "verified",
+      "note": "3 citation(s) located verbatim in the bound snapshot(s)"
+    }
+  ],
+  "driftCount": 0,
+  "verification": {
+    "file": "verification.jsonl",
+    "sha256": "c0f16d01659eb485c41901c6ce8e4ab1a0dd1a47f2d70e196d8d59d7184d4095",
+    "entries": 7
+  }
+}

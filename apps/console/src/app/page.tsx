@@ -722,7 +722,7 @@ export default function LandingPage() {
               </a>
               <a href="/llms.txt">llms.txt</a>
               <a href="/console">Console</a>
-              <a href="/state-of-x402">State of x402</a> · <a href="/lists">Deny lists</a> · <a href="/compare">Compare</a> · <a href="/glossary">Glossary</a> · <a href="/privacy">Privacy</a>
+              <a href="/state-of-x402">State of x402</a> · <a href="/lists">Deny lists</a> · <a href="/compare">Compare</a> · <a href="/glossary">Glossary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/support">Support</a> · <a href="/contact">Contact</a>
               <a href="https://github.com/base-buzz/paystage/security/advisories/new" rel="noopener">
                 Report a vulnerability
               </a>

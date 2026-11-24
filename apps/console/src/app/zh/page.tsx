@@ -337,6 +337,9 @@ export default function ZhHome() {
             <div className="lp-footer-nav">
               <Link href="/">English</Link>
               <Link href="/privacy">隐私</Link>
+              <Link href="/terms">条款</Link>
+              <Link href="/support">支持</Link>
+              <Link href="/contact">联系</Link>
               <a href="https://github.com/base-buzz/paystage/blob/main/LIMITS.md">LIMITS.md</a>
               <a href="https://github.com/base-buzz/paystage/blob/main/README.zh-CN.md">中文 README</a>
             </div>

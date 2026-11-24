@@ -1,0 +1,21 @@
+{"claimId":"c1","status":"unverified","note":"claim carries no checkable citation (number or quoted span); byte-level verification needs a literal to locate","at":"2026-11-24T21:15:56.862Z"}
+{"claimId":"c2","status":"unverified","note":"claim carries no checkable citation (number or quoted span); byte-level verification needs a literal to locate","at":"2026-11-24T21:15:56.862Z"}
+{"claimId":"c3","status":"insufficient","note":"insufficient evidence: citation(s) not found in bound evidence: \"Personal\"","at":"2026-11-24T21:15:56.862Z"}
+{"claimId":"c4","status":"unverified","note":"claim carries no checkable citation (number or quoted span); byte-level verification needs a literal to locate","at":"2026-11-24T21:15:56.862Z"}
+{"claimId":"c5","status":"unverified","note":"claim carries no checkable citation (number or quoted span); byte-level verification needs a literal to locate","at":"2026-11-24T21:15:56.862Z"}
+{"claimId":"c6","status":"unverified","note":"claim carries no checkable citation (number or quoted span); byte-level verification needs a literal to locate","at":"2026-11-24T21:15:56.862Z"}
+{"claimId":"c7","status":"verified","note":"4 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:15:56.862Z"}
+{"claimId":"c11","status":"verified","note":"4 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:07.264Z"}
+{"claimId":"c12","status":"insufficient","note":"insufficient evidence: citation(s) not found in bound evidence: \"Publishing under an unverified individual or business name will result in rejection.\"","at":"2026-11-24T21:16:07.264Z"}
+{"claimId":"c13","status":"verified","note":"2 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:07.264Z"}
+{"claimId":"c14","status":"verified","note":"1 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:07.264Z"}
+{"claimId":"c15","status":"verified","note":"1 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:07.264Z"}
+{"claimId":"c16","status":"verified","note":"1 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:07.264Z"}
+{"claimId":"c17","status":"verified","note":"3 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:07.264Z"}
+{"claimId":"c21","status":"verified","note":"4 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:15.060Z"}
+{"claimId":"c22","status":"verified","note":"2 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:15.060Z"}
+{"claimId":"c23","status":"verified","note":"2 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:15.060Z"}
+{"claimId":"c24","status":"verified","note":"1 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:15.060Z"}
+{"claimId":"c25","status":"verified","note":"1 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:15.060Z"}
+{"claimId":"c26","status":"verified","note":"1 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:15.060Z"}
+{"claimId":"c27","status":"verified","note":"3 citation(s) located verbatim in the bound snapshot(s)","at":"2026-11-24T21:16:15.060Z"}

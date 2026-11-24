@@ -140,6 +140,9 @@ export function SiteHeader() {
               <div className="site-menu-group">
                 <span className="site-menu-label">{lang === "zh" ? "文档" : "Docs"}</span>
                 <Link href="/privacy">{lang === "zh" ? "隐私" : "Privacy"}</Link>
+                <Link href="/terms">{lang === "zh" ? "条款" : "Terms"}</Link>
+                <Link href="/support">{lang === "zh" ? "支持" : "Support"}</Link>
+                <Link href="/contact">{lang === "zh" ? "联系" : "Contact"}</Link>
                 <Link href="/lists">{lang === "zh" ? "名单" : "Lists"}</Link>
                 <Link href="/glossary">{lang === "zh" ? "术语表" : "Glossary"}</Link>
                 <a href="https://github.com/base-buzz/paystage/blob/main/LIMITS.md">LIMITS.md</a>

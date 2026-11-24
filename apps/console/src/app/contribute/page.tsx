@@ -123,6 +123,18 @@ export default function ContributePage() {
             <a href="/privacy" style={{ textDecoration: "underline" }}>
               Privacy
             </a>
+            {" · "}
+            <a href="/terms" style={{ textDecoration: "underline" }}>
+              Terms
+            </a>
+            {" · "}
+            <a href="/support" style={{ textDecoration: "underline" }}>
+              Support
+            </a>
+            {" · "}
+            <a href="/contact" style={{ textDecoration: "underline" }}>
+              Contact
+            </a>
           </p>
         </div>
       </footer>

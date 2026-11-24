@@ -157,7 +157,8 @@ export default function PrivacyPage() {
       </p>
 
       <p className="lp-prose-back">
-        <Link href="/">← back to PayStage</Link> · <Link href="/limits">limits</Link> ·{" "}
+        <Link href="/">← back to PayStage</Link> · <Link href="/terms">terms</Link> ·{" "}
+        <Link href="/support">support</Link> · <Link href="/contact">contact</Link> ·{" "}
         <a href="https://github.com/base-buzz/paystage/blob/main/LIMITS.md">LIMITS.md</a>
       </p>
     </main>
