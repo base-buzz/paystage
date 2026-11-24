@@ -236,7 +236,7 @@ try {
     // renders with no entry, is red here — the registry is committed, so this works in a clean checkout.
     "check-claims.mjs",
     "check-client-manifests.mjs",
-    "check-agent-surfaces.mjs --live",
+    "check-agent-tool-parity.mjs --live",
     "gen-lists-manifest.mjs --check",
     // The Bazaar snapshot's source lives on the ops volume, so this one runs only where that volume is mounted and
     // exits 2 (not silently green) when it is not — GitHub's checkout has no /work/ops, so it stays out of ci.yml.

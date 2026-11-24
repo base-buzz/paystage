@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-24T21:43:59.584Z",
+  "checkedOn": "2026-11-24",
+  "method": "Read each product's own documentation at the URL shown, require a quoted span on the page, and POST one initialize to the canonical endpoint. No ranking: no product publishes usage numbers.",
+  "endpoint": {
+    "url": "https://api.paystage.xyz/mcp",
+    "ok": true,
+    "status": 200,
+    "checkedAt": "2026-11-24",
+    "serverName": "paystage",
+    "protocolVersion": "2025-06-18",
+    "detail": "initialize answered by paystage"
+  },
+  "requestBudget": {
+    "limit": 40,
+    "used": 12
+  },
+  "states": {
+    "reachable": "its own docs document an external/custom MCP server and the endpoint answers initialize",
+    "documented-not-listed": "it supports MCP servers but we are not in the list/directory it reads",
+    "no-mcp": "it does not accept an external MCP server at all",
+    "unverified": "no primary source was found that says either way"
+  },
+  "counts": {
+    "reachable": 7,
+    "documented-not-listed": 0,
+    "no-mcp": 0,
+    "unverified": 1
+  },
+  "products": [
+    {
+      "id": "grok-bot",
+      "product": "Grok Bot",
+      "vendor": "xAI",
+      "category": "computer-use",
+      "traits": [
+        "computer-use",
+        "persistent",
+        "teammate"
+      ],
+      "what": "An agent with a persistent cloud computer — browser, filesystem and terminal — that keeps working after the laptop closes and can run routines.",
+      "state": "reachable",
+      "reason": "Its docs document adding an MCP server that is not in the catalog, by URL or by a command.",
+      "checkedAt": "2026-11-24",
+      "sources": [
+        {
+          "url": "https://docs.x.ai/grok-bot/computer-and-apps.md",
+          "title": "Use the computer and apps — Grok Bot docs (xAI)",
+          "updated": null,
+          "ok": true,
+          "detail": "quoted span present"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "openai-dots",
+      "product": "OpenAI Dots",
+      "vendor": "OpenAI",
+      "category": "persistent",
+      "traits": [
+        "persistent",
+        "computer-use"
+      ],
+      "what": "An always-on agent in ChatGPT with its own cloud computer, scheduled runs, memories and the apps connected through Plugins.",
+      "state": "reachable",
+      "reason": "Dots share ChatGPT's plugin permissions, and OpenAI documents adding a custom MCP server from the Plugins tab, subject to account and workspace policy.",
+      "checkedAt": "2026-11-24",
+      "sources": [
+        {
+          "url": "https://help.openai.com/en/articles/20001529-dots-privacy-security-and-safety-faqs",
+          "title": "Dots privacy, security, and safety FAQs — OpenAI Help Center",
+          "updated": null,
+          "ok": true,
+          "detail": "quoted span present"
+        },
+        {
+          "url": "https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt",
+          "title": "Connecting custom MCP servers in ChatGPT — OpenAI Help Center",
+          "updated": null,
+          "ok": true,
+          "detail": "quoted span present"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "meta-muse",
+      "product": "Meta Muse",
+      "vendor": "Meta",
+      "category": "persistent",
+      "traits": [
+        "persistent"
+      ],
+      "what": "Meta's personal AI agent. Its help centre documents Connectors and custom connectors created from API information.",
+      "state": "unverified",
+      "reason": "Meta's own Connectors page describes custom connectors but does not mention MCP; no primary source says it accepts an external MCP server.",
+      "checkedAt": "2026-11-24",
+      "sources": [
+        {
+          "url": "https://www.meta.com/help/superintelligence/1687253048996149/",
+          "title": "How Muse works with Connectors — Meta Help Centre",
+          "updated": "2026-11-17",
+          "ok": true,
+          "detail": "quoted span present"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "claude-duet",
+      "product": "Anthropic Claude Duet",
+      "vendor": "Anthropic",
+      "category": "computer-use",
+      "traits": [
+        "computer-use",
+        "persistent"
+      ],
+      "what": "Anthropic's research-preview Claude that runs on its own cloud computer and uses the memory, skills and connectors already set up in Claude.",
+      "state": "reachable",
+      "reason": "Duet's docs say it uses the connectors set up in Claude, and Anthropic documents custom connectors over remote MCP.",
+      "checkedAt": "2026-11-24",
+      "sources": [
+        {
+          "url": "https://support.claude.com/en/articles/17631495-get-started-with-claude-duet",
+          "title": "Get started with Claude Duet — Claude Help Center",
+          "updated": null,
+          "ok": true,
+          "detail": "quoted span present"
+        },
+        {
+          "url": "https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities",
+          "title": "Use connectors to extend Claude's capabilities — Claude Help Center",
+          "updated": null,
+          "ok": true,
+          "detail": "quoted span present"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "manus-cue",
+      "product": "Manus / Cue",
+      "vendor": "Manus",
+      "category": "persistent",
+      "traits": [
+        "persistent"
+      ],
+      "what": "Manus's agent and connector platform. Its docs cover a connector catalog and a custom-MCP path for services that are not in it.",
+      "state": "reachable",
+      "reason": "Its docs document Settings → Integrations → Custom MCP Servers, adding a server by URL or command.",
+      "checkedAt": "2026-11-24",
+      "sources": [
+        {
+          "url": "https://manus.im/docs/integrations/custom-mcp.md",
+          "title": "Custom MCP Servers — Manus Documentation",
+          "updated": "2026-11-02",
+          "ok": true,
+          "detail": "quoted span present"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "openmausbot",
+      "product": "OpenMausBot",
+      "vendor": "OpenMausBot",
+      "category": "teammate",
+      "traits": [
+        "teammate",
+        "persistent",
+        "computer-use"
+      ],
+      "what": "An open-source bot harness: named bots on several engines, each with tools, tasks and a computer, and a Bring-your-own-MCP-servers screen.",
+      "state": "reachable",
+      "reason": "Its docs document adding an MCP server by URL or command and turning it on after a handshake test.",
+      "checkedAt": "2026-11-24",
+      "sources": [
+        {
+          "url": "https://raw.githubusercontent.com/milind-soni/OpenMausBot/main/docs/custom-mcp-servers.md",
+          "title": "Bring your own MCP servers — OpenMausBot docs",
+          "updated": null,
+          "ok": true,
+          "detail": "quoted span present"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "openclaw-hermes",
+      "product": "OpenClaw / Hermes Agent",
+      "vendor": "OpenClaw; Nous Research",
+      "category": "persistent",
+      "traits": [
+        "persistent",
+        "teammate"
+      ],
+      "what": "Two open-source agent runtimes. OpenClaw's Gateway and Hermes Agent both keep an agent running and both configure external MCP servers.",
+      "state": "reachable",
+      "reason": "Both sets of docs document external MCP servers: OpenClaw's registry and Hermes' mcp_servers config.",
+      "checkedAt": "2026-11-24",
+      "sources": [
+        {
+          "url": "https://docs.openclaw.ai/cli/mcp.md",
+          "title": "MCP — OpenClaw docs",
+          "updated": null,
+          "ok": true,
+          "detail": "quoted span present"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/docs/user-guide/features/mcp.md",
+          "title": "MCP (Model Context Protocol) — Hermes Agent docs",
+          "updated": null,
+          "ok": true,
+          "detail": "quoted span present"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "openbot-rakazo",
+      "product": "OpenBot / Rakazo",
+      "vendor": "OpenBot; Rakazo",
+      "category": "teammate",
+      "traits": [
+        "teammate",
+        "persistent",
+        "computer-use"
+      ],
+      "what": "OpenBot is a local-first desktop workspace for persistent agents; Rakazo is a self-hosted agent platform with a documented remote-MCP path.",
+      "state": "reachable",
+      "reason": "Rakazo's docs document adding any remote MCP server at an HTTPS address.",
+      "checkedAt": "2026-11-24",
+      "sources": [
+        {
+          "url": "https://rakazo.com/docs/integrations/",
+          "title": "Connect apps — Rakazo docs",
+          "updated": null,
+          "ok": true,
+          "detail": "quoted span present"
+        }
+      ],
+      "note": "Rakazo documents the custom-server path. OpenBot's own docs route MCP through its Marketplace apps rather than a documented add-a-server form."
+    }
+  ]
+}

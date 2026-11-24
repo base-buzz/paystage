@@ -2,7 +2,7 @@
 /**
  * Does the deployed /mcp endpoint serve the ten tools the repo declares?
  *
- * `check-agent-surfaces` compares the repo's tool list against the site's copy. Neither says anything about the endpoint an agent actually connects to — and the
+ * `check-agent-tool-parity` compares the repo's tool list against the site's copy. Neither says anything about the endpoint an agent actually connects to — and the
  * failure mode is quiet: a tool missing from the deployed server still appears in every document.
  *
  *   node scripts/check-mcp-live.mjs

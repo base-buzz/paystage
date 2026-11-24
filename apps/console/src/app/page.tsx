@@ -13,6 +13,12 @@ import { ChainTicker } from "@/components/ChainTicker";
 import { SettledStrip } from "@/components/SettledStrip";
 import { FunnelPanel } from "@/components/FunnelPanel";
 import { SOCIALS } from "@/lib/agent-manifest";
+import {
+  AGENT_CATEGORIES,
+  AGENT_SURFACES,
+  AGENT_SURFACE_LABELS,
+  type AgentSurfaceProduct,
+} from "@/lib/agent-surfaces";
 import { TOOL_COUNT, TOOL_COUNT_WORD } from "@/lib/tools";
 
 // Page-level metadata replaces the layout's `openGraph` object wholesale rather than merging into it,
@@ -53,6 +59,27 @@ const TOOLS = [
   ["validate_policy", "spending limits. check a policy document on its own — the question behind most support requests"],
   ["request_testnet_funds", "test funds. 0.5 Base Sepolia USDC so an agent can try the paid path — one drip per address per 24h, and the refusal says when it resets"],
 ] as const;
+
+const SURFACE_TRAITS: Record<string, string> = {
+  persistent: "persistent",
+  "computer-use": "computer-use",
+  teammate: "AI teammate",
+};
+
+const SURFACE_REACH: Record<AgentSurfaceProduct["state"], string> = {
+  reachable: "Can reach an MCP server: yes.",
+  "documented-not-listed": "MCP: supported, but not in the list it reads.",
+  "no-mcp": "MCP: no external server.",
+  unverified: "Can reach an MCP server: unverified.",
+};
+
+function sourceHost(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
 
 /**
  * Structured data, for the crawlers agents actually read (#discovery).
@@ -510,6 +537,123 @@ export default function LandingPage() {
             <p className="lp-hero-note">
               If any step fails, the page is wrong — open an issue and it gets fixed that
               week.
+            </p>
+          </div>
+        </section>
+
+        <section className="lp-section lp-section-alt" id="discovery" data-reveal>
+          <div className="lp-wrap">
+            <div className="lp-section-head">
+              <h2 className="lp-h2">Discovery</h2>
+              <p className="lp-h2-note">
+                Which always-on agent products could call a gate — and which one we
+                cannot yet verify.
+              </p>
+            </div>
+
+            <p className="lp-surface-lede">
+              The roster below is the operator&apos;s, not a ranking: no product here
+              publishes usage numbers. Two primary facts are recorded — whether the
+              product&apos;s own documentation describes a way to add an external MCP
+              server, and whether our endpoint answers <code>initialize</code>. A row
+              marked <strong>reachable</strong> means both are true; it does not mean the
+              product lists, recommends or supports PayStage.
+            </p>
+
+            <div className="lp-surface-endpoint">
+              <div className="lp-surface-endpoint-main">
+                <span className="lp-surface-endpoint-tag">MCP endpoint</span>
+                <a href={AGENT_SURFACES.endpoint.url} rel="noopener">
+                  <code>{AGENT_SURFACES.endpoint.url}</code>
+                </a>
+              </div>
+              <p>
+                Streamable HTTP. POST <code>initialize</code> and the server answers as{" "}
+                <code>{AGENT_SURFACES.endpoint.serverName ?? "paystage"}</code>. Checked{" "}
+                {AGENT_SURFACES.endpoint.checkedAt}
+                {AGENT_SURFACES.endpoint.ok ? " — answered" : " — did not answer"}.
+              </p>
+            </div>
+
+            <div className="lp-surface-kinds">
+              {AGENT_CATEGORIES.map((category) => (
+                <div className="lp-surface-kind" key={category.id}>
+                  <strong>{category.label}</strong>
+                  <p>{category.blurb}</p>
+                </div>
+              ))}
+            </div>
+
+            {AGENT_CATEGORIES.filter((category) => category.id !== "chatbot").map((category) => {
+              const products = AGENT_SURFACES.products.filter(
+                (product) => product.category === category.id,
+              );
+              return (
+                <section className="lp-surface-group" key={category.id} aria-label={category.label}>
+                  <div className="lp-surface-group-head">
+                    <h3>{category.label}</h3>
+                    <span>{products.length} on the roster</span>
+                  </div>
+                  <div className="lp-surface-grid">
+                    {products.map((product) => (
+                      <article className="lp-surface-card" key={product.id}>
+                        <div className="lp-surface-card-top">
+                          <div className="lp-surface-traits">
+                            {product.traits.map((trait) => (
+                              <span className="lp-surface-trait" key={trait}>
+                                {SURFACE_TRAITS[trait] ?? trait}
+                              </span>
+                            ))}
+                          </div>
+                          <span className={`lp-surface-state is-${product.state}`}>
+                            {AGENT_SURFACE_LABELS[product.state]}
+                          </span>
+                        </div>
+                        <h4>
+                          {product.product}
+                          <span className="lp-surface-vendor">{product.vendor}</span>
+                        </h4>
+                        <p>{product.what}</p>
+                        <p className="lp-surface-reach">
+                          <strong>{SURFACE_REACH[product.state]}</strong> {product.reason}
+                        </p>
+                        {product.note ? <p className="lp-surface-note">{product.note}</p> : null}
+                        <p className="lp-surface-source">
+                          {product.sources.map((source, index) => (
+                            <span key={source.url}>
+                              <a href={source.url} rel="noopener">
+                                {sourceHost(source.url)}
+                              </a>
+                              {index < product.sources.length - 1 ? " · " : ""}
+                            </span>
+                          ))}
+                          <span> — read {product.checkedAt}</span>
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+
+            <div className="lp-surface-chatbots">
+              <h3>Chatbots — not this list</h3>
+              <p>
+                The Q&amp;A interfaces these products are not. A chat tab answers when you
+                type; it has no routine, no standing browser session and no teammate to
+                hand work to. Nothing on the roster above is a chatbot, which is the
+                distinction that makes the rest worth checking one by one.
+              </p>
+            </div>
+
+            <p className="lp-surface-foot">
+              {AGENT_SURFACES.counts.reachable} of {AGENT_SURFACES.products.length} rows
+              document a path to an external MCP server; {AGENT_SURFACES.counts.unverified}{" "}
+              has no primary source that says either way and is shown as unverified rather
+              than filled from a blog. Each row was read on {AGENT_SURFACES.checkedOn}; the
+              probe used {AGENT_SURFACES.requestBudget.used} of{" "}
+              {AGENT_SURFACES.requestBudget.limit} requests. Data:{" "}
+              <code>docs/state/agent-surfaces.json</code>.
             </p>
           </div>
         </section>
