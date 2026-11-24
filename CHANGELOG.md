@@ -6,6 +6,20 @@
   same failure `#421` records and the same one `@paystage/preflight@0.5.4` fixed on 21 Nov. npm refuses a republish, the release
   workflow would still have reported success, and the published package would have kept announcing fewer tools than it has.
 
+- `@paystage/policy@0.4.0`: **the optional `step_up` block reaches npm for the first time.** `#414` added `step_up` — amount
+  above, unknown payee, first payment from this payer — and the payee-observation collector and hand-written parser that
+  also landed after the 0.3.1 tag. The schema change is additive (a new optional field), so this is a minor. The published
+  0.3.1 tarball cannot be replaced: npm refuses a republish, and the release assert is what reported the difference.
+- `@paystage/preflight@0.6.0`: **the evaluator that answers step-up ships.** A configured threshold now returns `review`
+  carrying the threshold that fired, the threshold value and the principal's non-browser answers
+  (`pre_signed_allowance`, `second_key`, `bounded_auto_approve`), with human approval as the fallback rather than the only
+  path. It also carries the Circle blacklist, Solana checks and review packet that postdate 0.5.4. Additive behaviour, so
+  minor; the 0.5.4 tarball predates all of it and cannot be republished.
+- `@paystage/x402-guard@0.5.0`: **the frozen correct-402 predicate is a public export.** `isCorrectChallenge` and the
+  builder-code constants now ship with the fixtures that pin them, so a number quoted against the checked-seller run means
+  the same thing next month. New public API, so minor; the exact pins move to `@paystage/policy@0.4.0` and
+  `@paystage/preflight@0.6.0`, which is also why the 0.4.10 tarball needed a version of its own.
+
 ## 2026-11-21
 - `@paystage/preflight@0.5.4`: **republishes what 0.5.3 does not contain.** Two features landed after that tag — the review
   packet (#302) and the per-run evidence bundle (#308) — so the tarball on npm was older than the repo, and `assert-artifact`

@@ -33,7 +33,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@paystage/preflight": "^0.5.3"
+    "@paystage/preflight": "^0.6.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

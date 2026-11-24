@@ -1,6 +1,6 @@
 {
   "name": "@paystage/x402-guard",
-  "version": "0.4.10",
+  "version": "0.5.0",
   "description": "a payment firewall for x402 clients and mcp payment firewall for x402-fetch: stop your agent paying a drainer before it signs. Blocks over-cap payments, unknown payees and OFAC-sanctioned addresses, and names the rule that fired.",
   "repository": {
     "type": "git",
@@ -61,8 +61,8 @@
     "budget"
   ],
   "dependencies": {
-    "@paystage/policy": "0.3.1",
-    "@paystage/preflight": "0.5.4",
+    "@paystage/policy": "0.4.0",
+    "@paystage/preflight": "0.6.0",
     "@x402/extensions": "^2.29.0"
   },
   "peerDependencies": {
