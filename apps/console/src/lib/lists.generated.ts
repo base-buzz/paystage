@@ -142,17 +142,17 @@ export const LISTS = {
         ]
       }
     ],
-    "denominator": 1321,
+    "denominator": 1394,
     "denominatorKind": "distinct payees in the supply catalogue",
-    "ratio": 0.17335352006056018,
-    "percent": 17.335352006056016,
+    "ratio": 0.1642754662840746,
+    "percent": 16.42754662840746,
     "enforcedNumerator": 229,
     "collectedOnly": 0,
-    "catalogueSnapshot": "2026-11-21.json",
-    "catalogueMeasuredAt": "2026-11-21T12:22:56.470Z",
+    "catalogueSnapshot": "2026-11-24.json",
+    "catalogueMeasuredAt": "2026-11-24T19:27:56.917Z",
     "catalogueSource": "https://facilitator.payai.network/discovery/resources",
-    "catalogueRows": 24473,
-    "catalogueTotalAdvertised": 17833
+    "catalogueRows": 25585,
+    "catalogueTotalAdvertised": 18427
   },
   "ofac": {
     "name": "OFAC SDN — Digital Currency Address, ETH",
