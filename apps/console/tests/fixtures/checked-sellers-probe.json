@@ -1,0 +1,115 @@
+{
+  "schema": "checked-sellers-probe/v1",
+  "verifiedOn": "2026-11-23",
+  "timeZone": "NZDT",
+  "generatedAt": "2026-11-23T00:00:00.000Z",
+  "method": "GET, one POST retry on error status",
+  "methodKind": "recorded-get-post-retry",
+  "source": {
+    "rankingInput": "ranking.json",
+    "rankedBy": "quality.l30DaysTotalCalls",
+    "topN": 100,
+    "catalogueTotal": 40154,
+    "callsMax": 1687627,
+    "callsMin": 850
+  },
+  "budget": {
+    "maxRequests": 200,
+    "requestCap": 200,
+    "timeoutMs": 15000,
+    "concurrency": 8
+  },
+  "provenance": {
+    "kind": "test fixture"
+  },
+  "aggregate": {
+    "sample": {
+      "pages": 50,
+      "perPage": 100,
+      "entries": 5000,
+      "catalogueEntries": 40154
+    },
+    "rankingField": "quality.l30DaysTotalCalls",
+    "topEntries": 100,
+    "callsMax": 1687627,
+    "callsMin": 850,
+    "probes": {
+      "getProbes": 100,
+      "postRetries": 25,
+      "endpointRequests": 125,
+      "indexPages": 50,
+      "totalRequests": 175,
+      "requestCap": 200
+    },
+    "result": {
+      "correct402": 2,
+      "no402": 0,
+      "error": 0,
+      "bad402": 0,
+      "priceCompared": 2,
+      "priceMatched": 2,
+      "hostsCarryingTopEntries": 34,
+      "hostsMeasured": 34,
+      "topEntries": 100,
+      "mcpNonResponsivePercent": 26
+    },
+    "tail": {
+      "path": "/mcp",
+      "entries": 153,
+      "sampled": 2000
+    }
+  },
+  "rowsNamed": 2,
+  "rows": [
+    {
+      "host": "console.ax1.vc",
+      "resource": "https://console.ax1.vc/api/dashboard/q-verdict/resource",
+      "calls30d": 1687627,
+      "uniquePayers": 4994,
+      "advertisedPriceAtomic": "20000",
+      "advertisedPriceUsd": 0.02,
+      "status": 402,
+      "state": "correct",
+      "correct": true,
+      "reason": "",
+      "payTo": "0x7284D41b5b852F2bd4c99bDf95043D84452d299C",
+      "amount": "20000",
+      "priceCompared": true,
+      "priceMatched": true,
+      "durationMs": 120
+    },
+    {
+      "host": "api.example.com",
+      "resource": "https://api.example.com/x402/ping",
+      "calls30d": 12345,
+      "uniquePayers": 10,
+      "advertisedPriceAtomic": "5000",
+      "advertisedPriceUsd": 0.005,
+      "status": 402,
+      "state": "correct",
+      "correct": true,
+      "reason": "",
+      "payTo": "0xabc",
+      "amount": "5000",
+      "priceCompared": true,
+      "priceMatched": true,
+      "durationMs": 90
+    }
+  ],
+  "hosts": [
+    {
+      "host": "console.ax1.vc",
+      "calls30d": 1687627,
+      "endpointsChecked": 1,
+      "endpointsCorrect": 1,
+      "challengeCorrect": true
+    },
+    {
+      "host": "api.example.com",
+      "calls30d": 12345,
+      "endpointsChecked": 3,
+      "endpointsCorrect": 3,
+      "challengeCorrect": true
+    }
+  ]
+}

@@ -32,15 +32,21 @@ import {
 const ROOT = fileURLToPath(new URL("../../..", import.meta.url));
 const GENERATOR = join(ROOT, "scripts/gen-checked-sellers.mjs");
 const FIXTURE = join(ROOT, "apps/console/tests/fixtures/checked-sellers.md");
+const JSON_FIXTURE = join(ROOT, "apps/console/tests/fixtures/checked-sellers-probe.json");
 
 function tempOut(): string {
   return join(mkdtempSync(join(tmpdir(), "checked-sellers-")), "checked-sellers.generated.json");
 }
 
-function runGenerator(args: string[], source: string, out: string) {
+function runGenerator(args: string[], source: string | null, out: string, env: Record<string, string> = {}) {
   return spawnSync(process.execPath, [GENERATOR, ...args], {
     encoding: "utf8",
-    env: { ...process.env, PAYSTAGE_CHECKED_SELLERS: source, PAYSTAGE_CHECKED_SELLERS_OUT: out },
+    env: {
+      ...process.env,
+      ...(source === null ? {} : { PAYSTAGE_CHECKED_SELLERS: source }),
+      PAYSTAGE_CHECKED_SELLERS_OUT: out,
+      ...env,
+    },
   });
 }
 
@@ -215,14 +221,64 @@ describe("the generator and its --check", () => {
     expect(result.stderr).toContain("no verification record");
   });
 
-  it("emits the fixture's rows with date and method, and with the per-row gaps as null", () => {
+  it("renders from the probe JSON, with no regex over the research prose", () => {
+    const out = tempOut();
+    const result = runGenerator([], null, out, { PAYSTAGE_CHECKED_SELLERS_JSON: JSON_FIXTURE });
+    expect(result.status).toBe(0);
+    expect(result.stderr).not.toContain("falling back");
+    expect(result.stdout).toContain("method: GET, one POST retry on error status");
+    const emitted = JSON.parse(readFileSync(out, "utf8"));
+    expect(emitted.rows).toHaveLength(2);
+    expect(emitted.aggregate.result.correct402).toBe(2);
+    expect(emitted.aggregate.result.priceMatched).toBe(2);
+    expect(emitted.aggregate.result.hostsCarryingTopEntries).toBe(34);
+    expect(emitted.rows[0].host).toBe("console.ax1.vc");
+    expect(emitted.rows[0].method).toContain("GET, one POST retry on error status");
+    expect(emitted.rows[0].priceMatched).toBeNull();
+    expect(emitted.rows[0].screening).toBeNull();
+  });
+
+  it("refuses a probe JSON whose aggregate lost a published number (#387)", () => {
+    const out = tempOut();
+    const drifted = JSON.parse(readFileSync(JSON_FIXTURE, "utf8"));
+    delete drifted.aggregate.result.correct402;
+    const source = join(mkdtempSync(join(tmpdir(), "checked-sellers-json-")), "probe.json");
+    writeFileSync(source, `${JSON.stringify(drifted, null, 2)}\n`);
+    const result = runGenerator([], null, out, { PAYSTAGE_CHECKED_SELLERS_JSON: source });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("correct-402 count");
+    expect(result.stderr).toContain("refuses");
+  });
+
+  it("falls back loudly to the markdown record when the probe JSON is absent", () => {
+    const out = tempOut();
+    const result = runGenerator([], FIXTURE, out, {
+      PAYSTAGE_CHECKED_SELLERS_JSON: join(tmpdir(), "checked-sellers-probe-does-not-exist.json"),
+    });
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain("ERROR: no probe JSON");
+    expect(result.stderr).toContain("falling back");
+    expect(JSON.parse(readFileSync(out, "utf8")).rows).toHaveLength(2);
+  });
+
+  it("fails --check when the probe JSON drifts", () => {
+    const out = tempOut();
+    expect(runGenerator([], null, out, { PAYSTAGE_CHECKED_SELLERS_JSON: JSON_FIXTURE }).status).toBe(0);
+    expect(runGenerator(["--check"], null, out, { PAYSTAGE_CHECKED_SELLERS_JSON: JSON_FIXTURE }).status).toBe(0);
+    const drifted = JSON.parse(readFileSync(out, "utf8"));
+    drifted.rows[0].calls30d += 1;
+    writeFileSync(out, `${JSON.stringify(drifted, null, 2)}\n`);
+    expect(runGenerator(["--check"], null, out, { PAYSTAGE_CHECKED_SELLERS_JSON: JSON_FIXTURE }).status).toBe(1);
+  });
+
+  it("emits the markdown fixture's rows with date and method, and with the per-row gaps as null", () => {
     const out = tempOut();
     expect(runGenerator([], FIXTURE, out).status).toBe(0);
     const emitted = JSON.parse(readFileSync(out, "utf8"));
     expect(emitted.rows).toHaveLength(2);
     for (const row of emitted.rows) {
       expect(row.verifiedOn).toBe("2026-11-23");
-      expect(row.method).toContain("GET probe");
+      expect(row.method).toContain("GET, one POST retry on error status");
       expect(row.priceMatched).toBeNull();
       expect(row.screening).toBeNull();
     }
