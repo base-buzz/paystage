@@ -74,6 +74,10 @@ ${m.tools.length} for callers that want the whole gate.
 - Base mainnet: https://api.paystage.xyz — ${m.networks.mainnet}
 - Base Sepolia: https://sepolia.api.paystage.xyz — ${m.networks.sepolia}
 - Price: $0.002 USDC per call on both networks.
+- **MCP endpoint (canonical): \`https://api.paystage.xyz/mcp\`** — ten tools, no authentication, one remote server. The
+  registry carries older entries under other namespaces (\`xyz.paystage/*\`, older \`io.github.base-buzz\` versions, some
+  with no remote endpoint); this URL is the one to call, and the canonical registry entry is
+  \`io.github.base-buzz/mcp\` at the newest version.
 
 ## Verify it yourself
 
