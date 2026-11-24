@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-24
+- `@paystage/mcp@0.8.18`: **republishes what 0.8.17 does not contain.** The source gained `evaluate_batch`, `request_testnet_funds`,
+  `normalizePaymentRequired` and the two receipt verifiers after that tag, so the published tarball was older than the repo — the
+  same failure `#421` records and the same one `@paystage/preflight@0.5.4` fixed on 21 Nov. npm refuses a republish, the release
+  workflow would still have reported success, and the published package would have kept announcing fewer tools than it has.
+
 ## 2026-11-21
 - `@paystage/preflight@0.5.4`: **republishes what 0.5.3 does not contain.** Two features landed after that tag — the review
   packet (#302) and the per-run evidence bundle (#308) — so the tarball on npm was older than the repo, and `assert-artifact`
