@@ -3,6 +3,7 @@ import "../landing.css";
 import Link from "next/link";
 import { LISTS } from "@/lib/lists.generated";
 import { CheckedSellersPanel } from "@/components/CheckedSellersPanel";
+import { UncensoredInferenceSegmentPanel } from "@/components/UncensoredInferenceSegmentPanel";
 import {
   buildGrowth,
   freshnessView,
@@ -480,6 +481,8 @@ export default function ListsPage() {
           verdict, truthful reason — paying one destroys the money rather than losing it to a thief.
         </p>
       </section>
+
+      <UncensoredInferenceSegmentPanel />
 
       <CheckedSellersPanel />
 
