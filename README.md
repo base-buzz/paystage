@@ -76,6 +76,10 @@ through, the header still says `review`, because the evaluator's finding and the
 to tolerate it are different facts — a caller that cannot tell "clean" from "warned but paid" cannot
 audit itself. The rule that fires travels in `x-paystage-reason-codes`.
 
+**Default:** if the caller passes no `onReview`, a `review` verdict pays — this is the tolerance default
+rather than the safe one, retained so the evaluator's finding and the caller's policy choice remain
+auditable separately.
+
 ### What decides
 
 ```mermaid

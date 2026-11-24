@@ -139,7 +139,7 @@ export default function LandingPage() {
           <div className="lp-wrap lp-hero-grid">
             <div>
               <p className="lp-eyebrow">
-                x402 · MCP · USDC on Base — the third party that decides before your agent signs
+                x402 · MCP · USDC on Base — the third party outside your wallet that decides before your agent signs
               </p>
               <h1 className="lp-h1">
                 Stop the payment <em>before</em> it&apos;s signed.

@@ -94,6 +94,10 @@ That sentence is the whole posture, and it is worth writing down because a revie
 - **cost** that cannot be computed (unknown asset decimals) is a refusal, not an estimate;
 - **evidence** that cannot be verified (a receipt whose digest no longer matches its inputs) is `invalid`, never `valid with a note`.
 
+@paystage/x402-guard tolerates `review` unless `onReview: "refuse"` is set — this explicit tolerance is not a
+failure to fail closed, because the evaluator always refuses `pay` when it cannot confirm policy, and the
+caller can override the tolerance by setting `onReview: "refuse"`.
+
 The inverse is the failure this project exists to argue against: an evaluator that answers `pay` because it had nothing to say.
 
 ## 9. What the receipt does not prove

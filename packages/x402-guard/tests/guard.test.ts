@@ -121,6 +121,21 @@ describe("guardFetch", () => {
     expect(wrap).toHaveBeenCalled();
   });
 
+  it("pays on review when onReview is omitted, which is the documented default", async () => {
+    // A genuine review: an unknown payee under a policy that says review rather than deny.
+    const reviewPolicy = { ...policy, allowed_pay_to: [OTHER_PAY_TO], unknown_payee: "review" };
+    const wrap = vi.fn(() => async () => paidOk());
+    const guarded = guardFetch(
+      async () => challenge("10000", PAY_TO) as never,
+      { policy: reviewPolicy, wrap: wrap as never },
+    );
+    const res = await guarded("https://api.example.com/paid");
+    // The verdict is `review` because the policy has unknown_payee: "review",
+    // and onReview defaults to "pay" so the payment proceeds.
+    expect(res.headers.get("x-paystage-verdict")).toBe("review");
+    expect(wrap).toHaveBeenCalled();
+  });
+
   it("rejects an invalid policy at construction rather than at payment time", () => {
     expect(() => guardFetch(async () => new Response(), { policy: { nonsense: true } })).toThrow(/invalid policy/);
   });
