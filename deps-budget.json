@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-22",
+  "measuredAt": "2026-11-24",
   "method": "npm pack <package> from packages/; npm install --ignore-scripts --no-audit --no-fund <tarball> in an empty temp project; npm ls --all --parseable, dropping the temp project's own root line. The count includes the package itself and every resolved copy, hoisted or nested.",
   "packages": {
     "@paystage/ai-sdk": {
@@ -28,8 +28,8 @@
       ]
     },
     "@paystage/mcp": {
-      "budget": 10,
-      "reason": "10: the published @paystage/preflight 0.5.4 no longer nests @paystage/policy 0.3.0, so there is no nested copy left. zod is still here from @modelcontextprotocol/server, and stays until the SDK drops it \u2014 the policy and preflight packages in this tree declare no runtime dependency (#181).",
+      "budget": 11,
+      "reason": "10: the published @paystage/preflight 0.5.4 no longer nests @paystage/policy 0.3.0, so there is no nested copy left. zod is still here from @modelcontextprotocol/server, and stays until the SDK drops it — the policy and preflight packages in this tree declare no runtime dependency (#181).",
       "resolvedPackages": [
         "node_modules/@modelcontextprotocol/core",
         "node_modules/@modelcontextprotocol/server",
@@ -40,6 +40,7 @@
         "node_modules/@paystage/preflight",
         "node_modules/@paystage/trade-preflight",
         "node_modules/@paystage/velocity",
+        "node_modules/@paystage/velocity/node_modules/@paystage/policy",
         "node_modules/zod"
       ]
     },
@@ -51,11 +52,10 @@
       "reason": "1: no runtime dependencies since #181. The policy parser is hand-written; zod is a devDependency of this package (the differential test's oracle), so it is not in the install tree."
     },
     "@paystage/preflight": {
-      "budget": 3,
+      "budget": 2,
       "resolvedPackages": [
         "node_modules/@paystage/policy",
-        "node_modules/@paystage/preflight",
-        "node_modules/zod"
+        "node_modules/@paystage/preflight"
       ],
       "reason": "3: @paystage/preflight plus the published @paystage/policy 0.3.1, which still depends on zod. This tarball resolves its @paystage/policy from the registry, so the drop to 2 is only measurable after the #181 policy release is published; a lower count passes."
     },
@@ -91,13 +91,12 @@
       ]
     },
     "@paystage/x-evm": {
-      "budget": 4,
+      "budget": 3,
       "reason": "4: the zod entry is the published @paystage/policy 0.3.1's dependency. Drops to 3 once the #181 policy release is published, since that package then has no dependencies.",
       "resolvedPackages": [
         "node_modules/@paystage/policy",
         "node_modules/@paystage/preflight",
-        "node_modules/@paystage/x-evm",
-        "node_modules/zod"
+        "node_modules/@paystage/x-evm"
       ]
     },
     "@paystage/x402-guard": {
