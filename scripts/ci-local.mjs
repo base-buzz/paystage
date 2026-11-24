@@ -83,6 +83,26 @@ if (reason === null) {
       for (const line of `${error.stdout ?? ""}${error.stderr ?? ""}`.split("\n").slice(-10)) console.error(`        ${line}`);
     }
   };
+  /**
+   * Doc/code drift checks run in the fast pass too.
+   *
+   * On 2026-11-24 CI failed on `check-env-vars` — six variables added by the measurement-registry work were read in code and absent from SECURITY.md — while every local run was green,
+   * because these checks live in the cold block that only triggers on a lockfile, workflow or build-script change. A text change that adds an env var is exactly the case the gate
+   * missed, so the cheap ones run here as well: each is sub-second and none touches the network.
+   */
+  for (const cheap of [
+    "check-env-vars.mjs",
+    "check-version-parity.mjs",
+    "check-copy.mjs",
+    "check-doc-links.mjs",
+    "check-count-claims.mjs",
+    "check-claims.mjs",
+    "gen-glossary.mjs --check",
+  ]) {
+    const [script, ...scriptArgs] = cheap.split(" ");
+    if (!existsSync(join(ROOT, "scripts", script))) continue;
+    runFast(cheap, "node", [join("scripts", script), ...scriptArgs], ROOT);
+  }
   runFast("npm run build", "npm", ["run", "build", "--silent"], ROOT);
   for (const dir of readdirSync(join(ROOT, "packages"), { withFileTypes: true })) {
     if (!dir.isDirectory()) continue;
