@@ -98,6 +98,7 @@ if (reason === null) {
     "check-count-claims.mjs",
     "check-claims.mjs",
     "gen-glossary.mjs --check",
+    "check-provenance-wording.mjs",
   ]) {
     const [script, ...scriptArgs] = cheap.split(" ");
     if (!existsSync(join(ROOT, "scripts", script))) continue;

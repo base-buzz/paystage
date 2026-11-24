@@ -96,7 +96,7 @@ export default function ContributePage() {
               </h2>
               <p>
                 No paid placement in the registry. No badge you can buy. No download
-                games, no sockpuppet stars, no fake users. If a listing cannot be
+                games, no sockpuppet stars, no invented users. If a listing cannot be
                 verified against a live endpoint it does not go in — that restriction is
                 the only reason a listing means anything.
               </p>

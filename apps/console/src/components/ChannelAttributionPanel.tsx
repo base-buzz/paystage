@@ -44,7 +44,7 @@ export function ChannelAttributionPanel({
             {unknownSentence(counts)}{" "}
             {truncated
               ? "This is the newest slice of the window, not every event in it — the counts are a floor."
-              : "Counted from real events only; synthetic and test traffic is excluded."}
+              : "Counted from external events only; our loadgen and probes are excluded."}
           </p>
           <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 10, fontSize: 13.5 }}>
             <thead>

@@ -23,6 +23,7 @@ jobs:
       # Copy drift, with the network check on: a README is what a stranger evaluates us on,
       # and a dead listing link or a stale version is invisible to every other test.
       - run: node scripts/check-copy.mjs --network
+      - run: node scripts/check-provenance-wording.mjs
       - run: node scripts/check-claims.mjs
       - run: node scripts/check-client-manifests.mjs
       - run: node scripts/check-published-links.mjs

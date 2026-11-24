@@ -7,9 +7,9 @@ import { LIVE_FEED } from "@/lib/live-feed";
 /**
  * One line that moves when something happens on the endpoint.
  *
- * A real settlement and a synthetic probe look different on purpose: the label is the point. This
- * project's rule is that synthetic traffic is never presented as a customer, and a pulsing light is
- * the easiest place in the whole product to break that rule by accident.
+ * Every row is a real request; the label says who caused it. Provenance is a fact, not a judgement:
+ * our loadgen, our probe, an operator's agent, or a payer we cannot attribute. The label exists so no
+ * aggregate can quietly absorb one into another, not to grade whose money it was.
  */
 type FeedRow = {
   id: string;
@@ -21,9 +21,13 @@ type FeedRow = {
 
 const LOOK: Record<string, { label: string; color: string }> = {
   real: { label: "settled", color: "#6ee7b7" },
-  synthetic: { label: "synthetic", color: "#8bb4ff" },
-  test: { label: "test", color: "#9aa0b0" },
+  "dev-loadgen": { label: "our loadgen", color: "#8bb4ff" },
+  "operator-agent": { label: "operator agent", color: "#8bb4ff" },
+  probe: { label: "our probe", color: "#9aa0b0" },
   "free-tier": { label: "free tier", color: "#9aa0b0" },
+  // Kept for one release so an older row still renders a label instead of a blank chip.
+  synthetic: { label: "our loadgen", color: "#8bb4ff" },
+  test: { label: "our loadgen", color: "#8bb4ff" },
 };
 
 export function LiveFeed() {

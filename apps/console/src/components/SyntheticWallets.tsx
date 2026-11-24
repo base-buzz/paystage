@@ -11,7 +11,7 @@ export function SyntheticWallets() {
         PayStage synthetic load
       </h2>
       <p className="panel-sub">
-        Dedicated mainnet wallets used only for labelled synthetic traffic
+        Dedicated mainnet wallets used only for our labelled loadgen and probes
         (<code>source=synthetic</code>). Not revenue. Not users. Loadgen starts
         disabled until funded.
       </p>

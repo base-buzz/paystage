@@ -71,8 +71,8 @@ export function SettledStrip() {
       {/* The label does the work a spinner cannot: it says whose money this is. */}
       <span className="lp-settled-note">
         {external === 0
-          ? "no external payer yet — every settlement above is our own test traffic"
-          : "external settles counted only when a real payer address signed the receipt"}
+          ? "no external payer yet — settlements above come from our own loadgen and probes"
+          : "external settles counted only when a payer address outside our own loadgen signed the receipt"}
       </span>
     </div>
   );

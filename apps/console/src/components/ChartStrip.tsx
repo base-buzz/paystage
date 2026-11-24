@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
  *
  * A number says how much. A shape says whether it is growing, whether it stopped, and whether the
  * growth is us. Both series carry the caveat they need: installs include our own CI, and the request
- * bars separate real callers from synthetic and test traffic, because a tall bar of our own probes
+ * bars separate external callers from our own loadgen and probes, because a tall bar of our own traffic
  * read as adoption would be the single most dishonest pixel on this site.
  */
 type NpmWeek = { week: string; installs: number };
@@ -81,7 +81,7 @@ function RequestChart({ days }: { days: RequestDay[] }) {
       <figcaption className="lp-chart-head">
         <span>requests per day, 30 days</span>
         <span className="lp-chart-note">
-          {realTotal.toLocaleString("en-US")} unlabelled · grey is our own synthetic and test traffic
+          {realTotal.toLocaleString("en-US")} external · grey is our own loadgen and probes
         </span>
       </figcaption>
       <div className="lp-chart-bars" role="img" aria-label={`requests per day for 30 days, ${realTotal} unlabelled`}>
