@@ -82,6 +82,12 @@ const FRAMES: Frame[] = [
       "Revoked reads at a glance without a field: desaturated, struck through, red. Delete the pass and nothing changes — the record is on the chain, not in the card.",
   },
   {
+    title: "7 · Someone else checks",
+    caption:
+      "A counterparty scans and reads the record: the serial, whether it is live, what the limit was, and whether to trust it.",
+    correction:
+      "Not drawn, on purpose. The page this frame shows is #436 and does not exist yet; an illustration of it would be a screenshot of nothing. When it ships, this frame becomes that page.",
+  },  {
     src: "/mocks/frame-stack.png",
     alt: "Four wallet passes fanned like cards, each in a different tint with its own teammate name and cap.",
     title: "8 · Four teammates, one principal",
@@ -99,13 +105,7 @@ const FRAMES: Frame[] = [
     correction:
       "A proposal, not a shipped screen. Nothing in this repository renders this yet; it is here because the copy and the argument are settled and the screen is the cheap part.",
   },
-  {
-    title: "7 · Someone else checks",
-    caption:
-      "A counterparty scans and reads the record: the serial, whether it is live, what the limit was, and whether to trust it.",
-    correction:
-      "Not drawn, on purpose. The page this frame shows is #436 and does not exist yet; an illustration of it would be a screenshot of nothing. When it ships, this frame becomes that page.",
-  },
+
 ];
 
 export default function MocksPage() {
