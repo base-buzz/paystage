@@ -95,6 +95,12 @@ const FACE = {
   brand: arg("brand", "vouchguard"),
   serial: arg("serial", "vch-7F3"),
   network: arg("network", "Base"),
+  // v3: the poster carries the teammate's name, so a render has to know whose pass it is.
+  teammate: {
+    name: arg("teammate", "Grok Bot"),
+    platform: arg("platform", "Grok"),
+    category: arg("category", "research"),
+  },
   window: `${arg("window-amount", "$20.00")} ${windowLabel(Number(arg("window-seconds", "86400")))}`,
 };
 

@@ -1,70 +1,64 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="750" height="1035" viewBox="0 0 750 1035">
   <rect width="750" height="1035" fill="#FFFFFF"/>
-  
-    <defs>
-      <linearGradient id="strip" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#1A1F71"/>
-        <stop offset="1" stop-color="#101322"/>
-      </linearGradient>
-    </defs>
-    <rect x="0" y="0" width="750" height="259" fill="url(#strip)"/>
-    
-    <rect x="0" y="246.05" width="750" height="12.950000000000001" fill="#1B4F8A"/>
-  
+  <rect x="0" y="0" width="750" height="352" fill="#312E81"/>
+  <rect x="0" y="347.776" width="750" height="4.224" fill="#F7B600"/>
 
-  <g transform="translate(48 36) scale(0.675)">
+  <g transform="translate(48 39) scale(0.63)">
     <rect x="0" y="0" width="100" height="100" rx="16" fill="none"/>
     <rect x="10" y="10" width="80" height="80" rx="8" fill="none" stroke="#F7B600" stroke-width="4"/>
-    <rect x="0" y="42" width="46" height="16" rx="8" fill="#16224A"/>
+    <rect x="0" y="42" width="46" height="16" rx="8" fill="#312E81"/>
     
     
   </g>
-  <text x="130.5" y="73.5" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="30"
+  <text x="126" y="72" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="28.5"
        font-weight="500" letter-spacing="0.01em" text-anchor="start" fill="#FFFFFF">vouchguard</text>
-  <text x="130.5" y="96" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="18"
-       font-weight="500" letter-spacing="0.04em" text-anchor="start" fill="#B9BFD6">vouched by PayStage</text>
-  <text x="702" y="73.5" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="27"
-       font-weight="600" letter-spacing="0.08em" text-anchor="end" fill="#DCE7F5">vch-7F3</text>
+  <text x="126" y="94.5" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="18"
+       font-weight="500" letter-spacing="0.03em" text-anchor="start" fill="rgba(255,255,255,0.72)">via Grok · research</text>
+  <rect x="552" y="39" width="150" height="46.5" rx="23.25"
+        fill="rgba(255,255,255,0.92)"/>
+    <text x="627" y="69.75" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="21.75"
+       font-weight="700" letter-spacing="0.12em" text-anchor="middle" fill="#312E81">ACTIVE</text>
 
-  <text x="48" y="323.17" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="28.5"
+  <text x="375" y="258.5" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="150"
+       font-weight="600" letter-spacing="-0.015em" text-anchor="middle" fill="#FFFFFF">Grok Bot</text>
+  <text x="375" y="310.75" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="19.5"
+       font-weight="500" letter-spacing="0.02em" text-anchor="middle" fill="rgba(255,255,255,0.66)">this teammate is authorised to spend within the caps below</text>
+
+  <text x="48" y="408.925" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="28.5"
        font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">UP TO</text>
-  <text x="48" y="419.425" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="112.5"
+  <text x="48" y="507.25" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="112.5"
        font-weight="700" letter-spacing="-0.02em" text-anchor="start" fill="#101322">$0.50</text>
   
-  <text x="52.5" y="461.425" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="27"
+  <text x="52.5" y="549.25" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="27"
        font-weight="500" letter-spacing="0.02em" text-anchor="start" fill="#5B6472">each purchase · $20.00 per 24h</text>
 
-  <text x="48" y="543.625" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="22.5"
+  <text x="48" y="626.2750000000001" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="22.5"
        font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">EXPIRES</text>
-  <text x="48" y="579.85" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="31.5"
+  <text x="48" y="662.5" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="31.5"
        font-weight="600" letter-spacing="0.01em" text-anchor="start" fill="#101322">31 Jan 2027</text>
-  <text x="315" y="543.625" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="22.5"
+  <text x="315" y="626.2750000000001" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="22.5"
        font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">PRINCIPAL</text>
-  <text x="315" y="579.85" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="31.5"
+  <text x="315" y="662.5" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="31.5"
        font-weight="600" letter-spacing="0.01em" text-anchor="start" fill="#101322">Northwind Ltd</text>
 
-  <rect x="48" y="626.425" width="654" height="1.5" fill="#DDD9CF"/>
+  <rect x="48" y="709.075" width="654" height="1.5" fill="#DDD9CF"/>
 
-  <rect x="48" y="657.475" width="315" height="165" fill="none" stroke="#CFC9BC" stroke-width="2.25"/>
-       <text x="67.5" y="697.975" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="21"
+  <rect x="48" y="740.125" width="315" height="165" fill="none" stroke="#CFC9BC" stroke-width="2.25"/>
+       <text x="67.5" y="780.625" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="21"
        font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">VERIFY</text>
-       <text x="67.5" y="741.475" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="24"
+       <text x="67.5" y="824.125" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="24"
        font-weight="600" letter-spacing="0.01em" text-anchor="start" fill="#101322">paystage.xyz/m/7F3</text>
-       <text x="67.5" y="778.975" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="21"
+       <text x="67.5" y="861.625" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="21"
        font-weight="500" letter-spacing="0.02em" text-anchor="start" fill="#5B6472">no app, no account</text>
-  <text x="400.5" y="688.975" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="19.5"
-       font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">STATE</text>
-  <text x="400.5" y="729.475" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="30"
-       font-weight="700" letter-spacing="0.02em" text-anchor="start" fill="#101322">ACTIVE</text>
-  <text x="400.5" y="766.975" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="19.5"
+  <text x="400.5" y="771.625" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="19.5"
        font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">NETWORK</text>
-  <text x="400.5" y="807.475" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="30"
+  <text x="400.5" y="807.625" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="28.5"
        font-weight="600" letter-spacing="0.02em" text-anchor="start" fill="#101322">Base</text>
-  <text x="400.5" y="844.975" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="19.5"
-       font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">ISSUER</text>
-  <text x="400.5" y="885.475" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="28.5"
-       font-weight="600" letter-spacing="0.01em" text-anchor="start" fill="#101322">paystage.xyz</text>
+  <text x="400.5" y="845.125" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="19.5"
+       font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">ISSUED BY</text>
+  <text x="400.5" y="881.125" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="28.5"
+       font-weight="600" letter-spacing="0.01em" text-anchor="start" fill="#101322">PayStage</text>
 
-  <text x="48" y="1001.4" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="21.75"
-       font-weight="500" letter-spacing="0.01em" text-anchor="start" fill="#5B6472">Scan to verify · the face is not authoritative, the QR is</text>
+  <text x="48" y="1008.6" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="24"
+       font-weight="600" letter-spacing="0.01em" text-anchor="start" fill="#101322">They scan to verify. You tap Manage.</text>
 </svg>

@@ -75,6 +75,22 @@ function stripArtwork(width, height, revoked, withMark = false) {
  * @param {string} [face.vouchedBy]      the sibling line under the wordmark
  * @param {string} [face.qrCells]        a 2D array of 0/1 when a real QR is available; omitted = no code drawn
  */
+/**
+ * Per-teammate tint, deterministic from the teammate's name.
+ *
+ * All seven are AA with white text, and **gold is deliberately absent**: gold belongs to the seal and the state, and a
+ * teammate colour that could be mistaken for a state signal is worse than no colour at all. Deterministic so the same
+ * teammate looks the same on every device and in every render — a colour that changes per run is decoration.
+ */
+export const POSTER_TINTS = ["#1A1F71", "#0F5257", "#4338CA", "#6B1D5E", "#14532D", "#334155", "#312E81"];
+
+export function tintFor(name) {
+  const text = String(name ?? "");
+  let sum = 0;
+  for (let i = 0; i < text.length; i++) sum = (sum * 31 + text.charCodeAt(i)) >>> 0;
+  return POSTER_TINTS[sum % POSTER_TINTS.length];
+}
+
 export function passFaceSvg(face) {
   const width = Number(face.width);
   if (!Number.isFinite(width) || width < 80) throw new TypeError("passFaceSvg: width must be a number >= 80");
@@ -82,13 +98,21 @@ export function passFaceSvg(face) {
   const expired = face.state === "EXPIRED";
   const dead = revoked || expired;
 
+  /**
+   * v3 (2026-11-26): the poster artwork carries the teammate's name, large, because the poster is an image and type
+   * size there is ours to choose. The limit stays the primary *field* below, so `$2.00` is still where the eye lands.
+   * The face no longer prints the serial: it is a support reference, not a human cue — it lives in the back fields
+   * and as the QR's `altText` ("<teammate> · vch-7F3"), which is the one place a person reads it aloud.
+   */
+  const teammate = face.teammate ?? null;
+  const tint = face.tint ?? tintFor(teammate?.name ?? "");
   const height = Math.round(width * 1.38);
   const pad = Math.round(width * 0.064);
-  const stripH = Math.round(height * 0.25);
-  const unit = width / 100; // one percent of the width, so every size scales together
+  const posterH = Math.round(height * (teammate ? 0.34 : 0.25));
+  const unit = width / 100;
   const f = (n) => Math.round(n * unit * 100) / 100;
 
-  const limitY = stripH + height * 0.155;
+  const limitY = posterH + height * 0.15;
   const limitStrike = dead
     ? `<line x1="${pad}" y1="${limitY - f(4.4)}" x2="${pad + f(38)}" y2="${limitY - f(4.4)}" stroke="${RED}" stroke-width="${f(0.9)}"/>`
     : "";
@@ -97,14 +121,9 @@ export function passFaceSvg(face) {
     `<text x="${x}" y="${y}" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="${size}"
        font-weight="${weight}" letter-spacing="${spacing}" text-anchor="${anchor}" fill="${colour}">${esc(text)}</text>`;
 
-  const box = { x: pad, y: stripH + height * 0.385, size: width * 0.42, h: width * 0.22 };
+  const box = { x: pad, y: posterH + height * 0.375, size: width * 0.42, h: width * 0.22 };
   const boxRight = box.x + box.size + f(5);
-  /**
-   * A QR is drawn **only** when real modules are supplied. A decorative pattern that looks scannable but is not is a
-   * claim the image cannot keep, and this asset goes into an article that argues exactly against that. Without
-   * modules the same box carries the verification URL, which is honest, legible at dock size, and says what the QR
-   * will say when #423 exists.
-   */
+
   const verify = Array.isArray(face.qrCells) && face.qrCells.length > 0
     ? `<rect x="${box.x}" y="${box.y}" width="${box.size}" height="${box.size}" fill="${PAPER}" stroke="${INK}" stroke-width="${f(0.3)}"/>` +
       face.qrCells
@@ -122,36 +141,48 @@ export function passFaceSvg(face) {
        ${label(box.x + f(2.6), box.y + f(11.2), "paystage.xyz/m/" + esc(String(face.serial ?? "").replace(/^vch-/, "")), f(3.2), INK, 600, "0.01em")}
        ${label(box.x + f(2.6), box.y + f(16.2), "no app, no account", f(2.8), MUTED, 500, "0.02em")}`;
 
+  const chipW = f(20);
+  const chipH = f(6.2);
+  const chip = `<rect x="${width - pad - chipW}" y="${pad - f(1.2)}" width="${chipW}" height="${chipH}" rx="${chipH / 2}"
+        fill="${dead ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.92)"}"/>
+    ${label(width - pad - chipW / 2, pad + f(2.9), face.state, f(2.9), dead ? "#FFFFFF" : tint, 700, "0.12em", "middle")}`;
+
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <rect width="${width}" height="${height}" fill="${PAPER}"/>
-  ${stripArtwork(width, stripH, revoked)}
+  <rect x="0" y="0" width="${width}" height="${posterH}" fill="${dead ? "#5B6472" : tint}"/>
+  <rect x="0" y="${posterH - Math.max(3, posterH * 0.012)}" width="${width}" height="${Math.max(3, posterH * 0.012)}" fill="${dead ? RED : GOLD}"/>
 
-  ${sealMark({ x: pad, y: pad - f(1.6), size: f(9), state: dead ? (revoked ? "REVOKED" : "EXPIRED") : "ACTIVE", paper: "#16224A" })}
-  ${label(pad + f(11), pad + f(3.4), face.brand ?? "vouchguard", f(4.0), dead ? "#C7CDD6" : "#FFFFFF", 500, "0.01em")}
-  ${label(pad + f(11), pad + f(6.4), face.vouchedBy ?? "vouched by PayStage", f(2.4), dead ? "#8C93A3" : "#B9BFD6", 500, "0.04em")}
-  ${label(width - pad, pad + f(3.4), shortCode(face.serial), f(3.6), dead ? "#C7CDD6" : "#DCE7F5", 600, "0.08em", "end")}
+  ${sealMark({ x: pad, y: pad - f(1.2), size: f(8.4), state: dead ? (revoked ? "REVOKED" : "EXPIRED") : "ACTIVE", paper: dead ? "#5B6472" : tint })}
+  ${label(pad + f(10.4), pad + f(3.2), face.brand ?? "vouchguard", f(3.8), "#FFFFFF", 500, "0.01em")}
+  ${label(pad + f(10.4), pad + f(6.2), teammate ? `via ${teammate.platform ?? teammate.name} · ${teammate.category ?? "agent"}` : (face.vouchedBy ?? "vouched by PayStage"), f(2.4), "rgba(255,255,255,0.72)", 500, "0.03em")}
+  ${chip}
 
-  ${label(pad, stripH + height * 0.062, "UP TO", f(3.8), MUTED, 650, "0.14em")}
+  ${teammate
+    ? label(width / 2, posterH * 0.5 + f(11), teammate.name, f(20), "#FFFFFF", 600, "-0.015em", "middle")
+    : ""}
+  ${teammate
+    ? label(width / 2, posterH - f(5.5), "this teammate is authorised to spend within the caps below", f(2.6), "rgba(255,255,255,0.66)", 500, "0.02em", "middle")
+    : ""}
+
+  ${label(pad, posterH + height * 0.055, "UP TO", f(3.8), MUTED, 650, "0.14em")}
   ${label(pad, limitY, face.limit, f(15), dead ? MUTED : INK, 700, "-0.02em")}
   ${limitStrike}
   ${label(pad + f(0.6), limitY + f(5.6), face.window ? `each purchase · ${face.window}` : "each purchase", f(3.6), MUTED, 500, "0.02em")}
 
-  ${label(pad, stripH + height * 0.275, "EXPIRES", f(3.0), MUTED, 650, "0.14em")}
-  ${label(pad, stripH + height * 0.31, face.expiry, f(4.2), INK, 600, "0.01em")}
-  ${label(width * 0.42, stripH + height * 0.275, "PRINCIPAL", f(3.0), MUTED, 650, "0.14em")}
-  ${label(width * 0.42, stripH + height * 0.31, face.principal, f(4.2), INK, 600, "0.01em")}
+  ${label(pad, posterH + height * 0.265, "EXPIRES", f(3.0), MUTED, 650, "0.14em")}
+  ${label(pad, posterH + height * 0.30, face.expiry, f(4.2), INK, 600, "0.01em")}
+  ${label(width * 0.42, posterH + height * 0.265, "PRINCIPAL", f(3.0), MUTED, 650, "0.14em")}
+  ${label(width * 0.42, posterH + height * 0.30, face.principal, f(4.2), INK, 600, "0.01em")}
 
-  <rect x="${pad}" y="${stripH + height * 0.355}" width="${width - pad * 2}" height="${f(0.2)}" fill="${dead ? "#E3E0D8" : "#DDD9CF"}"/>
+  <rect x="${pad}" y="${posterH + height * 0.345}" width="${width - pad * 2}" height="${f(0.2)}" fill="${dead ? "#E3E0D8" : "#DDD9CF"}"/>
 
   ${verify}
-  ${label(boxRight, box.y + f(4.2), "STATE", f(2.6), MUTED, 650, "0.14em")}
-  ${label(boxRight, box.y + f(9.6), face.state, f(4.0), dead ? RED : INK, 700, "0.02em")}
-  ${label(boxRight, box.y + f(14.6), "NETWORK", f(2.6), MUTED, 650, "0.14em")}
-  ${label(boxRight, box.y + f(20), face.network ?? "Base", f(4.0), INK, 600, "0.02em")}
-  ${label(boxRight, box.y + f(25), "ISSUER", f(2.6), MUTED, 650, "0.14em")}
-  ${label(boxRight, box.y + f(30.4), "paystage.xyz", f(3.8), INK, 600, "0.01em")}
+  ${label(boxRight, box.y + f(4.2), "NETWORK", f(2.6), MUTED, 650, "0.14em")}
+  ${label(boxRight, box.y + f(9), face.network ?? "Base", f(3.8), INK, 600, "0.02em")}
+  ${label(boxRight, box.y + f(14), "ISSUED BY", f(2.6), MUTED, 650, "0.14em")}
+  ${label(boxRight, box.y + f(18.8), "PayStage", f(3.8), INK, 600, "0.01em")}
 
-  ${label(pad, height - pad * 0.7, "Scan to verify · the face is not authoritative, the QR is", f(2.9), MUTED, 500, "0.01em")}
+  ${label(pad, height - pad * 0.55, "They scan to verify. You tap Manage.", f(3.2), dead ? RED : INK, 600, "0.01em")}
 </svg>`;
 }
 
