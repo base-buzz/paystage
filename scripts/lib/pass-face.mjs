@@ -188,3 +188,86 @@ export function passIconSvg({ width, height, revoked = false }) {
         stroke="${revoked ? "#D1D5DB" : "#8FB6E8"}" stroke-width="${stroke}" stroke-linecap="square"/>
 </svg>`;
 }
+
+/**
+ * The iOS Face ID sheet, as a frame in the storyboard (#438).
+ *
+ * This is deliberately **not** our design: it is a system sheet, and the only thing we choose is *when* it appears.
+ * The frame exists so a reader sees one biometric prompt and no form, which is the whole claim of the walkthrough.
+ * A caption must say it is the system sheet; a mock that implied we drew it would be a claim about iOS.
+ */
+export function faceIdSheetSvg({ width = 750, prompt = "Approve “this job”?" } = {}) {
+  const w = Number(width);
+  const h = Math.round(w * 0.62);
+  const pad = Math.round(w * 0.08);
+  const sheetH = Math.round(h * 0.66);
+  const y = h - sheetH;
+  const f = (n) => Math.round((n * w) / 100 * 100) / 100;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <rect width="${w}" height="${h}" fill="#0B0F19" opacity="0.55"/>
+  <rect x="0" y="${y}" width="${w}" height="${sheetH}" rx="${f(3)}" fill="#F2F2F7"/>
+  <rect x="${w / 2 - f(3)}" y="${y + f(1.4)}" width="${f(6)}" height="${f(0.8)}" rx="${f(0.4)}" fill="#C7C7CC"/>
+  <text x="${w / 2}" y="${y + f(11)}" text-anchor="middle" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif"
+        font-size="${f(4.6)}" font-weight="600" fill="#101322">Face ID</text>
+  <text x="${w / 2}" y="${y + f(18)}" text-anchor="middle" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif"
+        font-size="${f(3.6)}" font-weight="400" fill="#3C3C43">${esc(prompt)}</text>
+  <circle cx="${w / 2}" cy="${y + f(19)}" r="${f(5.4)}" fill="none" stroke="#1A1F71" stroke-width="${f(0.6)}"/>
+  <path d="M ${w / 2 - f(2.2)} ${y + f(19)} l ${f(1.8)} ${f(1.8)} l ${f(3.2)} ${-f(3.6)}" fill="none" stroke="#1A1F71"
+        stroke-width="${f(0.7)}" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="${pad}" y="${y + sheetH - f(15)}" width="${w - pad * 2}" height="${f(0.2)}" fill="#D1D1D6"/>
+  <text x="${pad}" y="${y + sheetH - f(7)}" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif"
+        font-size="${f(3.4)}" font-weight="400" fill="#0A84FF">Cancel</text>
+  <text x="${w - pad}" y="${y + sheetH - f(7)}" text-anchor="end" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif"
+        font-size="${f(3.4)}" font-weight="600" fill="#0A84FF">OK</text>
+</svg>`;
+}
+
+/**
+ * The mandate page in a browser frame (#438): one mandate, the fields, and the one button that ends it.
+ *
+ * It shows the *page* rather than the pass because that is the correction the storyboard exists to make: the pass
+ * cannot change anything. Every field here is data in — the page renders state, it does not decide.
+ */
+export function mandatePageSvg({ width = 750, state = "ACTIVE", limit = "$2.00", window = "$20.00 per 24h", expiry = "31 Jan 2027", principal = "Northwind Ltd", payees = ["api.onesource.io", "tanod.dev"], refusals = 2, serial = "vch-7F3" } = {}) {
+  const w = Number(width);
+  const h = Math.round(w * 1.22);
+  const f = (n) => Math.round((n * w) / 100 * 100) / 100;
+  const pad = f(7);
+  const revoked = state === "REVOKED";
+  const row = (y, label, value, extra = "") => `
+    <text x="${pad}" y="${y}" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="${f(2.8)}"
+          font-weight="600" letter-spacing="0.12em" fill="${MUTED}">${esc(label)}</text>
+    <text x="${pad}" y="${y + f(4.6)}" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="${f(3.8)}"
+          font-weight="600" fill="${INK}">${esc(value)}</text>${extra}`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <rect width="${w}" height="${h}" fill="#EDEBE6"/>
+  <rect x="0" y="0" width="${w}" height="${f(7)}" rx="${f(1.6)}" fill="#DAD7CF"/>
+  <circle cx="${f(4)}" cy="${f(3.5)}" r="${f(0.9)}" fill="#C4C0B6"/>
+  <circle cx="${f(7)}" cy="${f(3.5)}" r="${f(0.9)}" fill="#C4C0B6"/>
+  <circle cx="${f(10)}" cy="${f(3.5)}" r="${f(0.9)}" fill="#C4C0B6"/>
+  <text x="${w / 2}" y="${f(4.4)}" text-anchor="middle" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif"
+        font-size="${f(2.6)}" fill="#6B6862">paystage.xyz/m/${esc(String(serial).replace(/^vch-/, ""))}</text>
+  <rect x="${f(6)}" y="${f(11)}" width="${w - f(12)}" height="${h - f(18)}" rx="${f(2)}" fill="${PAPER}"/>
+
+  <text x="${pad + f(3)}" y="${f(19)}" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif"
+        font-size="${f(4.4)}" font-weight="700" fill="${INK}">This mandate</text>
+  <text x="${pad + f(3)}" y="${f(23.6)}" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif"
+        font-size="${f(2.9)}" fill="${MUTED}">${esc(serial)} · ${esc(principal)} · <tspan fill="${revoked ? RED : INK}" font-weight="600">${esc(state)}</tspan></text>
+
+  ${row(f(33), "LIMIT PER PURCHASE", limit, `<rect x="${w - pad - f(26)}" y="${f(28.6)}" width="${f(23)}" height="${f(6.4)}" rx="${f(1.4)}" fill="none" stroke="#C9C4B8"/>
+     <text x="${w - pad - f(24)}" y="${f(33)}" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="${f(3)}" fill="${MUTED}">change…</text>`)}
+  ${row(f(43), "WINDOW CEILING", window)}
+  ${row(f(52), "EXPIRES", expiry)}
+  <text x="${pad}" y="${f(62)}" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="${f(2.8)}"
+        font-weight="600" letter-spacing="0.12em" fill="${MUTED}">APPROVED PAYEES</text>
+  ${payees.map((p, i) => `
+    <text x="${pad}" y="${f(67 + i * 5)}" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif"
+          font-size="${f(3.4)}" fill="${INK}">${esc(p)}</text>
+    <text x="${w - pad}" y="${f(67 + i * 5)}" text-anchor="end" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif"
+          font-size="${f(3)}" fill="${MUTED}">remove</text>`).join("")}
+  ${row(f(84), "REFUSALS THIS PERIOD", String(refusals))}
+  <rect x="${pad}" y="${h - f(20)}" width="${w - pad * 2}" height="${f(7)}" rx="${f(1.6)}" fill="none" stroke="${RED}" stroke-width="${f(0.35)}"/>
+  <text x="${w / 2}" y="${h - f(15.4)}" text-anchor="middle" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif"
+        font-size="${f(3.2)}" font-weight="600" fill="${RED}">End this mandate</text>
+</svg>`;
+}

@@ -20,7 +20,7 @@
 import { mkdirSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { passFaceSvg, passIconSvg, passLogoSvg, passStripSvg } from "./lib/pass-face.mjs";
+import { faceIdSheetSvg, mandatePageSvg, passFaceSvg, passIconSvg, passLogoSvg, passStripSvg } from "./lib/pass-face.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback = null) => {
@@ -123,6 +123,28 @@ for (const asset of ASSETS) {
   }
   writeFileSync(join(OUT, asset.file), png);
   written.push(`${asset.file} ${meta.width}x${meta.height} — ${asset.note}`);
+}
+
+/**
+ * The storyboard frames (#438) live beside the pass assets and are rendered from the same module, so the page at
+ * `/mocks` cannot show a drawing that disagrees with the product. No QR is manufactured here either.
+ */
+if (argv.includes("--frames")) {
+  const FRAMES = [
+    { file: "frame-pass-active.png", svg: passFaceSvg({ ...FACE, width: 750, state: "ACTIVE", limit: "$2.00", window: "$20.00 per 24h" }), note: "the pass arrives" },
+    { file: "frame-face-id.png", svg: faceIdSheetSvg({ width: 750 }), note: "iOS system sheet — we choose when, not how" },
+    { file: "frame-mandate-page.png", svg: mandatePageSvg({ width: 750, state: STATE, limit: "$2.00", window: "$20.00 per 24h" }), note: "the page is the editor" },
+    { file: "frame-pass-changed.png", svg: passFaceSvg({ ...FACE, width: 750, state: "ACTIVE", limit: "$4.00", window: "$40.00 per 24h" }), note: "the same pass after a change" },
+    { file: "frame-pass-revoked.png", svg: passFaceSvg({ ...FACE, width: 750, state: "REVOKED", limit: "$2.00", window: "$20.00 per 24h" }), note: "ended, and the face says so" },
+  ];
+  mkdirSync(OUT, { recursive: true });
+  for (const frame of FRAMES) {
+    const png = await sharp(Buffer.from(frame.svg)).png({ compressionLevel: 9 }).toBuffer();
+    writeFileSync(join(OUT, frame.file), png);
+    console.log(`  ${frame.file} — ${frame.note}`);
+  }
+  console.log(`render-pass-assets: ${FRAMES.length} storyboard frame(s) in ${OUT}`);
+  process.exit(0);
 }
 
 // The SVG beside the PNG, so the lander can inline exactly what was rasterised.
