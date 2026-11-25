@@ -16,6 +16,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./signer": {
+      "types": "./dist/signer.d.ts",
+      "import": "./dist/signer.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -63,12 +67,17 @@
   "dependencies": {
     "@paystage/policy": "0.4.0",
     "@paystage/preflight": "0.6.0",
+    "@paystage/receipt-verify": "0.1.0",
     "@x402/extensions": "^2.29.0"
   },
   "peerDependencies": {
+    "viem": ">=2.21.0",
     "x402-fetch": ">=1.0.0"
   },
   "peerDependenciesMeta": {
+    "viem": {
+      "optional": true
+    },
     "x402-fetch": {
       "optional": true
     }

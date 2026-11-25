@@ -127,6 +127,51 @@ client.onBeforePaymentCreation(paystageClientHook({ policy }));
 Same policy, same verdicts, same reason codes as every other surface. A refusal aborts payload creation, so
 nothing is signed and the reason travels with it.
 
+## The signer boundary: `@paystage/x402-guard/signer`
+
+The hooks above decide whether a payment **should** be built. They cannot stop an agent that skips
+the call and signs. This subpath wraps the account's `signTypedData` — the last step every EIP-3009
+x402 payment passes through — and produces no signature unless a **verified PayStage receipt** covers
+the exact bytes being signed.
+
+```ts
+import { createSignerGuard } from "@paystage/x402-guard/signer";
+
+const signer = createSignerGuard(account, {
+  gate: async ({ payment, digest }) => {
+    // Your gate: return the signed PayStage receipt bound to `digest`.
+    return { receipt: await fetchVerdict(payment, digest) };
+  },
+});
+// Pass `signer` to @x402/evm, never the raw account.
+```
+
+The gate returns a signed receipt whose **`payment_digest`** (inside the signed payload) equals the
+`digest` it was given; `request_sha256` keeps its usual meaning. The adapter verifies the receipt's
+ES256 signature, that digest, its `payment` block and its expiry before it calls the account.
+
+It refuses for three reasons, as a thrown `SignerRefusedError` with a stable `code`:
+
+| `code` | When | What the message carries |
+|---|---|---|
+| `do_not_pay` | the verified receipt says `do_not_pay` | the gate's rule (`rule`), not just "refused" |
+| `gate_unreachable` | timeout, 5xx, malformed body | why; and that an unreachable gate is not an approval |
+| `digest_mismatch` | the receipt's signed `payment_digest` differs from the EIP-712 digest about to be signed | both digests |
+
+The digest is `hashTypedData(...)` — the same 32 bytes the account's signature commits to. A verdict
+issued for a 0.05 USDC authorization therefore cannot be replayed against a 5.00 one: the digest
+changes and the adapter refuses before calling the signer. A `review` verdict is refused by default
+(`onReview: "pay"` opts into a pre-arranged step-up).
+
+**Fail-closed is deliberate here, and it is the opposite of the telemetry rule.** A missing telemetry
+*label* is not a missing *verdict*, so a failed POST is swallowed. Here the gate supplies the verdict
+itself; with no receipt there is no approval, and "unknown" must never be read as "pay".
+
+**What it does not prove.** It binds **one account object** through **this wrapper**. An agent that
+holds the same key and calls the unwrapped `signTypedData` is unaffected — that is the adoption
+number the backlog row is about, not something a library can enforce for a signer it was not given.
+`viem` is an optional peer for this subpath only; the base guard does not import it.
+
 ## Any facilitator, unchanged
 
 The verifier hook attaches to the **resource server**, not to the facilitator — so it composes with

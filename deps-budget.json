@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-24",
+  "measuredAt": "2026-11-25",
   "method": "npm pack <package> from packages/; npm install --ignore-scripts --no-audit --no-fund <tarball> in an empty temp project; npm ls --all --parseable, dropping the temp project's own root line. The count includes the package itself and every resolved copy, hoisted or nested.",
   "packages": {
     "@paystage/ai-sdk": {
@@ -100,8 +100,8 @@
       ]
     },
     "@paystage/x402-guard": {
-      "budget": 31,
-      "reason": "mostly the @x402/extensions -> viem stack; the zod entry is the published @paystage/policy 0.3.1 dependency, gone once the #181 policy release is published.",
+      "budget": 32,
+      "reason": "mostly the @x402/extensions -> viem stack; +1 is @paystage/receipt-verify, the first-party ES256 receipt verifier the signer subpath checks before signing (it has no transitive dependencies); the zod entry is the published @paystage/policy 0.3.1 dependency, gone once the #181 policy release is published.",
       "resolvedPackages": [
         "node_modules/@adraffy/ens-normalize",
         "node_modules/@noble/ciphers",
@@ -109,6 +109,7 @@
         "node_modules/@noble/hashes",
         "node_modules/@paystage/policy",
         "node_modules/@paystage/preflight",
+        "node_modules/@paystage/receipt-verify",
         "node_modules/@paystage/x402-guard",
         "node_modules/@scure/base",
         "node_modules/@scure/bip32",
