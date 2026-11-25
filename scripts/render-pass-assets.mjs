@@ -18,6 +18,7 @@
  * rather than shipping one) · 3 sharp is not installed · 4 a write failed.
  */
 import { mkdirSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { passFaceSvg, passIconSvg, passLogoSvg, passStripSvg } from "./lib/pass-face.mjs";
 
@@ -52,7 +53,7 @@ if (!fontDir) {
   );
   process.exit(2);
 }
-const confDir = join(process.env.TMPDIR ?? "/tmp", "paystage-pass-fonts");
+const confDir = join(tmpdir(), "paystage-pass-fonts");
 mkdirSync(confDir, { recursive: true });
 const conf = join(confDir, "fonts.conf");
 writeFileSync(
