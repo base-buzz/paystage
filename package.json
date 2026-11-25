@@ -5,9 +5,9 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @paystage/policy -w @paystage/payment-policy -w @paystage/receipt-verify -w @paystage/mandate -w @paystage/preflight -w @paystage/x402-guard -w @paystage/x-evm -w @paystage/auth-watch -w @paystage/channel -w @paystage/velocity -w @paystage/trade-preflight -w @paystage/ai-sdk -w @paystage/mcp -w @paystage/n8n -w @paystage/eliza-plugin",
-    "test": "npm run test -w @paystage/policy -w @paystage/payment-policy -w @paystage/receipt-verify -w @paystage/mandate -w @paystage/preflight -w @paystage/auth-watch -w @paystage/channel -w @paystage/velocity -w @paystage/x402-guard -w @paystage/trade-preflight -w @paystage/mcp -w @paystage/n8n -w @paystage/eliza-plugin",
-    "typecheck": "npm run typecheck -w @paystage/policy -w @paystage/payment-policy -w @paystage/receipt-verify -w @paystage/mandate -w @paystage/preflight -w @paystage/auth-watch -w @paystage/velocity -w @paystage/trade-preflight -w @paystage/mcp -w paystage-hosted",
+    "build": "npm run build -w @paystage/policy -w @paystage/payment-policy -w @paystage/receipt-verify -w @paystage/mandate -w @paystage/pass -w @paystage/preflight -w @paystage/x402-guard -w @paystage/x-evm -w @paystage/auth-watch -w @paystage/channel -w @paystage/velocity -w @paystage/trade-preflight -w @paystage/ai-sdk -w @paystage/mcp -w @paystage/n8n -w @paystage/eliza-plugin",
+    "test": "npm run test -w @paystage/policy -w @paystage/payment-policy -w @paystage/receipt-verify -w @paystage/mandate -w @paystage/pass -w @paystage/preflight -w @paystage/auth-watch -w @paystage/channel -w @paystage/velocity -w @paystage/x402-guard -w @paystage/trade-preflight -w @paystage/mcp -w @paystage/n8n -w @paystage/eliza-plugin",
+    "typecheck": "npm run typecheck -w @paystage/policy -w @paystage/payment-policy -w @paystage/receipt-verify -w @paystage/mandate -w @paystage/pass -w @paystage/preflight -w @paystage/auth-watch -w @paystage/velocity -w @paystage/trade-preflight -w @paystage/mcp -w paystage-hosted",
     "check:dep-pins": "node scripts/check-dep-pins.mjs",
     "check:live": "node scripts/check-deployed-sha.mjs --remote && node scripts/check-mcp-live.mjs && node scripts/check-receipt-live.mjs && node scripts/check-sanctions-live.mjs"
   },

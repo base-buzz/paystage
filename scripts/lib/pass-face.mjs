@@ -207,15 +207,16 @@ export function passStripSvg({ width, height, revoked = false }) {
 
 const FONT_STACK = "Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif";
 
-/** The wordmark, for `logo.png` (160×50 max in Wallet). */
-export function passLogoSvg({ width, height }) {
+/** The wordmark, for `logo.png` (160×50 max in Wallet). The default is the PayStage site logo; the pass uses `VOUCH`. */
+export function passLogoSvg({ width, height, wordmark = "PAYSTAGE" }) {
   const w = Number(width);
   const h = Number(height);
-  const size = Math.min(h * 0.55, w * 0.16);
+  const text = String(wordmark ?? "PAYSTAGE").toUpperCase();
+  const size = Math.min(h * 0.55, (w * 0.88) / Math.max(1, text.length * 0.62));
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
   <rect width="${w}" height="${h}" fill="${DEEP}"/>
   <text x="${w / 2}" y="${h / 2 + size * 0.35}" text-anchor="middle" font-family="${FONT_STACK}" font-size="${size}"
-        font-weight="700" letter-spacing="${size * 0.14}" fill="#F4F1EA">PAYSTAGE</text>
+        font-weight="700" letter-spacing="${size * 0.14}" fill="#F4F1EA">${esc(text)}</text>
 </svg>`;
 }
 

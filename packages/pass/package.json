@@ -1,0 +1,56 @@
+{
+  "name": "@paystage/pass",
+  "version": "0.1.0",
+  "description": "Generate a Vouch spending pass from a signed mandate: an Apple Wallet .pkpass and a Google Wallet pass object.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "assets",
+    "!dist/**/*.map"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "paystage",
+    "vouch",
+    "wallet-pass",
+    "pkpass",
+    "mandate",
+    "spending-pass"
+  ],
+  "homepage": "https://paystage.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/base-buzz/paystage.git",
+    "directory": "packages/pass"
+  },
+  "bugs": {
+    "url": "https://github.com/base-buzz/paystage/issues"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@paystage/mandate": "0.1.0",
+    "pkijs": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12"
+  }
+}
