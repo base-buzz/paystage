@@ -49,6 +49,20 @@ const verdict = await verifyReceipt(receipt, { jwk });
 
 An unknown `kid` fails closed: it is `unverifiable`, never a guess at another key. This verifier is ES256-only (ECDSA P-256 + SHA-256); it rejects any other key or receipt algorithm rather than following the issuer to a new one silently.
 
+## Receipt lifecycle
+
+A refund and a void are separate signed statements in the same receipt envelope, each naming the
+original receipt by digest. `verifyChain()` checks the whole chain offline: signatures, legal state
+order, and the arithmetic (`captured − refunded = remaining`). A refund larger than what remains is
+`amount-exceeds-captured`; a second full refund is `already-refunded`. The five-minute seller page is
+[`docs/specs/receipt-lifecycle.md`](../../docs/specs/receipt-lifecycle.md).
+
+```js
+import { verifyChain } from "@paystage/receipt-verify";
+const chain = await verifyChain({ receipt }, refundStatements, { keys: publishedJwks.keys });
+if (!chain.ok) console.log(chain.status, chain.reason); // never throws
+```
+
 ## Tests
 
 ```sh

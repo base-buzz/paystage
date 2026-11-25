@@ -14,3 +14,33 @@ export {
   verifyReceipt,
 } from "./verify.js";
 export type { JwkLike, KeySource, ReceiptLike, VerifyOptions, VerifyVerdict } from "./verify.js";
+
+/**
+ * Receipt lifecycle (#413). Separate signed statements in the same receipt envelope; `verifyReceipt()`
+ * above is unchanged and `verifyChain()` calls it for every link.
+ */
+export {
+  LIFECYCLE_KIND,
+  LIFECYCLE_KEY_ID,
+  LIFECYCLE_STATES,
+  issueLifecycle,
+  receiptDigest,
+  refund,
+  verifyChain,
+  verifyLifecycleEvent,
+} from "./lifecycle.js";
+export type {
+  ChainFailureStatus,
+  ChainPayment,
+  ChainVerification,
+  IssueLifecycleInput,
+  IssueLifecycleOptions,
+  LifecycleEvent,
+  LifecycleEventBody,
+  LifecycleEventStatus,
+  LifecycleEventVerification,
+  LifecycleKeyOptions,
+  LifecycleState,
+  RefundInput,
+  VerifyChainOptions,
+} from "./lifecycle.js";
