@@ -14,3 +14,16 @@ journal.jsonl
 last-tick
 probe_runs.json
 apps/console/.lab-cache/
+
+# Private records and credentials — a public repo is not the place for either (#441).
+# `.research-ledger/` held 588 KB of our own evidence objects, one of them a 437 KB snapshot of the internal
+# backlog; it was tracked for a week. `check-staged-secrets.mjs` fails on these paths, because a .gitignore is a
+# hope and a check is a rule.
+.research-ledger/
+.env
+.env.*
+.dev.vars
+.dev.vars*
+*.p12
+*.pem
+*.mobileprovision

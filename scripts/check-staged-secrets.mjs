@@ -48,6 +48,41 @@ try {
   process.exit(2);
 }
 
+/**
+ * Paths that must never enter a public commit, whatever is inside them.
+ *
+ * The pattern scan below catches a *value*; these catch a *place*. 2026-11-25: `.research-ledger/` was tracked for a
+ * week and one of its evidence objects was a 437 KB snapshot of the internal backlog — no secret-shaped string in it,
+ * so a value scan would never have fired. A `.gitignore` does not stop `git add -f`, and it does not stop a tool that
+ * writes the directory afresh; this does.
+ */
+const FORBIDDEN_PATHS = [
+  { re: /^\.research-ledger\//, why: "the research ledger is private evidence, including snapshots of the backlog" },
+  { re: /^\.env(?:\.|$)/, why: "an environment file holds credentials" },
+  { re: /^\.dev\.vars/, why: "a Wrangler dev-vars file holds credentials" },
+  { re: /\.(?:p12|pem|mobileprovision)$/i, why: "a certificate or provisioning profile is an identity document" },
+];
+
+let forbidden = [];
+try {
+  forbidden = execFileSync("git", ["diff", "--cached", "--name-only", "--diff-filter=ACMR"], { encoding: "utf8" })
+    .split("\n")
+    .filter(Boolean)
+    .flatMap((file) => {
+      const hit = FORBIDDEN_PATHS.find((p) => p.re.test(file));
+      return hit ? [{ file, why: hit.why }] : [];
+    });
+} catch {
+  /* no index: the diff read above already failed with a clearer message */
+}
+
+if (forbidden.length > 0) {
+  console.error(`secrets: ${forbidden.length} staged path(s) must not be in a public repo`);
+  for (const f of forbidden) console.error(`  ${f.file} — ${f.why}`);
+  console.error("  unstage it: git rm -r --cached <path>. History is not rewritten by this check; see #441.");
+  process.exit(1);
+}
+
 if (scanAll) {
   try {
     const untracked = execFileSync("git", ["ls-files", "--others", "--exclude-standard"], { encoding: "utf8" })
