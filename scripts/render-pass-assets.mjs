@@ -20,7 +20,17 @@
 import { mkdirSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { faceIdSheetSvg, mandatePageSvg, passFaceSvg, passIconSvg, passLogoSvg, passStripSvg, sealMark } from "./lib/pass-face.mjs";
+import {
+  faceIdSheetSvg,
+  mandatePageSvg,
+  passFaceSvg,
+  passIconSvg,
+  passLogoSvg,
+  passStripSvg,
+  sealMark,
+  setupScreenSvg,
+  stackedTeammatesSvg,
+} from "./lib/pass-face.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback = null) => {
@@ -142,6 +152,8 @@ if (argv.includes("--frames")) {
     { file: "frame-mandate-page.png", svg: mandatePageSvg({ width: 750, state: STATE, limit: "$2.00", window: "$20.00 per 24h" }), note: "the page is the editor" },
     { file: "frame-pass-changed.png", svg: passFaceSvg({ ...FACE, width: 750, state: "ACTIVE", limit: "$4.00", window: "$40.00 per 24h" }), note: "the same pass after a change" },
     { file: "frame-pass-revoked.png", svg: passFaceSvg({ ...FACE, width: 750, state: "REVOKED", limit: "$2.00", window: "$20.00 per 24h" }), note: "ended, and the face says so" },
+    { file: "frame-stack.png", svg: stackedTeammatesSvg({ width: 750 }), note: "four teammates, four caps, one principal" },
+    { file: "frame-setup.png", svg: setupScreenSvg({ width: 750 }), note: "four presets, one tap — the numbers arrive filled in" },
   ];
   mkdirSync(OUT, { recursive: true });
   for (const frame of FRAMES) {

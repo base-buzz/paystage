@@ -82,6 +82,24 @@ const FRAMES: Frame[] = [
       "Revoked reads at a glance without a field: desaturated, struck through, red. Delete the pass and nothing changes — the record is on the chain, not in the card.",
   },
   {
+    src: "/mocks/frame-stack.png",
+    alt: "Four wallet passes fanned like cards, each in a different tint with its own teammate name and cap.",
+    title: "8 · Four teammates, one principal",
+    caption:
+      "Each teammate gets its own cap and its own tint, and revoking one leaves the others alone. The point of the stack is that a person can hold several and still tell them apart at a glance.",
+    correction:
+      "The caps are set by hand, one at a time. The agent may draft a change, but it cannot add a teammate or raise a cap — that is the whole difference between this and handing over a wallet.",
+  },
+  {
+    src: "/mocks/frame-setup.png",
+    alt: "A setup screen offering four job presets — Research, Errands, Build, Custom — each with the numbers already filled in.",
+    title: "9 · The first tap: pick a job, not a limit",
+    caption:
+      "A blank form is homework. The presets are jobs, not amounts, and picking one fills the numbers in — every one of them stays editable, and Custom… is the blank form for anyone who wants it.",
+    correction:
+      "A proposal, not a shipped screen. Nothing in this repository renders this yet; it is here because the copy and the argument are settled and the screen is the cheap part.",
+  },
+  {
     title: "7 · Someone else checks",
     caption:
       "A counterparty scans and reads the record: the serial, whether it is live, what the limit was, and whether to trust it.",
@@ -98,6 +116,9 @@ export default function MocksPage() {
         The Vouch model, frame by frame. Every image below is rendered by <code>scripts/lib/pass-face.mjs</code>, the
         same layout function that produces the Wallet assets — so nothing on this page is a separate drawing that can
         drift from what ships.
+      </p>
+      <p>
+        It looks like a card in the wallet, and it cannot tap to pay.
       </p>
 
       {FRAMES.map((frame) => (

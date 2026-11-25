@@ -354,3 +354,95 @@ export function mandatePageSvg({ width = 750, state = "ACTIVE", limit = "$2.00",
         font-size="${f(3.2)}" font-weight="600" fill="${RED}">End this mandate</text>
 </svg>`;
 }
+
+/**
+ * Frame 8 (#438 follow-on): **four teammates, four passes, one principal.**
+ *
+ * The single face argues what a pass *is*; this argues what a household of them looks like — a different tint per
+ * teammate, a different cap per job, the same seal and the same "you tap Manage" line. Drawn from the same tokens as
+ * the face so a reader cannot tell the two apart except by count.
+ */
+export function stackedTeammatesSvg({ width = 750, teammates } = {}) {
+  const list = teammates ?? [
+    { name: "Grok Bot", platform: "Grok", category: "research", limit: "$2.00", window: "$20.00 per 24h" },
+    { name: "Claude Ops", platform: "Claude", category: "ops", limit: "$0.50", window: "$5.00 per 24h" },
+    { name: "Code Agent", platform: "Cursor", category: "build", limit: "$1.00", window: "$10.00 per 24h" },
+    { name: "Data Runner", platform: "Qwen", category: "data", limit: "$0.25", window: "$2.00 per 24h" },
+  ];
+  const w = Number(width);
+  const cardH = Math.round(w * 0.30);
+  const step = Math.round(cardH * 0.72);
+  const footer = Math.round(w * 0.075);
+  const h = step * (list.length - 1) + cardH + footer;
+  const f = (n) => Math.round(((n * w) / 100) * 100) / 100;
+  const pad = f(6);
+  const cardW = w - pad * 2;
+  /** Back to front, so the first teammate sits on top of the pile the way a hand of cards is held. */
+  const cards = [...list]
+    .reverse()
+    .map((t, revIndex) => {
+      const i = list.length - 1 - revIndex;
+      const y = i * step + f(2);
+      const tint = POSTER_TINTS[i % POSTER_TINTS.length];
+      return `<g>
+      <rect x="${pad}" y="${y}" width="${cardW}" height="${cardH}" rx="${f(3)}" fill="${tint}"/>
+      <rect x="${pad}" y="${y}" width="${cardW}" height="${f(0.9)}" rx="${f(0.4)}" fill="${GOLD}"/>
+      ${sealMark({ x: pad + f(4.5), y: y + cardH - f(11.5), size: f(7.5), state: "ACTIVE", paper: tint })}
+      ${labelAt(pad + f(14), y + cardH - f(6.6), t.name, f(5.2), "#FFFFFF", 600, "-0.01em")}
+      ${labelAt(pad + f(14), y + cardH - f(2.6), `via ${t.platform} · ${t.category}`, f(2.6), "rgba(255,255,255,0.72)", 500, "0.03em")}
+      ${labelAt(w - pad - f(4.5), y + cardH - f(6.6), t.limit, f(5.0), "#FFFFFF", 700, "-0.01em", "end")}
+      ${labelAt(w - pad - f(4.5), y + cardH - f(2.6), t.window, f(2.6), "rgba(255,255,255,0.72)", 500, "0.02em", "end")}
+    </g>`;
+    })
+    .join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <rect width="${w}" height="${h}" fill="${PAPER}"/>
+  ${cards}
+  ${labelAt(pad, h - f(2.4), "one principal · four teammates · each cap set by hand, each revocable on its own", f(2.4), MUTED, 500, "0.01em")}
+</svg>`;
+}
+
+/** A tiny label helper for the composed frames; the face builds its own inside `passFaceSvg`. */
+function labelAt(x, y, text, size, colour = MUTED, weight = 600, spacing = "0.02em", anchor = "start") {
+  return `<text x="${x}" y="${y}" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="${size}"
+    font-weight="${weight}" letter-spacing="${spacing}" text-anchor="${anchor}" fill="${colour}">${esc(text)}</text>`;
+}
+
+/**
+ * Frame 9: **the setup screen — four presets, one tap.**
+ *
+ * The complaint every onboarding screen earns is "a blank form is homework". So the presets are jobs, not limits: the
+ * human picks the job and the numbers arrive filled in, which is the only way a person sets a cap willingly.
+ */
+export function setupScreenSvg({ width = 750, presets } = {}) {
+  const list = presets ?? [
+    { title: "Research", line: "up to $2.00 each · $20 a day", tag: "reading · APIs" },
+    { title: "Errands", line: "up to $0.50 each · $5 a day", tag: "small buys" },
+    { title: "Build", line: "up to $1.00 each · $10 a day", tag: "CI · packages" },
+    { title: "Custom…", line: "set the numbers yourself", tag: "blank form" },
+  ];
+  const w = Number(width);
+  const rowH = Math.round(w * 0.14);
+  const h = Math.round(rowH * list.length + w * 0.26);
+  const f = (n) => Math.round(((n * w) / 100) * 100) / 100;
+  const pad = f(7);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <rect width="${w}" height="${h}" fill="${PAPER}"/>
+  ${labelAt(pad, f(9), "Give a teammate a job", f(5.6), INK, 700, "-0.01em")}
+  ${labelAt(pad, f(14), "Pick the job. The numbers arrive filled in; change any of them.", f(2.7), MUTED, 500, "0.01em")}
+  ${list
+    .map((p, i) => {
+      const y = f(20) + i * rowH;
+      const tint = tintFor(p.title);
+      return `<g>
+        <rect x="${pad}" y="${y}" width="${w - pad * 2}" height="${rowH - f(2.5)}" rx="${f(2.4)}" fill="${i === list.length - 1 ? "none" : PAPER}" stroke="${i === list.length - 1 ? "#CFC9BC" : "none"}" stroke-width="${f(0.3)}" stroke-dasharray="${i === list.length - 1 ? `${f(1.4)} ${f(1.1)}` : "0"}"/>
+        <rect x="${pad + f(3)}" y="${y + f(3)}" width="${f(7)}" height="${f(7)}" rx="${f(1.6)}" fill="${tint}"/>
+        ${labelAt(pad + f(13), y + f(6.4), p.title, f(4.4), INK, 600, "-0.01em")}
+        ${labelAt(pad + f(13), y + f(10.8), p.line, f(3.0), MUTED, 500, "0.01em")}
+        ${labelAt(w - pad - f(3), y + f(6.4), p.tag, f(2.6), MUTED, 500, "0.01em", "end")}
+      </g>`;
+    })
+    .join("")}
+  ${labelAt(pad, h - f(3), "the human picks a job once; the agent drafts every later change", f(2.9), MUTED, 500, "0.01em")}
+</svg>`;
+}
