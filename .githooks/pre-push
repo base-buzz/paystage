@@ -200,6 +200,23 @@ if [ -n "$base" ] && git diff --name-only "$base" HEAD | grep -qE '^(packages|ap
   fi
 fi
 
+# 5. A Worker that bundles locally can still be rejected at deploy time by the *runtime*, and only the deploy asks.
+#
+#    2026-11-25: `#444` generated a per-isolate salt with `crypto.getRandomValues` at module scope. Every local check
+#    passed — build, every suite, `ci-local` — and `deploy-console` failed with Workers error 10021, "Disallowed
+#    operation called within global scope", because global-scope validation happens when the version is uploaded, not
+#    when the bundle is made. A dry run is bundle-only too, so this step is deliberately cheap and deliberately
+#    best-effort: it catches a syntax the bundler rejects, and says when it cannot run rather than pretending it did.
+if command -v npx >/dev/null 2>&1 && [ -x node_modules/.bin/wrangler ] && git diff --name-only "$base" HEAD 2>/dev/null | grep -qE '^apps/(hosted|console)/'; then
+  if ! npx wrangler deploy --dry-run --outdir /tmp/prepush-worker --config apps/hosted/wrangler.toml >/tmp/prepush-wrangler.txt 2>&1; then
+    note "wrangler dry run failed — see /tmp/prepush-wrangler.txt"
+    tail -5 /tmp/prepush-wrangler.txt | sed 's/^/    /'
+    fail=1
+  fi
+else
+  note "wrangler dry run skipped (no wrangler binary, or no apps/ change)"
+fi
+
 if [ "$fail" = "1" ]; then
   note "blocked. Fix above, or push with --no-verify and say why."
   exit 1
