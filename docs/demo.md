@@ -81,3 +81,7 @@ read. `examples/seller/seller.test.mjs` asserts that 403, so removing the call a
   by this stateless evaluator.
 - It shows no real payment, real stranger, or on-chain hash, so it does not meet the original row's
   "recorded demo with a transaction hash" scope. It is the offline decision clip, not the payment clip.
+
+The round trip is recorded separately in [the payment clip](specs/payment-clip.md): a real seller
+402, the same gate deciding before signing, and — once the operator's loadgen brake is clear — the
+Base Sepolia settlement and its transaction hash.
