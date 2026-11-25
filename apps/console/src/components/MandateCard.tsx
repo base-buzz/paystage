@@ -53,7 +53,8 @@ const TOKEN_CSS = [
   `--pass-gold:${palette.gold};`,
   `--pass-muted:${palette.muted};`,
   `--pass-red:${palette.red};`,
-  /* The mandate endpoint (#423) returns no teammate name, so the pass/page tint is the one `tintFor("")` returns. */
+  /* The mandate endpoint (#423) returns no teammate name, so the default tint is the one `tintFor("")` returns.
+     The state override is per-mandate and lives on the card (see `stateTint`), not here. */
   `--pass-tint:${PASS_TOKENS.posterTints[0]};`,
   `--pass-type-name:${type.name};`,
   `--pass-type-value:${type.value};`,
@@ -79,6 +80,15 @@ function markFor(status: string): "active" | "revoked" | "expired" {
   if (status === "active") return "active";
   if (status === "revoked") return "revoked";
   return "expired";
+}
+
+/**
+ * State treatment mirrors the pass: a revoked or expired mandate has no colour left in it, because a page that stays
+ * blue while the card greys out is two answers to the same question. The pass greys its plate; this greys the tint.
+ * Same rule, one token — and the value comes from `pass-tokens.json`, so the page cannot drift from the renderer.
+ */
+function stateTint(status: string): string {
+  return status === "revoked" || status === "expired" ? PASS_TOKENS.state.deadPlate : PASS_TOKENS.posterTints[0];
 }
 
 function StatusChip({ status }: { status: string }) {
@@ -152,7 +162,7 @@ export function MandateCard({ state }: { state: MandateViewState }) {
     return (
       <main className="mandate-page">
         <style>{TOKEN_CSS}</style>
-        <article className="mandate-card">
+        <article className="mandate-card" style={{ "--pass-tint": stateTint("unreadable") } as React.CSSProperties}>
           <PosterHead status="unreadable" />
           <section className="mandate-state">
             <p className="mandate-record">Serial {state.serial}</p>
@@ -172,7 +182,7 @@ export function MandateCard({ state }: { state: MandateViewState }) {
   return (
     <main className="mandate-page">
       <style>{TOKEN_CSS}</style>
-      <article className="mandate-card">
+      <article className="mandate-card" style={{ "--pass-tint": stateTint(payload.status) } as React.CSSProperties}>
         <PosterHead status={payload.status} />
 
         {known && payload.principal && payload.scope ? (
