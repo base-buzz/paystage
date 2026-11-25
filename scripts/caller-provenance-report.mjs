@@ -106,6 +106,7 @@ const own = new Set(["own-ci", "own-loadgen", "own-probe"]);
 const nonOwn = new Map(); // payer -> Set(day)
 let ownEvents = 0;
 let unknownEvents = 0;
+let preInstrumentationEvents = 0;
 let unknownWithoutPayer = 0;
 
 for (const row of read.rows) {
@@ -114,7 +115,16 @@ for (const row of read.rows) {
     ownEvents += 1;
     continue;
   }
-  // Anything not proven ours is `unknown` provenance, not "external".
+  /**
+   * Rows written before the column existed are a different fact from "a caller who did not sign": they were never
+   * asked. Counting them together would make the pre-instrumentation month look like unlabelled adoption, so they
+   * are counted, labelled and printed apart — and the day-90 comparison can exclude them by name.
+   */
+  if (provenance === "unknown-provenance") {
+    preInstrumentationEvents += 1;
+    continue;
+  }
+  // Anything else not proven ours is `unknown` provenance, not "external".
   unknownEvents += 1;
   const payer = typeof row.payer === "string" && row.payer !== "" ? row.payer.toLowerCase() : null;
   if (payer === null) {
@@ -138,5 +148,7 @@ line([
   `gap to zero=${gapToZero}`,
   `own events=${ownEvents}`,
   `unknown events=${unknownEvents}`,
+  `pre-instrumentation events=${preInstrumentationEvents} (unknown-provenance: written before the column, never asked)`,
   `unknown without a payer identity=${unknownWithoutPayer}`,
+  `go-live=${process.env.CALLER_PROVENANCE_GO_LIVE_AT ?? "unset — set it to the UTC time migration 20261125120000 was applied"}`,
 ]);

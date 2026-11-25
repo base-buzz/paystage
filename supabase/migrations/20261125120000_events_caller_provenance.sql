@@ -14,15 +14,26 @@
 -- Committed, not applied here: applying it needs the operator's Supabase credentials. Until it is applied the writer
 -- drops this field through the existing `recordDroppedField` signal instead of silencing telemetry.
 
+-- `unknown-provenance` is a different fact from `unknown`, and keeping them apart is the whole point. A column
+-- can only label traffic from the moment it is applied, so every row written before that is un-instrumented,
+-- not merely unlabelled. Backfilling those rows to `unknown` would let day 90 compare a measured week against
+-- an unmeasured month and call the difference adoption.
 alter table public.events
   add column if not exists caller_provenance text not null default 'unknown'
-  check (caller_provenance in ('own-ci', 'own-loadgen', 'own-probe', 'unknown'));
+  check (caller_provenance in ('own-ci', 'own-loadgen', 'own-probe', 'unknown', 'unknown-provenance'));
+
+-- A single pass, and the only write this migration makes to existing rows: anything already in the table
+-- predates the column by definition. Scoped by `now()` so a re-run cannot relabel traffic that arrived later.
+update public.events
+   set caller_provenance = 'unknown-provenance'
+ where caller_provenance = 'unknown'
+   and ts < now();
 
 comment on column public.events.caller_provenance is
-  'Who caused the call, from a signed header: own-ci | own-loadgen | own-probe | unknown. unknown is not external; it is the absence of a signed label. Never inferred from IP, user agent or referrer (#430).';
+  'Who caused the call, from a signed header: own-ci | own-loadgen | own-probe | unknown, plus unknown-provenance for rows written before this column existed. unknown is not external; it is the absence of a signed label. Never inferred from IP, user agent or referrer (#430).';
 
 -- No new index. The weekly report filters a date window and groups in the application; the existing
--- events_ts_desc_idx already serves that scan, and a four-value column has too little selectivity to earn one.
+-- events_ts_desc_idx already serves that scan, and a five-value column has too little selectivity to earn one.
 
 -- The daily counter now counts by provenance as well as source. The console selects only (day, source, n) and sums
 -- n per source, so adding a grouping column does not change its totals; it makes the count answer the new question.
