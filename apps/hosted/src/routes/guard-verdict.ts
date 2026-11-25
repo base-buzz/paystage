@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { provenanceFromHeaders, recordEvent, sourceFromHeaders } from "../telemetry.js";
+import { provenanceFromHeaders, provenanceKeyFrom, recordEvent, sourceFromHeaders } from "../telemetry.js";
 
 /**
  * Collector for `guardFetch({ telemetryUrl })`.
@@ -38,7 +38,7 @@ guardVerdictRoutes.post("/v1/guard-verdict", async (c) => {
   const { verdict, reasonCodes, payTo } = parsed.data;
   const env = c.env as { SUPABASE_URL?: string; SUPABASE_SERVICE_ROLE_KEY?: string };
 
-  const callerProvenance = await provenanceFromHeaders({ header: (n) => c.req.header(n) });
+  const callerProvenance = await provenanceFromHeaders({ header: (n) => c.req.header(n) }, provenanceKeyFrom(env));
 
   recordEvent(
     { SUPABASE_URL: env.SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY },

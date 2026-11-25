@@ -17,7 +17,7 @@ import {
   supabasePayeeObservationStore,
   type PayeeObservationStore,
 } from "./payee-observation-store.js";
-import { clientFromHeaders, provenanceFromHeaders, recordEvent, sourceFromHeaders } from "./telemetry.js";
+import { clientFromHeaders, provenanceFromHeaders, provenanceKeyFrom, recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { channelMiddleware } from "./channel.js";
 import { freeTierMiddleware } from "./free-tier.js";
 import { paidQuotaMiddleware, paidQuotaState } from "./paid-quota.js";
@@ -229,7 +229,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
     const tool = toolFromPath(path);
     const source = sourceFromHeaders(c.req);
     // Provenance is proven by a signed header, never inferred. `unknown` is not "external" (#430).
-    const callerProvenance = await provenanceFromHeaders(c.req);
+    const callerProvenance = await provenanceFromHeaders(c.req, provenanceKeyFrom(env));
     // Attributed by SDK build, never by caller identity (#52): this is what turns npm download counts into "which
     // installed version is actually being called".
     const client = clientFromHeaders(c.req);

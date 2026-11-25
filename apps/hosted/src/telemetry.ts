@@ -130,6 +130,21 @@ export async function provenanceFromHeaders(
   }
 }
 
+/**
+ * The signing key, read from the Worker's **binding** rather than `process.env`.
+ *
+ * `provenanceFromHeaders` defaults to `process.env.PAYSTAGE_PROVENANCE_KEY`, and on a Worker with a
+ * `compatibility_date` before 2025-04-01 that is only populated when `nodejs_compat_populate_process_env` is set.
+ * Measured 2026-11-25: the flag was set, the secret was on the worker, and a correctly signed request still landed
+ * as `unknown` — a dropped or absent value is indistinguishable from an honest "no signature", which is exactly the
+ * failure this column must not have. Reading the binding is explicit and cannot be silently empty for a reason of
+ * runtime configuration.
+ */
+export function provenanceKeyFrom(env: unknown): string | undefined {
+  const value = (env as { PAYSTAGE_PROVENANCE_KEY?: unknown } | undefined)?.PAYSTAGE_PROVENANCE_KEY;
+  return typeof value === "string" && value !== "" ? value : undefined;
+}
+
 export interface TelemetryEvent {
   source: TelemetrySource;
   tool: string;

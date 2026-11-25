@@ -19,6 +19,7 @@
 import type { MiddlewareHandler } from "hono";
 import {
   provenanceFromHeaders,
+  provenanceKeyFrom,
   recordEvent,
   sourceFromHeaders,
   type CallerProvenance,
@@ -171,7 +172,7 @@ export function settlementCaptureMiddleware(): MiddlewareHandler {
           network: receipt.network ?? (c.env as { PAYSTAGE_NETWORK?: string } | undefined)?.PAYSTAGE_NETWORK ?? null,
           requestId: c.req.header("x-paystage-request-id") ?? null,
           channel: c.get("channel") ?? null,
-          callerProvenance: await provenanceFromHeaders(c.req),
+          callerProvenance: await provenanceFromHeaders(c.req, provenanceKeyFrom(c.env)),
         }) as never,
         (p) => c.executionCtx?.waitUntil?.(p),
       );

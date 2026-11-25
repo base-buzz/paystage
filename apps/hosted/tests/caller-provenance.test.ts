@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   provenanceFromHeaders,
+  provenanceKeyFrom,
   recordEvent,
   telemetryDrops,
   type TelemetryEvent,
@@ -195,5 +196,28 @@ describe("caller_provenance reaches the event log", () => {
     const lines = log.mock.calls.map((call) => String(call[0])).join("\n");
     expect(lines).toContain("telemetry_field_dropped");
     expect(lines).toContain("caller_provenance");
+  });
+
+  /**
+   * The key comes from the Worker binding, not from `process.env`.
+   *
+   * Measured 2026-11-25: with the secret present and `nodejs_compat_populate_process_env` set, a correctly signed
+   * request still landed as `unknown` because `process.env` was empty. A missing key and a wrong signature are
+   * indistinguishable from outside, so the failure was silent — the one shape this column must not have.
+   */
+  it("reads the key from the worker binding, without process.env", async () => {
+    const key = "binding-only-key";
+    const headers = {
+      "x-paystage-provenance": "own-ci",
+      "x-paystage-provenance-sig": await sign("own-ci", key),
+    };
+
+    expect(await provenanceFromHeaders(request(headers), provenanceKeyFrom({ PAYSTAGE_PROVENANCE_KEY: key }))).toBe(
+      "own-ci",
+    );
+    // The same header against a binding with no value is unknown, never an error.
+    expect(await provenanceFromHeaders(request(headers), provenanceKeyFrom({}))).toBe("unknown");
+    expect(provenanceKeyFrom(undefined)).toBeUndefined();
+    expect(provenanceKeyFrom({ PAYSTAGE_PROVENANCE_KEY: "" })).toBeUndefined();
   });
 });

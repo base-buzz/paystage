@@ -12,6 +12,7 @@ import { parsePolicyCached } from "./policy-cache.js";
 import { publicKeyJwk } from "./receipt.js";
 import {
   provenanceFromHeaders,
+  provenanceKeyFrom,
   recordEvent,
   sourceFromHeaders,
   type CallerProvenance,
@@ -147,7 +148,7 @@ export function mcpHandler(
       ? sourceFromHeaders({ header: (name: string) => req.headers.get(name) ?? undefined })
       : "real";
     const callerProvenance = req
-      ? await provenanceFromHeaders({ header: (name: string) => req.headers.get(name) ?? undefined })
+      ? await provenanceFromHeaders({ header: (name: string) => req.headers.get(name) ?? undefined }, provenanceKeyFrom(env))
       : "unknown";
     return buildServer(
       env,
