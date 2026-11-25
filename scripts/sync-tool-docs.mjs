@@ -63,13 +63,14 @@ const PACKAGE_ROLES = {
   "@paystage/n8n": "the gate as an n8n community node",
   "@paystage/eliza-plugin": "the gate as an elizaOS action",
   "@paystage/receipt-verify": "verify a signed receipt without the server",
+  "@paystage/mandate": "issue, verify and evaluate a scoped, revocable authority",
   "@paystage/channel": "read-only x402 deposit-channel state",
 };
 
 /**
  * Packages that exist in the repo but not yet on npm. Emptying this list is the publish step for #88 and #89.
  */
-const PENDING_PUBLISH = new Set(["@paystage/n8n", "@paystage/eliza-plugin"]);
+const PENDING_PUBLISH = new Set(["@paystage/n8n", "@paystage/eliza-plugin", "@paystage/mandate"]);
 
 const PKG_START = "<!-- packages:table:start -->";
 const PKG_END = "<!-- packages:table:end -->";

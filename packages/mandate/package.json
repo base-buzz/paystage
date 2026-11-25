@@ -1,0 +1,60 @@
+{
+  "name": "@paystage/mandate",
+  "version": "0.1.0",
+  "description": "A signed, scoped, revocable authority a seller can verify before serving: issue, verify, revoke, and evaluate a payment against the mandate.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "paystage",
+    "x402",
+    "agent-payments",
+    "mandate",
+    "spend-limit",
+    "revocable-authority",
+    "receipt",
+    "es256",
+    "verify-without-trust"
+  ],
+  "homepage": "https://paystage.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/base-buzz/paystage.git",
+    "directory": "packages/mandate"
+  },
+  "bugs": {
+    "url": "https://github.com/base-buzz/paystage/issues"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@paystage/policy": "0.4.0",
+    "@paystage/receipt-verify": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

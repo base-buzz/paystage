@@ -9,7 +9,9 @@ import { describe, expect, it } from "vitest";
  * pass every behavioural test in this package, so the dependency itself is asserted here.
  *
  * `@paystage/preflight`'s runtime dependency has to stay `@paystage/policy` and nothing else:
- * that is what makes `npm i @paystage/preflight` a single installable evaluator.
+ * that is what makes `npm i @paystage/preflight` a single installable evaluator. The mandate
+ * package (#412) is a devDependency for the parity test only; the evaluator reads the mandate
+ * structurally so no second runtime package is needed.
  */
 const PACKAGE = fileURLToPath(new URL("..", import.meta.url));
 

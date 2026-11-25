@@ -13,6 +13,7 @@ export type {
   StepUpRequirement,
   StepUpTrigger,
   PaymentHistory,
+  MandateEvaluationInput,
 } from "./evaluate.js";
 export { DEFAULT_STEP_UP_ANSWERS } from "./evaluate.js";
 // Payer first-seen (#409): the salted-key store and the age input the evaluator consumes. The

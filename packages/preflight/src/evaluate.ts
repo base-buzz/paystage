@@ -423,6 +423,8 @@ function evaluateAccept(
   expected: ExpectedClaim | undefined,
   history: PaymentHistory | undefined,
   payerAge: PayerAgeInput | undefined,
+  mandate: MandateEvaluationInput | undefined,
+  now: Date | undefined,
 ): AcceptResult {
   const reasons: string[] = [];
   const pass = (rule: string, detail: string): void => {
@@ -508,6 +510,33 @@ function evaluateAccept(
     return deny("accept.amount", `invalid atomic amount ${accept.amount}`);
   }
   pass("accept.amount", `atomic amount ${accept.amount} parsed`);
+
+  /**
+   * Rule 4.5: the mandate (#412). A scoped authority is checked before the policy's own ceiling so a
+   * refusal names the mandate rule that failed rather than the looser policy cap behind it. The
+   * mandate is an *additional* restriction: it can only narrow what the policy already allows.
+   */
+  if (mandate !== undefined) {
+    const verdict = evaluateMandateScope(
+      {
+        mandate: mandate.mandate,
+        ...(mandate.history === undefined ? {} : { history: mandate.history }),
+        ...(mandate.revocations === undefined ? {} : { revocations: mandate.revocations }),
+      },
+      {
+        amount: accept.amount,
+        payee: accept.payTo,
+        decimals: asset.decimals,
+        ...(asset.symbol === undefined ? {} : { symbol: asset.symbol }),
+      },
+      now ?? new Date(),
+    );
+    if (!verdict.ok) return deny(`accept.mandate.${verdict.rule}`, verdict.reason);
+    pass(
+      "accept.mandate",
+      `payment is inside mandate ${mandate.mandate.serial} (per_payment ${mandate.mandate.scope.per_payment}, window ${mandate.mandate.scope.window_amount}/${mandate.mandate.scope.window_seconds}s)`,
+    );
+  }
 
   // Rule 5: policy-level max_amount, only if asset symbol matches
   if (eq(policy.max_amount.asset, asset.symbol)) {
@@ -1272,6 +1301,165 @@ export function buildReviewPacket(
   };
 }
 
+/**
+ * The subset of a mandate this evaluator reads (#412).
+ *
+ * Structural on purpose: `@paystage/preflight` keeps `@paystage/policy` as its only runtime
+ * dependency, so a published preflight tarball stays installable before the mandate package is on
+ * npm. The canonical implementation and the rule names live in `@paystage/mandate/evaluate.ts`; a
+ * parity test in this package keeps the two from drifting.
+ */
+export interface MandateScopeLike {
+  per_payment: string;
+  window_amount: string;
+  window_seconds: number;
+  allowed_payees?: string[];
+}
+
+export interface MandateLike {
+  v: number;
+  serial: string;
+  principal: string;
+  agent: string;
+  scope: MandateScopeLike;
+  issued_at: string;
+  expires_at: string;
+  revocable: boolean;
+}
+
+export interface MandateSpendLike {
+  amount: string;
+  at: string;
+  payee?: string;
+}
+
+export interface RevocationLike {
+  v: number;
+  serial: string;
+  revoked_at: string;
+}
+
+export type MandateRuleLike = "per-payment" | "window" | "payee" | "expiry" | "revoked" | "malformed";
+
+export type MandateScopeVerdict =
+  | { ok: true; mandate: MandateLike }
+  | { ok: false; rule: MandateRuleLike; reason: string };
+
+export interface MandateEvaluationInput {
+  mandate: MandateLike;
+  /** Payments already settled inside the window, in the same asset and decimals. */
+  history?: readonly MandateSpendLike[];
+  /** Verified revocation statements naming this serial. */
+  revocations?: readonly RevocationLike[];
+}
+
+/** EVM addresses are case-insensitive; Solana base58 is not. Keep the comparison identical to the mandate package. */
+function mandatePayeeEq(a: string, b: string): boolean {
+  if (a.startsWith("0x") && b.startsWith("0x")) return a.toLowerCase() === b.toLowerCase();
+  return a === b;
+}
+
+/**
+ * The four scope rules, in the same order and with the same reason strings as
+ * `@paystage/mandate`'s `evaluateMandate()`.
+ */
+function evaluateMandateScope(
+  input: MandateEvaluationInput,
+  payment: { amount: string; payee: string; decimals: number; symbol?: string },
+  now: Date,
+): MandateScopeVerdict {
+  const denied = (rule: MandateRuleLike, reason: string): MandateScopeVerdict => ({ ok: false, rule, reason });
+  const { mandate } = input;
+  const format = (atomic: bigint): string => {
+    const human = atomicToHuman(atomic, payment.decimals);
+    return payment.symbol === undefined ? human : `${human} ${payment.symbol}`;
+  };
+
+  if (mandate === null || typeof mandate !== "object") {
+    return denied("malformed", "mandate.malformed: mandate is not an object");
+  }
+  if (mandate.scope === null || typeof mandate.scope !== "object") {
+    return denied("malformed", "mandate.malformed: mandate carries no scope");
+  }
+
+  const expiresAt = Date.parse(mandate.expires_at);
+  if (Number.isNaN(expiresAt)) {
+    return denied("malformed", `mandate.malformed: expires_at is not a parseable timestamp: ${JSON.stringify(mandate.expires_at)}`);
+  }
+  if (now.getTime() > expiresAt) {
+    const seconds = Math.round((now.getTime() - expiresAt) / 1000);
+    return denied("expiry", `mandate.expiry: mandate expired ${seconds}s ago (${mandate.expires_at})`);
+  }
+
+  const revocation = (input.revocations ?? []).find((entry) => entry?.serial === mandate.serial);
+  if (revocation !== undefined) {
+    return denied("revoked", `mandate.revoked: revocation statement at ${revocation.revoked_at} names serial ${mandate.serial}`);
+  }
+
+  let amount: bigint;
+  try {
+    if (!/^\d+$/.test(payment.amount)) throw new Error("not an atomic integer");
+    amount = BigInt(payment.amount);
+  } catch {
+    return denied("malformed", `mandate.malformed: payment amount ${JSON.stringify(payment.amount)} is not an atomic integer`);
+  }
+
+  if (mandate.scope.allowed_payees !== undefined) {
+    if (!mandate.scope.allowed_payees.some((allowed) => mandatePayeeEq(allowed, payment.payee))) {
+      return denied("payee", `mandate.payee: payee ${payment.payee} is not in the mandate's allowed_payees`);
+    }
+  }
+
+  let perPayment: bigint;
+  let windowAmount: bigint;
+  try {
+    perPayment = humanToAtomic(mandate.scope.per_payment, payment.decimals);
+    windowAmount = humanToAtomic(mandate.scope.window_amount, payment.decimals);
+  } catch (error) {
+    return denied(
+      "malformed",
+      `mandate.malformed: the scope amount cannot be read at ${payment.decimals} decimals (${error instanceof Error ? error.message : String(error)})`,
+    );
+  }
+
+  if (amount > perPayment) {
+    return denied(
+      "per-payment",
+      `mandate.per-payment: amount ${format(amount)} exceeds per_payment ${mandate.scope.per_payment}${payment.symbol === undefined ? "" : ` ${payment.symbol}`}`,
+    );
+  }
+
+  const cutoff = now.getTime() - mandate.scope.window_seconds * 1000;
+  let spent = 0n;
+  for (const entry of input.history ?? []) {
+    const at = Date.parse(entry.at);
+    if (Number.isNaN(at)) {
+      return denied(
+        "malformed",
+        `mandate.malformed: spend history entry at ${JSON.stringify(entry.at)} is not a parseable timestamp, so the window cannot be computed`,
+      );
+    }
+    if (at <= cutoff) continue;
+    if (!/^\d+$/.test(entry.amount)) {
+      return denied(
+        "malformed",
+        `mandate.malformed: spend history amount ${JSON.stringify(entry.amount)} is not an atomic integer`,
+      );
+    }
+    spent += BigInt(entry.amount);
+  }
+
+  const total = spent + amount;
+  if (total > windowAmount) {
+    return denied(
+      "window",
+      `mandate.window: ${format(total)} in the last ${mandate.scope.window_seconds}s exceeds window_amount ${mandate.scope.window_amount}${payment.symbol === undefined ? "" : ` ${payment.symbol}`} (this payment ${format(amount)})`,
+    );
+  }
+
+  return { ok: true, mandate };
+}
+
 export interface EvaluateOptions {
   /**
    * Which agent is asking. Required when the policy declares per-agent budgets:
@@ -1321,6 +1509,14 @@ export interface EvaluateOptions {
    * naming both values — a catalogue payee that differs from the challenge payee is the failure this exists for.
    */
   expected?: ExpectedClaim;
+  /**
+   * A scoped, revocable authority to check the payment against (#412).
+   *
+   * When supplied, every accept must also be inside the mandate. A refusal names the rule that failed
+   * (`per-payment`, `window`, `payee`, `expiry`, `revoked`) instead of a generic "outside mandate".
+   * Verify the mandate's signature first: this evaluator is synchronous and does not do that.
+   */
+  mandate?: MandateEvaluationInput;
 }
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -1480,6 +1676,8 @@ export function evaluatePayment(
       options.expected,
       options.paymentHistory,
       options.payerAge,
+      options.mandate,
+      options.now,
     ),
   );
 
