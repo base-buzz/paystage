@@ -29,7 +29,7 @@ const run = promisify(execFile);
 const argv = process.argv.slice(2);
 const asJson = argv.includes("--json");
 const queuePath = argv.includes("--queue") ? argv[argv.indexOf("--queue") + 1] : null;
-const REPO = process.env.PAYSTAGE_REPO ?? "/work/paystage";
+const REPO = process.env.PAYSTAGE_REPO ?? "/work/paystage"; // hardcoded-path-ok: operator tool, env-overridable fallback
 
 const unscope = (n) => (n.includes("/") ? n.split("/")[1] : n);
 

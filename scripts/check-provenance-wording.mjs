@@ -11,9 +11,11 @@
  * text a reader sees: no "synthetic traffic", no "test traffic", no "fake", no "not a real user".
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, extname } from "node:path";
+import { dirname, join, extname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = "/work/paystage";
+// Derived from this file's location: a hardcoded container path passes here and dies in CI with ENOENT.
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 /** Copy surfaces: pages and components under the console, plus the top-level docs a reader lands on. */
 const DIRS = ["apps/console/src", "apps/hosted/src"];
 const DOCS = ["README.md", "docs/why-preflight.md", "docs/pricing.md", "SECURITY.md"];

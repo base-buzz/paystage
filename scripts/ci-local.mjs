@@ -100,6 +100,7 @@ if (reason === null) {
     "gen-glossary.mjs --check",
     "check-provenance-wording.mjs",
     "check-pass-assets.mjs",
+    "check-hardcoded-paths.mjs",
   ]) {
     const [script, ...scriptArgs] = cheap.split(" ");
     if (!existsSync(join(ROOT, "scripts", script))) continue;

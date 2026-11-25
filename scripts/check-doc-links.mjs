@@ -2,10 +2,13 @@
 /** Doc-link resolver — pre-push hook for repo-relative markdown inline links. */
 import { readFileSync, statSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
 // Repo root
-const REPO_ROOT = '/work/paystage';
+// Derived from this file's location, never hardcoded: `/work/paystage` exists in the container and not on a
+// GitHub runner, so a hardcoded root made this check pass locally and fail in CI with ENOENT (2026-11-25).
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 function getTrackedMdFiles() {
   try {
