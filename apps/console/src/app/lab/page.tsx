@@ -479,6 +479,25 @@ export default async function LabPage() {
         )}
 
         <MarketSupplyPanel rows={supplyMarket.rows} reason={supplyMarket.reason} />
+
+        {/*
+          The categories the market itself uses, with the caveat attached to them rather than in a footnote.
+          Attribution: the five-category framing is an external explainer's (9 Nov 2026), not our data — our census
+          counts endpoints, and classification is not in it. A reader who has met their taxonomy should find our
+          number and their expectation next to each other, labelled as such.
+        */}
+        <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--lp-line, #6b7280)" }}>
+          <p style={{ fontSize: 13, lineHeight: 1.7, margin: 0 }}>
+            <strong>Where the demand is expected to be.</strong> Data APIs (finance, legal, weather, logistics); AI
+            infrastructure (inference, embeddings, storage); developer tools (analysis, testing, deployment); digital
+            content (images, video, audio, datasets); and B2B workflows (freight, customs, compliance).
+          </p>
+          <p style={{ fontSize: 13, lineHeight: 1.7, margin: "8px 0 0", opacity: 0.8 }}>
+            Our census counts <strong>endpoints</strong>, not categories — classification is not in the data, so the
+            five above are where demand is expected, not where we have measured it. They come from an external
+            explainer&apos;s framing, not from our own figures.
+          </p>
+        </div>
       </section>
 
       {/* ---- demand: what listed sellers are actually paid ---- */}
