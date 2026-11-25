@@ -479,6 +479,97 @@
   color: var(--lp-dim);
 }
 
+/* ---------- one stored refusal ---------- */
+
+/* Sits between the badges and the proof counts on purpose: the example of a refusal is the
+   context a reader needs before the numbers, and it is a static export, not a render-time fetch. */
+.lp-refusal {
+  padding-top: 34px;
+  padding-bottom: 34px;
+}
+
+.lp-refusal-card {
+  border: 1px solid var(--lp-line);
+  border-left: 3px solid var(--lp-red);
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lp-red) 6%, var(--lp-panel)), var(--lp-panel));
+}
+
+.lp-refusal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.lp-refusal-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.lp-refusal-verdict {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  color: var(--lp-red);
+  border: 1px solid color-mix(in srgb, var(--lp-red) 36%, transparent);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.lp-refusal-rule {
+  margin: 0 0 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.lp-refusal-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.lp-refusal-rule code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  color: var(--lp-text);
+}
+
+.lp-refusal-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 18px;
+  font-size: 13px;
+  color: var(--lp-dim);
+}
+
+.lp-refusal-facts code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+}
+
+.lp-refusal-amount {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--lp-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.lp-refusal-note {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--lp-faint);
+}
+
 /* ---------- proof strip ---------- */
 
 .lp-proof {

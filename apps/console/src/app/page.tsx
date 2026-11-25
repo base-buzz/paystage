@@ -20,6 +20,7 @@ import {
   type AgentSurfaceProduct,
 } from "@/lib/agent-surfaces";
 import { TOOL_COUNT, TOOL_COUNT_WORD } from "@/lib/tools";
+import refusalExample from "@/lib/refusal-example.json";
 
 // Page-level metadata replaces the layout's `openGraph` object wholesale rather than merging into it,
 // so the image declared in layout.tsx never reached the page that matters. Declared here in full, and
@@ -79,6 +80,11 @@ function sourceHost(url: string) {
   } catch {
     return url;
   }
+}
+
+/** The example card names a payee once; the full address stays in the JSON it was generated from. */
+function shortAddress(address: string) {
+  return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
 /**
@@ -285,6 +291,37 @@ export default function LandingPage() {
               <span className="dot" aria-hidden="true" />
               callable through Arcade
             </a>
+          </div>
+        </section>
+
+        {/* Before the counts: a reader should see what a refusal is before reading a number.
+            This is one refusal exported from the stored receipts by scripts/refusal-summary.mjs
+            (--example-out); the page never fetches it at render. */}
+        <section className="lp-wrap lp-refusal" aria-label="A stored refusal">
+          <div className="lp-refusal-card">
+            <div className="lp-refusal-top">
+              <span className="lp-refusal-eyebrow">one refusal, from the stored receipts</span>
+              <span className="lp-refusal-verdict">{refusalExample.decision}</span>
+            </div>
+            <p className="lp-refusal-rule">
+              <span className="lp-refusal-label">rule that fired</span>
+              <code>{refusalExample.rule}</code>
+            </p>
+            <div className="lp-refusal-facts">
+              <span className="lp-refusal-amount">{refusalExample.amount}</span>
+              <span>
+                to <code>{shortAddress(refusalExample.payee)}</code>
+              </span>
+              {refusalExample.serial ? (
+                <span>
+                  mandate <code>{refusalExample.serial}</code>
+                </span>
+              ) : null}
+            </div>
+            <p className="lp-refusal-note">
+              A refusal is data, not an exception: the amount, the payee, and the rule the evaluator
+              fired. It is what a limit did, in a form the agent can act on.
+            </p>
           </div>
         </section>
 

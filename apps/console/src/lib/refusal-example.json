@@ -1,0 +1,7 @@
+{
+  "serial": null,
+  "decision": "do_not_pay",
+  "rule": "amount 12.5 USDC exceeds max_amount 5 USDC",
+  "amount": "12.5 USDC",
+  "payee": "0x000000000000000000000000000000000000dEaD"
+}
