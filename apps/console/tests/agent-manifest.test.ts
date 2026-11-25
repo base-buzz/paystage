@@ -52,6 +52,17 @@ describe("agent manifest", () => {
     expect(trade?.decisions).toEqual(["allow", "review", "do_not_trade"]);
   });
 
+  it("states the MCP dependency count from the package that declares it", () => {
+    const direct = Object.keys(mcpPkg.dependencies ?? {});
+    const notOurs = direct.filter((name) => !name.startsWith("@paystage/"));
+    expect(PAYSTAGE_MANIFEST.runtime_dependencies).toEqual(direct);
+    expect(PAYSTAGE_MANIFEST.runtime_dependencies_statement).toBe(
+      `${direct.length} direct, ${notOurs.length} not ours`,
+    );
+    expect(PAYSTAGE_MANIFEST.runtime_dependencies).toHaveLength(7);
+    expect(notOurs).toHaveLength(2);
+  });
+
   it("points socials at https URLs a human can load", () => {
     expect(PAYSTAGE_MANIFEST.socials.length).toBeGreaterThan(0);
     for (const social of PAYSTAGE_MANIFEST.socials) {

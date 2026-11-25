@@ -35,6 +35,12 @@ Security fixes are issued for the **latest minor** of each `@paystage/*` package
 
 PayStage has **no shell/child processes, no `eval`, no telemetry, and no private keys**.
 
+## Provenance
+
+Size, mtime and sha256 for this file and the preflight known-drainers document are generated into
+[`PROVENANCE.md`](PROVENANCE.md). Regenerate with `node scripts/gen-provenance-table.mjs`;
+`node scripts/check-provenance-table.mjs` fails CI when the table no longer matches the files.
+
 ## Supply chain
 
 - Runtime dependencies: **`@paystage/policy` and `@paystage/preflight` have none** (#181 — the policy parser is hand-written, and zod is a devDependency used only by the differential test that holds the guards to zod's behaviour). The MCP surfaces — `mcp`, `velocity`, `auth-watch`, `trade-preflight` and `ai-sdk` — are built on the official **`@modelcontextprotocol/server` v2 SDK** (which depends on `@modelcontextprotocol/core` and **`zod` ^4.2.0**); they inherit zod from the SDK, so it remains in a user's tree there. Other `@paystage/*` packages are pinned to exact versions.

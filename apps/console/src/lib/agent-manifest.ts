@@ -41,6 +41,18 @@ export const PACKAGE_VERSIONS: Record<string, string> = {
 };
 
 /**
+ * The MCP umbrella's direct dependencies, read from the package that declares them.
+ *
+ * The manifest used to say `runtime_dependencies: ["zod", "@modelcontextprotocol/server"]` — two names
+ * that looked like "two dependencies" while `packages/mcp/package.json` declared seven. A reader
+ * deciding whether to install a safety tool was given the smaller number by accident. The list and the
+ * counts are derived so they cannot be retyped wrong; a console test asserts the statement against the
+ * manifest.
+ */
+const MCP_DIRECT_DEPENDENCIES = Object.keys(mcpPkg.dependencies ?? {});
+const MCP_DEPENDENCIES_NOT_OURS = MCP_DIRECT_DEPENDENCIES.filter((name) => !name.startsWith("@paystage/"));
+
+/**
  * Places a human can follow the project. One array, because the footer, `/llms.txt`
  * and the manifest must not disagree about where we live. `verified` means a
  * maintainer loaded the URL and saw our own profile; nothing here is inferred
@@ -201,7 +213,8 @@ export const PAYSTAGE_MANIFEST = {
   telemetry: false,
   shell: false,
   eval: false,
-  runtime_dependencies: ["zod", "@modelcontextprotocol/server"],
+  runtime_dependencies: MCP_DIRECT_DEPENDENCIES,
+  runtime_dependencies_statement: `${MCP_DIRECT_DEPENDENCIES.length} direct, ${MCP_DEPENDENCIES_NOT_OURS.length} not ours`,
   environment_variables: ["PAYSTAGE_POLICY_PATH", "PAYSTAGE_RPC_URL"],
   packages: Object.keys(PACKAGE_VERSIONS),
   package_versions: PACKAGE_VERSIONS,

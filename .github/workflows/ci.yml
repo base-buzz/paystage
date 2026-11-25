@@ -24,6 +24,11 @@ jobs:
       # and a dead listing link or a stale version is invisible to every other test.
       - run: node scripts/check-copy.mjs --network
       - run: node scripts/check-provenance-wording.mjs
+      # The provenance page describes SECURITY.md and KNOWN_DRAINERS.md by size and sha256; stale
+      # numbers are worse than none, so a content change without regeneration fails here.
+      - run: node scripts/check-provenance-table.mjs
+      # Every shipped policy example must parse with the product's own validator (#406 A6).
+      - run: node scripts/check-examples.mjs
       - run: node scripts/check-claims.mjs
       - run: node scripts/check-client-manifests.mjs
       - run: node scripts/check-published-links.mjs

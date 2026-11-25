@@ -73,6 +73,12 @@ is `source` on the entry.
 
 Reviewed but not added (precision over recall): single anonymous Chainabuse reports without corroboration, non-EVM addresses, and exploit tx hashes.
 
+## Provenance
+
+Size, mtime and sha256 for this file and `SECURITY.md` are generated into
+[`PROVENANCE.md`](../../PROVENANCE.md). Regenerate with `node scripts/gen-provenance-table.mjs`;
+`node scripts/check-provenance-table.mjs` fails CI when the table no longer matches the files.
+
 ## Updating
 
 1. Add one object to `DRAINER_ENTRIES` with a lowercased address, an `https://` `source` that names

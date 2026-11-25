@@ -20,7 +20,12 @@ import {
   type AgentSurfaceProduct,
 } from "@/lib/agent-surfaces";
 import { TOOL_COUNT, TOOL_COUNT_WORD } from "@/lib/tools";
+import { ALTERNATE_TYPES } from "@/lib/discovery-links";
 import refusalExample from "@/lib/refusal-example.json";
+// The policy example is the file the examples suite actually runs, not a hand-typed sketch: the old
+// snippet omitted version/decimals/allowed_pay_to/allowed_assets/max_timeout_seconds and its five
+// parse errors were visible to any agent that pasted it into validate_policy.
+import policyExample from "../../../../examples/policies/strict.json";
 
 // Page-level metadata replaces the layout's `openGraph` object wholesale rather than merging into it,
 // so the image declared in layout.tsx never reached the page that matters. Declared here in full, and
@@ -30,7 +35,7 @@ export const metadata: Metadata = {
   title: "PayStage — Safety tools for AI agent payments",
   description:
     "Read-only preflight for AI agent payments: get pay, review or do-not-pay before anything is signed, with the rule that fired.",
-  alternates: { canonical: "https://paystage.xyz/" },
+  alternates: { canonical: "https://paystage.xyz/", types: ALTERNATE_TYPES },
   openGraph: {
     title: "Stop the payment before it's signed.",
     description:
@@ -199,6 +204,9 @@ export default function LandingPage() {
                 </a>
                 <CopyCommand command="npx -y -p @paystage/mcp paystage-mcp" />
               </div>
+              {/* One prompt, beside the install command it is an alternative to. The source had a
+                  single copy; the served HTML now contains it once, next to the command. */}
+              <AgentPrompt />
               {/* The structural argument, directly under the hero: a payment has two jobs and the
                   wallet can only credibly do the first. It says why a third party exists at all,
                   which the three bullets below (empirical objections) do not. */}
@@ -216,8 +224,6 @@ export default function LandingPage() {
                 <li>holds no keys and never signs; the agent is still the only signer</li>
                 <li>no account, no email: an agent cannot fill in a signup form</li>
               </ul>
-
-              <AgentPrompt />
             </div>
 
             <aside className="lp-gate" aria-label="Example evaluation">
@@ -402,26 +408,18 @@ export default function LandingPage() {
             </div>
 
             <pre className="lp-code" style={{ marginTop: 20 }}>
-              <code>
-                <span className="c">{"// policy.json — the whole configuration surface"}</span>
-                {"\n"}
-                {"{"}
-                {"\n  "}
-                <span className="k">&quot;max_amount&quot;</span>: {"{ "}
-                <span className="k">&quot;value&quot;</span>:{" "}
-                <span className="s">&quot;1.00&quot;</span>,{" "}
-                <span className="k">&quot;asset&quot;</span>:{" "}
-                <span className="s">&quot;USDC&quot;</span> {"},"}
-                {"\n  "}
-                <span className="k">&quot;allowed_networks&quot;</span>: [
-                <span className="s">&quot;eip155:8453&quot;</span>],
-                {"\n  "}
-                <span className="k">&quot;unknown_payee&quot;</span>:{" "}
-                <span className="s">&quot;review&quot;</span>
-                {"\n"}
-                {"}"}
-              </code>
+              <code>{JSON.stringify(policyExample, null, 2)}</code>
             </pre>
+            <p className="lp-hero-note">
+              The same file ships at{" "}
+              <a
+                href="https://github.com/base-buzz/paystage/blob/main/examples/policies/strict.json"
+                rel="noopener"
+              >
+                <code>examples/policies/strict.json</code>
+              </a>{" "}
+              and is parsed by <code>node scripts/check-examples.mjs</code>.
+            </p>
           </div>
         </section>
 

@@ -20,6 +20,20 @@ const WELL_KNOWN_MANIFEST = "/.well-known/paystage.json";
  */
 const WELL_KNOWN_X402 = "/.well-known/x402";
 
+/**
+ * `Accept: text/markdown` on `/` is the one landing-page change that reduces an agent's token cost.
+ *
+ * The HTML stays canonical; a caller that says it reads markdown gets the same facts from `/index.md`.
+ * No content negotiation is attempted for other types — a browser sends `text/html`, so it never
+ * reaches this branch, and a cache must key on `Accept` because the response body differs.
+ */
+const INDEX_MD = "/index.md";
+
+function acceptsMarkdown(request: NextRequest): boolean {
+  const accept = request.headers.get("accept") ?? "";
+  return /\btext\/markdown\b/i.test(accept);
+}
+
 export function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
   if (host === "www.paystage.xyz") {
@@ -27,6 +41,16 @@ export function middleware(request: NextRequest) {
     url.host = "paystage.xyz";
     url.protocol = "https:";
     return NextResponse.redirect(url, 308);
+  }
+
+  if (
+    request.nextUrl.pathname === "/" &&
+    (request.method === "GET" || request.method === "HEAD") &&
+    acceptsMarkdown(request)
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = INDEX_MD;
+    return NextResponse.rewrite(url);
   }
 
   if (request.nextUrl.pathname === WELL_KNOWN_X402) {

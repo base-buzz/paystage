@@ -1,4 +1,7 @@
 import { PAYSTAGE_MANIFEST } from "@/lib/agent-manifest";
+// The policy shown below is the file `scripts/check-examples.mjs` parses, not a shortened copy: the
+// previous inline sketch omitted required fields and failed our own parsePolicy with five errors.
+import policyExample from "../../../../../examples/policies/strict.json";
 
 export const dynamic = "force-static";
 
@@ -55,13 +58,7 @@ then \`./policy.json\`. It is never written to. Inline is the right choice for a
 that already knows its budget; a path is right when several calls share one file.
 
 \`\`\`json
-{
-  "version": 1,
-  "max_amount": { "value": "1.00", "asset": "USDC", "decimals": 6 },
-  "allowed_pay_to": ["0x209693Bc6afc0C5328bA36FaF03C514EF312287C"],
-  "allowed_networks": ["eip155:8453", "eip155:84532"],
-  "unknown_payee": "review"
-}
+${JSON.stringify(policyExample, null, 2)}
 \`\`\`
 
 The known-drainer list is a hard deny that runs before \`unknown_payee\`. It is
@@ -78,6 +75,8 @@ ${m.access.map((row) => `- **${row.kind}** — ${row.detail}`).join("\n")}
 No shell, no \`eval\`, no telemetry, no key custody, no writes.
 
 ## Runtime dependencies
+
+${m.runtime_dependencies_statement} (the \`@paystage/*\` entries are ours; the rest are third-party).
 
 ${m.runtime_dependencies.map((d) => `- \`${d}\``).join("\n")}
 

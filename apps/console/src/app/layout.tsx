@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ThemeScript } from "@/components/ThemeScript";
+import { ALTERNATE_TYPES } from "@/lib/discovery-links";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://paystage.xyz"),
@@ -14,6 +15,9 @@ export const metadata: Metadata = {
   // sentence — the part that says what it actually does — was the part being cut off.
   description:
     "Read-only preflight for AI agent payments: get pay, review or do-not-pay before anything is signed, with the rule that fired.",
+  alternates: {
+    types: ALTERNATE_TYPES,
+  },
   openGraph: {
     type: "website",
     url: "https://paystage.xyz",

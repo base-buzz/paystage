@@ -99,6 +99,8 @@ if (reason === null) {
     "check-claims.mjs",
     "gen-glossary.mjs --check",
     "check-provenance-wording.mjs",
+    "check-provenance-table.mjs",
+    "check-examples.mjs",
     "check-pass-assets.mjs",
     "check-hardcoded-paths.mjs",
   ]) {
@@ -246,6 +248,8 @@ try {
     // Same mount rule as the Bazaar snapshot: the research record is on the ops volume and exits 2 when absent.
     "gen-checked-sellers.mjs --check",
     "check-drainer-citations.mjs",
+    "check-provenance-table.mjs",
+    "check-examples.mjs",
     "check-listing-tools.mjs",
     "gen-integrations.mjs --check",
     "check-integrations-grading.mjs",
