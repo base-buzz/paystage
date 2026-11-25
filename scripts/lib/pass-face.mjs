@@ -14,11 +14,14 @@
  * fall back to, so a render on a build machine and a render on a phone look the same.
  */
 
-const INK = "#12171F";
-const PAPER = "#F4F1EA";
-const DEEP = "#0E2A4F";
+// Palette from docs/proposals/vouch-brand.md. Gold is the scarce signal — the V and the tick, never more than
+// about a tenth of any surface — so it appears here exactly once.
+const INK = "#101322";
+const PAPER = "#FFFFFF";
+const DEEP = "#1A1F71";
+const GOLD = "#F7B600";
 const MUTED = "#5B6472";
-const RED = "#B3261E";
+const RED = "#B42318";
 
 /** Short, stable, and readable aloud when a camera will not scan. */
 export function shortCode(serial) {
@@ -47,7 +50,7 @@ function stripArtwork(width, height, revoked) {
     </defs>
     <rect x="0" y="0" width="${width}" height="${height}" fill="url(#strip)"/>
     <path d="M ${x - v * 0.62} ${height * 0.2} L ${x} ${height * 0.2 + v} L ${x + v * 0.62} ${height * 0.2}"
-          fill="none" stroke="${revoked ? "#9CA3AF" : "#8FB6E8"}" stroke-width="${Math.max(2, height * 0.045)}"
+          fill="none" stroke="${revoked ? "#9CA3AF" : GOLD}" stroke-width="${Math.max(2, height * 0.032)}"
           stroke-linecap="square" opacity="${revoked ? 0.45 : 0.9}"/>
     <rect x="0" y="${height - Math.max(3, height * 0.05)}" width="${width}" height="${Math.max(3, height * 0.05)}" fill="${band}"/>
   `;
@@ -115,7 +118,8 @@ export function passFaceSvg(face) {
   <rect width="${width}" height="${height}" fill="${PAPER}"/>
   ${stripArtwork(width, stripH, revoked)}
 
-  ${label(pad, pad + f(3.4), "PAYSTAGE", f(3.6), dead ? "#C7CDD6" : "#DCE7F5", 700, "0.18em")}
+  ${label(pad, pad + f(3.6), face.brand ?? "vouchguard", f(4.0), dead ? "#C7CDD6" : "#FFFFFF", 500, "0.01em")}
+  ${label(pad, pad + f(6.6), face.vouchedBy ?? "vouched by PayStage", f(2.4), dead ? "#8C93A3" : "#B9BFD6", 500, "0.04em")}
   ${label(width - pad, pad + f(3.4), shortCode(face.serial), f(3.6), dead ? "#C7CDD6" : "#DCE7F5", 600, "0.08em", "end")}
 
   ${label(pad, stripH + height * 0.062, "UP TO", f(3.8), MUTED, 650, "0.14em")}

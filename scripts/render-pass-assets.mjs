@@ -75,7 +75,9 @@ const FACE = {
   state: STATE,
   limit: arg("limit", "$0.50"),
   expiry: arg("expiry", "31 Jan 2027"),
-  principal: arg("principal", "Acme Labs"),
+  // A figure uses a deliberate fictional entity: "you" in pixels reads as a placeholder bug (caught 2026-11-25).
+  principal: arg("principal", "Northwind Ltd"),
+  brand: arg("brand", "vouchguard"),
   serial: arg("serial", "vch-7F3"),
   network: arg("network", "Base"),
 };
