@@ -14,6 +14,8 @@ import { writeFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+// #431: prove this check is ours. Absent key → `{}`, and the gate records `unknown`.
+import { provenanceHeaders } from "../packages/loadgen/src/provenance.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "packages/mcp/dist/verify-cli.js");
@@ -48,7 +50,7 @@ let receipt;
 try {
   const res = await fetch("https://api.paystage.xyz/v1/evaluate_mcp_payment", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...(await provenanceHeaders("own-probe")) },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(20_000),
   });

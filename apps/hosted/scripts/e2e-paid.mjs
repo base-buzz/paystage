@@ -11,6 +11,8 @@ import { readFileSync } from "node:fs";
 import { wrapFetchWithPaymentFromConfig, decodePaymentResponseHeader } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm";
 import { privateKeyToAccount } from "viem/accounts";
+// #431: this CI job proves itself to the gate. Absent PAYSTAGE_PROVENANCE_KEY → `{}`, gate says `unknown`.
+import { provenanceHeaders } from "../../packages/loadgen/src/provenance.mjs";
 
 const KEY_FILE =
   process.env.PAYSTAGE_E2E_KEY_FILE ||
@@ -127,6 +129,7 @@ async function main() {
       // out of the real-traffic counters; `force-payment` skips the free tier for synthetic callers
       // only. Neither is a product feature.
       headers: {
+        ...(await provenanceHeaders("own-ci")),
         "content-type": "application/json",
         "x-paystage-source": "synthetic",
         "x-paystage-force-payment": "1",

@@ -12,6 +12,8 @@
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+// #431: prove this check is ours. Absent key → `{}`, and the gate records `unknown`.
+import { provenanceHeaders } from "../packages/loadgen/src/provenance.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const source = readFileSync(join(ROOT, "packages/mcp/src/tools.ts"), "utf8");
@@ -25,7 +27,11 @@ if (declared.length === 0) {
 const rpc = async (payload) => {
   const res = await fetch("https://api.paystage.xyz/mcp", {
     method: "POST",
-    headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json, text/event-stream",
+      ...(await provenanceHeaders("own-probe")),
+    },
     body: JSON.stringify(payload),
     signal: AbortSignal.timeout(20_000),
   });

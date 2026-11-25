@@ -34,6 +34,9 @@ jobs:
 
       - name: Probe production
         id: probe
+        # #431: the probe signs its own traffic. Read through the repo secret, never echoed.
+        env:
+          PAYSTAGE_PROVENANCE_KEY: ${{ secrets.PAYSTAGE_PROVENANCE_KEY }}
         run: |
           set +e
           node scripts/uptime-probe.mjs > probe.json
@@ -58,6 +61,8 @@ jobs:
       # HTTP — initialize, tools/list, and calling a tool — and asserts the verdicts. A broken `tools/list` now turns this red inside ten minutes instead of being found by a user.
       - name: Assert the MCP protocol
         id: mcp
+        env:
+          PAYSTAGE_PROVENANCE_KEY: ${{ secrets.PAYSTAGE_PROVENANCE_KEY }}
         run: |
           set +e
           node scripts/mcp-canary.mjs > mcp-canary.log 2>&1

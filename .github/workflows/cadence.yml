@@ -55,6 +55,9 @@ jobs:
         #
         # `exit` is captured explicitly: a `node … | tee` pipeline used to report tee's
         # status, so "Fail if the kit failed" below could never see the kit's exit code.
+        env:
+          # #431: the conformance kit's gate calls prove they are CI's. Never echoed.
+          PAYSTAGE_PROVENANCE_KEY: ${{ secrets.PAYSTAGE_PROVENANCE_KEY }}
         run: |
           set +e
           node apps/hosted/scripts/conformance.mjs --json > /tmp/conformance.json 2>/tmp/conformance.err

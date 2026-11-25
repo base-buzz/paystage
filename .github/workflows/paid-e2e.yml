@@ -46,6 +46,9 @@ jobs:
           echo "PAYSTAGE_E2E_KEY_FILE=$RUNNER_TEMP/e2e.key" >> "$GITHUB_ENV"
       - name: Pay once on Base Sepolia
         working-directory: apps/hosted
+        env:
+          # #431: the paid e2e call proves it is CI's. Never echoed.
+          PAYSTAGE_PROVENANCE_KEY: ${{ secrets.PAYSTAGE_PROVENANCE_KEY }}
         # The script exits non-zero with a distinct code per failure:
         #   3 = no PAYMENT-RESPONSE (the free tier answered; the job did not pay)
         #   4 = the test wallet cannot pay (balance below the floor)

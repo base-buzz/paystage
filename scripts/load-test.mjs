@@ -13,6 +13,9 @@
  * 402 or the documented 503 comes back.
  */
 
+// #431: the shared signer. Absent PAYSTAGE_PROVENANCE_KEY → no headers, gate records `unknown`.
+import { provenanceHeaders } from "../packages/loadgen/src/provenance.mjs";
+
 const args = process.argv.slice(2);
 const opt = (name, fallback) => {
   const i = args.indexOf(`--${name}`);
@@ -32,6 +35,9 @@ const appTimes = [];
 const statuses = new Map();
 let next = 0;
 
+// #431: one signature for the whole run; absent key → `{}` and the gate records `unknown`.
+const provenance = await provenanceHeaders("own-probe");
+
 async function worker() {
   while (next < total) {
     next += 1;
@@ -39,7 +45,7 @@ async function worker() {
     try {
       const res = await fetch(url, {
         method: "POST",
-        headers: { "content-type": "application/json", "x-paystage-source": "test" },
+        headers: { "content-type": "application/json", "x-paystage-source": "test", ...provenance },
         body,
         signal: AbortSignal.timeout(20_000),
       });

@@ -14,6 +14,8 @@
  * Uses Server-Timing when the response carries it, falls back to wall clock.
  */
 import { performance } from "node:perf_hooks";
+// #431: latency runs are our traffic too. Absent key → `{}`, gate records `unknown`.
+import { provenanceHeaders } from "../../packages/loadgen/src/provenance.mjs";
 
 const args = process.argv.slice(2);
 const arg = (name, fallback) => {
@@ -23,6 +25,7 @@ const arg = (name, fallback) => {
 
 const base = arg("--base", "https://api.paystage.xyz").replace(/\/+$/, "");
 const n = Number(arg("--n", "100"));
+const PROVENANCE = await provenanceHeaders("own-ci");
 
 function pct(sorted, p) {
   if (sorted.length === 0) return null;
@@ -80,7 +83,7 @@ const results = await Promise.all([
   measure("/health"),
   measure("/v1/evaluate_mcp_payment", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...PROVENANCE },
     body: JSON.stringify({ payment_required: { x402Version: 2, accepts: [] }, policy: {} }),
   }),
 ]);

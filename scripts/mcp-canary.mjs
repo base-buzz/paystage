@@ -13,6 +13,9 @@
  * No credentials, no money, no writes. One evaluation per run against a known drainer address.
  */
 
+// #431: the canary is one of our probes, so it signs like the rest. Absent key → `{}`, gate says `unknown`.
+import { provenanceHeaders } from "../packages/loadgen/src/provenance.mjs";
+
 const ENDPOINT = process.env.MCP_CANARY_URL || 'https://api.paystage.xyz/mcp';
 const DRAINER = '0x6160000000000000000000000000000000003757';
 const TREASURY = '0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE';
@@ -45,6 +48,7 @@ const headers = {
   'content-type': 'application/json',
   accept: 'application/json, text/event-stream',
   'x-paystage-source': 'test',
+  ...(await provenanceHeaders('own-probe')),
 };
 
 let sessionId = null;

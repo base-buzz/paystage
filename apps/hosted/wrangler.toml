@@ -1,7 +1,7 @@
 name = "paystage-hosted"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
-compatibility_flags = ["nodejs_compat"] # required: @x402 uses node:url; policy may touch node:fs
+compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"] # nodejs_compat: @x402 uses node:url. populate_process_env (#431): telemetry.ts reads PAYSTAGE_PROVENANCE_KEY from process.env, and compatibility_date 2024-11-01 predates the 2025-04-01 default.
 workers_dev = true
 
 # Top-level worker = MAINNET-ready (Base mainnet, eip155:8453).
@@ -43,7 +43,7 @@ custom_domain = true
 name = "paystage-hosted-sepolia"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"] # see mainnet note: process.env carries PAYSTAGE_PROVENANCE_KEY (#431)
 workers_dev = true
 
 # Only PAYSTAGE_PAYTO secret is needed for Sepolia.

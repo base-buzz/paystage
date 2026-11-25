@@ -13,6 +13,8 @@
  * Exit 0 every case behaved · 1 a case did not · 2 the drill could not run.
  */
 import { writeFileSync } from "node:fs";
+// #431: prove the drill is ours. Absent key → `{}`, and the gate records `unknown`.
+import { provenanceHeaders } from "../packages/loadgen/src/provenance.mjs";
 
 const urlFlag = process.argv.indexOf("--url");
 const BASE = (urlFlag > 0 ? process.argv[urlFlag + 1] : "https://sepolia.api.paystage.xyz").replace(/\/+$/, "");
@@ -112,7 +114,7 @@ for (const testCase of CASES) {
   try {
     const res = await fetch(`${BASE}/v1/evaluate_mcp_payment`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", ...(await provenanceHeaders("own-probe")) },
       body: testCase.raw ?? JSON.stringify(testCase.body),
       signal: AbortSignal.timeout(30_000),
     });

@@ -11,6 +11,8 @@ import { readFileSync } from "node:fs";
 import { wrapFetchWithPaymentFromConfig, decodePaymentResponseHeader } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm";
 import { privateKeyToAccount } from "viem/accounts";
+// #431: this sender proves itself to the gate. Absent PAYSTAGE_PROVENANCE_KEY → `{}`, gate says `unknown`.
+import { provenanceHeaders } from "../../packages/loadgen/src/provenance.mjs";
 
 const KEY_FILE =
   process.env.PAYSTAGE_E2E_KEY_FILE ||
@@ -121,6 +123,7 @@ async function main() {
     res = await fetchWithPayment(url, {
       method: "POST",
       headers: {
+        ...(await provenanceHeaders("own-ci")),
         "content-type": "application/json",
         "x-paystage-source": "test",
         "x-paystage-request-id": `test-${Date.now()}`,

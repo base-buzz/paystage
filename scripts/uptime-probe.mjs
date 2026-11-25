@@ -15,6 +15,9 @@
  * workflow can build an issue body from it.
  */
 
+// #431: the shared signer. Absent PAYSTAGE_PROVENANCE_KEY → no headers, gate records `unknown`.
+import { provenanceHeaders } from "../packages/loadgen/src/provenance.mjs";
+
 const TARGETS = [
   { name: "mainnet /health", url: "https://api.paystage.xyz/health", expect: [200] },
   { name: "mainnet receipt key", url: "https://api.paystage.xyz/v1/public/receipt-key.json", expect: [200] },
@@ -81,8 +84,12 @@ async function probe(target, init) {
   try {
     const res = await fetch(target.url, {
       ...init,
-      // Label our own probe so it is never counted as a real caller in /api/metrics.
-      headers: { "x-paystage-source": "test", ...(init?.headers ?? {}) },
+      // Label our own probe so it is never counted as a real caller in /api/metrics, and prove it is ours.
+      headers: {
+        "x-paystage-source": "test",
+        ...(init?.headers ?? {}),
+        ...(await provenanceHeaders("own-probe")),
+      },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     await res.arrayBuffer().catch(() => {});

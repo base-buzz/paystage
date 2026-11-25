@@ -14,6 +14,7 @@ import { loadWallets, publicWalletList } from "./wallets";
 import { pickScenario } from "./scenarios";
 import { pickFundedWallet } from "./balance";
 import { runPaidSyntheticCall } from "./pay";
+import { provenanceHeaders } from "./provenance.mjs";
 
 export interface Env {
   LOADGEN_STATE: KVNamespace;
@@ -104,6 +105,10 @@ async function callApi(
   const base = env.API_BASE || "https://api.paystage.xyz";
   const headers = new Headers(init.headers || {});
   headers.set("X-PayStage-Source", "synthetic");
+  // #431: sign every call the loadgen makes, including the free-path dry runs. Absent key → no headers.
+  for (const [name, value] of Object.entries(await provenanceHeaders("own-loadgen"))) {
+    headers.set(name, value);
+  }
   if (!headers.has("content-type") && init.body) {
     headers.set("content-type", "application/json");
   }

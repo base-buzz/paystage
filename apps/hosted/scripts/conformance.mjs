@@ -19,6 +19,11 @@ const API = process.env.PAYSTAGE_API ?? "https://api.paystage.xyz";
 const API_SEPOLIA = process.env.PAYSTAGE_API_SEPOLIA ?? "https://sepolia.api.paystage.xyz";
 const REPO_RAW = "https://raw.githubusercontent.com/base-buzz/paystage/main";
 
+// #431: our CI checks prove themselves to the gate. Absent PAYSTAGE_PROVENANCE_KEY → `{}`,
+// and every call lands as `unknown`, which is correct and never treated as a failure.
+import { provenanceHeaders } from "../../packages/loadgen/src/provenance.mjs";
+const PROVENANCE = await provenanceHeaders("own-ci");
+
 const TOOLS = [
   "evaluate_mcp_payment",
   "list_outstanding_auths",
@@ -270,7 +275,7 @@ async function checkUnpaidChallenge() {
   //   503 upstream_timeout-> documented fail-closed degradation (SLO.md), retryable
   const { res, text } = await get(`${API}/v1/evaluate_mcp_payment`, {
     method: "POST",
-    headers: { "content-type": "application/json", "x-paystage-source": "test" },
+    headers: { "content-type": "application/json", "x-paystage-source": "test", ...PROVENANCE },
     body: JSON.stringify({ payment_required: REAL_CHALLENGE, policy: REAL_POLICY }),
   });
 
@@ -321,7 +326,7 @@ async function checkDocsNotLying() {
   // a malformed body must not come back as a success.
   const { res } = await get(`${API}/v1/evaluate_mcp_payment`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...PROVENANCE },
     body: "{not json",
   });
   record("api: malformed input fails closed", res.status >= 400, `HTTP ${res.status}`);
@@ -348,6 +353,7 @@ async function checkToolParity() {
       "content-type": "application/json",
       accept: "application/json, text/event-stream",
       "x-paystage-source": "test",
+      ...PROVENANCE,
     },
     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }),
     signal: AbortSignal.timeout(20_000),

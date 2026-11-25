@@ -1,7 +1,7 @@
 name = "paystage-loadgen"
 main = "src/index.ts"
 compatibility_date = "2024-12-30"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"] # the signer reads PAYSTAGE_PROVENANCE_KEY from process.env (#431); set that secret on this Worker to sign
 workers_dev = true
 
 # DISABLED by default. Do not enable until Dave confirms funding.

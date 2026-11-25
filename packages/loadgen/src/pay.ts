@@ -1,6 +1,7 @@
 import { ExactEvmScheme } from '@x402/evm';
 import { wrapFetchWithPaymentFromConfig, decodePaymentResponseHeader } from '@x402/fetch';
 import type { PrivateKeyAccount } from 'viem/accounts';
+import { provenanceHeaders } from './provenance.mjs';
 
 export const NETWORK = 'eip155:8453';
 export const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
@@ -100,6 +101,8 @@ export async function runPaidSyntheticCall(args: {
   const res = await paidFetch(url, {
     method: 'POST',
     headers: {
+      // #431: prove this call is loadgen's. `{}` when the key is absent — unsigned is correct, not an error.
+      ...(await provenanceHeaders('own-loadgen')),
       'content-type': 'application/json',
       accept: 'application/json',
       'X-PayStage-Source': 'synthetic',
