@@ -14,8 +14,27 @@ export type {
   StepUpTrigger,
   PaymentHistory,
   MandateEvaluationInput,
+  RepeatCheck,
 } from "./evaluate.js";
 export { DEFAULT_STEP_UP_ANSWERS } from "./evaluate.js";
+// Challenge idempotency (#444): the canonical challenge digest, the salted repeat key, the
+// injected bounded store, and the async entry point that uses them. `evaluatePayment` stays
+// synchronous; a host that wants the repeat check calls `evaluateWithChallengeIdempotency`.
+export {
+  challengeDigest,
+  deriveChallengeKey,
+  createMemoryChallengeVerdictStore,
+  evaluateWithChallengeIdempotency,
+  DEFAULT_CHALLENGE_TTL_MS,
+  DEFAULT_CHALLENGE_MAX_ENTRIES,
+  REPEAT_REASON,
+} from "./challenge-idempotency.js";
+export type {
+  ChallengeVerdictRecord,
+  ChallengeVerdictStore,
+  ChallengeIdempotencyOptions,
+  MemoryChallengeVerdictStoreOptions,
+} from "./challenge-idempotency.js";
 // Payer first-seen (#409): the salted-key store and the age input the evaluator consumes. The
 // persistence half is injected by the host; nothing here imports a database client.
 export {

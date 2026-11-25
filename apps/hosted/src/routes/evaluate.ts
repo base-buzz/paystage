@@ -3,7 +3,7 @@ import { PROBLEMS } from "../problem.js";
 import { buildReceipt } from "../receipt.js";
 import {
   buildEvidenceBundle,
-  evaluatePayment,
+  evaluateWithChallengeIdempotency,
   normalizePaymentRequired,
   buildReviewPacket,
 } from "@paystage/preflight";
@@ -43,7 +43,17 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
     // Capture the clock explicitly: a time-window verdict is only recomputable if the
     // bundle records the hour the evaluator saw.
     const evaluatedAt = new Date();
-    const decision = evaluatePayment(normalized, policy, {
+    /**
+     * #444: the verdict carries the canonical challenge digest, and a host that owns a repeat store
+     * can return the original verdict for a retry. This HTTP route deliberately passes **no** store
+     * yet: its decision is not the evaluator's alone — the address-risk feed and seller-reputation
+     * checks below can change it — so storing here would return the pre-network-check verdict on a
+     * retry and silently skip those checks. The host that can safely own a store today is the MCP
+     * tool (`@paystage/mcp`), whose handler is the evaluator plus nothing else. Until this route
+     * stores the *final* decision, it says so with `repeat_check.reason = "challenge_store_absent"`
+     * rather than pretending the check ran.
+     */
+    const decision = await evaluateWithChallengeIdempotency(normalized, policy, {
       now: evaluatedAt,
       ...(typeof b.agent_id === "string" ? { agentId: b.agent_id } : {}),
     });

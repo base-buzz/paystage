@@ -12,6 +12,7 @@
  */
 import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
 import { registerAllTools, SERVER_CAPABILITIES, type ToolSurface } from "@paystage/mcp/tools";
+import { createMemoryChallengeVerdictStore } from "@paystage/preflight";
 import { parsePolicyCached } from "./policy-cache.js";
 import { publicKeyJwk } from "./receipt.js";
 import {
@@ -28,6 +29,21 @@ import { supabaseBundleStore, type BundleStore } from "./bundle-store.js";
 export const MCP_PATH = "/mcp";
 export const CURATED_MCP_PATH = "/mcp/chatgpt";
 const SERVICE_VERSION = "2026.11.14";
+
+/**
+ * The #444 repeat store for the MCP surface, per Worker isolate.
+ *
+ * The MCP tool handler is the evaluator and nothing else (unlike the HTTP evaluate route, which
+ * adds network checks after it), so storing its verdict is storing the final decision. Per isolate
+ * is the same boundary the payment-identifier cache documents: a cold isolate forgets, and a retry
+ * after the TTL is a new decision. The salt is generated per isolate and never committed; a durable
+ * store would need a deployment salt instead.
+ */
+const challengeSalt = (() => {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+})();
+const challengeStore = createMemoryChallengeVerdictStore();
 
 /**
  * The answer a ChatGPT user gets once the curated surface's free allowance is spent.
@@ -139,6 +155,10 @@ function buildServer(
             summary: string;
           }) => bundleStore.put(bundle),
         }),
+    // #444: the evaluator's verdict is the final decision on this surface, so the repeat store is
+    // attached here. Per isolate, bounded by TTL and entry cap (see the constants above).
+    challengeStore,
+    challengeSalt,
   }, { surface });
 
   // Telemetry: the MCP path recorded nothing until 2026-11-14, so a real agent call and a quiet day

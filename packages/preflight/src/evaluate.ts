@@ -169,6 +169,31 @@ export interface EvaluationStep {
   accept_index?: number;
 }
 
+/**
+ * Whether a retried preflight was recognised as the same challenge (#444), and if not, why not.
+ *
+ * A verdict is a decision about *this* challenge under *this* policy. Re-asking with the same inputs
+ * must not produce a second fresh `pay`; the reason token says whether the repeat check ran. The
+ * tokens are stable identifiers, not sentences, so a caller can branch on them:
+ *
+ * - `"first_sight"` — no stored verdict for this challenge and scope; this result is fresh.
+ * - `"repeat"` — the original verdict was returned, and `repeated: true` with its `as_of` are present.
+ * - `"challenge_store_absent"` — no store was injected; behaviour is exactly the pre-#444 stateless one.
+ * - `"challenge_store_unreadable"` — the store threw on lookup; the payment is evaluated fresh.
+ * - `"challenge_store_write_failed"` — the fresh verdict could not be remembered; a later retry
+ *   will not be recognised.
+ * - `"challenge_salt_missing"` — a store was injected without a salt, so no key could be derived;
+ *   behaviour is the stateless one. Never silently unsalted.
+ * - `"challenge_digest_unavailable"` — the request could not be canonicalised into a digest; the
+ *   verdict is still produced and the repeat check did not run.
+ */
+export interface RepeatCheck {
+  /** True when a store answered the repeat question (whether hit or miss). */
+  checked: boolean;
+  /** A stable reason token, listed on `RepeatCheck` itself. */
+  reason: string;
+}
+
 export interface EvaluateResult {
   decision: Decision;
   /**
@@ -209,6 +234,34 @@ export interface EvaluateResult {
    * `do_not_pay` loses nothing.
    */
   stepUp?: StepUpRequirement;
+  /**
+   * The canonical digest of the challenge this verdict was issued for (#444).
+   *
+   * Lowercase 64-hex, no `0x`. It covers the whole payment request — `x402Version`, every accept
+   * (including `extra`) and the resource — so a different amount, asset, network, payee, timeout or
+   * resource is a different digest by construction. It is **not** the EIP-3009 `payment_digest`:
+   * that one hashes the authorization the client is about to sign, whose nonce/validity/from fields
+   * are not in a 402 challenge, so it cannot exist at preflight time. One challenge, one digest.
+   *
+   * Present on results produced by `evaluateWithChallengeIdempotency()` (and by `evaluatePayment()`
+   * when the caller passes a precomputed `challengeDigest`). Absent when nobody computed it — the
+   * evaluator itself stays synchronous and cannot run WebCrypto's async digest.
+   */
+  challenge_digest?: string;
+  /**
+   * Present and `true` only when this result is the verdict already issued for this challenge.
+   *
+   * The body of the verdict (`decision`, `reasons`, `summary`, `acceptResults`, `steps`) is the
+   * original result, not a re-evaluation. `as_of` says when it was first issued.
+   */
+  repeated?: true;
+  /** ISO 8601 instant of the original verdict. Present only together with `repeated: true`. */
+  as_of?: string;
+  /**
+   * Whether the retried-preflight check ran, and the stable reason token when it could not.
+   * Present on results from `evaluateWithChallengeIdempotency()`; absent from raw `evaluatePayment()`.
+   */
+  repeat_check?: RepeatCheck;
 }
 
 /**
@@ -1517,6 +1570,16 @@ export interface EvaluateOptions {
    * Verify the mandate's signature first: this evaluator is synchronous and does not do that.
    */
   mandate?: MandateEvaluationInput;
+  /**
+   * A precomputed canonical digest of the challenge (#444), echoed onto the verdict.
+   *
+   * The evaluator is synchronous and the digest needs WebCrypto's async SHA-256, so the caller
+   * computes it with `challengeDigest(pr)` (or `evaluateWithChallengeIdempotency()`, which does
+   * both). This is an echo, not a check: the evaluator does not verify that the digest matches
+   * `pr`, because a duplicate hash of the same bytes would just repeat the same work. Pass only a
+   * digest you derived from this exact request.
+   */
+  challengeDigest?: string;
 }
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -1880,5 +1943,8 @@ export function evaluatePayment(
     dailyCapNote,
     ...(selectedStepUp ? { stepUp: selectedStepUp } : {}),
     ...(packet ? { packet } : {}),
+    ...(options.challengeDigest !== undefined
+      ? { challenge_digest: options.challengeDigest }
+      : {}),
   };
 }

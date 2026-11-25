@@ -3,9 +3,26 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { loadPolicy, parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
 import { normalizePaymentRequired } from "./normalize.js";
-import { evaluatePayment } from "./evaluate.js";
 import type { EvaluateResult } from "./evaluate.js";
+import {
+  createMemoryChallengeVerdictStore,
+  evaluateWithChallengeIdempotency,
+} from "./challenge-idempotency.js";
 import { evaluateToolInput } from "./tool-schema.js";
+
+/**
+ * The stdio server is a long-running process, so it is a legitimate owner of the #444 repeat store.
+ *
+ * In memory and per process, like the payment-identifier cache: a restart forgets and a rebuy after
+ * the TTL is a new decision. The salt is generated per process rather than committed, so the keys
+ * on disk (none here) or in a future durable store never match a value in the repo. A future
+ * durable host substitutes its own `ChallengeVerdictStore` and deployment salt.
+ */
+const challengeSalt = (() => {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+})();
+const challengeStore = createMemoryChallengeVerdictStore();
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -33,7 +50,10 @@ export function createServer(): McpServer {
       try {
         const policy = await resolvePolicy(input);
         const pr = normalizePaymentRequired(input.payment_required);
-        const result: EvaluateResult = evaluatePayment(pr, policy);
+        const result: EvaluateResult = await evaluateWithChallengeIdempotency(pr, policy, {
+          challengeStore,
+          challengeSalt,
+        });
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };

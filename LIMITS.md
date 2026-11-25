@@ -67,6 +67,15 @@ Passing `payment_identifier` (the x402 payment-identifier extension's client-sup
 
 The window is ten minutes. A legitimate rebuy after it is a `pay` again; a rebuy inside it should carry a new identifier, because it is a different purchase.
 
+## 6c. A retried preflight, keyed by the challenge digest (#444)
+
+`evaluateWithChallengeIdempotency()` derives a canonical digest of the **whole** challenge — every accept, including the amount, asset, network, payee and timeout, plus the resource — and looks it up in an injected, salted, TTL-bounded store. A retry inside the window returns the **original** verdict with `repeated: true` and its `as_of`, instead of a second fresh `pay`. A changed amount is a different digest by construction, so it is a new decision: this does not swallow a changed challenge.
+
+- **The key is the challenge, not the EIP-3009 payment digest.** The latter hashes `from`, `nonce`, `validAfter` and `validBefore`, which a 402 challenge does not carry — a retry that times out before signing has no payment digest yet.
+- **A verdict is scoped to its decision inputs.** The stored key also covers the policy, agent, catalogue claim, mandate, payer history and payment identifier, so one agent's `pay` is never served to another agent whose cap forbids it.
+- **The store is injected and bounded.** `@paystage/preflight/mcp` and `@paystage/mcp` attach a per-process in-memory store with a ten-minute TTL and an entry cap. The hosted HTTP route does not attach one yet because its decision also includes network checks run after evaluation; it reports `repeat_check.reason = "challenge_store_absent"` rather than pretending. A restart or a cold isolate forgets, and a retry after the TTL — a slow retry — is a new evaluation by design.
+- **No store, no key, a store outage or a failed write never blocks a payment.** The verdict is returned and `repeat_check.reason` names which degradation happened.
+
 ## 7. A compromised agent, or a compromised policy
 
 If the process running the gate is compromised, the attacker supplies the policy as well as the payment. The gate is a check inside that process, not a boundary around it. Likewise a policy file an attacker can edit is a policy that approves what they want.

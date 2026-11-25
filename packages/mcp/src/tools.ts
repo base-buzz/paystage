@@ -3,8 +3,13 @@ import { McpServer, type ServerCapabilities } from "@modelcontextprotocol/server
 import { z } from "zod";
 import { parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
-import { buildEvidenceBundle, evaluatePayment, normalizePaymentRequired } from "@paystage/preflight";
-import type { EvaluateResult } from "@paystage/preflight";
+import {
+  buildEvidenceBundle,
+  evaluatePayment,
+  evaluateWithChallengeIdempotency,
+  normalizePaymentRequired,
+} from "@paystage/preflight";
+import type { ChallengeVerdictStore, EvaluateResult } from "@paystage/preflight";
 import { verifyReceipt, verifyReceiptChain } from "./verify.js";
 import {
   listOutstandingAuths,
@@ -194,6 +199,20 @@ export interface ToolDeps {
     receipt: string | null;
     summary: string;
   }) => Promise<void>;
+  /**
+   * The #444 repeat store, when the host owns one. `evaluate_mcp_payment` looks a challenge verdict
+   * up here before evaluating and remembers a fresh one after, so a retry returns the original
+   * verdict with `repeated: true` instead of a second fresh `pay`.
+   *
+   * Absence is not an error: the result says `repeat_check.reason = "challenge_store_absent"` and
+   * the tool behaves exactly as it did before #444.
+   */
+  challengeStore?: ChallengeVerdictStore;
+  /**
+   * The deployment salt for `challengeStore`'s keys. Required with a store; without it the tool
+   * degrades with `challenge_salt_missing` rather than indexing an unsalted key.
+   */
+  challengeSalt?: string;
 }
 
 export function registerAllTools(
@@ -250,10 +269,12 @@ export function registerAllTools(
         const policy = await deps.resolvePolicy(input);
         const pr = normalizePaymentRequired(input.payment_required);
         const evaluatedAt = new Date();
-        const result: EvaluateResult = evaluatePayment(pr, policy, {
+        const result: EvaluateResult = await evaluateWithChallengeIdempotency(pr, policy, {
           now: evaluatedAt,
           ...(input.agent_id !== undefined ? { agentId: input.agent_id } : {}),
           ...(input.payment_identifier !== undefined ? { paymentIdentifier: input.payment_identifier } : {}),
+          ...(deps.challengeStore !== undefined ? { challengeStore: deps.challengeStore } : {}),
+          ...(deps.challengeSalt !== undefined ? { challengeSalt: deps.challengeSalt } : {}),
         });
         const bundle = await buildEvidenceBundle(
           {
