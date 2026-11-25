@@ -39,10 +39,19 @@ const SERVICE_VERSION = "2026.11.14";
  * after the TTL is a new decision. The salt is generated per isolate and never committed; a durable
  * store would need a deployment salt instead.
  */
-const challengeSalt = (() => {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-})();
+/**
+ * Lazily, not at module scope: `crypto.getRandomValues` in a Worker's global scope is a deploy-time
+ * error (10021, "Disallowed operation called within global scope") — it failed the hosted deploy on
+ * 2026-11-25 while every local check passed, because only the deploy validates global scope.
+ */
+let challengeSaltValue: string | null = null;
+function challengeSalt(): string {
+  if (challengeSaltValue === null) {
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    challengeSaltValue = [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+  return challengeSaltValue;
+}
 const challengeStore = createMemoryChallengeVerdictStore();
 
 /**
@@ -158,7 +167,7 @@ function buildServer(
     // #444: the evaluator's verdict is the final decision on this surface, so the repeat store is
     // attached here. Per isolate, bounded by TTL and entry cap (see the constants above).
     challengeStore,
-    challengeSalt,
+    challengeSalt: challengeSalt(),
   }, { surface });
 
   // Telemetry: the MCP path recorded nothing until 2026-11-14, so a real agent call and a quiet day
