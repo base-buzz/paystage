@@ -1,10 +1,10 @@
 {
- "generatedAt": "2026-11-24T18:00:03.150Z",
+ "generatedAt": "2026-11-25T18:01:47.097Z",
  "source": "docs/backlog.md",
  "counts": {
-  "total": 304,
+  "total": 323,
   "open": 53,
-  "done": 251
+  "done": 270
  },
  "droppedForSafety": 0,
  "redactedFields": 9,
@@ -1923,10 +1923,10 @@
   {
    "n": 308,
    "title": "A per-run evidence bundle, not just a verdict",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "**",
-   "doneWhen": "a tool call can return a bundle id, GET /runs/<id> serves the four artefacts, and a third party can recompute the verdict from proof alone",
+   "summary": "store can run SQL, which the row did not know — it assumed the SQL editor was the only route), and GET /runs/<id> now answers **200** with all four artefacts.…",
+   "doneWhen": null,
    "gate": null,
    "ref": null
   },
@@ -2347,7 +2347,7 @@
    "size": "M",
    "summary": "chatgpt.com/apps returns 200 and contains no \"paystage\" (fetched 2026-11-21, see docs/specs/mcp-directory-gaps.md). We already have a registered connector;…",
    "doneWhen": "paystage appears on chatgpt.com/apps (or the connector's public page) with the tool count, and the listing links the site",
-   "gate": null,
+   "gate": "identity (OpenAI organisation verification: Persona ID check, operator only)",
    "ref": null
   },
   {
@@ -2552,10 +2552,10 @@
   },
   {
    "n": 371,
-   "title": "Our guard pays on review by default, and our posture paragraph says the opposite",
-   "done": false,
+   "title": "document and pin the guard's onReview: \"pay\" default",
+   "done": true,
    "size": "S",
-   "summary": "found 2026-11-22 during the gap hunt, while comparing our defaults with a competitor's. packages/x402-guard/src/index.ts:166 is const onReview = options.onReview ?? \"pay\"; — a caller who passes no option gets a payment through on a review verdict.…",
+   "summary": "the gap hunt, while comparing our defaults with a competitor's. packages/x402-guard/src/index.ts:166 is const onReview = options.onReview ?? \"pay\"; — a caller who passes no option gets a payment through on a review verdict.…",
    "doneWhen": "either onReview defaults to refuse with a test that pins the omitted case, or the README, LIMITS.md and SKILL.md say in one sentence that the guard tolerates review unless told otherwise — and a test pins whichever it is",
    "gate": null,
    "ref": null
@@ -2602,10 +2602,10 @@
   },
   {
    "n": 376,
-   "title": "Hero and eyebrow alignment with the adjudicator argument",
-   "done": false,
+   "title": "the eyebrow gains \"outside your wallet\"",
+   "done": true,
    "size": null,
-   "summary": "checked 2026-11-22: the lander hero already says *\"Stop the payment before it's signed\"* and *\"a read-only seatbelt outside the wallet\"*, so this is a **copy edit**, not a rewrite: make the eyebrow and the README opening both carry *decides before signing* and…",
+   "summary": "seatbelt outside the wallet\"*, so this is a **copy edit**, not a rewrite: make the eyebrow and the README opening both carry *decides before signing* and the not-the-wallet line, without contradicting the adjudicator section.",
    "doneWhen": "hero, eyebrow and README's first paragraph agree on the same three claims",
    "gate": null,
    "ref": null
@@ -2763,12 +2763,12 @@
   {
    "n": 392,
    "title": "Put the checked-seller probe in the tree, and make the generator read its JSON",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "the real gap behind #389, found by review: **the generator reverse-parses the rendered page** (gen-checked-sellers.mjs:86-95 regexes correct 402 … **97** out of markdown), the probe that produced the numbers ran in /tmp, and challenge-predicate.ts has **no cal…",
-   "doneWhen": "ops/bin/checked-sellers-probe.mjs imports isCorrectChallenge, emits per-endpoint JSON, and the generator renders from that JSON with **no regex over prose**.",
+   "summary": "emits per-endpoint JSON, and gen-checked-sellers renders from it — **no regex over prose**, and the frozen predicate finally has a caller.…",
+   "doneWhen": null,
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-24 (0 0): `bin/checked-sellers-probe"
   },
   {
    "n": 393,
@@ -2823,12 +2823,12 @@
   {
    "n": 398,
    "title": "Verify the 55 hosts in the \"uncensored inference\" class and publish them as the first named segment",
-   "done": false,
+   "done": true,
    "size": "M",
-   "summary": "source: the 40,119-entry sweep (docs/research/uncensored-inference-class.md): **162 entries on 55 hosts** match the class by self-description, concentration extreme (gondola-ai 2,305 calls; Venice's own endpoints the biggest cluster).…",
-   "doneWhen": "**55/55 carry a verdict and a date** (does the endpoint answer a correct 402, is the advertised price the one it asks, is the payee screened), published as the **first named segment** of the checked-seller list, ahead of the top-200-by-call…",
+   "summary": "kill criterion did **not** fire — the class has arrived as a payable segment, and it now leads /lists ahead of the top-200-by-calls list.…",
+   "doneWhen": null,
    "gate": null,
-   "ref": null
+   "ref": "done 2026-11-24 (0 0): 51 of 55 answer a correct 402 (93%), so the"
   },
   {
    "n": 399,
@@ -2845,7 +2845,7 @@
    "title": "The payment clip: the demo that ends in a transaction hash",
    "done": false,
    "size": "M",
-   "summary": "#113 shipped the **offline decision clip** (three fixture challenges, three verdicts, and a falsification: remove the gate and the over-cap 402 is advertised and a payment accepted at gate calls: 0). What it cannot show is the round trip…",
+   "summary": "**half shipped 2026-11-25** in 47744e1 (CI green, watched): the real round trip now exists up to the signature — scripts/payment-roundtrip.mjs calls the hosted Sepolia seller, gets **its own 402** (2000 atomic USDC on eip155:84532), the buyer-side gate returns…",
    "doneWhen": "a recorded run where an agent receives a real 402, the gate decides, a **synthetic** payment settles on Base Sepolia, and the hash is in the doc — labelled synthetic per rule 3, with the spend inside the pre-approved loadgen caps.",
    "gate": null,
    "ref": null
@@ -2862,10 +2862,10 @@
   },
   {
    "n": 402,
-   "title": "offer-receipt interop — adopt their envelope or say precisely why not",
-   "done": false,
+   "title": "the field-by-field offer-receipt comparison",
+   "done": true,
    "size": "S",
-   "summary": "their receipt spec is docs/extensions/offer-receipt.mdx in the x402 docs repo; we sign receipts and publish JWKS by kid, and **nobody has compared the two**. This protects the one claim that is uniquely ours: that **a third party can verify our receipt**.…",
+   "summary": "receipts and publish JWKS by kid, and **nobody has compared the two**. This protects the one claim that is uniquely ours: that **a third party can verify our receipt**.…",
    "doneWhen": "a one-page comparison states **field by field** whether our envelope is a superset, a subset or incompatible, and either we adopt their field names or the page states exactly where we deliberately differ.",
    "gate": null,
    "ref": null
@@ -3042,11 +3042,201 @@
   },
   {
    "n": 420,
-   "title": "The browser tooling is pinned to a playwright that cannot talk to this Chromium — fix once, for every agent",
+   "title": "The browser tooling is pinned to a playwright that cannot talk to this Chromium",
+   "done": true,
+   "size": "S",
+   "summary": "connectOverCDP and reports the version pair, wired into pipeline-status as browser-client. **and it disproved the row's own diagnosis**: it reported playwright 1.49.1 attaches to Chrome 156, so the mismatch was never the cause…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 421,
+   "title": "@paystage/mcp source is ahead of the published 0.8.17, so the next tag publishes nothing",
+   "done": true,
+   "size": "S",
+   "summary": "**0.8.18 aligned, 10/10 tools**. The bump carried evaluate_batch, request_testnet_funds, normalizePaymentRequired and the two receipt verifiers, all of which had landed after 0.8.17.…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 422,
+   "title": "x402scan lists two of our ten tools",
+   "done": true,
+   "size": null,
+   "summary": "names (evaluate_mcp_payment, evaluate_outstanding_auths) out of ten — a snapshot from around 14 Nov, when we had two. **Every other surface is now 10/10** after tonight's release: the MCP registry reads **0.8.18 aligned**, the ai tools registry is 10/10, and t…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 423,
+   "title": "GET /v1/mandate/:serial — the QR has nothing behind it yet",
+   "done": true,
+   "size": "M",
+   "summary": "(CI green, watched): a public read-only endpoint answering {serial, status, scope{per_payment, window_amount, window_seconds, expires_at}, principal{display, assertion}, verdict_for_seller, as_of}. **unknown is HTTP 200 with a body**, never 404…",
+   "doneWhen": "a public, read-only endpoint returns the mandate for a serial — **status** (active / revoked / expired / unknown), the scope (per-transaction cap, period, expiry), the principal and the verdict the seller should take…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 424,
+   "title": "The six Vouch stories worth building, and the one rule we keep",
+   "done": false,
+   "size": "M",
+   "summary": "from docs/research/vouch-user-stories.md (3c14ca9): 24 stories across six actors, each carrying what the product allows, what a rule blocks, and whether the block is real or self-imposed. **Our rules block almost none of it**;…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 425,
+   "title": "A signer-side adapter that fails closed — the only thing that makes the cap real",
+   "done": false,
+   "size": "M",
+   "summary": "all four reviews of docs/research/opportunity-synthesis.md (a4c570b) converge on the same first move, and it is also the fix for our own concept paper's flaw: **the cap is advisory until something at the signing boundary refuses.** The adapter submits the exac…",
+   "doneWhen": "an adapter exists for at least one signer (viem/ethers account or a smart-account session key) that (a) refuses to sign on do_not_pay, (b) refuses to sign when the gate is unreachable, (c) refuses when the challenge digest differs from the…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 426,
+   "title": "/terms, /support and /contact are 404 on the live site",
+   "done": true,
+   "size": "S",
+   "summary": "footer and the Chinese landing page, in the sitemap, and cross-linked to each other. Live until the next deploy. **the terms carry the distinction the concept paper forced**: *\"a verdict is advisory until a signer enforces it\"*…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 427,
+   "title": "A \"Discovery\" section on the lander: the always-on agents that could call us",
+   "done": true,
+   "size": "M",
+   "summary": "Claude Duet, Manus/Cue, OpenMausBot, OpenClaw/Hermes, OpenBot/Rakazo — grouped as **persistent/always-on**, **computer-use**, **AI teammates** and **chatbots (not this list)**, reading the same JSON the probe writes so the page and the check cannot disagree.…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 428,
+   "title": "The discovery test: are we reachable from the surfaces these agents actually use",
+   "done": true,
+   "size": "M",
+   "summary": "located the pages and are not cited), makes one initialize call at the canonical endpoint, and reports **8 products · 7 reachable · 0 documented-not-listed · 0 no-mcp · 1 unverified** in 12 of 40 requests.…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 429,
+   "title": "Link the five master-plan posts to each other",
+   "done": true,
+   "size": null,
+   "summary": "on the plain URLs and through an **off-network fetch** (post 3 carries links to post 1 and post 4). Wording unchanged, slugs and post_date values unchanged. **post 5 has no \"Next:\" line** — not in the source and not in the live body…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": "done 2026-11-25: every post's *\"Post n of 5\"* line now links to post 1, and the *\"Next:\"* line links to the next post — verified live"
+  },
+  {
+   "n": 430,
+   "title": "Baseline the 90-day test — and instrument the one number nobody can measure today",
+   "done": true,
+   "size": "S",
+   "summary": "posts have to be judged against, and it exposes the gap: **non-own callers of the gate is \"not instrumented\"**. Stars 6, npm last week 4,300 / 2,648 / 3,440 across @paystage/mcp, x402-guard, policy, external citations 0 known, parties whose work breaks without…",
+   "doneWhen": "the gate's event log carries a **caller-provenance** value (own-ci | own-loadgen | own-probe | unknown) set from a signed header or key rather than guessed from IP; the baseline table lives in docs/state/;…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 431,
+   "title": "Our own senders sign, so own-* stops meaning nothing",
+   "done": true,
+   "size": "S",
+   "summary": "(PAYSTAGE_PROVENANCE_KEY, in both Workers and the repo secret), but **no sender signs yet**, so own-ci, own-loadgen and own-probe are populated by nobody and our traffic still arrives as unknown — the same bucket as a stranger's.…",
+   "doneWhen": "the loadgen, the five probes and the CI jobs that call the gate send x-paystage-provenance + x-paystage-provenance-sig, each with its own value;…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 432,
+   "title": "Provision the Apple pass credentials into the vault",
    "done": false,
    "size": "S",
-   "summary": "measured 2026-11-24: /opt/browser-tools carries **playwright-core 1.49.1**, and it fails **every** CDP handshake with the browser container's **Chrome 156.0.8078.79** (connectOverCDP: Timeout 30000ms exceeded after \"ws connected\"), while **playwright-core 1.65…",
-   "doneWhen": "the browser image ships a **playwright-core ≥ 1.6x** (or pins Chromium to what 1.49 supports), browser_login completes against accounts.google.com, and a smoke check in pipeline-status runs one connectOverCDP and fails loudly on version mis…",
+   "summary": "the operator reports an Apple Developer **organisation** account with a D-U-N-S number, which was the entity gate on the whole Vouch chain (docs/proposals/vouch-pass-face.md, 8f0aadf).…",
+   "doneWhen": "secret-names.mjs lists the four names (lengths and hash prefixes only) and a local test pass signs end to end without a key ever touching a file. Signing against the real #423 endpoint is a different row.",
+   "gate": "identity (the certificate is issued to the account holder)",
+   "ref": null
+  },
+  {
+   "n": 433,
+   "title": "The monthly refusal summary — the number that shows a limit is doing something",
+   "done": true,
+   "size": "S",
+   "summary": "2026-11-25** in 70ecbe3 (CI green, watched): node scripts/refusal-summary.mjs --days 30 --json returns the period, refusals, reviews, by_rule, by_payee, amounts and the previous-period delta from stored bundles alone — no new store.…",
+   "doneWhen": "for one mandate over one period, a single command returns {period, refusals, by_rule, by_payee, amounts, previous_period_delta} **from receipts alone**, no new store;…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 434,
+   "title": "One SVG master for the pass face, rasterised by a repo script",
+   "done": false,
+   "size": "S",
+   "summary": "**half shipped**: the master, the renderer, the Apple sizes, the dimension check and the article mock are on main (0837661, b48476d9, acee2a4), and /mocks renders from the same function (#438).…",
+   "doneWhen": "the script emits all six assets, a test asserts each PNG's pixel dimensions against Apple's table, and the lander's pass hero is the same component at true card ratio.",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 435,
+   "title": "The publisher refuses any post whose title has no date — and the series has no dates",
+   "done": true,
+   "size": "S",
+   "summary": "posts are live, three more are drafted (docs/substack/master-plan/06..08), and bin/substack-post.mjs stops every one of them at dayFromTitle: it exits 64 unless the heading matches … — YYYY-MM-DD.…",
+   "doneWhen": "substack-post.mjs can publish an undated **series** post only when it is told the post is part of a series (--series <slug-or-number>), the day guard still refuses every note-shaped draft, a test proves both directions (undated + --series p…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 436,
+   "title": "The mandate page — one page that can change one mandate",
+   "done": false,
+   "size": null,
+   "summary": "**read half shipped 2026-11-25** in ceeb929 (CI green, watched): /m/[serial] renders the endpoint's answer with no-store, gives every status a plain word **and** its meaning (unknown → \"not on record…",
+   "doneWhen": "for one serial the page renders state from #423, changes limit / payees / expiry, revokes, and every change is visible on a scan within one request.",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 437,
+   "title": "The session-key account — the one thing that turns \"advisory\" into \"enforced\"",
+   "done": false,
+   "size": "L",
+   "summary": "post 6 now states the boundary plainly: today the gate refuses before signing, which is real and tested and **advisory**; an ERC-4337 smart account with a session key carrying the limit, the payees and the expiry is what makes a payment that breaks the rules f…",
+   "doneWhen": "a smart account whose signer is a passkey exists on Base Sepolia; a session key is issued carrying {limit, payees, expiry, network};…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 438,
+   "title": "/mocks — the storyboard as a page, because that is where the model gets checked",
+   "done": true,
+   "size": null,
+   "summary": "2026-11-25** in b5ba7ce (CI green, watched): every image is rendered by scripts/lib/pass-face.mjs, so the page cannot show a drawing that disagrees with the Wallet assets. The three corrections are captions, not decoration…",
+   "doneWhen": "/mocks renders locally, passes the route-style and route-docs checks, every frame carries a caption saying what the human does **or does not do**, and the route is linked from the lander footer or the docs index rather than orphaned.",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 439,
+   "title": "A green hook is not a green pipeline — read the run after every push",
+   "done": false,
+   "size": "S",
+   "summary": "2026-11-25: nine consecutive CI runs on main were red (gh run list: 9 failures in the last 25) while pre-push printed green every time, because check-doc-links.mjs and check-provenance-wording.mjs both hardcoded /work/paystage and died on a runner with ENOENT:…",
+   "doneWhen": "the tick prompt and docs/runbooks/ both say \"watch the run\", a session cannot report a row shipped without gh run list naming that SHA green, and a small script (scripts/await-ci.mjs <sha>) polls to a verdict with a timeout and exits non-ze…",
    "gate": null,
    "ref": null
   }
