@@ -172,7 +172,7 @@ const res = await pay(url, init);
 ```
 
 `guardFetch` returns a `fetch` of the same shape, so the loop does not change: it evaluates the 402 the caller was about to sign and passes the response through only when the verdict is
-`pay`. A refusal costs one call and nothing else. The exact options are in
+`pay`. A refusal costs one call, nothing else. The exact options are in
 [packages/x402-guard/README.md](packages/x402-guard/README.md). The paid endpoint is
 $0.002 per call, the same order as the calls around it — so the gate is one more line item, not a new procurement.
 
