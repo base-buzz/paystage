@@ -36,7 +36,8 @@ const esc = (value) =>
  * The abstract V geometry on the strip. Deliberately nothing literal: no card, no chip, no network arcs.
  * `revoked` desaturates it and swaps the accent for the refusal band, because the face must say so plainly.
  */
-function stripArtwork(width, height, revoked) {
+function stripArtwork(width, height, revoked, withMark = false) {
+  const size = Math.round(height * 0.62);
   const accent = revoked ? "#6B7280" : DEEP;
   const band = revoked ? RED : "#1B4F8A";
   const v = height * 0.62;
@@ -49,9 +50,7 @@ function stripArtwork(width, height, revoked) {
       </linearGradient>
     </defs>
     <rect x="0" y="0" width="${width}" height="${height}" fill="url(#strip)"/>
-    <path d="M ${x - v * 0.62} ${height * 0.2} L ${x} ${height * 0.2 + v} L ${x + v * 0.62} ${height * 0.2}"
-          fill="none" stroke="${revoked ? "#9CA3AF" : GOLD}" stroke-width="${Math.max(2, height * 0.032)}"
-          stroke-linecap="square" opacity="${revoked ? 0.45 : 0.9}"/>
+    ${withMark ? sealMark({ x: x - size / 2, y: (height - size) / 2, size, state: revoked ? "REVOKED" : "ACTIVE", paper: "#0E1B3A" }) : ""}
     <rect x="0" y="${height - Math.max(3, height * 0.05)}" width="${width}" height="${Math.max(3, height * 0.05)}" fill="${band}"/>
   `;
 }
@@ -127,8 +126,9 @@ export function passFaceSvg(face) {
   <rect width="${width}" height="${height}" fill="${PAPER}"/>
   ${stripArtwork(width, stripH, revoked)}
 
-  ${label(pad, pad + f(3.6), face.brand ?? "vouchguard", f(4.0), dead ? "#C7CDD6" : "#FFFFFF", 500, "0.01em")}
-  ${label(pad, pad + f(6.6), face.vouchedBy ?? "vouched by PayStage", f(2.4), dead ? "#8C93A3" : "#B9BFD6", 500, "0.04em")}
+  ${sealMark({ x: pad, y: pad - f(1.6), size: f(9), state: dead ? (revoked ? "REVOKED" : "EXPIRED") : "ACTIVE", paper: "#16224A" })}
+  ${label(pad + f(11), pad + f(3.4), face.brand ?? "vouchguard", f(4.0), dead ? "#C7CDD6" : "#FFFFFF", 500, "0.01em")}
+  ${label(pad + f(11), pad + f(6.4), face.vouchedBy ?? "vouched by PayStage", f(2.4), dead ? "#8C93A3" : "#B9BFD6", 500, "0.04em")}
   ${label(width - pad, pad + f(3.4), shortCode(face.serial), f(3.6), dead ? "#C7CDD6" : "#DCE7F5", 600, "0.08em", "end")}
 
   ${label(pad, stripH + height * 0.062, "UP TO", f(3.8), MUTED, 650, "0.14em")}
@@ -160,7 +160,7 @@ export function passStripSvg({ width, height, revoked = false }) {
   const w = Number(width);
   const h = Number(height);
   if (!Number.isFinite(w) || !Number.isFinite(h) || w < 40 || h < 20) throw new TypeError("passStripSvg: bad width/height");
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${stripArtwork(w, h, revoked)}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${stripArtwork(w, h, revoked, true)}</svg>`;
 }
 
 const FONT_STACK = "Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif";
@@ -177,6 +177,48 @@ export function passLogoSvg({ width, height }) {
 </svg>`;
 }
 
+/**
+ * The mark: a keyway seal, drawn to the numbers in `docs/proposals/vouch-mark-seal.md`.
+ *
+ * Replaces the letter V, for two reasons that colour could not fix: a V is a **letter**, and it reads as a
+ * **checkmark** — a judgement, which is the seller's job and not ours. A keyway says *authority* and carries the
+ * state in its slot, so a revoked pass says so in greyscale, without a word:
+ *
+ *   ACTIVE    slot cut from the left edge, stopping inside the plate  — key in, sealed
+ *   EXPIRING  the same, plus a hairline notch near the slot's end     — being disturbed
+ *   EXPIRED   slot filled, plate desaturated                          — empty lock
+ *   REVOKED   slot runs all the way through, red hairline             — seal broken
+ *
+ * Geometry is on the spec's 100-unit grid and scales to any size. Four states, one function, because a mark that
+ * needs a second drawing per state is four marks that will drift.
+ */
+export function sealMark({ x = 0, y = 0, size = 100, state = "ACTIVE", paper = PAPER, gold = GOLD, ink = INK, red = RED, compact = false } = {}) {
+  /**
+   * `compact` exists because the spec's own legibility check fails at 29 px: a 16-unit slot is 4.6 px there, and the
+   * check asks for ≥ 5. At icon sizes the slot is widened to 20 units (5.8 px at 29) and the ring inset by 2 so the
+   * slot still stops inside the plate. The full-size mark keeps the spec's exact geometry.
+   */
+  const slotH = compact ? 20 : 16;
+  const slotY = 50 - slotH / 2;
+  const ringInset = compact ? 12 : 10;
+  const k = size / 100;
+  const g = (n) => Math.round(n * k * 1000) / 1000;
+  const s = String(state).toUpperCase();
+  const revoked = s === "REVOKED";
+  const expired = s === "EXPIRED";
+  const ringColour = expired ? "rgba(16,19,34,0.4)" : revoked ? "#9CA3AF" : gold;
+  const plate = expired ? "rgba(16,19,34,0.12)" : "none";
+  const slotFill = expired ? "#E5E3DE" : paper;
+  const slotW = revoked ? 100 : 46;
+  return `<g transform="translate(${x} ${y}) scale(${k})">
+    <rect x="0" y="0" width="100" height="100" rx="16" fill="${plate}"/>
+    <rect x="${ringInset}" y="${ringInset}" width="${100 - ringInset * 2}" height="${100 - ringInset * 2}" rx="8" fill="none" stroke="${ringColour}" stroke-width="4"/>
+    <rect x="0" y="${slotY}" width="${slotW}" height="${slotH}" rx="${slotH / 2}" fill="${slotFill}"/>
+    ${s === "EXPIRING" ? `<rect x="36" y="26" width="8" height="8" rx="4" fill="${gold}"/>` : ""}
+    ${revoked ? `<line x1="0" y1="${slotY}" x2="100" y2="${slotY}" stroke="${red}" stroke-width="4"/><line x1="0" y1="${slotY + slotH}" x2="100" y2="${slotY + slotH}" stroke="${red}" stroke-width="4"/>` : ""}
+  </g>`;
+}
+
 /** The mark alone, for `icon.png` (29×29 in notifications): the V, no type. */
 export function passIconSvg({ width, height, revoked = false }) {
   const w = Number(width);
@@ -184,8 +226,7 @@ export function passIconSvg({ width, height, revoked = false }) {
   const stroke = Math.max(1.2, h * 0.11);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
   <rect width="${w}" height="${h}" rx="${h * 0.22}" fill="${revoked ? "#6B7280" : DEEP}"/>
-  <path d="M ${w * 0.28} ${h * 0.3} L ${w * 0.5} ${h * 0.72} L ${w * 0.72} ${h * 0.3}" fill="none"
-        stroke="${revoked ? "#D1D5DB" : "#8FB6E8"}" stroke-width="${stroke}" stroke-linecap="square"/>
+  ${sealMark({ x: w * 0.18, y: h * 0.18, size: w * 0.64, state: revoked ? "REVOKED" : "ACTIVE", paper: DEEP, compact: true })}
 </svg>`;
 }
 

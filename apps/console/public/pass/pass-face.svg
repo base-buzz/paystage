@@ -8,15 +8,20 @@
       </linearGradient>
     </defs>
     <rect x="0" y="0" width="750" height="259" fill="url(#strip)"/>
-    <path d="M 275.4404 51.800000000000004 L 375 212.38000000000002 L 474.5596 51.800000000000004"
-          fill="none" stroke="#F7B600" stroke-width="8.288"
-          stroke-linecap="square" opacity="0.9"/>
+    
     <rect x="0" y="246.05" width="750" height="12.950000000000001" fill="#1B4F8A"/>
   
 
-  <text x="48" y="75" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="30"
+  <g transform="translate(48 36) scale(0.675)">
+    <rect x="0" y="0" width="100" height="100" rx="16" fill="none"/>
+    <rect x="10" y="10" width="80" height="80" rx="8" fill="none" stroke="#F7B600" stroke-width="4"/>
+    <rect x="0" y="42" width="46" height="16" rx="8" fill="#16224A"/>
+    
+    
+  </g>
+  <text x="130.5" y="73.5" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="30"
        font-weight="500" letter-spacing="0.01em" text-anchor="start" fill="#FFFFFF">vouchguard</text>
-  <text x="48" y="97.5" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="18"
+  <text x="130.5" y="96" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="18"
        font-weight="500" letter-spacing="0.04em" text-anchor="start" fill="#B9BFD6">vouched by PayStage</text>
   <text x="702" y="73.5" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="27"
        font-weight="600" letter-spacing="0.08em" text-anchor="end" fill="#DCE7F5">vch-7F3</text>
