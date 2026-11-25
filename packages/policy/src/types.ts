@@ -62,6 +62,22 @@ export interface StepUpSpec {
   answers?: StepUpAnswer[];
 }
 
+/**
+ * Payer-age friction (#409): a first payment from a payer we first saw recently, over an amount,
+ * becomes `review`.
+ *
+ * This is a *signal*, not a trust score. `younger_than_days` is when the salted payer key was first
+ * seen by this deployment; it is not the payer's age in the world, not its on-chain history and not
+ * evidence that an older payer is trustworthy. See `packages/preflight/src/payer-first-seen.ts` for
+ * what is stored and what the salt does not protect.
+ */
+export interface PayerAgeSpec {
+  /** A payer is "new" while `ageDays < younger_than_days`. Integer days, strictly positive. */
+  younger_than_days: number;
+  /** `review` when a new payer's amount is strictly above this ceiling, in this asset's units. */
+  amount_above: AmountSpec;
+}
+
 export interface VelocityWindow {
   /** Rolling window length in seconds (e.g. 300, 1800, 18000). */
   window_seconds: number;
@@ -90,6 +106,11 @@ export interface Policy {
    * reason names the threshold, and whose requirement lists the principal's non-interactive answers.
    */
   step_up?: StepUpSpec;
+  /**
+   * Optional payer-age friction (#409). Only runs when the caller supplies the payer's resolved age;
+   * unknown age is skipped, not treated as new.
+   */
+  payer_age?: PayerAgeSpec;
   unknown_payee: UnknownPayee;
   max_auth_validity_seconds?: number;
   allowed_spenders?: string[];

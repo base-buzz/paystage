@@ -189,6 +189,22 @@ const stepUp: Schema = {
 };
 
 /**
+ * Payer-age friction (#409). Shape only — the evaluator decides whether the resolved age makes the
+ * payer new. The threshold is a positive integer because a zero-day window would make no payer new
+ * and a negative one is meaningless; both are configuration errors, not a disabled rule.
+ */
+const payerAge: Schema = {
+  kind: "object",
+  fields: [
+    {
+      key: "younger_than_days",
+      schema: { kind: "number", integer: true, minimum: 0, minimumInclusive: false },
+    },
+    { key: "amount_above", schema: amountSpec },
+  ],
+};
+
+/**
  * Per-agent overlays. Shape is validated here; the *narrowing* rule is enforced in
  * `resolveAgentPolicy`, because it needs the surrounding policy to compare against.
  */
@@ -242,6 +258,7 @@ const POLICY_FIELDS: readonly Field[] = [
   { key: "time_window", schema: timeWindow, optional: true },
   { key: "require_human_above", schema: amountSpec, optional: true },
   { key: "step_up", schema: stepUp, optional: true },
+  { key: "payer_age", schema: payerAge, optional: true },
   { key: "unknown_payee", schema: { kind: "enum", values: ["review", "deny"] } },
   {
     key: "max_auth_validity_seconds",
@@ -269,6 +286,7 @@ const policyRefine: Refinement = (value, sink: SchemaSink): void => {
     ["max_amount", policy.max_amount],
     ["daily_cap", policy.daily_cap],
     ["step_up.amount_above", policy.step_up?.amount_above],
+    ["payer_age.amount_above", policy.payer_age?.amount_above],
   ] as const) {
     if (spec === undefined) continue;
     if (decimalPlaces(spec.value) > spec.decimals) {

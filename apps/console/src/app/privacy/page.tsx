@@ -85,6 +85,35 @@ export default function PrivacyPage() {
         </li>
       </ul>
 
+      <h2>Payer first-seen</h2>
+      <p>
+        One fact is kept about a payer so that a first payment can be treated differently from a returning one. It is
+        two values, and nothing else:
+      </p>
+      <ul>
+        <li>
+          <strong>a salted key</strong> — an HMAC-SHA-256 of the payer identifier under a salt we hold. The address
+          itself is not stored. Reading the table cannot recover an address; anyone who holds the salt and an address
+          can test whether that payer is present, so the key is pseudonymous, not anonymous.
+        </li>
+        <li>
+          <strong>a first-seen timestamp</strong> — the first time we saw that key.
+        </li>
+      </ul>
+      <p>
+        This is a payer-age signal, not a payer history. It records no address graph, no payee or merchant, no amount,
+        no last-seen time, no payment count, and nothing beyond the first sighting. No merchant or payee is stored
+        beside the key, so the row cannot link a payer across merchants, and there is no join table that could
+        reconstruct an address graph. The signal says when we first saw a salted key; it does not say who the payer is,
+        whether they are new to the world, or that an older payer is trustworthy.
+      </p>
+      <p>
+        The key and timestamp let one rule run: a first payment from a payer first seen recently, above a configured
+        amount, returns <code>review</code>. The measured age is not returned to the caller — the verdict carries the
+        reason, not the number. When the store cannot answer, the rule is skipped rather than treating every payment as
+        new.
+      </p>
+
       <h2>What it does not record</h2>
       <ul>
         <li>
@@ -153,8 +182,8 @@ export default function PrivacyPage() {
         <a href="https://github.com/base-buzz/paystage/issues" rel="noopener">
           github.com/base-buzz/paystage/issues
         </a>{" "}
-        with the transaction hash or request id and we will delete the row. We cannot delete the on-chain transaction,
-        because nobody can.
+        with the transaction hash or request id and we will delete the row, or with the payer address and we will delete
+        the salted first-seen row for it. We cannot delete the on-chain transaction, because nobody can.
       </p>
 
       <h2>Verifying this page</h2>

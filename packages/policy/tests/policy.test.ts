@@ -92,6 +92,31 @@ describe("parsePolicy", () => {
     expect(policy.disallow_unlimited_approvals).toBe(true);
   });
 
+  it("parses a payer_age block with a positive day window and an amount threshold", () => {
+    const policy = parsePolicy({
+      ...validPolicy,
+      payer_age: {
+        younger_than_days: 7,
+        amount_above: { value: "0.50", asset: "USDC", decimals: 6 },
+      },
+    });
+
+    expect(policy.payer_age?.younger_than_days).toBe(7);
+    expect(policy.payer_age?.amount_above.value).toBe("0.50");
+  });
+
+  it("rejects a payer_age window that would make no payer new", () => {
+    expect(() =>
+      parsePolicy({
+        ...validPolicy,
+        payer_age: {
+          younger_than_days: 0,
+          amount_above: { value: "0.50", asset: "USDC", decimals: 6 },
+        },
+      }),
+    ).toThrow();
+  });
+
   it("parses a step_up block with all three thresholds and non-interactive answers", () => {
     const policy = parsePolicy({
       ...validPolicy,

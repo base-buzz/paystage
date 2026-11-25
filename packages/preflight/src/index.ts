@@ -15,6 +15,20 @@ export type {
   PaymentHistory,
 } from "./evaluate.js";
 export { DEFAULT_STEP_UP_ANSWERS } from "./evaluate.js";
+// Payer first-seen (#409): the salted-key store and the age input the evaluator consumes. The
+// persistence half is injected by the host; nothing here imports a database client.
+export {
+  derivePayerKey,
+  normalisePayer,
+  createPayerFirstSeenStore,
+  resolvePayerAge,
+} from "./payer-first-seen.js";
+export type {
+  PayerAgeInput,
+  PayerFirstSeenLookup,
+  PayerFirstSeenPersistence,
+  PayerFirstSeenStore,
+} from "./payer-first-seen.js";
 export { normalizePaymentRequired } from "./normalize.js";
 // The Solana requirement checks and the optional `@x402/svm` peer. A host that wants the
 // peer's own tables calls `loadSvmPeer()` once at start-up; without it the built-in copies

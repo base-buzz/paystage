@@ -36,6 +36,7 @@ describe("zero-loss policy round-trip", () => {
       "time_window",
       "require_human_above",
       "step_up",
+      "payer_age",
       "max_auth_validity_seconds",
       "allowed_spenders",
       "disallow_unlimited_approvals",

@@ -65,6 +65,14 @@
       "bounded_auto_approve"
     ]
   },
+  "payer_age": {
+    "younger_than_days": 7,
+    "amount_above": {
+      "value": "0.50",
+      "asset": "USDC",
+      "decimals": 6
+    }
+  },
   "unknown_payee": "review",
   "max_auth_validity_seconds": 3600,
   "allowed_spenders": [

@@ -7,6 +7,7 @@ import {
   type StepUpAnswer,
 } from "@paystage/policy";
 import { isKnownDrainer, isNonReceivable } from "./known-drainers.js";
+import type { PayerAgeInput } from "./payer-first-seen.js";
 import { SANCTIONED_ADDRESSES } from "./sanctioned-addresses.js";
 import {
   CIRCLE_BLACKLIST_STATES,
@@ -421,6 +422,7 @@ function evaluateAccept(
   svmPeer: SvmValidationPeer | null,
   expected: ExpectedClaim | undefined,
   history: PaymentHistory | undefined,
+  payerAge: PayerAgeInput | undefined,
 ): AcceptResult {
   const reasons: string[] = [];
   const pass = (rule: string, detail: string): void => {
@@ -808,6 +810,55 @@ function evaluateAccept(
     }
   }
 
+  /**
+   * Rule 7e: payer age (#409) — friction for a new payer, and only a signal.
+   *
+   * The caller resolves the payer's age from the payer-first-seen store; the age itself never
+   * leaves this function. The reason and the transcript name the configured threshold, not the
+   * payer's measured age, and no result field carries it.
+   *
+   * Unknown age is a deliberate **fail-open**: a missing store, an unreadable row or a caller that
+   * did not wire the store means the rule is skipped. The lenient choice is the correct one here —
+   * treating absent data as "new" would turn a store outage into a review on every payment, and the
+   * rule is friction, not a refusal. It does mean the signal is absent exactly when the store is.
+   */
+  if (policy.payer_age) {
+    const spec = policy.payer_age;
+    if (!eq(spec.amount_above.asset, asset.symbol)) {
+      skip(
+        "accept.payer_age",
+        `payer_age not applied: the threshold is denominated in ${spec.amount_above.asset}, the challenge asset is ${asset.symbol}`,
+      );
+    } else if (payerAge === undefined || !payerAge.known) {
+      skip(
+        "accept.payer_age",
+        "payer age unknown: no store answer, so the payer-age rule was skipped (fail-open — a missing store must not turn every payment into a review)",
+      );
+    } else {
+      // The threshold is read in the unit of the asset the challenge actually matched, not in
+      // `amount_above.decimals`. Those can disagree when a policy lists the same ticker twice at
+      // different decimals, and a threshold computed in the wrong unit fails open (a 0.50 cap read
+      // at 18 decimals never fires). `amount_above.decimals` remains a parse-time precision check.
+      const threshold = humanToAtomic(spec.amount_above.value, asset.decimals);
+      if (amount <= threshold) {
+        pass(
+          "accept.payer_age",
+          `amount ${atomicToHuman(amount, asset.decimals)} ${asset.symbol} is at or under payer_age.amount_above ${spec.amount_above.value} ${spec.amount_above.asset}, so the payer's age does not change the verdict`,
+        );
+      } else if (payerAge.ageDays < spec.younger_than_days) {
+        return hold(
+          "accept.payer_age",
+          `payer_age: payer first seen fewer than ${spec.younger_than_days} days ago and amount ${atomicToHuman(amount, asset.decimals)} ${asset.symbol} exceeds payer_age.amount_above ${spec.amount_above.value} ${spec.amount_above.asset} — a new payer over the threshold needs review`,
+        );
+      } else {
+        pass(
+          "accept.payer_age",
+          `amount ${atomicToHuman(amount, asset.decimals)} ${asset.symbol} exceeds payer_age.amount_above ${spec.amount_above.value} ${spec.amount_above.asset} but the payer is not younger than ${spec.younger_than_days} days, so it is not downgraded`,
+        );
+      }
+    }
+  }
+
   // Rule 8: require_human_above
   if (policy.require_human_above) {
     const threshold = humanToAtomic(
@@ -1132,6 +1183,20 @@ export function buildReviewPacket(
     );
   }
 
+  // Payer age (#409): describe the rule only when the policy configures it. The measured age is not
+  // printed here either — the packet says whether the rule fired, not how old the payer is.
+  if (policy.payer_age) {
+    if (reason.includes("payer_age:")) {
+      checked.push(
+        `payer age: a new payer over ${policy.payer_age.amount_above.value} ${policy.payer_age.amount_above.asset} (younger than ${policy.payer_age.younger_than_days} days)`,
+      );
+    } else {
+      notChecked.push(
+        "payer age: not checked — an earlier rule returned review before the payer-age rule; or the payer's age was unknown and the rule failed open",
+      );
+    }
+  }
+
   if (policy.agents) {
     checked.push(`agent budget: ${options.agentId ? `applied for ${options.agentId}` : "per-agent overlay applied"}`);
   } else {
@@ -1224,6 +1289,14 @@ export interface EvaluateOptions {
    * passing — see `PaymentHistory`.
    */
   paymentHistory?: PaymentHistory;
+  /**
+   * What the caller established about when this payer was first seen (#409).
+   *
+   * Resolve it with `resolvePayerAge()` from `./payer-first-seen.js`; the evaluator never imports a
+   * store or a database client. Omit it when the store is unavailable: unknown age is skipped, not
+   * treated as new (the lenient fail-open — see `policy.payer_age`).
+   */
+  payerAge?: PayerAgeInput;
   /**
    * The client-supplied payment identifier from the x402 payment-identifier extension.
    *
@@ -1406,6 +1479,7 @@ export function evaluatePayment(
       svmPeer,
       options.expected,
       options.paymentHistory,
+      options.payerAge,
     ),
   );
 
