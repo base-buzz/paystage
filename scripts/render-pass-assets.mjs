@@ -29,6 +29,21 @@ const arg = (name, fallback = null) => {
 };
 
 const OUT = resolve(arg("out", "apps/console/public/pass"));
+
+/**
+ * The second ceiling is a **window**, not a lifetime allowance: `packages/policy/src/schema.ts` has
+ * `velocity.windows[] {window_seconds, max_amount, max_count, per_payee_max_amount}` and no total anywhere. So the
+ * label is derived from the same seconds the evaluator reads, and cannot drift into the word "total" again.
+ */
+function windowLabel(seconds) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "per window";
+  // "per 1d" reads like a typo; a single day is 24h to everyone who says it out loud.
+  if (seconds === 86400) return "per 24h";
+  if (seconds % 86400 === 0) return `per ${seconds / 86400}d`;
+  if (seconds % 3600 === 0) return `per ${seconds / 3600}h`;
+  if (seconds % 60 === 0) return `per ${seconds / 60}m`;
+  return `per ${seconds}s`;
+}
 const STATE = (arg("state", "ACTIVE") ?? "ACTIVE").toUpperCase();
 if (!["ACTIVE", "REVOKED", "EXPIRED"].includes(STATE)) {
   console.error(`render-pass-assets: state must be ACTIVE, REVOKED or EXPIRED, got ${STATE}`);
@@ -80,7 +95,7 @@ const FACE = {
   brand: arg("brand", "vouchguard"),
   serial: arg("serial", "vch-7F3"),
   network: arg("network", "Base"),
-  total: arg("total", "$20.00"),
+  window: `${arg("window-amount", "$20.00")} ${windowLabel(Number(arg("window-seconds", "86400")))}`,
 };
 
 /** every asset, with the size Apple asks for */

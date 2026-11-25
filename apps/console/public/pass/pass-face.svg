@@ -27,7 +27,7 @@
        font-weight="700" letter-spacing="-0.02em" text-anchor="start" fill="#101322">$0.50</text>
   
   <text x="52.5" y="461.425" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="27"
-       font-weight="500" letter-spacing="0.02em" text-anchor="start" fill="#5B6472">each purchase · $20.00 total</text>
+       font-weight="500" letter-spacing="0.02em" text-anchor="start" fill="#5B6472">each purchase · $20.00 per 24h</text>
 
   <text x="48" y="543.625" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="22.5"
        font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">EXPIRES</text>

@@ -61,13 +61,19 @@ function stripArtwork(width, height, revoked) {
  * @param {number} face.width            rendered width in px; everything else scales from it
  * @param {"ACTIVE"|"REVOKED"|"EXPIRED"} face.state
  * @param {string} face.limit            e.g. "$0.50" — the per-payment ceiling
- * @param {string} [face.total]          e.g. "$20.00" — the mandate's total allowance. A plate that shows only the
- *                                       per-payment ceiling lets a reader believe that is the most that can be lost,
- *                                       which is false by an unbounded factor: forty calls at $1.99 each pass a $2 cap.
+ * @param {string} [face.window]         e.g. "$20.00 per 24h" — the second ceiling **as a window, not a lifetime
+ *                                       total**: the policy schema has `velocity.windows[]` with `window_seconds`,
+ *                                       `max_amount`, `max_count` and `per_payee_max_amount`, and no lifetime
+ *                                       allowance anywhere (checked 2026-11-25). A plate showing only the per-payment
+ *                                       ceiling lets a reader believe that is the most that can be lost — false by an
+ *                                       unbounded factor; calling a window a "total" errs worse, because it makes the
+ *                                       mandate look safer than it is.
  * @param {string} face.expiry           e.g. "31 Jan 2027"
- * @param {string} face.principal        e.g. "Acme Labs"
- * @param {string} face.serial           e.g. "vch-7F3"
+ * @param {string} face.principal        the entity the mandate is issued to, e.g. "Northwind Ltd"
+ * @param {string} face.serial           e.g. "vch-7F3", stable and readable aloud
  * @param {string} [face.network]        e.g. "Base"
+ * @param {string} [face.brand]          the wordmark; a parameter because the name is a working one
+ * @param {string} [face.vouchedBy]      the sibling line under the wordmark
  * @param {string} [face.qrCells]        a 2D array of 0/1 when a real QR is available; omitted = no code drawn
  */
 export function passFaceSvg(face) {
@@ -128,7 +134,7 @@ export function passFaceSvg(face) {
   ${label(pad, stripH + height * 0.062, "UP TO", f(3.8), MUTED, 650, "0.14em")}
   ${label(pad, limitY, face.limit, f(15), dead ? MUTED : INK, 700, "-0.02em")}
   ${limitStrike}
-  ${label(pad + f(0.6), limitY + f(5.6), face.total ? `each purchase · ${face.total} total` : "each purchase", f(3.6), MUTED, 500, "0.02em")}
+  ${label(pad + f(0.6), limitY + f(5.6), face.window ? `each purchase · ${face.window}` : "each purchase", f(3.6), MUTED, 500, "0.02em")}
 
   ${label(pad, stripH + height * 0.275, "EXPIRES", f(3.0), MUTED, 650, "0.14em")}
   ${label(pad, stripH + height * 0.31, face.expiry, f(4.2), INK, 600, "0.01em")}
