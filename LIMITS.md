@@ -59,8 +59,7 @@ the seller's honesty about what it was for.
 
 ## 6b. A retried preflight, when the caller supplies no identifier
 
-Passing `payment_identifier` (the x402 payment-identifier extension's client-supplied id) makes a repeated `pay` for the same id return `review` instead: a retried preflight is not a
-second approval. Three things bound that.
+Passing `payment_identifier` (the x402 payment-identifier extension's client-supplied id) makes a repeated `pay` for the same id return `review` instead: a retried preflight is not a second approval. Three things bound that.
 
 - **It is in-memory, per process.** A restart forgets; on the hosted API each isolate has its own view. It catches retry loops, not a distributed adversary.
 - **It only downgrades `pay`.** Repeating a refusal or a review changes nothing, which is deliberate — those are verdicts an agent should be free to re-ask.
@@ -70,17 +69,13 @@ The window is ten minutes. A legitimate rebuy after it is a `pay` again; a rebuy
 
 ## 7. A compromised agent, or a compromised policy
 
-If the process running the gate is compromised, the attacker supplies the policy as well as the payment.
-The gate is a check inside that process, not a boundary around it. Likewise a policy file an attacker can
-edit is a policy that approves what they want.
+If the process running the gate is compromised, the attacker supplies the policy as well as the payment. The gate is a check inside that process, not a boundary around it. Likewise a policy file an attacker can edit is a policy that approves what they want.
 
-*What would be needed:* running the evaluation somewhere the agent cannot rewrite, with the policy fetched
-from somewhere it cannot forge. We do not do that today.
+*What would be needed:* running the evaluation somewhere the agent cannot rewrite, with the policy fetched from somewhere it cannot forge. We do not do that today.
 
 ## 8. Velocity across separate agents
 
-`evaluate_velocity` sees the history you pass it. Two agents with separate histories can each stay under a
-limit while together exceeding it. Per-agent budgets narrow this; they do not close it.
+`evaluate_velocity` sees the history you pass it. Two agents with separate histories can each stay under a limit while together exceeding it. Per-agent budgets narrow this; they do not close it.
 
 ## 8b. How a refusal is worded, and why it is worded that way
 
