@@ -72,6 +72,14 @@ export default function PrivacyPage() {
           read from the payment receipt
         </li>
         <li>
+          <strong>caller provenance</strong> — one of <code>own-ci</code>, <code>own-loadgen</code>,{" "}
+          <code>own-probe</code> or <code>unknown</code>. It says whether a caller proved it was our own test or probe
+          traffic, by sending a header signed with our key; a caller that does not prove it is stored as{" "}
+          <code>unknown</code>, which is not the same as external. It is never inferred from an IP address, a user agent
+          or a referrer: the only way it becomes anything other than <code>unknown</code> is a signature, so it
+          describes who can prove they caused a call, not who you are.
+        </li>
+        <li>
           <strong>request id</strong>, <strong>facilitator status</strong>, <strong>error class</strong> — for
           debugging a failure
         </li>

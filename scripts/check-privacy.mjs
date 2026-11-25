@@ -36,6 +36,7 @@ for (const field of fields) {
     error_class: "error class",
     client_package: "client package",
     client_version: "client version",
+    caller_provenance: "caller provenance",
     source: "source",
     tool: "tool",
     decision: "decision",
