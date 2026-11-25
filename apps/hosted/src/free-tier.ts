@@ -14,7 +14,7 @@
  */
 
 import type { MiddlewareHandler } from "hono";
-import { recordEvent } from "./telemetry.js";
+import { provenanceFromHeaders, recordEvent } from "./telemetry.js";
 
 const DAY_MS = 86_400_000;
 const FREE_PATHS = new Set([
@@ -118,6 +118,7 @@ export function freeTierMiddleware(cfg: FreeTierConfig = {}): MiddlewareHandler 
       waitUntil = undefined;
     }
     try {
+      const callerProvenance = await provenanceFromHeaders(c.req);
       recordEvent(
         (c.env ?? {}) as never,
         {
@@ -128,6 +129,7 @@ export function freeTierMiddleware(cfg: FreeTierConfig = {}): MiddlewareHandler 
         network: c.env?.PAYSTAGE_NETWORK ?? null,
           request_id: c.req.header("x-paystage-request-id") ?? null,
           channel: c.get("channel") ?? null,
+          caller_provenance: callerProvenance,
         } as never,
         waitUntil,
       );

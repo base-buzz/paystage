@@ -17,7 +17,7 @@ import {
   supabasePayeeObservationStore,
   type PayeeObservationStore,
 } from "./payee-observation-store.js";
-import { clientFromHeaders, recordEvent, sourceFromHeaders } from "./telemetry.js";
+import { clientFromHeaders, provenanceFromHeaders, recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { channelMiddleware } from "./channel.js";
 import { freeTierMiddleware } from "./free-tier.js";
 import { paidQuotaMiddleware, paidQuotaState } from "./paid-quota.js";
@@ -87,6 +87,11 @@ const CORS_ALLOW_HEADERS = [
   "x-paystage-request-id",
   "X-Paystage-Source",
   "x-paystage-source",
+  // #430: a browser-based caller must be able to send its signed provenance without a failed preflight.
+  "X-Paystage-Provenance",
+  "x-paystage-provenance",
+  "X-Paystage-Provenance-Sig",
+  "x-paystage-provenance-sig",
 ];
 
 const CORS_EXPOSE_HEADERS = [
@@ -223,6 +228,8 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
     const path = c.req.path;
     const tool = toolFromPath(path);
     const source = sourceFromHeaders(c.req);
+    // Provenance is proven by a signed header, never inferred. `unknown` is not "external" (#430).
+    const callerProvenance = await provenanceFromHeaders(c.req);
     // Attributed by SDK build, never by caller identity (#52): this is what turns npm download counts into "which
     // installed version is actually being called".
     const client = clientFromHeaders(c.req);
@@ -314,6 +321,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
             client_package: client.package,
             client_version: client.version,
             channel: c.get("channel") ?? null,
+            caller_provenance: callerProvenance,
             facilitator_status,
             error_class,
           },

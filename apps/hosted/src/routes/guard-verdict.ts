@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { recordEvent, sourceFromHeaders } from "../telemetry.js";
+import { provenanceFromHeaders, recordEvent, sourceFromHeaders } from "../telemetry.js";
 
 /**
  * Collector for `guardFetch({ telemetryUrl })`.
@@ -38,6 +38,8 @@ guardVerdictRoutes.post("/v1/guard-verdict", async (c) => {
   const { verdict, reasonCodes, payTo } = parsed.data;
   const env = c.env as { SUPABASE_URL?: string; SUPABASE_SERVICE_ROLE_KEY?: string };
 
+  const callerProvenance = await provenanceFromHeaders({ header: (n) => c.req.header(n) });
+
   recordEvent(
     { SUPABASE_URL: env.SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY },
     {
@@ -50,6 +52,8 @@ guardVerdictRoutes.post("/v1/guard-verdict", async (c) => {
       reason_codes: reasonCodes.slice(0, 10),
       // The listing that sent this caller (#326). Null is unknown; never a "direct" bucket.
       channel: c.get("channel") ?? null,
+      // Provenance of the caller, from a signed header; unknown is not "external" (#430).
+      caller_provenance: callerProvenance,
       // The payee is the subject of the decision and a public on-chain address, which is why it can
       // travel here at all. It is not the caller.
       pay_to: payTo ?? null,

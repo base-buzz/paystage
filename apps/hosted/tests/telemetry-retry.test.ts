@@ -86,7 +86,7 @@ afterEach(() => {
 });
 
 describe("#360 telemetry PGRST204 retry", () => {
-  it.each(["payer", "channel"] as const)(
+  it.each(["payer", "channel", "caller_provenance"] as const)(
     "a PGRST204 for %s drops only that column and a row still lands",
     async (field) => {
       const log = vi.spyOn(console, "log").mockImplementation(() => {});

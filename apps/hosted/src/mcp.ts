@@ -10,7 +10,13 @@ import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
 import { registerAllTools, SERVER_CAPABILITIES } from "@paystage/mcp/tools";
 import { parsePolicyCached } from "./policy-cache.js";
 import { publicKeyJwk } from "./receipt.js";
-import { recordEvent, sourceFromHeaders, type TelemetrySource } from "./telemetry.js";
+import {
+  provenanceFromHeaders,
+  recordEvent,
+  sourceFromHeaders,
+  type CallerProvenance,
+  type TelemetrySource,
+} from "./telemetry.js";
 import { channelFromCookieHeader, channelFromUrl, firstTouch } from "./channel.js";
 import { supabaseBundleStore, type BundleStore } from "./bundle-store.js";
 
@@ -48,6 +54,7 @@ function buildServer(
   env: Env,
   source: TelemetrySource,
   channel: string | null,
+  callerProvenance: CallerProvenance,
   injectedStore?: BundleStore,
 ): McpServer {
   const server = new McpServer(
@@ -117,6 +124,8 @@ function buildServer(
             network: "eip155:8453",
             latency_ms: Date.now() - started,
             channel,
+            // Provenance from a signed header; `unknown` is not "external" (#430).
+            caller_provenance: callerProvenance,
           },
         );
       } catch {
@@ -132,11 +141,20 @@ export function mcpHandler(
   env: Env,
   options: { bundleStore?: BundleStore } = {},
 ): { fetch: (request: Request) => Promise<Response> } {
-  return createMcpHandler((ctx) => {
+  return createMcpHandler(async (ctx) => {
     const req = ctx?.requestInfo;
     const source = req
       ? sourceFromHeaders({ header: (name: string) => req.headers.get(name) ?? undefined })
       : "real";
-    return buildServer(env, source, req ? channelForRequest(req) : null, options.bundleStore);
+    const callerProvenance = req
+      ? await provenanceFromHeaders({ header: (name: string) => req.headers.get(name) ?? undefined })
+      : "unknown";
+    return buildServer(
+      env,
+      source,
+      req ? channelForRequest(req) : null,
+      callerProvenance,
+      options.bundleStore,
+    );
   });
 }

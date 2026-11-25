@@ -33,6 +33,103 @@ export function telemetryDrops(): { count: number; fields: string[]; last: strin
   };
 }
 
+/**
+ * Who caused a call (#430).
+ *
+ * Three ways traffic can be provably ours, and `unknown` for everything else. `unknown` is **not** "external":
+ * it is the absence of a signed label, which includes our own callers before they sign and anyone who does not
+ * send a header. Nothing here is inferred from an IP, user agent or referrer.
+ */
+export type CallerProvenance = "own-ci" | "own-loadgen" | "own-probe" | "unknown";
+
+const CALLER_PROVENANCE_VALUES: ReadonlySet<string> = new Set([
+  "own-ci",
+  "own-loadgen",
+  "own-probe",
+  "unknown",
+]);
+
+const PROVENANCE_HEADER = "x-paystage-provenance";
+const PROVENANCE_SIG_HEADER = "x-paystage-provenance-sig";
+
+/** Hex to bytes, or null when the value is not a well-formed even-length hex string. */
+function hexToBytes(hex: string): Uint8Array | null {
+  if (hex.length === 0 || hex.length % 2 !== 0 || !/^[0-9a-f]+$/i.test(hex)) return null;
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+  return bytes;
+}
+
+/** Constant-time-ish: the loop never exits on a differing byte, only on a length mismatch. */
+function equalBytes(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= (a[i] ?? 0) ^ (b[i] ?? 0);
+  return diff === 0;
+}
+
+/**
+ * HMAC-SHA256 via Web Crypto. No Node `crypto` import: this runs in a Worker as well as in tests.
+ * Returns null when the runtime has no subtle crypto, and never logs its inputs.
+ */
+async function hmacSha256(key: string, message: string): Promise<Uint8Array | null> {
+  const subtle = typeof crypto === "undefined" ? undefined : crypto.subtle;
+  if (!subtle) return null;
+  const encoder = new TextEncoder();
+  const cryptoKey = await subtle.importKey(
+    "raw",
+    encoder.encode(key),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  return new Uint8Array(await subtle.sign("HMAC", cryptoKey, encoder.encode(message)));
+}
+
+/**
+ * Read caller provenance from a signed header (#430).
+ *
+ * The caller sends `x-paystage-provenance: own-ci | own-loadgen | own-probe` with
+ * `x-paystage-provenance-sig: <hex HMAC-SHA256 of the value>`, keyed by `PAYSTAGE_PROVENANCE_KEY`.
+ *
+ * Every failure — missing key, missing header, missing or malformed signature, a value outside the allowlist, or a
+ * signature that does not match — resolves to `unknown`. It never throws and never logs the key or the signature:
+ * a caller's inability to prove provenance is ordinary, not an error.
+ *
+ * No timestamp is signed. That is deliberate: the header records provenance, it does not authorise anything, and a
+ * replayed signature can only mislabel traffic as ours (which understates adoption, never inflates it).
+ */
+export async function provenanceFromHeaders(
+  req: { header(name: string): string | undefined },
+  key: string | undefined = process.env.PAYSTAGE_PROVENANCE_KEY,
+): Promise<CallerProvenance> {
+  const value = req.header(PROVENANCE_HEADER)?.trim() ?? "";
+  const signature = req.header(PROVENANCE_SIG_HEADER)?.trim() ?? "";
+
+  // A proof of "unknown" is not a proof of anything, so only the three own values can be returned signed.
+  if (
+    value === "unknown" ||
+    !CALLER_PROVENANCE_VALUES.has(value) ||
+    signature === "" ||
+    key === undefined ||
+    key === ""
+  ) {
+    return "unknown";
+  }
+
+  try {
+    const expected = await hmacSha256(key, value);
+    const provided = hexToBytes(signature);
+    if (expected === null || provided === null) return "unknown";
+    return equalBytes(expected, provided) ? (value as CallerProvenance) : "unknown";
+  } catch {
+    // A malformed header or an unavailable crypto implementation is not the caller's error to see.
+    return "unknown";
+  }
+}
+
 export interface TelemetryEvent {
   source: TelemetrySource;
   tool: string;
@@ -54,6 +151,11 @@ export interface TelemetryEvent {
    * and never a bucket. This is attribution to a directory, not to a person: no IP, user agent or referrer is read.
    */
   channel?: string | null;
+  /**
+   * Who caused the call (#430), proven by a signed header or `unknown`. Never guessed from IP, user agent or
+   * referrer. An external caller is indistinguishable from an unlabelled one and both are `unknown`.
+   */
+  caller_provenance?: CallerProvenance;
   facilitator_status?: string | null;
   error_class?: string | null;
 }
@@ -154,6 +256,7 @@ export function recordEvent(
     client_package: event.client_package ?? null,
     client_version: event.client_version ?? null,
     channel: event.channel ?? null,
+    caller_provenance: event.caller_provenance ?? "unknown",
     facilitator_status: event.facilitator_status ?? null,
     error_class: event.error_class ?? null,
   };
@@ -165,9 +268,10 @@ export function recordEvent(
    * One entry, added 2026-11-14 for the `payer` migration, and it should be deleted once every
    * environment has the column. `channel` was added 2026-11-21 for the same reason: its migration is
    * committed but not applied, and a field the table does not have must not silence telemetry for the
-   * whole window between code and schema. Remove both entries once their columns exist everywhere.
+   * whole window between code and schema. `caller_provenance` was added 2026-11-25 for the same reason (#430).
+   * Remove each entry once its column exists everywhere.
    */
-  const DROPPABLE_FIELDS = new Set(["payer", "channel"]);
+  const DROPPABLE_FIELDS = new Set(["payer", "channel", "caller_provenance"]);
 
   const p: Promise<unknown> = (async () => {
     try {

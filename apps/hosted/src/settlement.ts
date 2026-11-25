@@ -17,7 +17,13 @@
  */
 
 import type { MiddlewareHandler } from "hono";
-import { recordEvent, sourceFromHeaders, type TelemetrySource } from "./telemetry.js";
+import {
+  provenanceFromHeaders,
+  recordEvent,
+  sourceFromHeaders,
+  type CallerProvenance,
+  type TelemetrySource,
+} from "./telemetry.js";
 
 export interface SettlementReceipt {
   success?: boolean;
@@ -106,6 +112,7 @@ export function settlementEvent(input: {
   network?: string | null;
   requestId?: string | null;
   channel?: string | null;
+  callerProvenance?: CallerProvenance;
 }) {
   const payer = normalisePayer(input.receipt.payer);
   const txHash =
@@ -137,6 +144,7 @@ export function settlementEvent(input: {
     payer,
     request_id: input.requestId ?? null,
     channel: input.channel ?? null,
+    caller_provenance: input.callerProvenance ?? "unknown",
   };
 }
 
@@ -163,6 +171,7 @@ export function settlementCaptureMiddleware(): MiddlewareHandler {
           network: receipt.network ?? (c.env as { PAYSTAGE_NETWORK?: string } | undefined)?.PAYSTAGE_NETWORK ?? null,
           requestId: c.req.header("x-paystage-request-id") ?? null,
           channel: c.get("channel") ?? null,
+          callerProvenance: await provenanceFromHeaders(c.req),
         }) as never,
         (p) => c.executionCtx?.waitUntil?.(p),
       );
