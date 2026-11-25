@@ -116,6 +116,14 @@ export async function provenanceFromHeaders(
     key === undefined ||
     key === ""
   ) {
+    /**
+     * Say *why* when a caller did sign and we could not check it. Measured 2026-11-25: a correctly signed request
+     * landed as `unknown` and nothing anywhere said the key was missing, so the column was inert and looked honest.
+     * Never logs the key or the signature — only that a signature arrived and there was nothing to verify it with.
+     */
+    if (signature !== "" && (key === undefined || key === "")) {
+      console.log(JSON.stringify({ level: "warn", msg: "provenance_key_absent", reason: "signed header with no key configured" }));
+    }
     return "unknown";
   }
 
