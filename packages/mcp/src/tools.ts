@@ -45,6 +45,47 @@ export const TOOL_NAMES = [
 export type ToolName = (typeof TOOL_NAMES)[number];
 
 /**
+ * The ChatGPT-facing surface (#442): the read-only payment tools only — the gate, the decoder
+ * and the receipt verifier. It exists because `/mcp` also advertises `request_testnet_funds`
+ * (`readOnlyHint: false`, it writes a testnet transaction) and a trade preflight, so "read-only"
+ * cannot describe the whole server to a directory. It is registered through the same handlers
+ * as `/mcp`; a second implementation would be a second thing to keep in sync.
+ */
+export const CURATED_TOOL_NAMES = [
+  "evaluate_mcp_payment",
+  "decode_payment_required",
+  "verify_receipt",
+] as const satisfies readonly ToolName[];
+
+export type CuratedToolName = (typeof CURATED_TOOL_NAMES)[number];
+
+export type ToolSurface = "all" | "curated";
+
+type ToolRegistrar = Pick<McpServer, "registerTool">;
+
+/**
+ * A filtered view of the real server. It forwards only the curated names and refuses to forward
+ * one whose own annotations do not say `readOnlyHint: true` — the invariant is enforced where the
+ * tool is registered, not only in a test.
+ */
+function filteredRegistrar(server: McpServer, only: ReadonlySet<string>): ToolRegistrar {
+  return {
+    registerTool: ((name: string, config: unknown, handler: unknown) => {
+      if (!only.has(name)) return;
+      const annotations = (config as { annotations?: { readOnlyHint?: boolean } }).annotations;
+      if (annotations?.readOnlyHint !== true) {
+        throw new Error(`curated MCP surface refused "${name}": readOnlyHint is not true`);
+      }
+      return (server["registerTool"] as unknown as (
+        toolName: string,
+        toolConfig: unknown,
+        toolHandler: unknown,
+      ) => unknown)(name, config, handler);
+    }) as ToolRegistrar["registerTool"],
+  };
+}
+
+/**
  * `@paystage/mcp/<version>`, sent on every outbound call (#52).
  *
  * Derived from the package manifest at build time would be better; a constant beside the version field is one edit and
@@ -155,8 +196,22 @@ export interface ToolDeps {
   }) => Promise<void>;
 }
 
-export function registerAllTools(server: McpServer, deps: ToolDeps): void {
-  server.registerTool(
+export function registerAllTools(
+  server: McpServer,
+  deps: ToolDeps,
+  options: { surface?: ToolSurface } = {},
+): void {
+  const only =
+    options.surface === "curated" ? new Set<string>(CURATED_TOOL_NAMES) : null;
+  if (only !== null) {
+    for (const name of only) {
+      if (!(TOOL_NAMES as readonly string[]).includes(name)) {
+        throw new Error(`curated MCP surface names an unregistered tool: ${name}`);
+      }
+    }
+  }
+  const target: ToolRegistrar = only === null ? server : filteredRegistrar(server, only);
+  target.registerTool(
     "evaluate_mcp_payment",
     {
       description:
@@ -260,7 +315,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     },
   );
 
-  server.registerTool(
+  target.registerTool(
     "list_outstanding_auths",
     {
       description:
@@ -303,7 +358,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     },
   );
 
-  server.registerTool(
+  target.registerTool(
     "evaluate_outstanding_auths",
     {
       description:
@@ -348,7 +403,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     },
   );
 
-  server.registerTool(
+  target.registerTool(
     "evaluate_hip3_trade",
     {
       description:
@@ -396,7 +451,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     },
   );
 
-  server.registerTool(
+  target.registerTool(
     "evaluate_velocity",
     {
       description:
@@ -447,7 +502,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
   // CLI call: nothing here is new logic, it is the same evaluation reachable from an agent.
   // ---------------------------------------------------------------------------------------------
 
-  server.registerTool(
+  target.registerTool(
     "verify_receipt",
     {
       description:
@@ -494,7 +549,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     },
   );
 
-  server.registerTool(
+  target.registerTool(
     "decode_payment_required",
     {
       description:
@@ -528,7 +583,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     },
   );
 
-  server.registerTool(
+  target.registerTool(
     "validate_policy",
     {
       description:
@@ -556,7 +611,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     },
   );
 
-  server.registerTool(
+  target.registerTool(
     "request_testnet_funds",
     {
       description:
@@ -600,7 +655,7 @@ export function registerAllTools(server: McpServer, deps: ToolDeps): void {
     },
   );
 
-  server.registerTool(
+  target.registerTool(
     "evaluate_batch",
     {
       description:

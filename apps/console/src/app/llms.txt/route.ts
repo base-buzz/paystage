@@ -78,6 +78,10 @@ ${m.tools.length} for callers that want the whole gate.
   registry carries older entries under other namespaces (\`xyz.paystage/*\`, older \`io.github.base-buzz\` versions, some
   with no remote endpoint); this URL is the one to call, and the canonical registry entry is
   \`io.github.base-buzz/mcp\` at the newest version.
+- **Curated ChatGPT-facing subset: \`https://api.paystage.xyz/mcp/chatgpt\`** — the read-only payment tools only
+  (gate, decode, verify), on the same free tier (1,000 calls/day per Worker instance); past the cap it says so and
+  names the paid path. The testnet faucet writer and the trade preflight stay on \`/mcp\`, so "read-only" describes
+  this path, not the whole server.
 
 ## Verify it yourself
 

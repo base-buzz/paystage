@@ -33,6 +33,49 @@ export type FreeTierConfig = {
   dailyLimit?: number;
 };
 
+export type FreeTierCall =
+  | { allowed: true; counted: boolean; limit: number; remaining: number }
+  | { allowed: false; reason: "exhausted" | "disabled"; limit: number };
+
+/** The same caller key the evaluation free tier uses: client IP, never a user agent. */
+function callerKey(req: Request): string {
+  return (
+    req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown"
+  );
+}
+
+/**
+ * Consume one call from the shared per-isolate allowance.
+ *
+ * Exported because the curated MCP surface (#442) sits behind the same free tier as the paid HTTP
+ * evaluations. It reuses this counter and this limit rather than copying them: a second counter
+ * would drift, and a second limit would be a second number to explain. A non-POST request (an MCP
+ * GET stream) is allowed through without consuming a call.
+ */
+export function consumeFreeTierCall(req: Request, cfg: FreeTierConfig = {}): FreeTierCall {
+  const limit = cfg.dailyLimit ?? 1000;
+  if (cfg.enabled === false) return { allowed: false, reason: "disabled", limit };
+  if (req.method !== "POST") return { allowed: true, counted: false, limit, remaining: -1 };
+
+  const key = callerKey(req);
+  const today = Math.floor(Date.now() / DAY_MS);
+  const bucket = buckets.get(key);
+  const used = bucket && bucket.day === today ? bucket.used : 0;
+
+  if (used >= limit) return { allowed: false, reason: "exhausted", limit };
+
+  buckets.set(key, { day: today, used: used + 1 });
+  return { allowed: true, counted: true, limit, remaining: limit - used - 1 };
+}
+
+/** Seconds until the per-instance daily allowance resets at 00:00 UTC. */
+export function secondsUntilFreeTierReset(now = Date.now()): number {
+  const nextDay = (Math.floor(now / DAY_MS) + 1) * DAY_MS;
+  return Math.max(0, Math.ceil((nextDay - now) / 1000));
+}
+
 export function freeTierMiddleware(cfg: FreeTierConfig = {}): MiddlewareHandler {
   const enabled = cfg.enabled ?? true;
   const limit = cfg.dailyLimit ?? 1000;
@@ -85,26 +128,17 @@ export function freeTierMiddleware(cfg: FreeTierConfig = {}): MiddlewareHandler 
       }
     }
 
-    const ip =
-      c.req.header("cf-connecting-ip") ||
-      c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
-      "unknown";
-
-    const today = Math.floor(Date.now() / DAY_MS);
-    const bucket = buckets.get(ip);
-    const used = bucket && bucket.day === today ? bucket.used : 0;
-
-    if (used >= limit) {
+    const call = consumeFreeTierCall(c.req.raw, { enabled: true, dailyLimit: limit });
+    if (!call.allowed) {
       // Out of free calls: fall through to the paid path, which answers 402 with the
       // challenge. A caller that cannot pay gets a clear reason rather than a hard block.
       c.header("x-paystage-free-tier", "exhausted");
       return next();
     }
 
-    buckets.set(ip, { day: today, used: used + 1 });
     c.set("paystageFree", true);
     c.header("x-paystage-free-tier", "free");
-    c.header("x-paystage-free-remaining", String(limit - used - 1));
+    c.header("x-paystage-free-remaining", String(call.remaining));
 
     await next();
 

@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/server";
 import { loadPolicy, parsePolicy } from "@paystage/policy";
 import type { Policy } from "@paystage/policy";
-import { registerAllTools, SERVER_CAPABILITIES, TOOL_NAMES, type ToolName } from "./tools.js";
+import { CURATED_TOOL_NAMES, registerAllTools, SERVER_CAPABILITIES, TOOL_NAMES, type ToolName } from "./tools.js";
 
 /**
  * Report the real package version. This was hardcoded as "0.3.0" and stayed there two releases,
@@ -13,7 +13,7 @@ const SERVER_VERSION = (
   createRequire(import.meta.url)("../package.json") as { version: string }
 ).version;
 
-export { TOOL_NAMES };
+export { CURATED_TOOL_NAMES, TOOL_NAMES };
 export type { ToolName };
 
 /** The stdio transport resolves a policy from a path; the Worker never can. */

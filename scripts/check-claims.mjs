@@ -240,7 +240,9 @@ function checkToolAnnotations() {
     "verify_receipt",        // fetches the published key
     "request_testnet_funds", // POSTs to the sepia faucet, which sends a testnet transaction
   ]);
-  for (const block of src.split("server.registerTool(").slice(1)) {
+  // Split on the method call, not a receiver name: the curated surface registers through a filtered
+  // registrar, and a receiver-specific split silently checked zero tools once that name changed.
+  for (const block of src.split("registerTool(").slice(1)) {
     const name = /^\s*"([a-z0-9_]+)"/.exec(block)?.[1];
     if (!name) continue;
     const ann = block.slice(block.indexOf("annotations"), block.indexOf("inputSchema"));

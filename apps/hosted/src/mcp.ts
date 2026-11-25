@@ -1,13 +1,17 @@
 /**
- * PayStage as a remote MCP server — the same nine tools the npm package serves.
+ * PayStage as a remote MCP server — the same tools the npm package serves.
  *
  * It used to mount ONE tool while the site said nine, so every URL-based channel (Arcade, the MCP
  * registry's remote entry, the Docker catalogue, ChatGPT) reached a narrower surface than the page
  * promised. Two transports, one registration module: the only way they cannot drift is if there is
  * only one list.
+ *
+ * `/mcp` keeps all ten tools. `/mcp/chatgpt` is the same handlers filtered to the read-only payment
+ * tools, because a directory listing cannot say "read-only" about a server whose full surface also
+ * writes a testnet transaction. The curated path is also the one placed behind the free tier.
  */
 import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
-import { registerAllTools, SERVER_CAPABILITIES } from "@paystage/mcp/tools";
+import { registerAllTools, SERVER_CAPABILITIES, type ToolSurface } from "@paystage/mcp/tools";
 import { parsePolicyCached } from "./policy-cache.js";
 import { publicKeyJwk } from "./receipt.js";
 import {
@@ -22,7 +26,44 @@ import { channelFromCookieHeader, channelFromUrl, firstTouch } from "./channel.j
 import { supabaseBundleStore, type BundleStore } from "./bundle-store.js";
 
 export const MCP_PATH = "/mcp";
+export const CURATED_MCP_PATH = "/mcp/chatgpt";
 const SERVICE_VERSION = "2026.11.14";
+
+/**
+ * The answer a ChatGPT user gets once the curated surface's free allowance is spent.
+ *
+ * A bare 402/429 reads as an outage to a client that cannot pay in chat. So the body names the cap,
+ * says the service is working, and gives the paid path — the caller must be able to tell "I used
+ * today's free calls" from "this is broken". Status: 429.
+ */
+export function curatedOverCapBody(
+  limit: number,
+  retryAfterSeconds: number,
+  reason: "exhausted" | "disabled" = "exhausted",
+): Record<string, unknown> {
+  const formatted = new Intl.NumberFormat("en-US").format(limit);
+  const allowance = `${formatted} free call${limit === 1 ? "" : "s"} per day per Worker instance`;
+  const message =
+    reason === "disabled"
+      ? `The curated ChatGPT surface is available but its free tier is disabled on this deployment. The full paid endpoint is https://api.paystage.xyz/mcp ($0.002 USDC per call over x402).`
+      : `Free tier exhausted: this ChatGPT MCP surface allows ${allowance}, and this caller has used them all. The service is working — this is the daily limit, not an outage. Continue against the full paid endpoint https://api.paystage.xyz/mcp ($0.002 USDC per call over x402), or retry after the daily reset in ${retryAfterSeconds} seconds (00:00 UTC).`;
+  return {
+    jsonrpc: "2.0",
+    id: null,
+    error: {
+      code: -32001,
+      message,
+      data: {
+        paystage_error: reason === "disabled" ? "free_tier_disabled" : "free_tier_exhausted",
+        daily_limit: limit,
+        enforcement: "per-worker-instance",
+        paid_path: "https://api.paystage.xyz/mcp",
+        price_usdc_per_call: "0.002",
+        retry_after_seconds: retryAfterSeconds,
+      },
+    },
+  };
+}
 
 type Env = { SUPABASE_URL?: string; SUPABASE_SERVICE_ROLE_KEY?: string };
 
@@ -56,6 +97,7 @@ function buildServer(
   source: TelemetrySource,
   channel: string | null,
   callerProvenance: CallerProvenance,
+  surface: ToolSurface,
   injectedStore?: BundleStore,
 ): McpServer {
   const server = new McpServer(
@@ -97,7 +139,7 @@ function buildServer(
             summary: string;
           }) => bundleStore.put(bundle),
         }),
-  });
+  }, { surface });
 
   // Telemetry: the MCP path recorded nothing until 2026-11-14, so a real agent call and a quiet day
   // were the same number. The tool results are not parsed here; the decision is read from the text
@@ -140,7 +182,7 @@ function buildServer(
 
 export function mcpHandler(
   env: Env,
-  options: { bundleStore?: BundleStore } = {},
+  options: { bundleStore?: BundleStore; surface?: ToolSurface } = {},
 ): { fetch: (request: Request) => Promise<Response> } {
   return createMcpHandler(async (ctx) => {
     const req = ctx?.requestInfo;
@@ -155,6 +197,7 @@ export function mcpHandler(
       source,
       req ? channelForRequest(req) : null,
       callerProvenance,
+      options.surface ?? "all",
       options.bundleStore,
     );
   });

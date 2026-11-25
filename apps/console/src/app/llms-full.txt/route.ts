@@ -171,6 +171,9 @@ access table: ${m.repository}/blob/main/SECURITY.md.
 - \`/llms-full.txt\` — this file.
 - \`/.well-known/paystage.json\` — JSON manifest with versions and access facts.
 - MCP Registry: ${m.machine_surfaces.mcp_registry}
+- Curated ChatGPT-facing MCP: \`https://api.paystage.xyz/mcp/chatgpt\` — the read-only payment tools only
+  (gate, decode, verify). The testnet faucet writer and the trade preflight remain on \`/mcp\`; the curated path
+  is not advertised as the whole server.
 ## Questions an agent asks, and the call that answers each
 
 The shortest path from a question to a tool call. Every answer is a tool or endpoint that exists, with the argument

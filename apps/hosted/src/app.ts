@@ -20,10 +20,10 @@ import {
 } from "./payee-observation-store.js";
 import { clientFromHeaders, provenanceFromHeaders, provenanceKeyFrom, recordEvent, sourceFromHeaders } from "./telemetry.js";
 import { channelMiddleware } from "./channel.js";
-import { freeTierMiddleware } from "./free-tier.js";
+import { consumeFreeTierCall, freeTierMiddleware, secondsUntilFreeTierReset } from "./free-tier.js";
 import { paidQuotaMiddleware, paidQuotaState } from "./paid-quota.js";
 import { settlementCaptureMiddleware } from "./settlement.js";
-import { mcpHandler } from "./mcp.js";
+import { curatedOverCapBody, mcpHandler } from "./mcp.js";
 import { CORS_ORIGINS } from "./cors-origins.js";
 import { DRIP_USDC, WINDOW_HOURS, handleFaucet } from "./faucet.js";
 import {
@@ -451,6 +451,28 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   // needs to discover tools. The evaluation itself runs with the caller's own policy.
   const mcp = mcpHandler(env, { bundleStore });
   app.all("/mcp", (c) => mcp.fetch(c.req.raw));
+
+  // ChatGPT-facing curated surface (#442): the same handlers filtered to the read-only payment
+  // tools (gate, decode, verify). `/mcp` keeps all ten, writers included. This path sits behind
+  // the same per-instance free allowance as the evaluation paths; past the cap it answers with a
+  // body that names the cap and the paid path instead of a bare 402/429, because a ChatGPT client
+  // cannot pay in-chat and a bare 402 reads as an outage to its user.
+  const curatedMcp = mcpHandler(env, { bundleStore, surface: "curated" });
+  app.all("/mcp/chatgpt", async (c) => {
+    const gate = consumeFreeTierCall(c.req.raw, {
+      enabled: env.FREE_TIER_ENABLED !== "false",
+      dailyLimit: Number(env.FREE_TIER_DAILY_LIMIT ?? 1000),
+    });
+    if (!gate.allowed) {
+      const retryAfter = secondsUntilFreeTierReset();
+      c.header("retry-after", String(retryAfter));
+      c.header("x-paystage-free-tier", gate.reason);
+      return c.json(curatedOverCapBody(gate.limit, retryAfter, gate.reason), 429);
+    }
+    c.header("x-paystage-free-tier", gate.counted ? "free" : "uncounted");
+    if (gate.counted) c.header("x-paystage-free-remaining", String(gate.remaining));
+    return curatedMcp.fetch(c.req.raw);
+  });
 
   return app;
 }

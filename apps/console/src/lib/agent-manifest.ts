@@ -276,6 +276,8 @@ export const PAYSTAGE_MANIFEST = {
     llms_full: "/llms-full.txt",
     manifest: "/.well-known/paystage.json",
     mcp_registry: "io.github.base-buzz/x402-payment-safety",
+    chatgpt_mcp:
+      "https://api.paystage.xyz/mcp/chatgpt — curated read-only payment tools (gate, decode, verify) on the free tier; the ten-tool /mcp keeps the testnet writer and trade preflight",
     cadence: "/v1/public/cadence.json",
     // Routes that existed and were served but appeared in no agent-facing document (#140). An endpoint an agent cannot
     // find is an endpoint that does not exist for it.

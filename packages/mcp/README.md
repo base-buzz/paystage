@@ -7,6 +7,14 @@ PayStage umbrella MCP server: payment preflight, auth watch, HIP-3 trade preflig
 
 Published on npm as **`@paystage/mcp`** — see the [npm page](https://www.npmjs.com/package/@paystage/mcp) for the current version rather than a number here that can go stale.
 
+## Hosted endpoints
+
+- `https://api.paystage.xyz/mcp` — all ten tools, including `request_testnet_funds` (writes a
+  testnet transaction; `readOnlyHint: false`) and the trade preflight. This is not a read-only server.
+- `https://api.paystage.xyz/mcp/chatgpt` — the curated ChatGPT-facing subset: the read-only payment
+  tools only (gate, decode, verify), served through the same handlers with the writer and the trade
+  tool filtered out. It sits behind the free tier (1,000 calls/day per Worker instance); past the cap
+  it returns a 429 body naming the cap and the paid path instead of a bare payment challenge.
 
 ## What a valid receipt means
 
