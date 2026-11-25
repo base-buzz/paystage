@@ -470,7 +470,15 @@ export const LISTS = ${JSON.stringify(manifest, null, 2)} as const;
 
 if (process.argv.includes("--check")) {
   const current = existsSync(OUT) ? readFileSync(OUT, "utf8") : "";
-  if (current !== body) {
+  /**
+   * `generatedAt` is a stamp, not content. Comparing it made this check fail at 00:00 UTC on every day the lists had not
+   * moved — red for a reason that is not drift, which is the one failure a guard must never have, because the honest
+   * response to it is to regenerate and stop believing the check. The comparison ignores the stamp and keeps everything
+   * else: counts, addresses, citations and coverage all still have to match exactly.
+   */
+  const stamp = /"generatedAt": "(\d{4}-\d{2}-\d{2})"/.exec(current)?.[1];
+  const comparable = stamp === undefined ? body : body.replace('"generatedAt": "' + manifest.generatedAt + '"', '"generatedAt": "' + stamp + '"');
+  if (current !== comparable) {
     console.error("lists-manifest: apps/console/src/lib/lists.generated.ts is out of date — run node scripts/gen-lists-manifest.mjs");
     process.exit(1);
   }
