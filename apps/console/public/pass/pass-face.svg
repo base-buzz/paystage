@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="750" height="1035" viewBox="0 0 750 1035">
+  <rect width="750" height="1035" fill="#F4F1EA"/>
+  
+    <defs>
+      <linearGradient id="strip" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#0E2A4F"/>
+        <stop offset="1" stop-color="#12171F"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="750" height="259" fill="url(#strip)"/>
+    <path d="M 275.4404 51.800000000000004 L 375 212.38000000000002 L 474.5596 51.800000000000004"
+          fill="none" stroke="#8FB6E8" stroke-width="11.655"
+          stroke-linecap="square" opacity="0.9"/>
+    <rect x="0" y="246.05" width="750" height="12.950000000000001" fill="#1B4F8A"/>
+  
+
+  <text x="48" y="73.5" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="27"
+       font-weight="700" letter-spacing="0.18em" text-anchor="start" fill="#DCE7F5">PAYSTAGE</text>
+  <text x="702" y="73.5" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="27"
+       font-weight="600" letter-spacing="0.08em" text-anchor="end" fill="#DCE7F5">vch-7F3</text>
+
+  <text x="48" y="323.17" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="28.5"
+       font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">UP TO</text>
+  <text x="48" y="419.425" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="112.5"
+       font-weight="700" letter-spacing="-0.02em" text-anchor="start" fill="#12171F">$0.50</text>
+  
+  <text x="52.5" y="461.425" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="27"
+       font-weight="500" letter-spacing="0.02em" text-anchor="start" fill="#5B6472">per purchase</text>
+
+  <text x="48" y="543.625" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="22.5"
+       font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">EXPIRES</text>
+  <text x="48" y="579.85" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="31.5"
+       font-weight="600" letter-spacing="0.01em" text-anchor="start" fill="#12171F">31 Jan 2027</text>
+  <text x="315" y="543.625" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="22.5"
+       font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">PRINCIPAL</text>
+  <text x="315" y="579.85" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="31.5"
+       font-weight="600" letter-spacing="0.01em" text-anchor="start" fill="#12171F">Acme Labs</text>
+
+  <rect x="48" y="626.425" width="654" height="1.5" fill="#DDD9CF"/>
+
+  <rect x="48" y="657.475" width="315" height="165" fill="none" stroke="#CFC9BC" stroke-width="2.25"/>
+       <text x="67.5" y="697.975" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="21"
+       font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">VERIFY</text>
+       <text x="67.5" y="741.475" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="24"
+       font-weight="600" letter-spacing="0.01em" text-anchor="start" fill="#12171F">paystage.xyz/m/7F3</text>
+       <text x="67.5" y="778.975" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="21"
+       font-weight="500" letter-spacing="0.02em" text-anchor="start" fill="#5B6472">no app, no account</text>
+  <text x="400.5" y="688.975" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="19.5"
+       font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">STATE</text>
+  <text x="400.5" y="729.475" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="30"
+       font-weight="700" letter-spacing="0.02em" text-anchor="start" fill="#12171F">ACTIVE</text>
+  <text x="400.5" y="766.975" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="19.5"
+       font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">NETWORK</text>
+  <text x="400.5" y="807.475" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="30"
+       font-weight="600" letter-spacing="0.02em" text-anchor="start" fill="#12171F">Base</text>
+  <text x="400.5" y="844.975" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="19.5"
+       font-weight="650" letter-spacing="0.14em" text-anchor="start" fill="#5B6472">ISSUER</text>
+  <text x="400.5" y="885.475" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="28.5"
+       font-weight="600" letter-spacing="0.01em" text-anchor="start" fill="#12171F">paystage.xyz</text>
+
+  <text x="48" y="1001.4" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="21.75"
+       font-weight="500" letter-spacing="0.01em" text-anchor="start" fill="#5B6472">Scan to verify · the face is not authoritative, the QR is</text>
+</svg>

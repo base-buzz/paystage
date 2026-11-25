@@ -12,6 +12,7 @@
     "check:live": "node scripts/check-deployed-sha.mjs --remote && node scripts/check-mcp-live.mjs && node scripts/check-receipt-live.mjs && node scripts/check-sanctions-live.mjs"
   },
   "devDependencies": {
+    "sharp": "^0.35.5",
     "typescript": "^5.9.3"
   }
 }
