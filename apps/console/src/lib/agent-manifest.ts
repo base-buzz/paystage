@@ -9,6 +9,7 @@
  */
 import mcpPkg from "../../../../packages/mcp/package.json";
 import receiptVerifyPkg from "../../../../packages/receipt-verify/package.json";
+import mandatePkg from "../../../../packages/mandate/package.json";
 import channelPkg from "../../../../packages/channel/package.json";
 import authWatchPkg from "../../../../packages/auth-watch/package.json";
 import policyPkg from "../../../../packages/policy/package.json";
@@ -38,6 +39,7 @@ export const PACKAGE_VERSIONS: Record<string, string> = {
   "@paystage/eliza-plugin": elizaPluginPkg.version,
   "@paystage/receipt-verify": receiptVerifyPkg.version,
   "@paystage/channel": channelPkg.version,
+  "@paystage/mandate": mandatePkg.version,
 };
 
 /**

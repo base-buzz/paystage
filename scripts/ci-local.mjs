@@ -103,6 +103,12 @@ if (reason === null) {
     "check-examples.mjs",
     "check-pass-assets.mjs",
     "check-hardcoded-paths.mjs",
+    /**
+     * In `ci.yml` but not in this list until 2026-11-26, which is how a new package (`@paystage/mandate`) reached main
+     * with CI red while `ci-local` said green. A local gate that runs a different set of checks than CI is the same
+     * failure as a hook that cannot see the runner (#439): it converts "unknown" into "verified".
+     */
+    "check-manifest-packages.mjs",
   ]) {
     const [script, ...scriptArgs] = cheap.split(" ");
     if (!existsSync(join(ROOT, "scripts", script))) continue;
