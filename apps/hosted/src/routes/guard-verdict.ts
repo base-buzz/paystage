@@ -38,6 +38,7 @@ guardVerdictRoutes.post("/v1/guard-verdict", async (c) => {
   const { verdict, reasonCodes, payTo } = parsed.data;
   const env = c.env as { SUPABASE_URL?: string; SUPABASE_SERVICE_ROLE_KEY?: string };
 
+  console.log(JSON.stringify({ level: "info", msg: "provenance_debug", hasValue: Boolean(c.req.header("x-paystage-provenance")), hasSig: Boolean(c.req.header("x-paystage-provenance-sig")), hasKey: Boolean(provenanceKeyFrom(env)) }));
   const callerProvenance = await provenanceFromHeaders({ header: (n) => c.req.header(n) }, provenanceKeyFrom(env));
 
   recordEvent(
