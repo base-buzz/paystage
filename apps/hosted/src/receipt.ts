@@ -18,6 +18,8 @@
  *    version is read as one. It was "0.0.0" on every live receipt until 2026-11-12.
  */
 
+import { paymentTermsDigest } from "@paystage/preflight";
+
 export const RECEIPT_VERSION = 1;
 export const RECEIPT_ALG = "ECDSA-P256-SHA256";
 export const RECEIPT_KEY_ID = "paystage-receipt-v1";
@@ -114,6 +116,20 @@ export interface ReceiptPayload {
   /** The payment terms this verdict was issued for. Absent on receipts issued before v2. */
   payment?: ReceiptPayment;
   /**
+   * #443: the digest of the payment terms above, lowercase 64-hex without `0x`, signed inside the
+   * payload. `@paystage/x402-guard/signer` refuses to produce a signature unless this equals the
+   * digest it computes from the EIP-3009 typed data.
+   *
+   * It is the payment-**terms** digest (`paymentTermsDigest` in `@paystage/preflight`), not the
+   * EIP-712 `hashTypedData` digest: the nonce, payer and validity window that EIP-712 covers are
+   * not present in a 402 challenge, so a gate cannot know them before the client signs. See the
+   * note in `packages/preflight/src/payment-digest.ts`.
+   *
+   * Optional so receipts issued before this field existed keep verifying. When present it is
+   * inside the signature; a receipt whose field is stripped or altered fails verification.
+   */
+  payment_digest?: string;
+  /**
    * The chain link (#171): the SHA-256 of the previous receipt this issuer produced, or
    * `"genesis"` for the first link. Absent on receipts issued before chaining existed, and on
    * issuers with no chain head — the verifier treats either as "pre-chain", not invalid.
@@ -180,6 +196,20 @@ async function signingKey(pkcs8B64: string): Promise<CryptoKey | undefined> {
 }
 
 /**
+ * The digest, or `undefined` when the terms are not canonicalisable. A malformed amount is the only
+ * realistic failure (the evaluator has already checked the other fields), and an absent field is
+ * safer than aborting the verdict: a receipt must never be withheld because accounting could not
+ * compute one value.
+ */
+async function safePaymentTermsDigest(payment: ReceiptPayment): Promise<string | undefined> {
+  try {
+    return await paymentTermsDigest(payment);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Build a receipt for one decision. Signature failures degrade to an unsigned
  * receipt rather than failing the request: a verdict must never be withheld
  * because of an accounting problem.
@@ -204,12 +234,23 @@ export async function buildReceipt(input: BuildReceiptInput): Promise<Receipt> {
   const ttl = input.ttlSeconds ?? RECEIPT_TTL_SECONDS;
   const expires = ttl > 0 ? new Date(issued.getTime() + ttl * 1000).toISOString() : undefined;
 
+  /**
+   * #443: derive the digest from the same `payment` block the receipt publishes, never from a second
+   * copy of the terms, so the field and the block cannot disagree. If the terms cannot be
+   * canonicalised (a malformed amount), the field is omitted rather than filled with a placeholder:
+   * an absent digest makes the adapter refuse, which is the honest fail-closed outcome, while a
+   * fake one would make it refuse with a forgery-shaped reason.
+   */
+  const paymentDigest =
+    input.payment === undefined ? undefined : await safePaymentTermsDigest(input.payment);
+
   const payload: ReceiptPayload = {
     v: RECEIPT_VERSION,
     issuer: "paystage",
     issued_at: issued.toISOString(),
     ...(expires === undefined ? {} : { expires_at: expires }),
     ...(input.payment === undefined ? {} : { payment: input.payment }),
+    ...(paymentDigest === undefined ? {} : { payment_digest: paymentDigest }),
     ...(input.prev === undefined ? {} : { prev: assertPrev(input.prev) }),
     service: { name: "@paystage/hosted", version: input.serviceVersion ?? "unknown" },
     verdict: {

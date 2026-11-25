@@ -132,7 +132,7 @@ nothing is signed and the reason travels with it.
 The hooks above decide whether a payment **should** be built. They cannot stop an agent that skips
 the call and signs. This subpath wraps the account's `signTypedData` — the last step every EIP-3009
 x402 payment passes through — and produces no signature unless a **verified PayStage receipt** covers
-the exact bytes being signed.
+the exact payment terms being signed.
 
 ```ts
 import { createSignerGuard } from "@paystage/x402-guard/signer";
@@ -156,12 +156,20 @@ It refuses for three reasons, as a thrown `SignerRefusedError` with a stable `co
 |---|---|---|
 | `do_not_pay` | the verified receipt says `do_not_pay` | the gate's rule (`rule`), not just "refused" |
 | `gate_unreachable` | timeout, 5xx, malformed body | why; and that an unreachable gate is not an approval |
-| `digest_mismatch` | the receipt's signed `payment_digest` differs from the EIP-712 digest about to be signed | both digests |
+| `digest_mismatch` | the receipt's signed `payment_digest` differs from the digest of the terms about to be signed | both digests |
 
-The digest is `hashTypedData(...)` — the same 32 bytes the account's signature commits to. A verdict
-issued for a 0.05 USDC authorization therefore cannot be replayed against a 5.00 one: the digest
-changes and the adapter refuses before calling the signer. A `review` verdict is refused by default
-(`onReview: "pay"` opts into a pre-arranged step-up).
+The digest is the **payment-terms digest**, not `hashTypedData(...)`: over EIP-3009, the typed data's
+`nonce`, `from`, `validAfter` and `validBefore` do not exist in a 402 challenge, so a gate cannot know
+them before the client signs. Both the receipt builder and this adapter call
+`paymentTermsDigest` from `@paystage/preflight`, which hashes `{scheme, network, asset, amount,
+payee}` with a domain separator. A verdict issued for a 0.05 USDC authorization therefore cannot be
+replayed against a 5.00 one — the amount changes the digest and the adapter refuses before calling
+the signer. A `review` verdict is refused by default (`onReview: "pay"` opts into a pre-arranged
+step-up).
+
+`paymentDigest()` (the exact EIP-712 digest) is still exported as a diagnostic, but it is not the
+value the receipt carries. The terms digest binds price, payee, asset, network and scheme; it does
+**not** bind the nonce, payer or validity window, and it does not prove a payment settled.
 
 **Fail-closed is deliberate here, and it is the opposite of the telemetry rule.** A missing telemetry
 *label* is not a missing *verdict*, so a failed POST is swallowed. Here the gate supplies the verdict

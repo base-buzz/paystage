@@ -47,6 +47,16 @@ async function sha256Hex(value: unknown): Promise<string> {
 function base64UrlToBytes(value: string): Uint8Array {
   return Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
 }
+/**
+ * The one normalisation rule for a payment digest (#443): lowercase 64-hex, `0x` accepted and
+ * stripped. Shared with the signer adapter so a receipt it accepts and a receipt this verifier
+ * accepts cannot disagree about what "a valid digest" means. Returns null for anything else.
+ */
+export function normalizePaymentDigest(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const hex = value.toLowerCase().replace(/^0x/, "");
+  return /^[0-9a-f]{64}$/.test(hex) ? hex : null;
+}
 /** Age in seconds, or null when `issued_at` is not a timestamp. */
 function ageSeconds(issuedAt: unknown, now: Date | undefined): number | null {
   if (typeof issuedAt !== "string") return null;
@@ -63,6 +73,11 @@ export interface ReceiptLike {
   issued_at?: string;
   expires_at?: string;
   payment?: { scheme?: string; network?: string; asset?: string; amount?: string; payee?: string };
+  /**
+   * #443: the signed digest of the payment terms. Optional so every receipt issued before the field
+   * existed still verifies; when present it must be lowercase 64-hex, with or without `0x`.
+   */
+  payment_digest?: string;
   service?: { name?: string; version?: string };
   verdict?: { decision?: string; reasons?: string[]; summary?: string };
   request_sha256?: string;
@@ -212,6 +227,17 @@ export async function verifyReceipt(receipt: ReceiptLike, options: VerifyOptions
         ok: false,
         status: "invalid",
         reason: "signature does not match the payload — the receipt was altered or was signed by a different key",
+      };
+    }
+    /**
+     * #443: the payment digest is optional, but a signed one that is not 64 hex is malformed, not a
+     * weaker approval. Receipts issued before the field existed carry nothing here and are unaffected.
+     */
+    if (receipt.payment_digest !== undefined && normalizePaymentDigest(receipt.payment_digest) === null) {
+      return {
+        ok: false,
+        status: "invalid",
+        reason: `payment_digest is not a 64-hex digest: ${JSON.stringify(receipt.payment_digest)}`,
       };
     }
     // Only with the signature proven is it worth asking whether the receipt covers the caller's inputs.

@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { hashTypedData, verifyTypedData } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { ReceiptLike } from "@paystage/receipt-verify";
+import { paymentTermsDigest } from "@paystage/preflight";
+// #443: the digest_mismatch case must run against a receipt the deployed receipt builder produces,
+// not a hand-written stub. Importing the builder keeps this test honest when the receipt changes.
+import { buildReceipt } from "../../../apps/hosted/src/receipt.js";
 import {
   createSignerGuard,
   paymentDigest,
@@ -43,7 +47,12 @@ async function keypair(kid = "paystage-receipt-v1") {
     "verify",
   ])) as CryptoKeyPair;
   const jwk = (await crypto.subtle.exportKey("jwk", pair.publicKey)) as Record<string, unknown>;
-  return { privateKey: pair.privateKey, jwk: { ...jwk, kid, use: "sig", alg: "ES256" } };
+  const pkcs8 = (await crypto.subtle.exportKey("pkcs8", pair.privateKey)) as ArrayBuffer;
+  return {
+    privateKey: pair.privateKey,
+    b64: Buffer.from(new Uint8Array(pkcs8)).toString("base64"),
+    jwk: { ...jwk, kid, use: "sig", alg: "ES256" },
+  };
 }
 
 type Pair = Awaited<ReturnType<typeof keypair>>;
@@ -113,6 +122,18 @@ function typedData(amount: bigint): SignerTypedData {
   };
 }
 
+/** The five terms the gate can see, from the typed data the adapter will sign. */
+function termsOf(data: SignerTypedData) {
+  const payment = paymentFromTypedData(data);
+  return {
+    scheme: payment.scheme,
+    network: payment.network,
+    asset: payment.asset,
+    amount: payment.amount,
+    payee: payment.payTo,
+  };
+}
+
 /** A signer that records whether a signature was produced; the refusals must leave this at zero. */
 function countingSigner() {
   let signatures = 0;
@@ -147,7 +168,10 @@ describe("@paystage/x402-guard/signer", () => {
     expect((guarded as unknown as { address?: string }).address).toBe(ACCOUNT.address);
 
     expect(seen).toHaveLength(1);
-    expect(seen[0].digest).toBe(paymentDigest(data));
+    // #443: the adapter's binding is the payment-terms digest the gate can also compute, not the
+    // EIP-712 digest (which needs the nonce/payer/validity fields the receipt cannot know).
+    expect(seen[0].digest).toBe(await paymentTermsDigest(termsOf(data)));
+    expect(seen[0].digest).not.toBe(paymentDigest(data));
     expect(seen[0].digest).toHaveLength(64);
     expect(seen[0].amount).toBe("50000");
     // The real account signed the exact typed data, not a re-encoded copy.
@@ -237,8 +261,8 @@ describe("@paystage/x402-guard/signer", () => {
 
     const approved = typedData(50_000n); // 0.05 approved
     const swapped = typedData(5_000_000n); // 5.00 attempted
-    const approvedDigest = paymentDigest(approved);
-    const swappedDigest = paymentDigest(swapped);
+    const approvedDigest = await paymentTermsDigest(termsOf(approved));
+    const swappedDigest = await paymentTermsDigest(termsOf(swapped));
     expect(approvedDigest).not.toBe(swappedDigest);
 
     // The gate approved digest A earlier; it does not re-evaluate. This is the replay shape:
@@ -261,7 +285,7 @@ describe("@paystage/x402-guard/signer", () => {
     expect(signatures()).toBe(0);
   });
 
-  it("binds the receipt digest to the viem EIP-712 digest, not a second hash of chosen fields", () => {
+  it("keeps hashTypedData available as a diagnostic, distinct from the receipt binding", async () => {
     const data = typedData(50_000n);
     expect(paymentDigest(data)).toBe(hashTypedData(data as never).slice(2).toLowerCase());
     const terms = paymentFromTypedData(data);
@@ -273,5 +297,78 @@ describe("@paystage/x402-guard/signer", () => {
       amount: "50000",
       from: ACCOUNT.address,
     });
+    // #443: these are deliberately different values. The receipt cannot carry the EIP-712 digest
+    // because the gate never sees the nonce/payer/validity fields it covers.
+    const termsDigest = await paymentTermsDigest({
+      scheme: terms.scheme,
+      network: terms.network,
+      asset: terms.asset,
+      amount: terms.amount,
+      payee: terms.payTo,
+    });
+    expect(termsDigest).not.toBe(paymentDigest(data));
+  });
+
+  /**
+   * #443: the gate's receipt must come from the real builder, not a hand-written fixture. These two
+   * cases are the end-to-end contract: a receipt built for the terms being signed is accepted, and a
+   * builder receipt for a different amount is refused as `digest_mismatch`.
+   */
+  async function builtReceipt(pair: Pair, amount: bigint): Promise<ReceiptLike> {
+    const payment = paymentFromTypedData(typedData(amount));
+    return buildReceipt({
+      decision: { decision: "pay", reasons: [] },
+      request: { x402Version: 2, accepts: [{ ...payment, payTo: payment.payTo, maxTimeoutSeconds: 300 }] },
+      policy: { version: 1 },
+      payment: {
+        scheme: payment.scheme,
+        network: payment.network,
+        asset: payment.asset,
+        amount: payment.amount,
+        payee: payment.payTo,
+      },
+      signingKeyPkcs8B64: pair.b64,
+      ttlSeconds: 0,
+      now: new Date(NOW),
+      serviceVersion: "test",
+    });
+  }
+
+  it("signs against a receipt produced by the hosted receipt builder", async () => {
+    const pair = await keypair();
+    const { account, signatures } = countingSigner();
+    const receipt = await builtReceipt(pair, 50_000n);
+    expect(receipt.payment_digest).toBe(
+      await paymentTermsDigest(termsOf(typedData(50_000n))),
+    );
+
+    const guarded = createSignerGuard(account, {
+      gate: async () => ({ receipt }),
+      jwk: pair.jwk,
+    });
+    await expect(guarded.signTypedData(typedData(50_000n))).resolves.toBe("0xsigned");
+    expect(signatures()).toBe(1);
+  });
+
+  it("refuses digest_mismatch against a builder receipt for a different amount", async () => {
+    const pair = await keypair();
+    const { account, signatures } = countingSigner();
+    const receipt = await builtReceipt(pair, 50_000n);
+
+    const guarded = createSignerGuard(account, {
+      gate: async () => ({ receipt }),
+      jwk: pair.jwk,
+    });
+    const error = await guarded.signTypedData(typedData(5_000_000n)).then(
+      () => null,
+      (reason: unknown) => reason,
+    );
+    expect(error).toBeInstanceOf(SignerRefusedError);
+    expect((error as SignerRefusedError).code).toBe("digest_mismatch");
+    expect((error as SignerRefusedError).coveredDigest).toBe(receipt.payment_digest);
+    expect((error as SignerRefusedError).signingDigest).toBe(
+      await paymentTermsDigest(termsOf(typedData(5_000_000n))),
+    );
+    expect(signatures()).toBe(0);
   });
 });

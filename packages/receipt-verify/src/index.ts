@@ -10,6 +10,7 @@ export {
   JWK_ALG,
   RECEIPT_ALG,
   canonicalize,
+  normalizePaymentDigest,
   receiptPayload,
   verifyReceipt,
 } from "./verify.js";

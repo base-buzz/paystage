@@ -4,7 +4,17 @@
  * `guardFetch` and `paystageClientHook` decide whether a payment *should* be built; they cannot stop
  * an agent that skips the call and signs. This wraps the account's `signTypedData` instead, which is
  * the last point every EIP-3009 x402 payment passes through. The signature is either backed by a
- * verified PayStage receipt for **exactly these bytes**, or it is not produced.
+ * verified PayStage receipt for **exactly these terms**, or it is not produced.
+ *
+ * ## Why the receipt digest is the payment-terms digest, not `hashTypedData` (#443)
+ *
+ * The gate evaluates a 402 challenge, which does not contain the EIP-3009 `nonce`, `from`,
+ * `validAfter` or `validBefore` — the client picks them at signing time. A receipt therefore cannot
+ * carry the EIP-712 digest of the authorization that will eventually be signed without inventing
+ * those fields, and a digest over invented bytes is one the adapter can never reproduce. Both sides
+ * use `paymentTermsDigest` from `@paystage/preflight` over the terms both can see: scheme, network,
+ * asset, amount and payee. That binds the price, the payee, the asset and the network; it does not
+ * bind the nonce or validity window, which is stated in the README rather than papered over.
  *
  * Why a subpath rather than a package of its own: the policy, the receipt and the `pay` / `review` /
  * `do_not_pay` vocabulary are already `@paystage/x402-guard`'s, and an integrator should not have to
@@ -17,7 +27,13 @@
  */
 
 import { hashTypedData } from "viem";
-import { verifyReceipt, type JwkLike, type ReceiptLike } from "@paystage/receipt-verify";
+import { canonicalPaymentTerms, paymentTermsDigest } from "@paystage/preflight";
+import {
+  normalizePaymentDigest,
+  verifyReceipt,
+  type JwkLike,
+  type ReceiptLike,
+} from "@paystage/receipt-verify";
 
 /** EIP-3009 authorizations are the typed-data form of an x402 `exact` EVM payment. */
 const PAYMENT_PRIMARY_TYPES = new Set(["TransferWithAuthorization", "ReceiveWithAuthorization"]);
@@ -90,9 +106,10 @@ export interface PaymentAuthorization {
 export interface SignerGateRequest {
   payment: PaymentAuthorization;
   /**
-   * The EIP-712 digest of the typed data, lowercase 64-hex **without** `0x`. This is the exact
-   * value the account's signature commits to. The gate must put it in the receipt's
-   * `payment_digest` field, which the receipt signature then covers.
+   * The payment-terms digest of `payment`, lowercase 64-hex **without** `0x`, computed by
+   * `paymentTermsDigest` from `@paystage/preflight`. The gate must put this value in the receipt's
+   * `payment_digest` field, which the receipt signature then covers. It is not the EIP-712
+   * `hashTypedData` digest; see the module note above for why the gate cannot know that one.
    */
   digest: string;
   signal: AbortSignal;
@@ -227,7 +244,14 @@ export function paymentFromTypedData(typedData: SignerTypedData): PaymentAuthori
   };
 }
 
-/** The exact EIP-712 digest the account signs, as lowercase 64-hex without `0x`. */
+/**
+ * The exact EIP-712 digest the account signs, as lowercase 64-hex without `0x`.
+ *
+ * Kept as a public diagnostic: it is what the signature commits to, and it is useful when debugging a
+ * mismatched payment. It is deliberately **not** the value compared against the receipt — a gate
+ * evaluating a 402 challenge cannot know the nonce/payer/validity fields it covers. The receipt's
+ * `payment_digest` is `paymentTermsDigest(payment)` instead; see the module note.
+ */
 export function paymentDigest(typedData: SignerTypedData): string {
   try {
     return hashTypedData(typedData as never).slice(2).toLowerCase();
@@ -237,12 +261,6 @@ export function paymentDigest(typedData: SignerTypedData): string {
       `PayStage signer refused: the typed data cannot be hashed — ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-}
-
-function normalizeDigest(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const hex = value.toLowerCase().replace(/^0x/, "");
-  return /^[0-9a-f]{64}$/.test(hex) ? hex : null;
 }
 
 function reasonOf(error: unknown): string {
@@ -319,9 +337,27 @@ export function createSignerGuard<T extends TypedDataSigner>(
     }
 
     const payment = paymentFromTypedData(typedData);
-    // Hash the same object that will be passed to the account. If the amount, payee, nonce or
-    // domain changes after approval, this digest changes with it and the receipt no longer matches.
-    const digest = paymentDigest(typedData);
+    /**
+     * #443: the digest the receipt must carry. It is computed from the same five terms the gate can
+     * read from the challenge, and from the same object that is about to be signed, so a changed
+     * amount, payee, asset, network or scheme changes it and the receipt no longer matches. It does
+     * not cover `nonce` / `from` / `validAfter` / `validBefore`; those cannot be known at gate time.
+     */
+    let digest: string;
+    try {
+      digest = await paymentTermsDigest({
+        scheme: payment.scheme,
+        network: payment.network,
+        asset: payment.asset,
+        amount: payment.amount,
+        payee: payment.payTo,
+      });
+    } catch (error) {
+      throw new SignerRefusedError(
+        "invalid_typed_data",
+        `PayStage signer refused: the payment terms cannot be canonicalised (${reasonOf(error)})`,
+      );
+    }
 
     let response: SignerGateResponse;
     try {
@@ -364,7 +400,7 @@ export function createSignerGuard<T extends TypedDataSigner>(
 
     // Verify the signature first, then the binding: a forged receipt must not be able to reach the
     // digest comparison and have its claim quoted back as if it were a real verdict.
-    const covered = normalizeDigest(receipt.payment_digest);
+    const covered = normalizePaymentDigest(receipt.payment_digest);
     if (covered !== digest) {
       throw new SignerRefusedError(
         "digest_mismatch",
@@ -375,17 +411,34 @@ export function createSignerGuard<T extends TypedDataSigner>(
 
     // The digest is the strong binding, but a receipt whose own `payment` block contradicts the
     // typed data it claims to cover is malformed, not an approval. Check it after the digest so a
-    // genuinely swapped challenge is reported as the digest mismatch it is.
+    // genuinely swapped challenge is reported as the digest mismatch it is. Compare with the same
+    // normalisation the digest uses (lowercase addresses/network, atomic amount as a decimal
+    // string): a strict string compare would refuse a checksummed challenge against the identical
+    // checksummed typed data, which is the same payment.
     const bound = receipt.payment;
     const mismatched = (["scheme", "network", "asset", "amount", "payee"] as const).filter(
       (field) => {
-        const wanted =
-          field === "payee"
-            ? payment.payTo
-            : field === "scheme"
-              ? payment.scheme
-              : payment[field];
-        return bound === undefined || String(bound[field]) !== String(wanted);
+        if (bound === undefined) return true;
+        try {
+          const wanted = canonicalPaymentTerms({
+            scheme: payment.scheme,
+            network: payment.network,
+            asset: payment.asset,
+            amount: payment.amount,
+            payee: payment.payTo,
+          });
+          const claimed = canonicalPaymentTerms({
+            scheme: String(bound.scheme ?? ""),
+            network: String(bound.network ?? ""),
+            asset: String(bound.asset ?? ""),
+            amount: String(bound.amount ?? ""),
+            payee: String(bound.payee ?? ""),
+          });
+          return claimed[field] !== wanted[field];
+        } catch {
+          // A bound block that cannot be canonicalised is malformed, not an approval.
+          return true;
+        }
       },
     );
     if (mismatched.length > 0) {

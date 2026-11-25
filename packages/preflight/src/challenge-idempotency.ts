@@ -1,12 +1,13 @@
 /**
  * Challenge idempotency (#444) — a retried preflight is not a second approval.
  *
- * ## Why the key is a canonical digest of the challenge, not the EIP-3009 `payment_digest`
+ * ## Why the key is a canonical digest of the challenge, not the receipt's `payment_digest`
  *
- * #425's signer adapter computes the EIP-712 digest of the authorization the account is about to
- * sign. That digest cannot exist at preflight time: its typed data carries `from`, `nonce`,
- * `validAfter` and `validBefore`, and none of those are in a 402 challenge — the client chooses the
- * nonce per attempt. A retry that times out *before signing* therefore has no payment digest at all.
+ * #425's signer adapter binds a signature to the payment it approves; since #443 that binding is a
+ * digest of the five payment terms (`scheme`, `network`, `asset`, `amount`, `payee`), not the
+ * EIP-712 typed-data digest, because the nonce/payer/validity fields are chosen at signing time. It
+ * is still not a challenge key: it says nothing about the resource, the timeout or the accept's
+ * `extra`, and a retry that times out *before signing* has no signed payment to digest at all.
  * So the key this module uses is the canonical digest of the challenge the verdict was issued for,
  * which is the only payment-shaped thing that exists on both the first call and the retry.
  *

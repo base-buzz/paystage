@@ -239,9 +239,9 @@ export interface EvaluateResult {
    *
    * Lowercase 64-hex, no `0x`. It covers the whole payment request — `x402Version`, every accept
    * (including `extra`) and the resource — so a different amount, asset, network, payee, timeout or
-   * resource is a different digest by construction. It is **not** the EIP-3009 `payment_digest`:
-   * that one hashes the authorization the client is about to sign, whose nonce/validity/from fields
-   * are not in a 402 challenge, so it cannot exist at preflight time. One challenge, one digest.
+   * resource is a different digest by construction. It is **not** the receipt's `payment_digest`
+   * (#443): that one covers only the five payment terms of one accept, while this covers the whole
+   * request, so a changed resource or timeout is a different digest. One challenge, one digest.
    *
    * Present on results produced by `evaluateWithChallengeIdempotency()` (and by `evaluatePayment()`
    * when the caller passes a precomputed `challengeDigest`). Absent when nobody computed it — the

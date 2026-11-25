@@ -31,6 +31,8 @@ wrong — that is the point of having them.
 | `issued_at` | ISO-8601 UTC, when the verdict was computed |
 | `service` | the build that produced it |
 | `verdict` | `decision` is `pay` / `review` / `do_not_pay`; `reasons` are the rule texts |
+| `payment` | optional terms the verdict was issued for: `scheme`, `network`, `asset`, `amount` (atomic), `payee` |
+| `payment_digest` | optional signed digest of those terms (#443); lowercase 64-hex without `0x` |
 | `request_sha256` | SHA-256 over the **canonical** request, lowercase hex |
 | `policy_sha256` | SHA-256 over the **canonical** policy, lowercase hex |
 | `signed` | `false` means no key was configured. Never a placeholder signature |
@@ -49,6 +51,33 @@ canonical({"b":1,"a":[2,{"d":3,"c":4}]})  ==  {"a":[2,{"c":4,"d":3}],"b":1}
 The **payload** — every field above except `signed`, `alg`, `key_id`, `signature`. Sign the
 canonical form of the payload; verify against the same. `alg` is `ECDSA-P256-SHA256`, and
 the key is published at `https://api.paystage.xyz/.well-known/paystage-receipt-key.json`.
+
+### `payment_digest` — the payment the verdict covers (#443)
+
+When the challenge carries payment terms, the receipt binds them twice: the `payment` block above,
+and `payment_digest` inside the signed payload. The digest is
+
+```
+SHA-256( canonical JSON of {
+  domain: "paystage.payment-terms.v1",
+  scheme, network, asset, amount, payee
+} )
+```
+
+with `scheme`/`network` lowercased, addresses lowercased, and the atomic `amount` normalised
+through `BigInt` to a decimal string. It is lowercase 64-hex **without** `0x`. The one
+implementation is `paymentTermsDigest` in `packages/preflight/src/payment-digest.ts`, imported by
+both the receipt builder and `@paystage/x402-guard/signer`; a verifier can reproduce it from the
+receipt's `payment` block.
+
+It is **not** the EIP-712 `hashTypedData` digest of the authorization the account will sign. A 402
+challenge does not carry the EIP-3009 `nonce`, `from` or validity window, so the gate cannot know
+them before the client signs; a digest over invented values is one the adapter could never
+reproduce. It binds the amount, payee, asset, network and scheme — not the nonce, payer or validity
+period, and not the fact that a payment settled.
+
+The field is optional. A receipt issued without known terms, or before the field existed, is still
+valid; the signer adapter treats a digest-less receipt as not an approval and refuses to sign.
 
 ### `prev` — the hash chain (#171)
 

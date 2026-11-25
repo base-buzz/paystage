@@ -35,6 +35,14 @@ export type {
   ChallengeIdempotencyOptions,
   MemoryChallengeVerdictStoreOptions,
 } from "./challenge-idempotency.js";
+// Payment-terms digest (#443): the signed binding between the gate's receipt and the payment the
+// signer adapter is about to authorize. One implementation for both sides, so they cannot drift.
+export {
+  PAYMENT_DIGEST_DOMAIN,
+  canonicalPaymentTerms,
+  paymentTermsDigest,
+} from "./payment-digest.js";
+export type { PaymentTerms } from "./payment-digest.js";
 // Payer first-seen (#409): the salted-key store and the age input the evaluator consumes. The
 // persistence half is injected by the host; nothing here imports a database client.
 export {
