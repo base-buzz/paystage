@@ -101,6 +101,15 @@ verdict. A field two sources disagree about appears in \`disagreements\` with bo
 address with no stored rows returns empty arrays; that means no observations were recorded, not that
 the address is safe.
 
+\`GET /v1/mandate/:serial\` returns the record behind a Vouch pass: \`status\` (\`active\`, \`revoked\`,
+\`expired\` or \`unknown\`), \`scope\` (per-payment cap, window amount and length, expiry), \`principal\`
+(the published display name plus \`assertion: "self"\`) and \`verdict_for_seller\` (\`trust\`,
+\`do_not_trust\` or \`unknown\`). An unknown serial answers HTTP 200 with \`status: "unknown"\` rather
+than 404, because a scanner needs an answer and "unknown" is one. The response is never cached
+(\`cache-control: no-store\`), since a cached "active" would outlive a revocation. With no mandate
+source configured, every serial answers \`unknown\`; the route reports that rather than inventing an
+active mandate.
+
 The hosted API runs the same evaluation code. Use it when you cannot run a local
 process; run locally when you can, because it removes the network hop before a
 payment.

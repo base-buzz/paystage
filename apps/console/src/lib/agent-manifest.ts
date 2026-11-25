@@ -272,6 +272,8 @@ export const PAYSTAGE_MANIFEST = {
     evidence_bundle: "GET /runs/:id — the events.jsonl, proof, receipt and summary.md for one decision",
     payee_categories:
       "GET /wallets/:address — stored observations about one payee with source and read date; no score or combined verdict",
+    mandate:
+      "GET /v1/mandate/:serial — status, scope, principal and seller verdict for one Vouch mandate serial; unknown serials answer 200 with status unknown",
   },
   not_advice: true,
 } as const;

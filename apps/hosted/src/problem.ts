@@ -226,6 +226,29 @@ export const PROBLEMS = {
       fix: "Fix the offending row in payee_observations; the collector must write only the fields the classifier recognises.",
       ...(instance !== undefined ? { instance } : {}),
     }),
+  invalidSerial: (serial: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "invalid_serial",
+      title: "That is not a mandate serial",
+      detail: `The path segment ${JSON.stringify(serial)} is not a serial this endpoint accepts.`,
+      retriable: false,
+      field: "serial",
+      fix: "Pass either the short code from the pass face (vch- followed by exactly three alphanumerics, e.g. vch-7F3) or the full URL-safe serial (vch_ followed by 22-64 characters).",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateSourceUnavailable: (instance?: string) =>
+    problem({
+      status: 503,
+      code: "mandate_source_unavailable",
+      title: "The mandate source did not answer",
+      detail:
+        "The configured mandate source rejected the read. The serial may exist; this response cannot say, and `unknown` is deliberately not substituted for a failed read.",
+      retriable: true,
+      retryAfterSeconds: 5,
+      fix: "Retry after the indicated delay. Do not read this as an unknown serial.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
   faucetAlreadyFunded: (resetsAt: string, hours: number, instance?: string) =>
     problem({
       status: 429,

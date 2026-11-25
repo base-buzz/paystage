@@ -12,6 +12,7 @@ import { guardVerdictRoutes } from "./routes/guard-verdict.js";
 import { openapiRoutes } from "./routes/openapi.js";
 import { createRunsRoutes } from "./routes/runs.js";
 import { createWalletsRoutes } from "./routes/wallets.js";
+import { createMandateRoutes, type MandateSource } from "./routes/mandate.js";
 import { BUNDLE_STORE_VAR, supabaseBundleStore, type BundleStore } from "./bundle-store.js";
 import {
   supabasePayeeObservationStore,
@@ -65,6 +66,11 @@ export interface CreateAppOptions {
   bundleStore?: BundleStore;
   /** Test/deployment seam for payee-observation storage; defaults to the Supabase store. */
   payeeObservationStore?: PayeeObservationStore;
+  /**
+   * Test/deployment seam for mandate reads. Unset in every deployment today because no mandate store or
+   * writer exists (#423); the route then answers `unknown` for every serial rather than inventing one.
+   */
+  mandateSource?: MandateSource;
 }
 
 function nonEmpty(v: string | undefined): v is string {
@@ -360,6 +366,10 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   // Public and read-only: a category is a list of observations, not a paid evaluation.
   const walletsRoutes = createWalletsRoutes(payeeObservationStore);
   app.route("/", walletsRoutes);
+  // Public and read-only: a QR scan asks whether an authority still exists, not for a new evaluation.
+  // Mounted before the payment gate on purpose (#423).
+  const mandateRoutes = createMandateRoutes(opts.mandateSource);
+  app.route("/", mandateRoutes);
 
   const protect = opts.protect ?? true;
   if (protect) {
