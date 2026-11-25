@@ -80,6 +80,7 @@ const FACE = {
   brand: arg("brand", "vouchguard"),
   serial: arg("serial", "vch-7F3"),
   network: arg("network", "Base"),
+  total: arg("total", "$20.00"),
 };
 
 /** every asset, with the size Apple asks for */

@@ -60,7 +60,10 @@ function stripArtwork(width, height, revoked) {
  * @param {object} face
  * @param {number} face.width            rendered width in px; everything else scales from it
  * @param {"ACTIVE"|"REVOKED"|"EXPIRED"} face.state
- * @param {string} face.limit            e.g. "$0.50"
+ * @param {string} face.limit            e.g. "$0.50" — the per-payment ceiling
+ * @param {string} [face.total]          e.g. "$20.00" — the mandate's total allowance. A plate that shows only the
+ *                                       per-payment ceiling lets a reader believe that is the most that can be lost,
+ *                                       which is false by an unbounded factor: forty calls at $1.99 each pass a $2 cap.
  * @param {string} face.expiry           e.g. "31 Jan 2027"
  * @param {string} face.principal        e.g. "Acme Labs"
  * @param {string} face.serial           e.g. "vch-7F3"
@@ -125,7 +128,7 @@ export function passFaceSvg(face) {
   ${label(pad, stripH + height * 0.062, "UP TO", f(3.8), MUTED, 650, "0.14em")}
   ${label(pad, limitY, face.limit, f(15), dead ? MUTED : INK, 700, "-0.02em")}
   ${limitStrike}
-  ${label(pad + f(0.6), limitY + f(5.6), "per purchase", f(3.6), MUTED, 500, "0.02em")}
+  ${label(pad + f(0.6), limitY + f(5.6), face.total ? `each purchase · ${face.total} total` : "each purchase", f(3.6), MUTED, 500, "0.02em")}
 
   ${label(pad, stripH + height * 0.275, "EXPIRES", f(3.0), MUTED, 650, "0.14em")}
   ${label(pad, stripH + height * 0.31, face.expiry, f(4.2), INK, 600, "0.01em")}
