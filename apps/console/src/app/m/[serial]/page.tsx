@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "../../landing.css";
+import "./mandate.css";
 import { MandateCard } from "@/components/MandateCard";
 import { MANDATE_SERIAL_RE, fetchMandate, mandateApiBase } from "@/lib/mandate";
+import { DEFAULT_TINT } from "@/lib/pass-tokens";
 
 /**
  * `/m/:serial` — the HTML page the QR points at (#436).
@@ -24,11 +26,27 @@ import { MANDATE_SERIAL_RE, fetchMandate, mandateApiBase } from "@/lib/mandate";
  * Only the fields in the endpoint's body are rendered. The write half is deliberately absent: a change
  * requires a signature from the account holding the authority, which the endpoint does not yet accept,
  * so the page says that once and offers no control that cannot work.
+ *
+ * #440: the page is the pass, structurally. Its colours, type sizes and pad ratio come from
+ * `apps/console/src/lib/pass-tokens.json` — the same file `scripts/lib/pass-face.mjs` renders the Wallet
+ * assets from — and `MandateCard` draws the pass's own poster head. The browser chrome takes the tint
+ * too, and the page has no dark mode because a pass does not have one.
  */
 export const metadata: Metadata = {
   title: "Mandate",
   description: "The record behind a Vouch pass: its status, caps, expiry and when it was read.",
   robots: { index: false, follow: false },
+};
+
+/**
+ * The page margin is the stylesheet's; this export carries the other two numbers from #440: `theme-color`
+ * is the pass tint, and `colorScheme: "light"` says out loud that the page does not invert. A second fetch
+ * to make the tint per-mandate is exactly what this page must not add, so the tint is the token default —
+ * the tint of a pass with no teammate name, which is all the endpoint returns today.
+ */
+export const viewport: Viewport = {
+  themeColor: DEFAULT_TINT,
+  colorScheme: "light",
 };
 
 /** The one endpoint where a cached HTML 200 is a safety incident. */

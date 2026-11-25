@@ -14,14 +14,25 @@
  * fall back to, so a render on a build machine and a render on a phone look the same.
  */
 
+/**
+ * One token file, two runtimes (#440).
+ *
+ * `apps/console/src/lib/pass-tokens.json` is read here **and** by the `/m/[serial]` page, so the palette, the poster
+ * tints, the type scale and the pad ratio cannot be two transcriptions that happen to agree. It is JSON rather than
+ * `.ts` because this file is plain ESM and cannot import TypeScript: a `.ts` token file would be readable by the page
+ * and not by the renderer, which is exactly the review-matching this row exists to remove.
+ */
+import TOKENS from "../../apps/console/src/lib/pass-tokens.json" with { type: "json" };
+
+/** The token object itself, exported so a test can prove both runtimes read the same values. */
+export const PASS_TOKENS = TOKENS;
+
 // Palette from docs/proposals/vouch-brand.md. Gold is the scarce signal — the V and the tick, never more than
 // about a tenth of any surface — so it appears here exactly once.
-const INK = "#101322";
-const PAPER = "#FFFFFF";
-const DEEP = "#1A1F71";
-const GOLD = "#F7B600";
-const MUTED = "#5B6472";
-const RED = "#B42318";
+const { ink: INK, paper: PAPER, deep: DEEP, gold: GOLD, muted: MUTED, red: RED } = TOKENS.palette;
+const TYPE = TOKENS.type;
+const SPACING = TOKENS.spacing;
+const GEOMETRY = TOKENS.geometry;
 
 /** Short, stable, and readable aloud when a camera will not scan. */
 export function shortCode(serial) {
@@ -82,7 +93,7 @@ function stripArtwork(width, height, revoked, withMark = false) {
  * teammate colour that could be mistaken for a state signal is worse than no colour at all. Deterministic so the same
  * teammate looks the same on every device and in every render — a colour that changes per run is decoration.
  */
-export const POSTER_TINTS = ["#1A1F71", "#0F5257", "#4338CA", "#6B1D5E", "#14532D", "#334155", "#312E81"];
+export const POSTER_TINTS = TOKENS.posterTints;
 
 export function tintFor(name) {
   const text = String(name ?? "");
@@ -106,9 +117,9 @@ export function passFaceSvg(face) {
    */
   const teammate = face.teammate ?? null;
   const tint = face.tint ?? tintFor(teammate?.name ?? "");
-  const height = Math.round(width * 1.38);
-  const pad = Math.round(width * 0.064);
-  const posterH = Math.round(height * (teammate ? 0.34 : 0.25));
+  const height = Math.round(width * GEOMETRY.aspect);
+  const pad = Math.round(width * SPACING.pad);
+  const posterH = Math.round(height * (teammate ? GEOMETRY.posterShareNamed : GEOMETRY.posterShareBare));
   const unit = width / 100;
   const f = (n) => Math.round(n * unit * 100) / 100;
 
@@ -137,52 +148,52 @@ export function passFaceSvg(face) {
         )
         .join("")
     : `<rect x="${box.x}" y="${box.y}" width="${box.size}" height="${box.h}" fill="none" stroke="${dead ? "#DDD9CF" : "#CFC9BC"}" stroke-width="${f(0.3)}"/>
-       ${label(box.x + f(2.6), box.y + f(5.4), "VERIFY", f(2.8), MUTED, 650, "0.14em")}
-       ${label(box.x + f(2.6), box.y + f(11.2), "paystage.xyz/m/" + esc(String(face.serial ?? "").replace(/^vch-/, "")), f(3.2), INK, 600, "0.01em")}
-       ${label(box.x + f(2.6), box.y + f(16.2), "no app, no account", f(2.8), MUTED, 500, "0.02em")}`;
+       ${label(box.x + f(2.6), box.y + f(5.4), "VERIFY", f(TYPE.verifyLabel), MUTED, 650, "0.14em")}
+       ${label(box.x + f(2.6), box.y + f(11.2), "paystage.xyz/m/" + esc(String(face.serial ?? "").replace(/^vch-/, "")), f(TYPE.verifyUrl), INK, 600, "0.01em")}
+       ${label(box.x + f(2.6), box.y + f(16.2), "no app, no account", f(TYPE.verifyNote), MUTED, 500, "0.02em")}`;
 
   const chipW = f(20);
   const chipH = f(6.2);
   const chip = `<rect x="${width - pad - chipW}" y="${pad - f(1.2)}" width="${chipW}" height="${chipH}" rx="${chipH / 2}"
         fill="${dead ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.92)"}"/>
-    ${label(width - pad - chipW / 2, pad + f(2.9), face.state, f(2.9), dead ? "#FFFFFF" : tint, 700, "0.12em", "middle")}`;
+    ${label(width - pad - chipW / 2, pad + f(TYPE.chip), face.state, f(TYPE.chip), dead ? "#FFFFFF" : tint, 700, "0.12em", "middle")}`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <rect width="${width}" height="${height}" fill="${PAPER}"/>
-  <rect x="0" y="0" width="${width}" height="${posterH}" fill="${dead ? "#5B6472" : tint}"/>
+  <rect x="0" y="0" width="${width}" height="${posterH}" fill="${dead ? MUTED : tint}"/>
   <rect x="0" y="${posterH - Math.max(3, posterH * 0.012)}" width="${width}" height="${Math.max(3, posterH * 0.012)}" fill="${dead ? RED : GOLD}"/>
 
-  ${sealMark({ x: pad, y: pad - f(1.2), size: f(8.4), state: dead ? (revoked ? "REVOKED" : "EXPIRED") : "ACTIVE", paper: dead ? "#5B6472" : tint })}
-  ${label(pad + f(10.4), pad + f(3.2), face.brand ?? "vouchguard", f(3.8), "#FFFFFF", 500, "0.01em")}
-  ${label(pad + f(10.4), pad + f(6.2), teammate ? `via ${teammate.platform ?? teammate.name} · ${teammate.category ?? "agent"}` : (face.vouchedBy ?? "vouched by PayStage"), f(2.4), "rgba(255,255,255,0.72)", 500, "0.03em")}
+  ${sealMark({ x: pad, y: pad - f(1.2), size: f(8.4), state: dead ? (revoked ? "REVOKED" : "EXPIRED") : "ACTIVE", paper: dead ? MUTED : tint })}
+  ${label(pad + f(10.4), pad + f(3.2), face.brand ?? "vouchguard", f(TYPE.brand), "#FFFFFF", 500, "0.01em")}
+  ${label(pad + f(10.4), pad + f(6.2), teammate ? `via ${teammate.platform ?? teammate.name} · ${teammate.category ?? "agent"}` : (face.vouchedBy ?? "vouched by PayStage"), f(TYPE.subBrand), "rgba(255,255,255,0.72)", 500, "0.03em")}
   ${chip}
 
   ${teammate
-    ? label(width / 2, posterH * 0.5 + f(11), teammate.name, f(20), "#FFFFFF", 600, "-0.015em", "middle")
+    ? label(width / 2, posterH * 0.5 + f(11), teammate.name, f(TYPE.name), "#FFFFFF", 600, "-0.015em", "middle")
     : ""}
   ${teammate
-    ? label(width / 2, posterH - f(5.5), "this teammate is authorised to spend within the caps below", f(2.6), "rgba(255,255,255,0.66)", 500, "0.02em", "middle")
+    ? label(width / 2, posterH - f(5.5), "this teammate is authorised to spend within the caps below", f(TYPE.meta), "rgba(255,255,255,0.66)", 500, "0.02em", "middle")
     : ""}
 
-  ${label(pad, posterH + height * 0.055, "UP TO", f(3.8), MUTED, 650, "0.14em")}
-  ${label(pad, limitY, face.limit, f(15), dead ? MUTED : INK, 700, "-0.02em")}
+  ${label(pad, posterH + height * 0.055, "UP TO", f(TYPE.label), MUTED, 650, "0.14em")}
+  ${label(pad, limitY, face.limit, f(TYPE.value), dead ? MUTED : INK, 700, "-0.02em")}
   ${limitStrike}
-  ${label(pad + f(0.6), limitY + f(5.6), face.window ? `each purchase · ${face.window}` : "each purchase", f(3.6), MUTED, 500, "0.02em")}
+  ${label(pad + f(0.6), limitY + f(5.6), face.window ? `each purchase · ${face.window}` : "each purchase", f(TYPE.caption), MUTED, 500, "0.02em")}
 
-  ${label(pad, posterH + height * 0.265, "EXPIRES", f(3.0), MUTED, 650, "0.14em")}
-  ${label(pad, posterH + height * 0.30, face.expiry, f(4.2), INK, 600, "0.01em")}
-  ${label(width * 0.42, posterH + height * 0.265, "PRINCIPAL", f(3.0), MUTED, 650, "0.14em")}
-  ${label(width * 0.42, posterH + height * 0.30, face.principal, f(4.2), INK, 600, "0.01em")}
+  ${label(pad, posterH + height * 0.265, "EXPIRES", f(TYPE.fieldLabel), MUTED, 650, "0.14em")}
+  ${label(pad, posterH + height * 0.30, face.expiry, f(TYPE.field), INK, 600, "0.01em")}
+  ${label(width * 0.42, posterH + height * 0.265, "PRINCIPAL", f(TYPE.fieldLabel), MUTED, 650, "0.14em")}
+  ${label(width * 0.42, posterH + height * 0.30, face.principal, f(TYPE.field), INK, 600, "0.01em")}
 
   <rect x="${pad}" y="${posterH + height * 0.345}" width="${width - pad * 2}" height="${f(0.2)}" fill="${dead ? "#E3E0D8" : "#DDD9CF"}"/>
 
   ${verify}
-  ${label(boxRight, box.y + f(4.2), "NETWORK", f(2.6), MUTED, 650, "0.14em")}
-  ${label(boxRight, box.y + f(9), face.network ?? "Base", f(3.8), INK, 600, "0.02em")}
-  ${label(boxRight, box.y + f(14), "ISSUED BY", f(2.6), MUTED, 650, "0.14em")}
-  ${label(boxRight, box.y + f(18.8), "PayStage", f(3.8), INK, 600, "0.01em")}
+  ${label(boxRight, box.y + f(4.2), "NETWORK", f(TYPE.meta), MUTED, 650, "0.14em")}
+  ${label(boxRight, box.y + f(9), face.network ?? "Base", f(TYPE.metaValue), INK, 600, "0.02em")}
+  ${label(boxRight, box.y + f(14), "ISSUED BY", f(TYPE.meta), MUTED, 650, "0.14em")}
+  ${label(boxRight, box.y + f(18.8), "PayStage", f(TYPE.metaValue), INK, 600, "0.01em")}
 
-  ${label(pad, height - pad * 0.55, "They scan to verify. You tap Manage.", f(3.2), dead ? RED : INK, 600, "0.01em")}
+  ${label(pad, height - pad * 0.55, "They scan to verify. You tap Manage.", f(TYPE.footer), dead ? RED : INK, 600, "0.01em")}
 </svg>`;
 }
 

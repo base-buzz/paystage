@@ -20,7 +20,7 @@
 import { mkdirSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { faceIdSheetSvg, mandatePageSvg, passFaceSvg, passIconSvg, passLogoSvg, passStripSvg } from "./lib/pass-face.mjs";
+import { faceIdSheetSvg, mandatePageSvg, passFaceSvg, passIconSvg, passLogoSvg, passStripSvg, sealMark } from "./lib/pass-face.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback = null) => {
@@ -151,6 +151,24 @@ if (argv.includes("--frames")) {
   }
   console.log(`render-pass-assets: ${FRAMES.length} storyboard frame(s) in ${OUT}`);
   process.exit(0);
+}
+
+/**
+ * The poster mark for the HTML page (#440).
+ *
+ * The page is HTML and cannot call `sealMark()`, so it renders this file instead. Generating it here — from the same
+ * function the pass itself uses — is what makes "the mark top-left" the same mark rather than a second drawing. The
+ * slot is transparent so the page's tint shows through exactly as the pass's slot is filled with its own tint.
+ */
+const MARKS = [
+  ["mark-active.svg", "ACTIVE"],
+  ["mark-revoked.svg", "REVOKED"],
+  ["mark-expired.svg", "EXPIRED"],
+];
+for (const [file, state] of MARKS) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${sealMark({ state, paper: "transparent" })}</svg>`;
+  writeFileSync(join(OUT, file), svg);
+  written.push(`${file} — the poster mark, drawn by sealMark()`);
 }
 
 // The SVG beside the PNG, so the lander can inline exactly what was rasterised.

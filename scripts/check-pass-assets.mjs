@@ -12,7 +12,7 @@
  * `docs/proposals/vouch-pass-face.md` once; a transcription that is checked is a fact and a transcription that is
  * remembered is a typo waiting for a release.
  */
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const DIR = resolve(process.argv[2] ?? "apps/console/public/pass");
@@ -55,6 +55,23 @@ for (const [file, width, height] of EXPECTED) {
 }
 if (!present.has("pass-face.svg")) {
   problems.push("pass-face.svg is missing — the lander must inline the same source that was rasterised");
+}
+
+/**
+ * The poster mark the `/m/:serial` page renders (#440). It must exist, and the active/revoked slots must stay
+ * transparent: the page shows them over the mandate's tint, so a filled slot would paint a block where the pass shows
+ * a cut. `EXPIRED` is the exception on purpose — its slot is the pale, filled one by spec (an empty lock), so it is
+ * checked for existence only.
+ */
+for (const file of ["mark-active.svg", "mark-revoked.svg", "mark-expired.svg"]) {
+  if (!present.has(file)) {
+    problems.push(`${file} is missing — the /m page would draw a different mark from the pass`);
+    continue;
+  }
+  const transparent = file !== "mark-expired.svg";
+  if (transparent && !readFileSync(join(DIR, file), "utf8").includes('fill="transparent"')) {
+    problems.push(`${file} lost its transparent slot — the page would paint a block over the poster tint`);
+  }
 }
 
 if (problems.length > 0) {

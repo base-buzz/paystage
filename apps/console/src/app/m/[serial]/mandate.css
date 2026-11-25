@@ -1,0 +1,268 @@
+/*
+ * `/m/[serial]` — the page is the pass (#440).
+ *
+ * This file holds **structure only**: no colour, size or spacing is typed in twice. Every value below is a CSS
+ * custom property that `MandateCard` writes from `apps/console/src/lib/pass-tokens.json`, the same file
+ * `scripts/lib/pass-face.mjs` draws from. The poster's geometry (aspect, mark position, type scale) is therefore the
+ * pass's geometry, not a second transcription of it.
+ *
+ * The page has no dark mode. A pass does not have one, and a verification page that turned white under
+ * `prefers-color-scheme: dark` would be a different object from the pass in the holder's wallet. The media query at
+ * the end exists to *hold* the paper and the tint against any inherited theme, not to add a theme.
+ */
+
+/* The global header is the thing this page must not have: the first viewport is the pass's own head, not a page
+   header with a logo. Scoped with :has() to this route, so no other page loses it. */
+body:has(> .mandate-page) > .site-header {
+  display: none;
+}
+
+html:has(.mandate-page),
+body:has(> .mandate-page) {
+  background: var(--pass-paper);
+}
+
+.mandate-page {
+  /* The page margin, 20–24 px (#440). One number, and the card centres inside it. */
+  padding: 22px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--pass-paper);
+  color: var(--pass-ink);
+  font-family: "Noto Sans", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.mandate-card {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--pass-paper);
+  border: 1px solid color-mix(in oklab, var(--pass-muted) 26%, transparent);
+  border-radius: 16px;
+  overflow: hidden;
+  /* Every cqw below is a percentage of this card's width — the same unit the renderer's f(n) uses on the pass. */
+  container-type: inline-size;
+}
+
+/* ---- the pass's own head ---------------------------------------------------------------- */
+
+.mandate-poster {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 2cqw;
+  /* `aspect` × `posterShareBare` is the pass's poster band (pass-face.mjs: height × posterH share). */
+  aspect-ratio: 1 / var(--pass-poster-aspect);
+  padding: calc(var(--pass-pad) * 100cqw);
+  background: var(--pass-tint);
+  /* The pass floors this band at 3 px, so the page uses the same floor rather than a thinner line. */
+  border-bottom: 3px solid var(--pass-gold);
+  color: #ffffff;
+}
+
+.mandate-mark {
+  width: 8.4cqw;
+  height: 8.4cqw;
+  flex: none;
+  /* The pass draws the mark 1.2 f-units above the text's padding line. */
+  margin-top: -1.2cqw;
+}
+
+.mandate-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6cqw;
+  padding-top: 0.1cqw;
+}
+
+.mandate-wordmark {
+  font-size: calc(var(--pass-type-brand) * 1cqw);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.mandate-vouched {
+  font-size: calc(var(--pass-type-sub-brand) * 1cqw);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* The status chip is the pass's chip: white pill top-right, tint ink when active, a translucent pill and white ink
+   when the mandate is not in force. It is the page's state signal, in the pass's own position. */
+.mandate-chip {
+  position: absolute;
+  top: calc(var(--pass-pad) * 100cqw - 1.2cqw);
+  right: calc(var(--pass-pad) * 100cqw);
+  display: inline-flex;
+  align-items: center;
+  height: 6.2cqw;
+  padding: 0 2.4cqw;
+  border-radius: 999px;
+  font-size: calc(var(--pass-type-chip) * 1cqw);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mandate-chip[data-dead="false"] {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--pass-tint);
+}
+
+.mandate-chip[data-dead="true"] {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+/* ---- the fields, in the pass's order and type scale -------------------------------------- */
+
+.mandate-fields {
+  padding: calc(var(--pass-pad) * 100cqw) calc(var(--pass-pad) * 100cqw) 0;
+}
+
+/* The malformed-serial page has no record and therefore no poster; it still gets the page's own spacing. */
+.mandate-plain .mandate-fields {
+  padding-bottom: calc(var(--pass-pad) * 100cqw * 2);
+}
+
+.mandate-label {
+  margin: 0;
+  font-size: calc(var(--pass-type-label) * 1cqw);
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pass-muted);
+}
+
+.mandate-limit {
+  margin: 0.6cqw 0 0;
+  font-size: calc(var(--pass-type-value) * 1cqw);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  color: var(--pass-ink);
+}
+
+.mandate-caption {
+  margin: 0.6cqw 0 0;
+  font-size: calc(var(--pass-type-caption) * 1cqw);
+  font-weight: 500;
+  color: var(--pass-muted);
+}
+
+.mandate-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: calc(var(--pass-pad) * 100cqw);
+  margin-top: calc(var(--pass-pad) * 100cqw);
+  padding-top: calc(var(--pass-pad) * 100cqw);
+  border-top: 1px solid color-mix(in oklab, var(--pass-muted) 28%, transparent);
+}
+
+.mandate-field-label {
+  margin: 0;
+  font-size: calc(var(--pass-type-field-label) * 1cqw);
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pass-muted);
+}
+
+.mandate-field-value {
+  margin: 0.5cqw 0 0;
+  font-size: calc(var(--pass-type-field) * 1cqw);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--pass-ink);
+  overflow-wrap: anywhere;
+}
+
+.mandate-self {
+  font-size: 0.7em;
+  font-weight: 400;
+  color: var(--pass-muted);
+}
+
+/* ---- the record's state, below the fields ------------------------------------------------ */
+
+.mandate-state {
+  padding: 0 calc(var(--pass-pad) * 100cqw) calc(var(--pass-pad) * 100cqw);
+}
+
+.mandate-meaning {
+  margin: calc(var(--pass-pad) * 100cqw) 0 0;
+  font-size: calc(var(--pass-type-field) * 1cqw);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--pass-ink);
+}
+
+.mandate-note {
+  margin: calc(var(--pass-pad) * 100cqw * 0.5) 0 0;
+  font-size: calc(var(--pass-type-field-label) * 1cqw);
+  line-height: 1.55;
+  color: var(--pass-muted);
+}
+
+.mandate-rule {
+  margin: calc(var(--pass-pad) * 100cqw) 0 0;
+  border: 0;
+  border-top: 1px solid color-mix(in oklab, var(--pass-muted) 28%, transparent);
+}
+
+.mandate-record {
+  margin: calc(var(--pass-pad) * 100cqw * 0.5) 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: calc(var(--pass-type-meta) * 1cqw);
+  overflow-wrap: anywhere;
+  color: var(--pass-muted);
+}
+
+.mandate-link {
+  color: var(--pass-deep);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.mandate-title {
+  margin: calc(var(--pass-pad) * 100cqw) 0 0;
+  font-size: calc(var(--pass-type-value) * 1cqw);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.mandate-copy {
+  margin: calc(var(--pass-pad) * 100cqw * 0.5) 0 0;
+  font-size: calc(var(--pass-type-field-label) * 1cqw);
+  line-height: 1.55;
+  color: var(--pass-muted);
+}
+
+.mandate-copy code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+/* A pass has no dark mode. Hold the paper and the tint against an inherited dark theme rather than inventing one. */
+@media (prefers-color-scheme: dark) {
+  html:has(.mandate-page),
+  body:has(> .mandate-page),
+  .mandate-page,
+  .mandate-card {
+    background: var(--pass-paper);
+    color: var(--pass-ink);
+  }
+
+  .mandate-poster {
+    background: var(--pass-tint);
+    color: #ffffff;
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "_note": "JSON, not .ts, on purpose: scripts/lib/pass-face.mjs is plain ESM run by node and cannot import TypeScript. The /m/[serial] page imports this same file, so both runtimes read one set of values and changing a token moves both. Do not convert it to .ts — the renderer would lose its only shared source and the pass/page matching would be by review again (#440).",
+  "palette": {
+    "ink": "#101322",
+    "paper": "#FFFFFF",
+    "deep": "#1A1F71",
+    "gold": "#F7B600",
+    "muted": "#5B6472",
+    "red": "#B42318"
+  },
+  "posterTints": ["#1A1F71", "#0F5257", "#4338CA", "#6B1D5E", "#14532D", "#334155", "#312E81"],
+  "type": {
+    "name": 20,
+    "value": 15,
+    "field": 4.2,
+    "label": 3.8,
+    "fieldLabel": 3,
+    "caption": 3.6,
+    "brand": 3.8,
+    "subBrand": 2.4,
+    "chip": 2.9,
+    "meta": 2.6,
+    "metaValue": 3.8,
+    "verifyLabel": 2.8,
+    "verifyUrl": 3.2,
+    "verifyNote": 2.8,
+    "footer": 3.2
+  },
+  "spacing": {
+    "pad": 0.064
+  },
+  "geometry": {
+    "aspect": 1.38,
+    "posterShareBare": 0.25,
+    "posterShareNamed": 0.34
+  }
+}

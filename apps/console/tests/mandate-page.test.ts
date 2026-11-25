@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import MandatePage, { metadata } from "@/app/m/[serial]/page";
+import MandatePage, { metadata, viewport } from "@/app/m/[serial]/page";
 import { HONESTY_LINE, MandateCard } from "@/components/MandateCard";
 import {
   MANDATE_SERIAL_RE,
@@ -11,6 +11,7 @@ import {
   type MandatePayload,
   type MandateStatus,
 } from "@/lib/mandate";
+import { PASS_TOKENS } from "@/lib/pass-tokens";
 
 /**
  * `/m/:serial` — the page a counterparty's camera opens (#436).
@@ -89,8 +90,9 @@ describe("the four statuses render their word and their meaning", () => {
     const html = renderCard(payload("active"));
     expect(html).toContain("Northwind Ltd");
     expect(html).toContain("self-asserted");
-    expect(html).toContain("2.00 USDC");
-    expect(html).toContain("20.00 USDC per 24h");
+    // The pass's limit line, in the pass's words (#440): `$2.00 each purchase · $20.00 per 24h`.
+    expect(html).toContain("$2.00");
+    expect(html).toContain("each purchase · $20.00 per 24h");
     expect(html).toContain("31 Jan 2027, 23:59 UTC");
     expect(html).toContain("Record read 26 Nov 2026, 06:44 UTC");
     expect(html).toContain(HONESTY_LINE);
@@ -100,6 +102,34 @@ describe("the four statuses render their word and their meaning", () => {
     const html = renderCard(payload("active"));
     expect(html.match(/requires a signature from the account that holds the authority/g) ?? []).toHaveLength(1);
     expect(html).not.toMatch(/<form\b|<input\b|<button\b/i);
+  });
+});
+
+describe("the page is the pass, by construction (#440)", () => {
+  it("takes theme-color from the token tint and declares no dark mode", () => {
+    expect(viewport.themeColor).toBe(PASS_TOKENS.posterTints[0]);
+    expect(viewport.colorScheme).toBe("light");
+  });
+
+  it("renders the pass's head: tint, generated mark, wordmark, and the token scale", () => {
+    const html = renderCard(payload("active"));
+    expect(html).toContain(`--pass-tint:${PASS_TOKENS.posterTints[0]}`);
+    expect(html).toContain("/pass/mark-active.svg");
+    expect(html).toContain("vouchguard");
+    expect(html).toContain("vouched by PayStage");
+    expect(html).toContain(`--pass-type-name:${PASS_TOKENS.type.name}`);
+    expect(html).toContain(`--pass-type-value:${PASS_TOKENS.type.value}`);
+    expect(html).toContain(`--pass-pad:${PASS_TOKENS.spacing.pad}`);
+  });
+
+  it("uses the mark the renderer generated for the record's state", () => {
+    expect(renderCard(payload("revoked"))).toContain("/pass/mark-revoked.svg");
+    expect(renderCard(payload("expired"))).toContain("/pass/mark-expired.svg");
+  });
+
+  it("does not invent a teammate name the endpoint does not return", () => {
+    const html = renderCard(payload("active"));
+    expect(html).not.toMatch(/teammate|Grok Bot|agent name/i);
   });
 });
 
@@ -122,7 +152,7 @@ describe("unknown is an ordinary answer, not an error", () => {
     expect(html).toContain(STATUS_COPY.unknown.word);
     expect(html).toContain(STATUS_COPY.unknown.meaning);
     expect(html).toContain("Record read 26 Nov 2026, 06:44 UTC");
-    expect(html).not.toContain("USDC per");
+    expect(html).not.toContain("each purchase");
     expect(html).not.toContain("Could not read");
     expect(html).not.toContain("not readable JSON");
     expect(html).not.toMatch(/something went wrong|unexpected error/i);
