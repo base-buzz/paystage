@@ -7,18 +7,18 @@ what a rebrand must preserve, and why.
 ## Geometry (the part that is not negotiable)
 
 ```
-canvas 100 × 62
-plate A (left)   62 × 62, radius 15, 100% ink, x = 0
-plate B (right)  62 × 62, radius 15, 62% ink over the surface, x = 38
-overlap          24 units = 38.7% of a plate
-lens             the intersection, and the only accent
+canvas       184 × 100          W = 1.84 H
+corner       26                 0.26 H
+plate split  x = 92             the canvas centre
+bites        r 17 at (0,50) and (184,50)   cut from both plates
+seal         cx 92, w 56, inset 4          the only accent
 ```
 
-Two plates **one value apart** — revised 2026-11-28 (#460). An outlined second plate needed a small-size variant to
-survive 29 px, and a mark with a variant is two marks; two plates in the *same* fill merged into one silhouette with a
-gold hole. So plate A is the full ink and plate B is 62% of it over the background — colour, not geometry, separates
-the shapes, as on the Mastercard mark. The blend is computed against the surface (paper, ink, tile or poster tint) and
-written as an opaque hex, so the raster does not change with whatever the SVG is later composited over.
+A **ticket with a bite out of each end**: teal body `#1A5F7A`, slate stub `#7AA2B2`, amber seal `#D4A843`. Two parties
+and a seal between them — the body is the authority, the stub is the half someone keeps, the seal is the record.
+
+**The state is in the silhouette.** Revoked removes the stub, so a revoked pass reads revoked in greyscale, at 16 px and
+on a photocopy, without anyone reproducing a colour. That is the property four earlier marks lacked.
 
 ## State lives in the lens
 
@@ -35,8 +35,8 @@ written as an opaque hex, so the raster does not change with whatever the SVG is
 |---|---|---|
 | vertical lockup | 90 px wide | the mark alone |
 | horizontal lockup | 110 px wide | the mark alone |
-| the mark | 16 px | do not use it — there is no simplified version |
-| the lens (state) | 3 px | do not show state |
+| the mark | 16 px | do not use it — the bites are gone below this |
+| the seal (state) | 3 px | do not show state |
 
 ## Clear space
 

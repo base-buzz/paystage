@@ -23,7 +23,7 @@
  * and not by the renderer, which is exactly the review-matching this row exists to remove.
  */
 import TOKENS from "../../apps/console/src/lib/pass-tokens.json" with { type: "json" };
-import { VENN_SURFACES, blendHex, vennGroup } from "./venn.mjs";
+import { MARK_SURFACES, blendHex, ticketGroup } from "./mark.mjs";
 
 /** The token object itself, exported so a test can prove both runtimes read the same values. */
 export const PASS_TOKENS = TOKENS;
@@ -66,7 +66,7 @@ function stripArtwork(width, height, revoked, withMark = false) {
       </linearGradient>
     </defs>
     <rect x="0" y="0" width="${width}" height="${height}" fill="url(#strip)"/>
-    ${withMark ? vennMark({ x: x - size / 2, y: (height - size * 0.62) / 2, size, state: revoked ? "REVOKED" : "ACTIVE", plate: PAPER, surface: markSurface }) : ""}
+    ${withMark ? ticketMark({ x: x - size / 2, y: (height - size * 0.62) / 2, size, state: revoked ? "REVOKED" : "ACTIVE", plate: PAPER, surface: markSurface }) : ""}
     <rect x="0" y="${height - Math.max(3, height * 0.05)}" width="${width}" height="${Math.max(3, height * 0.05)}" fill="${band}"/>
   `;
 }
@@ -168,7 +168,7 @@ export function passFaceSvg(face) {
   <rect x="0" y="0" width="${width}" height="${posterH}" fill="${dead ? MUTED : tint}"/>
   <rect x="0" y="${posterH - Math.max(3, posterH * 0.012)}" width="${width}" height="${Math.max(3, posterH * 0.012)}" fill="${dead ? RED : GOLD}"/>
 
-  ${vennMark({ x: pad, y: pad - f(1.2), size: f(8.4), state: dead ? (revoked ? "REVOKED" : "EXPIRED") : "ACTIVE", plate: PAPER, surface: dead ? MUTED : tint })}
+  ${ticketMark({ x: pad, y: pad - f(1.2), size: f(8.4), state: dead ? (revoked ? "REVOKED" : "EXPIRED") : "ACTIVE", plate: PAPER, surface: dead ? MUTED : tint })}
   ${label(pad + f(10.4), pad + f(3.2), face.brand ?? "vouchguard", f(TYPE.brand), "#FFFFFF", 500, "0.01em")}
   ${label(pad + f(10.4), pad + f(6.2), teammate ? `via ${teammate.platform ?? teammate.name} · ${teammate.category ?? "agent"}` : (face.vouchedBy ?? "vouched by PayStage"), f(TYPE.subBrand), "rgba(255,255,255,0.72)", 500, "0.03em")}
   ${chip}
@@ -228,7 +228,7 @@ export function passLogoSvg({ width, height, wordmark = "PAYSTAGE" }) {
 /**
  * The mark: the venn — two plates 62 × 62 at x = 0 and x = 38, radius 15, one value apart, lens = state.
  *
- * Replaces the keyway seal (2026-11-27). The geometry is in `scripts/lib/venn.mjs`, shared with the brand kit,
+ * Replaces the keyway seal (2026-11-27). The geometry is in `scripts/lib/mark.mjs`, shared with the brand kit,
  * so the mark on the pass, the verification page and the marketing kit is one drawing. Plate A is 100% and
  * plate B is 62% of it over the surface the mark is painted on (#460); the lens is the only differentiated
  * element (gold active, red revoked, grey expired, paper knockout for one-colour use). There is no compact
@@ -238,7 +238,7 @@ export function passLogoSvg({ width, height, wordmark = "PAYSTAGE" }) {
  * plate on the deep field disappears. That is a colour application, not a second drawing. `surface` is the
  * exact colour behind the mark; plate B is blended against it so the raster is deterministic.
  */
-export function vennMark({
+export function ticketMark({
   x = 0,
   y = 0,
   size = 100,
@@ -249,7 +249,7 @@ export function vennMark({
   red = RED,
   body = null,
   stub = null,
-  surface = VENN_SURFACES.paper,
+  surface = MARK_SURFACES.paper,
   id = null,
 } = {}) {
   // The ticket mark carries state in two places: the seal colour and, for revoked, the missing stub. On the pass poster the
@@ -260,7 +260,7 @@ export function vennMark({
   // On the poster the plates invert to paper; the stub is paper at 62% over the tint so the two plates stay distinct —
   // the same rule the mark uses on paper, applied to the field it actually sits on.
   const stubColour = stub ?? blendHex(paper, surface, 0.62);
-  return vennGroup({
+  return ticketGroup({
     x,
     y,
     width: Number(size),
@@ -279,7 +279,7 @@ export function passIconSvg({ width, height, revoked = false }) {
   const stroke = Math.max(1.2, h * 0.11);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
   <rect width="${w}" height="${h}" rx="${h * 0.22}" fill="${revoked ? "#6B7280" : DEEP}"/>
-  ${vennMark({ x: (w - w * 0.74) / 2, y: (h - w * 0.74 * 0.62) / 2, size: w * 0.74, state: revoked ? "REVOKED" : "ACTIVE", plate: PAPER, surface: revoked ? "#6B7280" : DEEP })}
+  ${ticketMark({ x: (w - w * 0.74) / 2, y: (h - w * 0.74 * 0.62) / 2, size: w * 0.74, state: revoked ? "REVOKED" : "ACTIVE", plate: PAPER, surface: revoked ? "#6B7280" : DEEP })}
 </svg>`;
 }
 
@@ -398,7 +398,7 @@ export function stackedTeammatesSvg({ width = 750, teammates } = {}) {
       return `<g>
       <rect x="${pad}" y="${y}" width="${cardW}" height="${cardH}" rx="${f(3)}" fill="${tint}"/>
       <rect x="${pad}" y="${y}" width="${cardW}" height="${f(0.9)}" rx="${f(0.4)}" fill="${GOLD}"/>
-      ${vennMark({ x: pad + f(4.5), y: y + cardH - f(11.5) + f(7.5) * 0.19, size: f(7.5), state: "ACTIVE", plate: PAPER, surface: tint })}
+      ${ticketMark({ x: pad + f(4.5), y: y + cardH - f(11.5) + f(7.5) * 0.19, size: f(7.5), state: "ACTIVE", plate: PAPER, surface: tint })}
       ${labelAt(pad + f(14), y + cardH - f(6.6), t.name, f(5.2), "#FFFFFF", 600, "-0.01em")}
       ${labelAt(pad + f(14), y + cardH - f(2.6), `via ${t.platform} · ${t.category}`, f(2.6), "rgba(255,255,255,0.72)", 500, "0.03em")}
       ${labelAt(w - pad - f(4.5), y + cardH - f(6.6), t.limit, f(5.0), "#FFFFFF", 700, "-0.01em", "end")}

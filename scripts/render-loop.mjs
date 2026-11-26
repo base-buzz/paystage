@@ -36,7 +36,7 @@ const conf = join(confDir, "fonts.conf");
 writeFileSync(conf, `<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "fonts.dtd">\n<fontconfig>\n  <dir>${fontDir}</dir>\n  <cachedir>${join(confDir, "cache")}</cachedir>\n</fontconfig>\n`);
 process.env.FONTCONFIG_FILE = conf;
 
-const { vennGroup } = await import("./lib/venn.mjs");
+const { ticketGroup } = await import("./lib/mark.mjs");
 const TOKENS = JSON.parse(readFileSync("apps/console/src/lib/pass-tokens.json", "utf8"));
 const { ink: INK, deep: DEEP, gold: GOLD, muted: MUTED, red: RED } = TOKENS.palette;
 const PAPER = "#FFFFFF";
@@ -109,7 +109,7 @@ function sceneCaps(w, h, phase) {
   // The mark is drawn by the shared module rather than by three hand-written rects here, so the 62%
   // second plate reaches the loop as well (#460). It used to be a local copy of the geometry, which is
   // exactly how a stale mark survives a brand change.
-  const mark = vennGroup({ x: f(8), y: f(24), width: f(9), plate: DEEP, lens: GOLD, surface: PAPER });
+  const mark = ticketGroup({ x: f(8), y: f(24), width: f(9), plate: DEEP, lens: GOLD, surface: PAPER });
   return ms(
     w,
     h,

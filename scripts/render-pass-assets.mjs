@@ -27,7 +27,7 @@ import {
   passIconSvg,
   passLogoSvg,
   passStripSvg,
-  vennMark,
+  ticketMark,
   setupScreenSvg,
   stackedTeammatesSvg,
   PASS_TOKENS,
@@ -201,7 +201,7 @@ if (argv.includes("--frames")) {
 /**
  * The poster mark for the HTML page (#440).
  *
- * The page is HTML and cannot call `vennMark()`, so it renders this file instead. Generating it here — from the
+ * The page is HTML and cannot call `ticketMark()`, so it renders this file instead. Generating it here — from the
  * same function the pass itself uses — is what makes "the mark top-left" the same mark rather than a second
  * drawing. The mark is drawn inverted (paper plates, state-coloured lens) because the page paints it over the
  * mandate's tint, where a deep plate would disappear.
@@ -217,9 +217,9 @@ const MARKS = [
   ["mark-expired.svg", "EXPIRED", PASS_TOKENS.state.deadPlate],
 ];
 for (const [file, state, surface] of MARKS) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${vennMark({ x: 0, y: 19, size: 100, state, plate: "#FFFFFF", surface })}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${ticketMark({ x: 0, y: 19, size: 100, state, plate: "#FFFFFF", surface })}</svg>`;
   writeFileSync(join(OUT, file), svg);
-  written.push(`${file} — the poster mark, drawn by vennMark()`);
+  written.push(`${file} — the poster mark, drawn by ticketMark()`);
 }
 
 // The SVG beside the PNG, so the lander can inline exactly what was rasterised.

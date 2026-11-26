@@ -29,10 +29,13 @@ say so rather than copying it.
 
 ## What you must not change
 
-- **the mark's geometry**: two plates, 62 × 62, radius 15, the second at x = 38 → overlap 24 units = **38.7%**.
-- **the lens is the only accent**: gold active, red revoked, grey expired, paper knockout for one colour.
-- **the minimum sizes**: vertical lockup 90 px, horizontal 110 px, mark 16 px, lens ≥ 3 px. There is no simplified
-  variant — below the floor you use the mark alone or you do not show state.
+- **the mark's geometry**: the ticket — 184 × 100, corner 26, a bite of **r 17** out of each end, the split at x = 92,
+  and the seal 56 wide between them.
+- **the seal is the only accent**: amber active, red revoked, grey expired, paper knockout for one colour.
+- **the state stays in the silhouette**: revoked removes the stub. Do not "tidy" that away — it is why the mark works in
+  greyscale and at 16 px.
+- **the minimum sizes**: vertical lockup 90 px, horizontal 110 px, mark 16 px, seal ≥ 3 px. There is no simplified
+  variant — below the floor the bites go, so you use the mark alone or do not show state.
 - **the honesty lines**: no custody, no tap to pay, not a payment card, and a seller can verify it without trusting
   the holder.
 
