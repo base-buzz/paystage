@@ -124,6 +124,8 @@ if (reason === null) {
     /* #454: the demo's copy must say budget, not crypto. A vocabulary rule is a grep, and a grep that only runs in CI is
        a rule that ships broken. */
     "check-demo-vocabulary.mjs",
+    /* #461: the site says "0 keys held". A claim nobody attacks is a liability, so something attacks it on every run. */
+    "check-no-keys.mjs",
   ]) {
     const [script, ...scriptArgs] = cheap.split(" ");
     if (!existsSync(join(ROOT, "scripts", script))) continue;
