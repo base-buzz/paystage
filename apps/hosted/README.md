@@ -26,8 +26,20 @@ Set via `wrangler secret put <NAME>` (never commit values):
 | `PAYSTAGE_PAYTO` | required | required |
 | `CDP_API_KEY_ID` | required | — |
 | `CDP_API_KEY_SECRET` | required | — |
+| `MANDATE_MINT_TOKEN` | only to mint mandates | only to mint mandates |
+| `MANDATE_TENANT_ID` | only to mint mandates | only to mint mandates |
 
 No private keys are stored in the Worker. `PAYSTAGE_PAYTO` is the treasury address that receives USDC; the CDP secrets are only used to authenticate to the facilitator.
+
+## Minting a mandate
+
+`POST /v1/mandate` records a signed mandate envelope so `GET /v1/mandate/:serial` can answer with a
+status instead of `unknown`. It is not part of the paid evaluation API and not behind x402: it is
+gated by the service token `MANDATE_MINT_TOKEN` (`Authorization: Bearer …`) and writes only into the
+tenant `MANDATE_TENANT_ID`. Unset either one and every mint is refused with `503
+mandate_mint_not_configured` — there is no open default. The envelope is verified against the receipt
+key set (`RECEIPT_SIGNING_KEY_PKCS8`), so a deployment that signs no receipts cannot mint either.
+Caller rule, response shape and the named refusals: [`docs/specs/mandate.md`](../../docs/specs/mandate.md#minting-a-mandate--post-v1mandate-455).
 
 ## Deploy
 

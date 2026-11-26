@@ -249,6 +249,149 @@ export const PROBLEMS = {
       fix: "Retry after the indicated delay. Do not read this as an unknown serial.",
       ...(instance !== undefined ? { instance } : {}),
     }),
+  /**
+   * The mint route (#455): one named refusal per way an envelope, a serial or a caller can fail.
+   *
+   * These are separate codes rather than one `mint_refused` because the fixes differ: an unsigned
+   * envelope needs the issuer to sign it, an unknown kid needs the verifier's key set checked, a past
+   * expiry needs a fresh mandate, and an unauthorised caller needs a token it does not have. A single
+   * code would make every one of those look like the same problem.
+   */
+  mandateMintUnauthorized: (instance?: string) =>
+    problem({
+      status: 401,
+      code: "mandate_mint_unauthorized",
+      title: "Only the mandate issuer may mint",
+      detail:
+        "Minting writes a capability, so it is not a public write. This request carried no service token, or a token this deployment does not hold.",
+      retriable: false,
+      fix: "Send `Authorization: Bearer <MANDATE_MINT_TOKEN>` from the issuer backend that holds the token. A console session, a browser and an agent are all refused by design.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateMintNotConfigured: (instance?: string) =>
+    problem({
+      status: 503,
+      code: "mandate_mint_not_configured",
+      title: "Minting is not configured on this deployment",
+      detail:
+        "A mint needs a mandate store, a tenant binding, a service token and a published receipt key. At least one of those is missing here, so the route refuses everyone rather than minting a capability it cannot later read.",
+      retriable: false,
+      fix: "Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY, MANDATE_TENANT_ID, MANDATE_MINT_TOKEN and RECEIPT_SIGNING_KEY_PKCS8 on the deployment, then retry once.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateMintStoreUnavailable: (instance?: string) =>
+    problem({
+      status: 503,
+      code: "mandate_mint_store_unavailable",
+      title: "The mandate store did not answer",
+      detail:
+        "The row could not be written or read back. No mandate was minted by this request; retrying may succeed.",
+      retriable: true,
+      retryAfterSeconds: 5,
+      fix: "Retry after the indicated delay. Do not tell a principal their mandate exists until this call succeeds.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateEnvelopeRequired: (instance?: string) =>
+    problem({
+      status: 400,
+      code: "mandate_envelope_required",
+      title: "The body carries no signed envelope",
+      detail: "The body must contain an `envelope` object: the signed mandate to record.",
+      retriable: false,
+      field: "envelope",
+      fix: "Send `{\"envelope\": <the object @paystage/mandate.issue() returned>}`. The serial comes from that object; a body-level `serial` is ignored.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateMalformed: (reason: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "mandate_malformed",
+      title: "The envelope is not a mandate this store can record",
+      detail: reason,
+      retriable: false,
+      field: "envelope",
+      fix: "Re-read the package's `verify` status table: the reason above names the field or statement that failed. Fix that before retrying; the same body fails the same way.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateUnsigned: (reason: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "mandate_unsigned",
+      title: "The envelope carries no signature",
+      detail: reason,
+      retriable: false,
+      field: "envelope",
+      fix: "The envelope must be produced by `@paystage/mandate.issue()` with the issuer's signing key. An unsigned object records a claim; it does not prove a principal granted it.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateTampered: (reason: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "mandate_tampered",
+      title: "The envelope's signature does not match its payload",
+      detail: reason,
+      retriable: false,
+      field: "envelope",
+      fix: "Record the exact object `issue()` returned. Any edit after signing — even to a display label — breaks the signature and is refused.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateUnknownKid: (reason: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "mandate_unknown_kid",
+      title: "The envelope names a key this deployment does not publish",
+      detail: reason,
+      retriable: false,
+      field: "envelope",
+      fix: "Read the key set this deployment publishes at /.well-known/paystage-receipt-key.json and sign with the matching `kid`. An unverifiable mandate is not a valid one.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateExpired: (reason: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "mandate_expired",
+      title: "The envelope's signed expiry is already past",
+      detail: reason,
+      retriable: false,
+      field: "envelope",
+      fix: "Ask the principal for a fresh mandate with an `expires_at` in the future, then mint that one. A past expiry is refused rather than stored as an `expired` row, because a mint is the moment a capability starts.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateRevoked: (serial: string, instance?: string) =>
+    problem({
+      status: 409,
+      code: "mandate_revoked",
+      title: "This mandate has been revoked",
+      detail: `Serial ${JSON.stringify(serial)} has a signed revocation statement, or a stored row already marked revoked. A revoked authority is not re-minted by this route.`,
+      retriable: false,
+      field: "envelope",
+      fix: "Mint a new mandate with a new serial. Re-minting a revoked serial would make a revocation lose to a replayed envelope.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateAlreadyMinted: (serial: string, instance?: string) =>
+    problem({
+      status: 409,
+      code: "mandate_already_minted",
+      title: "This serial is already on record",
+      detail: `Serial ${JSON.stringify(serial)} already has a row. The stored envelope is immutable, so a second mint would be an overwrite.`,
+      retriable: false,
+      field: "envelope",
+      fix: "Read the existing record at GET /v1/mandate/:serial. If the mandate changed, issue a new one with a new serial rather than reusing this one.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateSerialNotMintable: (serial: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "mandate_serial_not_mintable",
+      title: "The signed serial is not a mintable serial",
+      detail:
+        `The envelope's serial ${JSON.stringify(serial)} is not the full form (vch_ followed by 22-64 URL-safe characters). ` +
+        "The vch-ABC short code on the pass face is three characters and is a display handle, not a capability — anyone could guess it.",
+      retriable: false,
+      field: "envelope",
+      fix: "Issue the mandate with `generateSerial()` from @paystage/mandate. Serials are unguessable or they are not capabilities.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
   faucetAlreadyFunded: (resetsAt: string, hours: number, instance?: string) =>
     problem({
       status: 429,

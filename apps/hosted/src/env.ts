@@ -19,6 +19,14 @@ export interface Bindings {
   SEPOLIA_RPC_URL?: string;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
+  /** The receipt key set a mandate envelope is verified against (#455). Unset = minting is refused. */
+  RECEIPT_SIGNING_KEY_PKCS8?: string;
+  RECEIPT_SIGNING_KEY_ID?: string;
+  RECEIPT_SIGNING_KEYS_RETIRED?: string;
+  /** The service token that may call POST /v1/mandate (#455). Unset = every mint is refused. */
+  MANDATE_MINT_TOKEN?: string;
+  /** The tenant a minted mandate row belongs to (#455). Deployment config, not a request field. */
+  MANDATE_TENANT_ID?: string;
 }
 
 export interface Env {

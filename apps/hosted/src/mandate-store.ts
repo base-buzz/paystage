@@ -74,6 +74,20 @@ export interface MandateWriter {
 
 export interface MandateStore extends MandateSource, MandateWriter {}
 
+/**
+ * A serial that already has a row (#455).
+ *
+ * Its own type because the mint route has to answer `409 mandate_already_minted` for a duplicate and
+ * `503` for a store that did not answer, and both otherwise arrive as "insert failed". Matching on an
+ * error message to tell them apart would break the first time the wording changed.
+ */
+export class DuplicateMandateError extends Error {
+  constructor(readonly serial: string) {
+    super(`mandate ${serial} is already stored; the envelope is immutable`);
+    this.name = "DuplicateMandateError";
+  }
+}
+
 function nonEmpty(value: string | undefined | null): value is string {
   return typeof value === "string" && value.length > 0;
 }
@@ -171,6 +185,9 @@ export function supabaseMandateStore(env: MandateStorageEnv): MandateStore | und
         headers: { ...headers(key), "Content-Type": "application/json", Prefer: "return=minimal" },
         body: JSON.stringify(row),
       });
+      // 409 is PostgREST's answer to a duplicate primary key: the serial is already stored, and the
+      // envelope is immutable, so this is a conflict the caller can act on rather than an outage.
+      if (res.status === 409) throw new DuplicateMandateError(row.serial);
       if (!res.ok) throw new Error(`mandate insert failed (HTTP ${res.status})`);
     },
 
@@ -315,7 +332,7 @@ export function createMemoryMandateStore(seed: NewMandateRow[] = []): MandateSto
       return toPublicRecord(row);
     },
     async insert(row: NewMandateRow): Promise<void> {
-      if (rows.has(row.serial)) throw new Error(`mandate ${row.serial} is already stored; the envelope is immutable`);
+      if (rows.has(row.serial)) throw new DuplicateMandateError(row.serial);
       rows.set(row.serial, { ...row, revoked_at: null, revocation: null });
     },
     async revoke(serial: string, revocation: Revocation, revokedAt: string): Promise<void> {

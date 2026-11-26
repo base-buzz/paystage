@@ -15,6 +15,8 @@ workers_dev = true
 #   CDP_API_KEY_SECRET         (mainnet only)
 #   SUPABASE_URL               (telemetry: Supabase project URL, e.g. https://<ref>.supabase.co)
 #   SUPABASE_SERVICE_ROLE_KEY  (telemetry: service role key — server-side only, never expose)
+#   MANDATE_MINT_TOKEN         (POST /v1/mandate: the only caller allowed to mint; unset = every mint refused)
+#   MANDATE_TENANT_ID          (POST /v1/mandate: the tenant minted rows belong to; unset = every mint refused)
 # Mainnet live: set CDP_API_KEY_ID / CDP_API_KEY_SECRET + PAYSTAGE_PAYTO via wrangler secret put.
 # Telemetry: set SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY via wrangler secret put.
 

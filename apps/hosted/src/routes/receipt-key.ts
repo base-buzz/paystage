@@ -50,12 +50,21 @@ function keySet(env: Record<string, string | undefined>): SigningKey[] {
   return keys;
 }
 
-async function jwks(env: Record<string, string | undefined>): Promise<Record<string, unknown>[]> {
+/**
+ * The key set this deployment publishes, derived from the signing keys it holds.
+ *
+ * Exported (#455) because the mint route must verify an envelope against exactly the keys a seller
+ * reads from `/.well-known/paystage-receipt-key.json`; deriving a second set inside the route would be
+ * a place for the two to drift. `kid`, `use` and `alg` are what let a verifier pick an entry rather
+ * than trying all of them.
+ */
+export async function publishedReceiptJwks(
+  env: Record<string, string | undefined>,
+): Promise<Record<string, unknown>[]> {
   const out: Record<string, unknown>[] = [];
   for (const key of keySet(env)) {
     const jwk = await publicKeyJwk(key.pkcs8);
     if (jwk === undefined) continue;
-    // `kid`, `use` and `alg` are what let a verifier pick an entry rather than trying all of them.
     out.push({ ...jwk, kid: key.key_id, use: "sig", alg: "ES256" });
   }
   return out;
@@ -66,7 +75,7 @@ const CACHE = { "cache-control": "public, max-age=300, s-maxage=300" };
 /** The JWKS. Standard path, and the one a new verifier should read. */
 receiptKeyRoutes.get("/.well-known/paystage-receipt-key.json", async (c) => {
   const env = (c.env ?? {}) as Record<string, string | undefined>;
-  const keys = await jwks(env);
+  const keys = await publishedReceiptJwks(env);
   if (keys.length === 0) {
     return c.json({ keys: [], configured: false, alg: RECEIPT_ALG }, 200, CACHE);
   }
@@ -76,7 +85,7 @@ receiptKeyRoutes.get("/.well-known/paystage-receipt-key.json", async (c) => {
 /** The original single-key shape, now carrying the set as well. */
 receiptKeyRoutes.get("/v1/public/receipt-key.json", async (c) => {
   const env = (c.env ?? {}) as Record<string, string | undefined>;
-  const keys = await jwks(env);
+  const keys = await publishedReceiptJwks(env);
   const active = keys[0];
   if (active === undefined) {
     return c.json({ configured: false, alg: RECEIPT_ALG, key_id: RECEIPT_KEY_ID, keys: [] }, 200, CACHE);

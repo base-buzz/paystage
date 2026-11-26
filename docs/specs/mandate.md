@@ -79,6 +79,64 @@ if (!result.ok) {
 `verify()` never throws. "I could not check this" is a different answer from "this is forged", and
 neither is ever reported as valid.
 
+## Minting a mandate — `POST /v1/mandate` (#455)
+
+A signed envelope is a document. For `GET /v1/mandate/:serial` to answer anything but `unknown`, the
+envelope has to be recorded, and that write is its own route: a pass is a rendering of a mandate, not
+the moment authority is granted, so the write must not depend on someone drawing a card.
+
+```http
+POST /v1/mandate
+Authorization: Bearer <MANDATE_MINT_TOKEN>
+Content-Type: application/json
+
+{ "envelope": { "v": 1, "serial": "vch_…", "principal": "…", "agent": "…", "scope": { … },
+                "issued_at": "…", "expires_at": "…", "revocable": true,
+                "kid": "paystage-receipt-v1", "signature": "…" },
+  "revocations": [] }
+```
+
+**Who may mint.** The holder of the service token `MANDATE_MINT_TOKEN` — the issuer backend that already
+holds the signing key. That is the whole owner rule: no console session, no browser credential and no
+agent can mint, because a mint route without an owner is an open endpoint that creates capabilities.
+Every other caller is refused with `401 mandate_mint_unauthorized`, and a deployment with no token (or
+no mandate store, no tenant or no published key) refuses every mint with `503
+mandate_mint_not_configured` rather than defaulting to open.
+
+**What it returns.** `201` and exactly two fields — never the envelope back:
+
+```json
+{ "serial": "vch_7F3…", "verificationUrl": "https://paystage.xyz/m/vch_7F3…" }
+```
+
+**Where the serial comes from.** The signed envelope, full stop. A `serial` in the request body is
+ignored (and tested), because a serial is only a capability while it is unguessable. For the same
+reason the mint accepts only the full `vch_` form of at least 22 URL-safe characters: the 3-character
+`vch-ABC` short code on the pass face is a display handle and is refused with `400
+mandate_serial_not_mintable`.
+
+**The three things it refuses**, each with a named code — and no row exists after any of them:
+
+| Refusal | Status / code |
+|---|---|
+| The envelope is unsigned, tampered, or names a `kid` this deployment does not publish | `400` `mandate_unsigned` · `mandate_tampered` · `mandate_unknown_kid` |
+| The signed `expires_at` is already past (a mint starts a capability; a dead one is not recorded) | `400` `mandate_expired` |
+| The envelope is revoked — a matching signed statement in `revocations`, or a stored row already marked revoked | `409` `mandate_revoked` |
+| The caller fails the owner rule (no token, wrong token, another auth scheme) | `401` `mandate_mint_unauthorized` |
+
+The remaining refusals are about the request or the store, not the authority: `mandate_envelope_required`
+(no `envelope` object), `invalid_json`, `mandate_malformed` (a bad `revocations` list or a malformed
+envelope), `mandate_already_minted` (`409`, the serial is on record and the stored envelope is
+immutable) and `mandate_mint_store_unavailable` (`503`, retriable — the write did not happen).
+
+Deployment configuration for the route:
+
+| Variable | Meaning |
+|---|---|
+| `MANDATE_MINT_TOKEN` | Wrangler secret. The bearer token that may mint. Unset = every mint refused. |
+| `MANDATE_TENANT_ID` | The tenant every minted row belongs to; RLS keys on it. Never a request field. |
+| `RECEIPT_SIGNING_KEY_PKCS8` | The key set an envelope is verified against (the published JWKS is derived from it). |
+
 ## Revocation is a separate signed statement
 
 The mandate is immutable and signed, so revoking it does not edit it. `revoke()` signs a statement
@@ -109,9 +167,9 @@ rather than letting the mandate read as live.
    read it against a token with different decimals or a different asset.
 6. **A revocation feed, when `revocable` is true.** If you never look, a revoked mandate looks active.
 
-The hosted lookup (`GET /v1/mandate/:serial`) answers `unknown` for every serial until a writer
-records one; `unknown` means do not trust the pass. Offline verification of a mandate you were handed
-does not depend on that endpoint.
+The hosted lookup (`GET /v1/mandate/:serial`) answers `unknown` for a serial nobody has minted; the
+mint route above is the only writer, and `unknown` means do not trust the pass. Offline verification of
+a mandate you were handed does not depend on that endpoint.
 
 ## What a verified mandate does not prove
 
@@ -130,3 +188,5 @@ holder of the key named by `kid` signed these exact limits for this exact serial
 - Types and constants: [`packages/mandate/src/types.ts`](../../packages/mandate/src/types.ts)
 - Evaluator integration: [`packages/preflight/src/evaluate.ts`](../../packages/preflight/src/evaluate.ts) (`EvaluateOptions.mandate`)
 - Public lookup route: [`apps/hosted/src/routes/mandate.ts`](../../apps/hosted/src/routes/mandate.ts)
+- Mint route and its store writer: [`apps/hosted/src/routes/mandate-mint.ts`](../../apps/hosted/src/routes/mandate-mint.ts),
+  [`apps/hosted/src/mandate-store.ts`](../../apps/hosted/src/mandate-store.ts)

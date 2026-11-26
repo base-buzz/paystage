@@ -13,7 +13,13 @@ import { openapiRoutes } from "./routes/openapi.js";
 import { createRunsRoutes } from "./routes/runs.js";
 import { createWalletsRoutes } from "./routes/wallets.js";
 import { createMandateRoutes, type MandateSource } from "./routes/mandate.js";
-import { supabaseMandateStore } from "./mandate-store.js";
+import {
+  createMandateMintRoutes,
+  type MandateMintOptions,
+  type VerificationKey,
+} from "./routes/mandate-mint.js";
+import { publishedReceiptJwks } from "./routes/receipt-key.js";
+import { supabaseMandateStore, type MandateStore } from "./mandate-store.js";
 import { BUNDLE_STORE_VAR, supabaseBundleStore, type BundleStore } from "./bundle-store.js";
 import {
   supabasePayeeObservationStore,
@@ -47,6 +53,18 @@ export interface AppEnv {
   SUPABASE_SERVICE_ROLE_KEY?: string;
   /** PKCS#8 base64 ECDSA P-256 key. Unset = receipts are emitted unsigned. */
   RECEIPT_SIGNING_KEY_PKCS8?: string;
+  /** Key id the active signing key stamps. Rotation is additive; see `receipt-key.ts`. */
+  RECEIPT_SIGNING_KEY_ID?: string;
+  /** `kid:pkcs8` pairs, comma-separated, for keys rotated out while their receipts still verify. */
+  RECEIPT_SIGNING_KEYS_RETIRED?: string;
+  /**
+   * #455: the service token that may mint a mandate (`POST /v1/mandate`). Unset/empty means every
+   * mint is refused with `mandate_mint_not_configured`: minting is a write of authority, so there is
+   * no open default.
+   */
+  MANDATE_MINT_TOKEN?: string;
+  /** #455: the tenant every minted row belongs to. Deployment configuration, never a request field. */
+  MANDATE_TENANT_ID?: string;
   /** Free tier for callers with no payment and no account. Default on. */
   FREE_TIER_ENABLED?: string;
   FREE_TIER_DAILY_LIMIT?: string;
@@ -73,6 +91,17 @@ export interface CreateAppOptions {
    * `unknown` for every serial rather than inventing one.
    */
   mandateSource?: MandateSource;
+  /**
+   * Test/deployment seam for mandate writes (#455). Defaults to the same Supabase store the read
+   * route uses; a test that injects a memory store gets both halves pointed at it.
+   */
+  mandateStore?: MandateStore;
+  /**
+   * Test seam for the mint route's owner, tenant and verification key set. Defaults to
+   * `MANDATE_MINT_TOKEN`, `MANDATE_TENANT_ID` and the published receipt key set derived from
+   * `RECEIPT_SIGNING_KEY_PKCS8` / `RECEIPT_SIGNING_KEYS_RETIRED`.
+   */
+  mandateMint?: Partial<Omit<MandateMintOptions, "store">>;
 }
 
 function nonEmpty(v: string | undefined): v is string {
@@ -200,7 +229,10 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   const bundleStore = opts.bundleStore ?? supabaseBundleStore(env);
   const payeeObservationStore =
     opts.payeeObservationStore ?? supabasePayeeObservationStore(env);
-  const mandateSource = opts.mandateSource ?? supabaseMandateStore(env);
+  // One store instance serves both halves: the public read (#453) and the mint writer (#455), so an
+  // injected memory store in a test is read back by the same route the production store is.
+  const mandateStore = opts.mandateStore ?? supabaseMandateStore(env);
+  const mandateSource = opts.mandateSource ?? mandateStore;
   app.use("*", async (c, next) => {
     c.set(BUNDLE_STORE_VAR, bundleStore);
     await next();
@@ -373,6 +405,21 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   // Mounted before the payment gate on purpose (#423).
   const mandateRoutes = createMandateRoutes(mandateSource);
   app.route("/", mandateRoutes);
+  // The mint (#455) is the write half of the same record: not a paid evaluation, and gated by a
+  // service token rather than by x402, so it is mounted outside the payment middleware too.
+  const mandateMintRoutes = createMandateMintRoutes({
+    store: mandateStore,
+    token: opts.mandateMint?.token ?? env.MANDATE_MINT_TOKEN,
+    tenantId: opts.mandateMint?.tenantId ?? env.MANDATE_TENANT_ID,
+    verificationKeys:
+      opts.mandateMint?.verificationKeys ??
+      (() =>
+        publishedReceiptJwks(
+          env as unknown as Record<string, string | undefined>,
+        ) as unknown as Promise<VerificationKey[]>),
+    now: opts.mandateMint?.now,
+  });
+  app.route("/", mandateMintRoutes);
 
   const protect = opts.protect ?? true;
   if (protect) {
