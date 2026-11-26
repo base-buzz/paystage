@@ -14,6 +14,7 @@
   "dependencies": {
     "@coinbase/x402": "^2.1.0",
     "@paystage/auth-watch": "file:../../packages/auth-watch",
+    "@paystage/mandate": "file:../../packages/mandate",
     "@paystage/policy": "^0.4.0",
     "@paystage/preflight": "^0.6.0",
     "@x402/core": "^2.29.0",

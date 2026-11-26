@@ -16,10 +16,10 @@ import { DEFAULT_TINT } from "@/lib/pass-tokens";
  *
  *  1. **No caching.** A cached `active` would outlive a revocation. `force-dynamic` + a `no-store` fetch
  *     keep the answer live; a CDN cache rule for `/m/*` would be a safety incident.
- *  2. **`unknown` is an ordinary answer.** No mandate store exists yet, so every real serial answers
- *     `unknown` today. The page shows that in the same visual language as `revoked`; it never turns it
- *     into an error, and a failed read is never shown as `unknown` (that would say "no such mandate"
- *     when the truth is "could not check").
+ *  2. **`unknown` is an ordinary answer.** A serial the store has never seen answers `unknown`, and the
+ *     page shows that in the same visual language as `revoked`; it never turns it into an error, and a
+ *     failed read is never shown as `unknown` (that would say "no such mandate" when the truth is
+ *     "could not check").
  *  3. **A camera must never see a framework error page.** A malformed serial renders a plain 200
  *     explanation before any fetch happens.
  *

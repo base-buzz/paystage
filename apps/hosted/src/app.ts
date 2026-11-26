@@ -13,6 +13,7 @@ import { openapiRoutes } from "./routes/openapi.js";
 import { createRunsRoutes } from "./routes/runs.js";
 import { createWalletsRoutes } from "./routes/wallets.js";
 import { createMandateRoutes, type MandateSource } from "./routes/mandate.js";
+import { supabaseMandateStore } from "./mandate-store.js";
 import { BUNDLE_STORE_VAR, supabaseBundleStore, type BundleStore } from "./bundle-store.js";
 import {
   supabasePayeeObservationStore,
@@ -67,8 +68,9 @@ export interface CreateAppOptions {
   /** Test/deployment seam for payee-observation storage; defaults to the Supabase store. */
   payeeObservationStore?: PayeeObservationStore;
   /**
-   * Test/deployment seam for mandate reads. Unset in every deployment today because no mandate store or
-   * writer exists (#423); the route then answers `unknown` for every serial rather than inventing one.
+   * Test/deployment seam for mandate reads. Defaults to the Supabase store (#453) when both
+   * `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are configured; with none the route answers
+   * `unknown` for every serial rather than inventing one.
    */
   mandateSource?: MandateSource;
 }
@@ -198,6 +200,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   const bundleStore = opts.bundleStore ?? supabaseBundleStore(env);
   const payeeObservationStore =
     opts.payeeObservationStore ?? supabasePayeeObservationStore(env);
+  const mandateSource = opts.mandateSource ?? supabaseMandateStore(env);
   app.use("*", async (c, next) => {
     c.set(BUNDLE_STORE_VAR, bundleStore);
     await next();
@@ -368,7 +371,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   app.route("/", walletsRoutes);
   // Public and read-only: a QR scan asks whether an authority still exists, not for a new evaluation.
   // Mounted before the payment gate on purpose (#423).
-  const mandateRoutes = createMandateRoutes(opts.mandateSource);
+  const mandateRoutes = createMandateRoutes(mandateSource);
   app.route("/", mandateRoutes);
 
   const protect = opts.protect ?? true;

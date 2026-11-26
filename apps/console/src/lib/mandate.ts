@@ -3,7 +3,7 @@
  *
  * The page renders the hosted `GET /v1/mandate/:serial` answer; it does not keep its own copy of a
  * mandate. One endpoint, one truth: if the endpoint says `unknown`, the page says `unknown` and not an
- * error, because no mandate store exists yet and "not on record" is a complete, actionable answer.
+ * error, because "not on record" is a complete, actionable answer for a serial never written.
  *
  * The boundary this file protects is the one the proposal names in §7: **only what the endpoint
  * returns goes on the page.** No payee list, no spend history, no agent address, no refusals. The

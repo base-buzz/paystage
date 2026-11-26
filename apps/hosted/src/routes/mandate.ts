@@ -5,12 +5,11 @@
  * "does this authority still exist?", not making a new paid judgement. The route answers with the
  * status, the scope the principal wrote, the principal and the verdict a seller should take.
  *
- * **No mandate store exists in this tree.** No writer records a serial anywhere (checked 2026-11-25:
- * `apps/hosted/src/routes` had no mandate route and no store module, and `scripts/refusal-summary.mjs`
- * already exits 2 because no stored receipt carries `mandate_serial`). Rather than invent a store or
- * fabricate an `active` record, this route takes an optional read-only `MandateSource` seam; with no
- * source configured — which is every deployment today — every serial answers `unknown`. Honest
- * `unknown` beats a fabricated `active`, and the shape is stable for the day a writer lands.
+ * **The store exists (#453); a deployment may still not have one.** `mandate-store.ts` writes and reads
+ * the `mandates` table, and `createApp` wires the Supabase adapter when both Supabase bindings are set.
+ * This route keeps the optional read-only `MandateSource` seam: with no source configured (no Supabase
+ * env, or a test that injects nothing) every serial answers `unknown`. Honest `unknown` beats a
+ * fabricated `active`, and the seam is what keeps the endpoint testable without a database.
  *
  * **Unknown is HTTP 200, not 404.** A scanner must always get an answer, and "unknown" is an answer:
  * a 404 is indistinguishable from a typo, a CDN miss or a route that no longer exists. `unknown` is a
@@ -37,7 +36,7 @@ export interface MandatePrincipal {
   assertion: "self";
 }
 
-/** One stored mandate. This is a read shape, not a schema: no migration and no writer exist yet. */
+/** One stored mandate. The table and writer live in `mandate-store.ts` (#453). */
 export interface MandateRecord {
   serial: string;
   /** The stored state. Expiry is recomputed against `as_of` so a stale `active` cannot pass. */
@@ -138,8 +137,8 @@ export function createMandateRoutes(source: MandateSource | undefined): Hono {
       return c.json(PROBLEMS.invalidSerial(serial), 400);
     }
 
-    // No source is configured in this deployment. Say so in the body by answering `unknown` for every
-    // serial — never 503, because "we do not keep mandates" is a fact, not an outage, and never a
+    // No source configured (no Supabase bindings, or a test with none). Answer `unknown` for every
+    // serial — never 503, because "we do not keep mandates here" is a fact, not an outage, and never a
     // fabricated active record.
     if (source === undefined) {
       return c.json(unknownMandate(serial, asOf), 200, { "cache-control": "no-store, max-age=0" });
