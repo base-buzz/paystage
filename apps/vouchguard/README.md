@@ -1,7 +1,9 @@
 # @paystage/vouchguard
 
-Public lander and signed-in dashboard for **VouchGuard**, the wallet-pass product and a
-sibling brand to PayStage. PayStage appears only as the issuer line: "vouched by PayStage".
+Public lander and signed-in dashboard for the product named in the repo-root **`brand.json`**,
+a sibling brand to PayStage. PayStage appears only as the issuer line: "vouched by PayStage".
+A fork changes `brand.json` and nothing in this app; the whole contract is in
+[`docs/specs/fork.md`](../../docs/specs/fork.md).
 
 Next.js 15 App Router, React 19, Tailwind v4 (same wiring as `apps/console`), shadcn-style
 components copied into `src/components/ui/`, Radix primitives, lucide icons.
@@ -41,11 +43,18 @@ mandate store (**#423 / #436**). Until then, the dashboard layout sets
 
 The account chip in the top bar is fake but labelled: "Demo account / not signed in".
 
-## Shared tokens
+## Shared tokens and brand
 
 `src/lib/tokens.ts` imports `apps/console/src/lib/pass-tokens.json` directly — it does not
 copy the palette. The values are exposed as CSS custom properties in `layout.tsx` and
 mapped in `globals.css` under `@theme inline`.
+
+`src/lib/brand-config.ts` imports the repo-root `brand.json` and validates it through
+`src/lib/brand.mjs`. Name, wordmark, tint, domain and mode are read from that one file;
+`tint` becomes the `--vg-brand` accent. The validator rejects unknown keys, names missing
+keys, and fails with `APPLE_PASS_CERT` in the message when `mode` is `"apple"` and no
+certificate path is set. `scripts/check-brand.mjs` runs the same check in `predev` and
+`prebuild`.
 
 ## Artwork
 
@@ -67,12 +76,17 @@ npm run build     # prebuild copies the artwork first
 
 The method is copied from `apps/console`, which is the only Next app in this repo that
 deploys: `@opennextjs/cloudflare` builds the app, then `wrangler deploy` ships the Worker
-with a static-assets binding. `open-next.config.ts` and `wrangler.toml` mirror the
-console's files, with the worker name and route changed to `vouchguard.app`.
+with a static-assets binding. `open-next.config.ts` mirrors the console's file.
+
+`wrangler.toml` is **generated and gitignored**: `scripts/render-wrangler.mjs` renders it
+from `wrangler.toml.template` plus the Worker name and domain in `brand.json`. That keeps
+the fork to one file; do not commit a generated `wrangler.toml`.
 
 ```bash
-npm run deploy:prod   # npx opennextjs-cloudflare build && npx wrangler deploy
+node scripts/check-brand.mjs   # or let prebuild do it
+npm test                       # config schema, missing cert, changed brand values
+npm run deploy:prod            # check + render wrangler.toml + OpenNext build + deploy
 ```
 
-**No deploy has been run from this branch.** The route bindings for `vouchguard.app` and
-`www.vouchguard.app` are written but unproven; the parent session owns the first deploy.
+**No deploy has been run from this branch.** The parent session owns the first deploy, and
+the route bindings are unproven until then.

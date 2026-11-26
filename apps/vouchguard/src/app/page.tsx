@@ -15,13 +15,14 @@ import {
 import { Brand } from "@/components/brand";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { brand, view } from "@/lib/brand-config";
 import { posterTints } from "@/lib/tokens";
 
 export const metadata: Metadata = {
-  title: "VouchGuard — a wallet pass for agent spending limits",
+  title: view.title,
   description:
     "A wallet pass that shows what an AI agent may spend: per-purchase cap, per-24h cap, expiry and revocation. Not a card, not a wallet, not escrow. vouched by PayStage.",
-  alternates: { canonical: "https://vouchguard.app/" },
+  alternates: { canonical: view.homepage },
   robots: { index: true, follow: true },
 };
 
@@ -59,7 +60,7 @@ const STEPS = [
     surface: "iPhone · Safari → Wallet",
     body: "The pass is signed and handed to the Wallet app. After this transition the page holds nothing; the wallet does.",
     image: "/mocks/story1-provision.png",
-    alt: "Safari on an iPhone: an Add to Apple Wallet button for a signed VouchGuard pass.",
+    alt: `Safari on an iPhone: an Add to Apple Wallet button for a signed ${brand.name} pass.`,
     tint: posterTints[3],
   },
 ] as const;
@@ -118,7 +119,7 @@ export default function HomePage() {
           <div aria-hidden="true" className="paper-grid absolute inset-0 opacity-60" />
           <div
             aria-hidden="true"
-            className="absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-tint-1/10 blur-3xl"
+            className="absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-brand/10 blur-3xl"
           />
           <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
             <div>
@@ -130,7 +131,7 @@ export default function HomePage() {
                 A pass that carries the limits, not the money.
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink/70">
-                VouchGuard puts an agent&rsquo;s spending mandate on a wallet pass — per purchase, per 24 hours, with
+                {brand.name} puts an agent&rsquo;s spending mandate on a wallet pass — per purchase, per 24 hours, with
                 an expiry and a revoke — so the limits travel with the agent and stay readable by the person paying.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -153,7 +154,7 @@ export default function HomePage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/pass/pass-face@2x.png"
-                alt="A VouchGuard pass face in deep indigo: Research teammate, $0.50 per purchase, $20.00 per 24h, expires 31 Jan 2027, principal Northwind Ltd."
+                alt={`A ${brand.name} pass face in deep indigo: Research teammate, $0.50 per purchase, $20.00 per 24h, expires 31 Jan 2027, principal Northwind Ltd.`}
                 width={750}
                 height={1035}
                 className="pass-shadow w-full rounded-[1.4rem] border border-ink/10 bg-paper"
@@ -315,7 +316,7 @@ export default function HomePage() {
             <div>
               <Brand showIssuer />
               <p className="mt-4 max-w-sm text-sm text-muted">
-                VouchGuard is a sibling brand to PayStage. PayStage appears only in the &ldquo;vouched by&rdquo; line,
+                {brand.name} is a sibling brand to PayStage. PayStage appears only in the &ldquo;vouched by&rdquo; line,
                 as the issuer of the pass.
               </p>
             </div>
@@ -353,7 +354,7 @@ export default function HomePage() {
               </p>
             </div>
             <p className="mt-6 text-xs text-muted">
-              © 2026 VouchGuard. Demo screens say so; no live tenants are shown. Built as a separate app at{" "}
+              © 2026 {brand.name}. Demo screens say so; no live tenants are shown. Built as a separate app at{" "}
               <span className="font-mono">apps/vouchguard</span>.
             </p>
           </div>

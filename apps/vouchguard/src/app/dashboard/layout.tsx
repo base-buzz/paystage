@@ -8,6 +8,7 @@ import { DemoBanner } from "@/components/demo-banner";
 import { Brand } from "@/components/brand";
 import { Badge } from "@/components/ui/badge";
 import { Toaster } from "@/components/ui/toaster";
+import { brand } from "@/lib/brand-config";
 
 /**
  * The dashboard is intentionally reachable without auth: the domain is new and unlisted,
@@ -15,8 +16,8 @@ import { Toaster } from "@/components/ui/toaster";
  * layout is noindex, and the account chip is labelled as a demo account.
  */
 export const metadata: Metadata = {
-  title: { default: "Dashboard", template: "%s — VouchGuard" },
-  description: "VouchGuard dashboard preview. Demo data only; no mandates exist yet.",
+  title: { default: "Dashboard", template: `%s — ${brand.name}` },
+  description: `${brand.name} dashboard preview. Demo data only; no mandates exist yet.`,
   robots: { index: false, follow: false, nocache: true },
 };
 
@@ -41,7 +42,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 No mandates exist yet. This shell is a preview of the shape.
               </p>
               <Link href="/" className="mt-2 inline-block text-[11px] font-semibold text-deep hover:underline">
-                Back to vouchguard.app →
+                Back to {brand.domain} →
               </Link>
             </div>
           </div>
@@ -70,7 +71,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </main>
 
           <footer className="border-t border-ink/10 px-5 py-5 text-xs text-muted sm:px-8">
-            VouchGuard dashboard preview · no authentication wired up · data is a fixture, not a tenant.
+            {brand.name} dashboard preview · no authentication wired up · data is a fixture, not a tenant.
           </footer>
         </div>
       </div>

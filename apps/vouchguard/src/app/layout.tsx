@@ -1,25 +1,25 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import "./globals.css";
+import { brand, view } from "@/lib/brand-config";
 import { tokenStyle } from "@/lib/tokens";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://vouchguard.app"),
+  metadataBase: new URL(view.homepage),
   title: {
-    default: "VouchGuard — a wallet pass for agent spending limits",
-    template: "%s — VouchGuard",
+    default: view.title,
+    template: `%s — ${brand.name}`,
   },
-  description:
-    "VouchGuard puts an agent's spending mandate on a wallet pass: per-purchase cap, per-24h cap, expiry and revocation. It is not a card, it holds no funds and it cannot tap to pay.",
-  applicationName: "VouchGuard",
+  description: view.description,
+  applicationName: brand.name,
   robots: { index: true, follow: true },
-  alternates: { canonical: "https://vouchguard.app/" },
+  alternates: { canonical: view.homepage },
   icons: { icon: "/pass/icon@2x.png", apple: "/pass/icon@3x.png" },
   openGraph: {
     type: "website",
-    url: "https://vouchguard.app/",
-    siteName: "VouchGuard",
+    url: view.homepage,
+    siteName: brand.name,
     title: "A pass that carries the limits, not the money.",
     description:
       "The wallet pass for agent spending mandates. Per-purchase and per-24h caps, expiry, revocation — vouched by PayStage.",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
         url: "/pass/pass-face@2x.png",
         width: 750,
         height: 1035,
-        alt: "A VouchGuard pass face showing per-purchase and per-24h spending limits",
+        alt: `A ${brand.name} pass face showing per-purchase and per-24h spending limits`,
       },
     ],
   },
@@ -42,8 +42,9 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const rootStyle = { ...tokenStyle(), ...view.cssVariables } as CSSProperties;
   return (
-    <html lang="en" style={tokenStyle()}>
+    <html lang="en" style={rootStyle}>
       <body>
         <a
           href="#main"

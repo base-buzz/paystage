@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 
+import { view } from "@/lib/brand-config";
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -9,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/dashboard", "/dashboard/"],
       },
     ],
-    sitemap: "https://vouchguard.app/sitemap.xml",
-    host: "https://vouchguard.app",
+    sitemap: `${view.verificationBase}/sitemap.xml`,
+    host: view.verificationBase,
   };
 }

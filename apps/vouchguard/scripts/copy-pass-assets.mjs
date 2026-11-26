@@ -3,7 +3,7 @@
  * Copy the shared Vouch artwork into this app at build time.
  *
  * The pass face and the storyboard are already produced by `scripts/lib/pass-face.mjs`
- * and `scripts/lib/pass-story.mjs` in the console checkout. VouchGuard must not carry a
+ * and `scripts/lib/pass-story.mjs` in the console checkout. This app must not carry a
  * second drawing of the same product, so this script copies the rendered files from
  * `apps/console/public/` instead of committing duplicates. `prebuild` (and `predev`)
  * run it, so a source change in the console reaches this app on the next build.

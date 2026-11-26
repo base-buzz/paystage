@@ -13,6 +13,8 @@
  * app is meant to avoid. If the artwork changes, change these fixtures with it.
  */
 
+import { brand } from "./brand-config";
+
 export type PassStatus = "active" | "revoked" | "expired";
 
 export interface DemoPass {
@@ -177,7 +179,7 @@ export const DEMO_ACTIVITY: DemoActivity[] = [
 
 export const DEMO_SETTINGS = {
   principal: "Northwind Ltd",
-  verificationBase: "https://vouchguard.app",
+  verificationBase: `https://${brand.domain}`,
   defaultPerPurchase: "2.00",
   defaultPerWindow: "20.00",
   defaultExpiry: "2027-01-31",

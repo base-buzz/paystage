@@ -2,8 +2,9 @@
 
 /*
  * Values come from apps/console/src/lib/pass-tokens.json via src/lib/tokens.ts and are
- * applied as inline custom properties on <html> in layout.tsx. Nothing in this file
- * hardcodes a palette value: change the JSON and the app follows.
+ * applied as inline custom properties on <html> in layout.tsx. `--vg-brand` comes from
+ * the repo-root brand.json (`tint`) through src/lib/brand-config.ts. Nothing in this file
+ * hardcodes a palette value: change either JSON and the app follows.
  */
 @theme inline {
   --color-ink: var(--vg-ink);
@@ -12,6 +13,7 @@
   --color-gold: var(--vg-gold);
   --color-muted: var(--vg-muted);
   --color-red: var(--vg-red);
+  --color-brand: var(--vg-brand);
   --color-tint-1: var(--vg-tint-1);
   --color-tint-2: var(--vg-tint-2);
   --color-tint-3: var(--vg-tint-3);

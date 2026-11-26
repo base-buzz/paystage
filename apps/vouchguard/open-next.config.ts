@@ -1,7 +1,7 @@
 import type { OpenNextConfig } from "@opennextjs/cloudflare";
 
 // Copied from apps/console/open-next.config.ts. The console is the only Next app in
-// this repo that deploys, so VouchGuard uses the same adapter rather than a second one.
+// this repo that deploys, so this app uses the same adapter rather than a second one.
 const config: OpenNextConfig = {
   default: {
     override: {
