@@ -1,12 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="275" viewBox="0 0 1200 275">
-    <rect width="1200" height="275" fill="#FFFFFF"/>
-    <g transform="translate(0 28)">
-    <rect width="220" height="220" rx="48.4" fill="#1A1F71"/>
-    <path d="M66 171.6 V52.8 h35.2
-             a41.8 41.8 0 0 1 0 83.6 h-35.2"
-          fill="none" stroke="#FFFFFF" stroke-width="25.3" stroke-linejoin="round" stroke-linecap="round"/>
-    <rect x="70.4" y="89.10000000000001" width="44" height="12.1" rx="5.9399999999999995" fill="#F7B600"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="291" viewBox="0 0 1200 291">
+  <rect width="1200" height="291" fill="#FFFFFF"/>
+  <g transform="translate(99 65) scale(2.6)">
+  <defs>
+    <clipPath id="venn-a">
+      <rect x="0" y="0" width="62" height="62" rx="15"/>
+    </clipPath>
+  </defs>
+  <rect data-plate="A" x="0" y="0" width="62" height="62" rx="15" fill="#101322"/>
+  <rect data-plate="B" x="38" y="0" width="62" height="62" rx="15" fill="#101322"/>
+  <g clip-path="url(#venn-a)">
+    <rect data-lens="1" x="38" y="0" width="62" height="62" rx="15" fill="#FFFFFF"/>
   </g>
-    <text x="295" y="190" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="145" font-weight="700"
-      letter-spacing="-2.9" fill="#101322" stroke="#101322" stroke-width="2.755">PayStage</text>
-  </svg>
+</g>
+  <text x="489" y="189" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="120"
+        font-weight="700" letter-spacing="-2.4" fill="#101322" stroke="#101322"
+        stroke-width="2.28">PayStage</text>
+</svg>

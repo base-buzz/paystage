@@ -153,7 +153,7 @@ export default function HomePage() {
             <figure className="mx-auto w-full max-w-[22rem]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/pass/pass-face@2x.png"
+                src="/pass/pass-face-2x.png"
                 alt={`A ${brand.name} pass face in deep indigo: Research teammate, $0.50 per purchase, $20.00 per 24h, expires 31 Jan 2027, principal Northwind Ltd.`}
                 width={750}
                 height={1035}

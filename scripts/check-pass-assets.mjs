@@ -58,19 +58,19 @@ if (!present.has("pass-face.svg")) {
 }
 
 /**
- * The poster mark the `/m/:serial` page renders (#440). It must exist, and the active/revoked slots must stay
- * transparent: the page shows them over the mandate's tint, so a filled slot would paint a block where the pass shows
- * a cut. `EXPIRED` is the exception on purpose — its slot is the pale, filled one by spec (an empty lock), so it is
- * checked for existence only.
+ * The poster mark the `/m/:serial` page renders (#440). The 2026-11-27 venn is two solid plates with the state in
+ * the lens; the page paints it inverted over the mandate's tint, so both plates must be present (paper) and the
+ * lens must be a distinct filled element. An outlined plate or a missing lens would be the old seal or a stale
+ * drawing, and the page would show a different mark from the pass.
  */
 for (const file of ["mark-active.svg", "mark-revoked.svg", "mark-expired.svg"]) {
   if (!present.has(file)) {
     problems.push(`${file} is missing — the /m page would draw a different mark from the pass`);
     continue;
   }
-  const transparent = file !== "mark-expired.svg";
-  if (transparent && !readFileSync(join(DIR, file), "utf8").includes('fill="transparent"')) {
-    problems.push(`${file} lost its transparent slot — the page would paint a block over the poster tint`);
+  const text = readFileSync(join(DIR, file), "utf8");
+  for (const needle of ['data-plate="A"', 'data-plate="B"', 'data-lens="1"']) {
+    if (!text.includes(needle)) problems.push(`${file} has no ${needle} — the venn is not the mark in this file`);
   }
 }
 

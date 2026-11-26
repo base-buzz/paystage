@@ -27,7 +27,7 @@ import {
   passIconSvg,
   passLogoSvg,
   passStripSvg,
-  sealMark,
+  vennMark,
   setupScreenSvg,
   stackedTeammatesSvg,
 } from "./lib/pass-face.mjs";
@@ -200,9 +200,10 @@ if (argv.includes("--frames")) {
 /**
  * The poster mark for the HTML page (#440).
  *
- * The page is HTML and cannot call `sealMark()`, so it renders this file instead. Generating it here — from the same
- * function the pass itself uses — is what makes "the mark top-left" the same mark rather than a second drawing. The
- * slot is transparent so the page's tint shows through exactly as the pass's slot is filled with its own tint.
+ * The page is HTML and cannot call `vennMark()`, so it renders this file instead. Generating it here — from the
+ * same function the pass itself uses — is what makes "the mark top-left" the same mark rather than a second
+ * drawing. The mark is drawn inverted (paper plates, state-coloured lens) because the page paints it over the
+ * mandate's tint, where a deep plate would disappear.
  */
 const MARKS = [
   ["mark-active.svg", "ACTIVE"],
@@ -210,9 +211,9 @@ const MARKS = [
   ["mark-expired.svg", "EXPIRED"],
 ];
 for (const [file, state] of MARKS) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${sealMark({ state, paper: "transparent" })}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${vennMark({ x: 0, y: 19, size: 100, state, plate: "#FFFFFF" })}</svg>`;
   writeFileSync(join(OUT, file), svg);
-  written.push(`${file} — the poster mark, drawn by sealMark()`);
+  written.push(`${file} — the poster mark, drawn by vennMark()`);
 }
 
 // The SVG beside the PNG, so the lander can inline exactly what was rasterised.

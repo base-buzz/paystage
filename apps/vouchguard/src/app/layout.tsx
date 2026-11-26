@@ -25,7 +25,7 @@ export const metadata: Metadata = {
       "The wallet pass for agent spending mandates. Per-purchase and per-24h caps, expiry, revocation — vouched by PayStage.",
     images: [
       {
-        url: "/pass/pass-face@2x.png",
+        url: "/pass/pass-face-2x.png",
         width: 750,
         height: 1035,
         alt: `A ${brand.name} pass face showing per-purchase and per-24h spending limits`,
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     title: "A pass that carries the limits, not the money.",
     description:
       "The wallet pass for agent spending mandates. Per-purchase and per-24h caps, expiry, revocation — vouched by PayStage.",
-    images: ["/pass/pass-face@2x.png"],
+    images: ["/pass/pass-face-2x.png"],
   },
 };
 

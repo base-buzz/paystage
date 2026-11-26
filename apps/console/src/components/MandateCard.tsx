@@ -14,7 +14,7 @@ import { PASS_TOKENS } from "@/lib/pass-tokens";
  *
  * Order is the pass's own:
  *
- *  1. **the poster**: the mandate's tint, the keyway mark top-left, the status chip top-right. This is the pass's
+ *  1. **the poster**: the mandate's tint, the venn mark top-left, the status chip top-right. This is the pass's
  *     head, not a page header — the site header is hidden for this route in `mandate.css`;
  *  2. **the fields**, in the pass's order and type scale — `$2.00 each purchase · $20.00 per 24h`, then EXPIRES,
  *     then PRINCIPAL;
@@ -22,7 +22,7 @@ import { PASS_TOKENS } from "@/lib/pass-tokens";
  *
  * Every colour, type size and the pad ratio come from `apps/console/src/lib/pass-tokens.json`, the file
  * `scripts/lib/pass-face.mjs` draws the Wallet assets from. The poster's mark is `/pass/mark-*.svg`, rendered from
- * the same `sealMark()` by `scripts/render-pass-assets.mjs`, so it is not a second drawing either.
+ * the same `vennMark()` by `scripts/render-pass-assets.mjs`, so it is not a second drawing either.
  *
  * It renders **only** fields the endpoint returned. No payee list, no spend history, no agent address,
  * no refusals — the proposal's §7 is a privacy boundary, not a styling choice. The write half is

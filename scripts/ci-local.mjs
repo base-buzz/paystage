@@ -102,6 +102,9 @@ if (reason === null) {
     "check-provenance-table.mjs",
     "check-examples.mjs",
     "check-pass-assets.mjs",
+    /* #457: the kit's geometry, the generated sizes and the zero-byte class of failure. It was a separate
+       command until the venn landed; a check that runs only when someone remembers is a hope. */
+    "check-brand-assets.mjs",
     "check-hardcoded-paths.mjs",
     /**
      * In `ci.yml` but not in this list until 2026-11-26, which is how a new package (`@paystage/mandate`) reached main
@@ -274,6 +277,9 @@ try {
     "gen-verified-payees.mjs --check",
     "gen-build-info.mjs --check",
     "check-copy.mjs",
+    // #457: the kit is part of the build, so the cold run checks it too, not just the fast pass.
+    "check-pass-assets.mjs",
+    "check-brand-assets.mjs",
     "check-doc-links.mjs",
     "check-published-links.mjs",
     "check-badges.mjs",
