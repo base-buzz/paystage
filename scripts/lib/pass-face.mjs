@@ -242,20 +242,34 @@ export function vennMark({
   x = 0,
   y = 0,
   size = 100,
-  state = "ACTIVE",
+  state = "active",
   paper = PAPER,
   gold = GOLD,
   ink = INK,
   red = RED,
-  plate = null,
+  body = null,
+  stub = null,
   surface = VENN_SURFACES.paper,
-  plateB = null,
   id = null,
 } = {}) {
+  // The ticket mark carries state in two places: the seal colour and, for revoked, the missing stub. On the pass poster the
+  // plates invert to paper so the mark reads on the tint; the seal keeps its state colour.
   const s = String(state).toUpperCase();
-  const lens = s === "REVOKED" ? red : s === "EXPIRED" ? MUTED : s === "MONO" ? paper : gold;
-  const uid = id ?? `venn-${Math.round(x)}-${Math.round(y)}-${Math.round(size)}`;
-  return vennGroup({ x, y, width: Number(size), plate: plate ?? paper, plateB: plateB ?? undefined, lens, surface });
+  const seal = s === "REVOKED" ? red : s === "EXPIRED" ? MUTED : s === "MONO" ? paper : gold;
+  const stateKey = s === "REVOKED" ? "revoked" : s === "EXPIRED" ? "expired" : "active";
+  // On the poster the plates invert to paper; the stub is paper at 62% over the tint so the two plates stay distinct —
+  // the same rule the mark uses on paper, applied to the field it actually sits on.
+  const stubColour = stub ?? blendHex(paper, surface, 0.62);
+  return vennGroup({
+    x,
+    y,
+    width: Number(size),
+    body: body ?? paper,
+    stub: stubColour,
+    seal,
+    state: stateKey,
+    surface,
+  });
 }
 
 /** The mark alone, for `icon.png` (29×29 in notifications): the venn, no type. */

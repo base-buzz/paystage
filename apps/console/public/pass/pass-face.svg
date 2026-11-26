@@ -3,10 +3,19 @@
   <rect x="0" y="0" width="750" height="352" fill="#312E81"/>
   <rect x="0" y="347.776" width="750" height="4.224" fill="#F7B600"/>
 
-  <g transform="translate(48 39) scale(0.35413153456998314)">
-  <rect data-plate="B" data-surface="#312E81" x="69.3" y="0" width="108.5" height="100" rx="31.4" fill="#45506B"/>
-  <rect data-plate="A" x="0" y="0" width="114.4" height="100" rx="31.4" fill="#FFFFFF"/>
-  <path data-lens="1" data-role="lens" d="M92 0C130.4 18 130.4 82 92 100C53.6 82 53.6 18 92 0Z" fill="#F7B600"/>
+  <g transform="translate(48 39) scale(0.3423913043478261)">
+  <defs>
+    <mask id="ticket-active-184" maskUnits="userSpaceOnUse" x="-8" y="-8" width="200" height="116">
+      <rect x="-8" y="-8" width="200" height="116" fill="#FFFFFF"/>
+      <circle data-bite="left" cx="0" cy="50" r="17" fill="#000000"/>
+      <circle data-bite="right" cx="184" cy="50" r="17" fill="#000000"/>
+    </mask>
+  </defs>
+  <g mask="url(#ticket-active-184)">
+    <rect data-plate="body" x="0" y="0" width="92" height="100" rx="26" fill="#FFFFFF"/>
+    <rect data-plate="stub" x="92" y="0" width="92" height="100" rx="26" fill="#b1b0cf"/>
+  </g>
+  <path data-lens="1" data-role="seal" d="M92 4C126.7 20.6 126.7 79.4 92 96C57.3 79.4 57.3 20.6 92 4Z" fill="#F7B600"/>
 </g>
   <text x="126" y="72" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="28.5"
        font-weight="500" letter-spacing="0.01em" text-anchor="start" fill="#FFFFFF">vouchguard</text>

@@ -1,13 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="634" viewBox="0 0 900 634">
-  <rect width="900" height="634" fill="#FFFFFF"/>
-  <g transform="translate(170 56) scale(3.1478358628442944)">
-  <rect data-plate="B" data-surface="#FFFFFF" x="69.3" y="0" width="108.5" height="100" rx="31.4" fill="#45506B"/>
-  <rect data-plate="A" x="0" y="0" width="114.4" height="100" rx="31.4" fill="#0B1020"/>
-  <path data-lens="1" data-role="lens" d="M92 0C130.4 18 130.4 82 92 100C53.6 82 53.6 18 92 0Z" fill="#F5CC00"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="621" viewBox="0 0 900 621">
+  <rect width="900" height="621" fill="#FFFFFF"/>
+  <g transform="translate(170 56) scale(3.0434782608695654)">
+  <defs>
+    <mask id="ticket-active-184" maskUnits="userSpaceOnUse" x="-8" y="-8" width="200" height="116">
+      <rect x="-8" y="-8" width="200" height="116" fill="#FFFFFF"/>
+      <circle data-bite="left" cx="0" cy="50" r="17" fill="#000000"/>
+      <circle data-bite="right" cx="184" cy="50" r="17" fill="#000000"/>
+    </mask>
+  </defs>
+  <g mask="url(#ticket-active-184)">
+    <rect data-plate="body" x="0" y="0" width="92" height="100" rx="26" fill="#1A5F7A"/>
+    <rect data-plate="stub" x="92" y="0" width="92" height="100" rx="26" fill="#7AA2B2"/>
+  </g>
+  <path data-lens="1" data-role="seal" d="M92 4C126.7 20.6 126.7 79.4 92 96C57.3 79.4 57.3 20.6 92 4Z" fill="#D4A843"/>
 </g>
-  <text x="450" y="500" text-anchor="middle" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="95" font-weight="700"
+  <text x="450" y="487" text-anchor="middle" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="95" font-weight="700"
         letter-spacing="-1.9000000000000001" fill="#101322" stroke="#101322" stroke-width="1.805"
         textLength="560" lengthAdjust="spacingAndGlyphs">PayStage</text>
-  <text x="450" y="557" text-anchor="middle" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="30" font-weight="600"
+  <text x="450" y="544" text-anchor="middle" font-family="Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="30" font-weight="600"
         letter-spacing="1.7999999999999998" fill="#5B6472">agent spending mandates</text>
 </svg>

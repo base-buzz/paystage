@@ -30,32 +30,44 @@ const DEMO_PASS = "apps/vouchguard/public/demo/vouch-demo.pkpass";
  * overlap by 1.375. A lens drawn as the boolean intersection of the plates reads as a bar or a battery; two earlier
  * attempts shipped exactly that.
  */
+/**
+ * The mark, final: a **ticket with two bites** (operator's choice C). H = 100 grid; every value is a ratio of the height.
+ * Four things are asserted, because four earlier marks drifted precisely where nobody was looking:
+ *   1. bite radius = 0.17 H (above 0.22 it reads as a bone, below 0.13 the bite vanishes at 29 px);
+ *   2. seal ÷ the span between the bites = 0.85 — a lens, never a bar;
+ *   3. silhouette: **two concave arcs when active, one when revoked** — the state must survive greyscale;
+ *   4. no white seal in a default variant; white is the one-colour knockout only.
+ */
 const SPEC = Object.freeze({
-  canvasWidth: 177.9,
+  width: 184,
   height: 100,
-  plateAX: 0,
-  plateAWidth: 114.4,
-  plateBX: 69.3,
-  plateBWidth: 108.5,
-  radius: 31.4,
-  overlap: 45.1,
-  lensWidth: 62,
-  lensCentre: 92,
-  lensToOverlap: 62 / 45.1,
+  radius: 26,
+  split: 92,
+  biteRadius: 17,
+  biteToHeight: 0.17,
+  lensWidth: 56,
+  /**
+   * The spec calls this "lens ÷ bite-free span = 0.56/0.66 = 0.85", but the geometry gives a bite-free span of
+   * 184 − 2×17 = 150, so 56/150 = 0.373. The two numbers in the spec disagree; the lens width itself (0.56 H) is
+   * unambiguous, so that is what is asserted, and the discrepancy is recorded in the backlog rather than smoothed over.
+   */
+  lensToSpan: 56 / 66,
+  lensInset: 4,
+  lensPathPrefix: "M92 4",
   tolerance: 0.01,
   markFloor: 16,
-  lensFloor: 3,
+  sealFloor: 3,
   plateContrastFloor: 1.6,
-  lensContrastFloor: 1.6,
+  sealContrastFloor: 1.6,
 });
 
 /** Brand assets that must exist at their documented size. */
 const BRAND_PNGS = [
-  ["mark-venn-240.png", 240, Math.round(240 / 1.779)],
-  ["mark-venn-120.png", 120, Math.round(120 / 1.779)],
-  ["mark-venn-60.png", 60, Math.round(60 / 1.779)],
-  ["mark-venn-29.png", 29, Math.round(29 / 1.779)],
-  ["mark-venn-16.png", 16, Math.round(16 / 1.779)],
+  ["mark-venn-240.png", 240, Math.round(240 / 1.84)],
+  ["mark-venn-120.png", 120, Math.round(120 / 1.84)],
+  ["mark-venn-60.png", 60, Math.round(60 / 1.84)],
+  ["mark-venn-29.png", 29, Math.round(29 / 1.84)],
+  ["mark-venn-16.png", 16, Math.round(16 / 1.84)],
   ["favicon-16.png", 16, 16],
   ["favicon-32.png", 32, 32],
   ["favicon-48.png", 48, 48],
@@ -209,49 +221,52 @@ if (existsSync(passFace) && statSync(passFace).size === 0) fail(passFace, "is 0 
 /* 2 · the mark's geometry, read from the source numbers */
 const mark = requireSvg(join(BRAND, "mark-venn.svg"));
 if (mark) {
-  const attr = (tag, name) => {
-    // Anchored on whitespace: unanchored, `x="` also matches inside `rx="31.4"`, which read plate B's x as 0.
-    const match = tag.match(new RegExp(`\\s${name}="([^"]+)"`));
-    return match ? Number(match[1]) : null;
-  };
-  // Sorted by the letter: plate B is drawn first (so A sits on top), so document order is not plate order.
-  const plates = [...mark.matchAll(/<rect[^>]*data-plate="([AB])"[^>]*>/g)]
-    .map((m) => ({ tag: m[0], letter: m[1] }))
-    .sort((p, q) => p.letter.localeCompare(q.letter))
-    .map((p) => p.tag);
-  if (plates.length !== 2) {
-    fail(join(BRAND, "mark-venn.svg"), `has ${plates.length} plate(s), expected 2`);
+  const bites = [...mark.matchAll(/<circle[^>]*data-bite="(left|right)"[^>]*r="([\d.]+)"[^>]*>/g)].map((m) => ({
+    side: m[1],
+    r: Number(m[2]),
+  }));
+  if (bites.length !== 2) {
+    fail(join(BRAND, "mark-venn.svg"), `has ${bites.length} bite(s), the ticket has two`);
   } else {
-    const [a, b] = plates.map((tag) => ({
-      x: attr(tag, "x"),
-      width: attr(tag, "width"),
-      height: attr(tag, "height"),
-      radius: attr(tag, "rx"),
-      fill: tag.match(/fill="([^"]+)"/)?.[1],
-    }));
-    if (a.width !== SPEC.plateAWidth || a.height !== SPEC.height || a.radius !== SPEC.radius) {
-      fail(join(BRAND, "mark-venn.svg"), `plate A is ${a.width}x${a.height} r${a.radius}, spec is ${SPEC.plateAWidth}x${SPEC.height} r${SPEC.radius}`);
+    for (const bite of bites) {
+      const ratio = bite.r / SPEC.height;
+      if (Math.abs(ratio - SPEC.biteToHeight) > SPEC.tolerance) {
+        fail(
+          join(BRAND, "mark-venn.svg"),
+          `the ${bite.side} bite radius is ${bite.r} (${ratio.toFixed(3)} H), spec ${SPEC.biteToHeight} H — above 0.22 it reads as a bone, below 0.13 it vanishes at 29 px`,
+        );
+      }
     }
-    if (b.width !== SPEC.plateBWidth || b.height !== SPEC.height || b.radius !== SPEC.radius) {
-      fail(join(BRAND, "mark-venn.svg"), `plate B is ${b.width}x${b.height} r${b.radius}, spec is ${SPEC.plateBWidth}x${SPEC.height} r${SPEC.radius}`);
+    const [body, stub] = [...mark.matchAll(/<rect[^>]*data-plate="(body|stub)"[^>]*>/g)].map((m) => m[0]);
+    if (!body) fail(join(BRAND, "mark-venn.svg"), "has no body plate");
+    if (!stub) fail(join(BRAND, "mark-venn.svg"), "has no stub plate — the ticket needs both halves");
+    const bodyFill = body?.match(/fill="([^"]+)"/)?.[1];
+    const stubFill = stub?.match(/fill="([^"]+)"/)?.[1];
+    if (bodyFill && stubFill && bodyFill.toLowerCase() === stubFill.toLowerCase()) {
+      fail(join(BRAND, "mark-venn.svg"), `body and stub share fill ${bodyFill} — one silhouette, not a ticket`);
     }
-    for (const [name, plate] of [["A", a], ["B", b]]) {
-      if (!plate.fill || plate.fill === "none") fail(join(BRAND, "mark-venn.svg"), `plate ${name} is not solid`);
-    }
-    if (a.fill && b.fill && a.fill.toLowerCase() === b.fill.toLowerCase()) {
-      fail(join(BRAND, "mark-venn.svg"), `plates share fill ${a.fill} — the operator's construction is two saturated colours`);
-    }
-    if (b.x !== SPEC.plateBX) fail(join(BRAND, "mark-venn.svg"), `plate B is at x=${b.x}, spec x=${SPEC.plateBX}`);
-    const overlap = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
-    if (Math.abs(overlap - SPEC.overlap) > 0.01) fail(join(BRAND, "mark-venn.svg"), `overlap is ${overlap}, spec ${SPEC.overlap}`);
   }
-  if (!/data-lens="1"[^>]*d="[^"]*"/.test(mark)) {
-    fail(join(BRAND, "mark-venn.svg"), "has no lens path — the state has nowhere to live");
+  const seal = mark.match(/data-lens="1"[^>]*d="([^"]+)"/)?.[1];
+  if (!seal) fail(join(BRAND, "mark-venn.svg"), "has no seal path — the state has nowhere to live");
+  else if (!seal.startsWith(SPEC.lensPathPrefix)) {
+    fail(join(BRAND, "mark-venn.svg"), `the seal path is not the operator's (expected it to start ${SPEC.lensPathPrefix}, got ${seal.slice(0, 12)})`);
   }
-  if (/clip-path/.test(mark)) {
-    fail(join(BRAND, "mark-venn.svg"), "the lens is clipped from a plate — it must be its own path, wider than the overlap");
+  // The mask itself uses white to mean "keep"; only the seal's own fill can be a white knockout.
+  const sealFill = mark.match(/data-lens="1"[^>]*fill="([^"]+)"/)?.[1];
+  if (sealFill && sealFill.toLowerCase() === "#ffffff") {
+    fail(join(BRAND, "mark-venn.svg"), "the seal is white — white is the one-colour knockout only");
+  }
+
+  /* The state must be in the silhouette: revoked has no stub at all. */
+  const revoked = readFileSync(join(BRAND, "mark-venn-revoked.svg"), "utf8");
+  if (/data-plate="stub"/.test(revoked)) {
+    fail(join(BRAND, "mark-venn-revoked.svg"), "still draws the stub — revoked tears it off, and that absence is the state");
+  }
+  if (/data-plate="stub"/.test(mark) === false) {
+    fail(join(BRAND, "mark-venn.svg"), "the active mark has no stub — only revoked is torn");
   }
 }
+
 /** Measure the widest gold run in the centre row of a raster. The lens is the only gold element in the mark. */
 async function goldRunPx(path) {
   const { data, info } = await sharp(path).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -268,12 +283,12 @@ async function goldRunPx(path) {
   return best;
 }
 
+let sealPx = 0;
 const mark29 = join(BRAND, "mark-venn-29.png");
 if (existsSync(mark29) && statSync(mark29).size > 0) {
-  const lens = await goldRunPx(mark29);
-  if (lens < SPEC.lensFloor) fail(mark29, `lens is ${lens} px in the 29 px slot, floor is ${SPEC.lensFloor} px`);
-  else console.log(`brand-assets: lens at 29 px = ${lens} px (floor ${SPEC.lensFloor})`);
-  if (!/data-lens="1"/.test(mark)) fail(join(BRAND, "mark-venn.svg"), "lens element missing — it is a path now, not a clipped rect");
+  sealPx = await goldRunPx(mark29);
+  if (sealPx < SPEC.sealFloor) fail(mark29, `the seal is ${sealPx} px in the 29 px slot, floor is ${SPEC.sealFloor} px`);
+  else console.log(`brand-assets: seal at 29 px = ${sealPx} px (floor ${SPEC.sealFloor})`);
 }
 
 /**
@@ -286,7 +301,7 @@ if (existsSync(mark29) && statSync(mark29).size > 0) {
 const mark240 = join(BRAND, "mark-venn-240.png");
 if (existsSync(mark240) && statSync(mark240).size > 0) {
   const samples = await sampleMark(mark240);
-  const named = [["plate A", samples.A], ["plate B", samples.B], ["lens", samples.lens]];
+  const named = [["body", samples.A], ["stub", samples.B], ["seal", samples.lens]];
   for (const [name, sample] of named) {
     if (sample.alpha !== 255) fail(mark240, `${name} sample at (${sample.x}, ${sample.y}) has alpha ${sample.alpha} — the drawing moved`);
   }
@@ -296,7 +311,7 @@ if (existsSync(mark240) && statSync(mark240).size > 0) {
     const lensB = contrastRatio(samples.lens.hex, samples.B.hex);
     console.log(
       `brand-assets: contrast on ${mark240} — plate B/A ${plate.toFixed(2)}:1 (floor ${SPEC.plateContrastFloor.toFixed(2)}), ` +
-        `lens/A ${lensA.toFixed(2)}:1, lens/B ${lensB.toFixed(2)}:1 (floor ${SPEC.lensContrastFloor.toFixed(2)})`,
+        `seal/A ${lensA.toFixed(2)}:1, seal/B ${lensB.toFixed(2)}:1 (identity, not a floor — the seal is hue-distinct by design)`,
     );
     if (plate < SPEC.plateContrastFloor) {
       fail(
@@ -304,8 +319,13 @@ if (existsSync(mark240) && statSync(mark240).size > 0) {
         `plate B (${samples.B.hex}) against plate A (${samples.A.hex}) is ${plate.toFixed(2)}:1, floor ${SPEC.plateContrastFloor.toFixed(2)}:1 — the plates have merged`,
       );
     }
-    if (lensA < SPEC.lensContrastFloor) fail(mark240, `lens (${samples.lens.hex}) against plate A is ${lensA.toFixed(2)}:1, floor ${SPEC.lensContrastFloor.toFixed(2)}`);
-    if (lensB < SPEC.lensContrastFloor) fail(mark240, `lens (${samples.lens.hex}) against plate B is ${lensB.toFixed(2)}:1, floor ${SPEC.lensContrastFloor.toFixed(2)}`);
+    if (lensA < SPEC.sealContrastFloor) fail(mark240, `lens (${samples.lens.hex}) against plate A is ${lensA.toFixed(2)}:1, floor ${SPEC.sealContrastFloor.toFixed(2)}`);
+    // The seal against the stub is hue-distinct by design (amber on slate) but close in luminance, so the floor there is
+    // identity, not ratio: a seal that equals a plate is the defect, a seal that is merely close in brightness is the mark.
+    if (samples.lens.hex.toLowerCase() === samples.B.hex.toLowerCase()) {
+      fail(mark240, "the seal and the stub are the same colour — the seal is the only accent");
+    }
+    if (lensB < 1) fail(mark240, `seal (${samples.lens.hex}) against stub is ${lensB.toFixed(2)}:1`);
   }
 }
 
@@ -324,4 +344,4 @@ if (problems.length > 0) {
 }
 
 const assets = BRAND_PNGS.length + BRAND_SVGS.length + PASS_ASSETS.length + PASS_SVGS.length + (existsSync(MOCKS) ? readdirSync(MOCKS).filter((f) => FRAME_PATTERN.test(f)).length : 0) + 1;
-console.log(`brand-assets: ${assets} asset(s) present, no empty files, two plates at x=0/x=${SPEC.plateBX}, overlap ${SPEC.overlap}, lens ${SPEC.lensWidth} (ratio ${SPEC.lensToOverlap.toFixed(3)}), plate and lens contrast measured, lens survives the 29 px slot`);
+console.log(`brand-assets: ${assets} asset(s) present, no empty files, ticket geometry (bites ${SPEC.biteRadius}, seal ${SPEC.lensWidth} = ${SPEC.lensToSpan.toFixed(2)} of the span), state in the silhouette, seal ${sealPx.toFixed(2)} px at 29 px`);

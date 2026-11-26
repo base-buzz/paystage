@@ -1,41 +1,40 @@
 /**
- * The mark, **final**: the narrow-lens construction on an H = 100 grid, graphite palette.
+ * The mark, final: **a ticket with two bites** (operator's choice C — teal body, slate stub, amber seal).
  *
- * Two rounded plates — one ink, one slate — and a **gold lens that is a shape of its own**: a path with cusps at the top
- * and bottom edges, overrunning the geometric overlap by **1.375×** (62 against 45.1). That overrun is the idea. A lens
- * drawn as the boolean intersection of the plates reads as a bar or a battery, and two earlier attempts shipped exactly
- * that; the check asserts this ratio from the source so it cannot drift back.
+ * Two plates on one ticket, a semicircular **bite** out of each end, and the seal as a lens between them. The property the
+ * four earlier versions lacked is here: **the state is in the silhouette.** Revoked *removes the right plate* — the stub is
+ * torn off and that edge goes flat — so a revoked pass reads as revoked in greyscale, at 16 px and on a photocopy, without
+ * relying on anyone reproducing a colour.
  *
- * Everything is a ratio of the height, so the kit rebuilds at any size:
+ * Master grid, H = 100, everything else a ratio of it:
  *
- *   canvas    177.9 × 100          1.779 H
- *   plate A   x 0,      w 114.4, rx 31.4     1.144 H · rx 0.314 H
- *   plate B   x 69.3,   w 108.5, rx 31.4     0.693 H · 1.085 H
- *   overlap   45.1                  0.451 H
- *   lens      x 61 → 123, cx 92, full height 0.62 H · cx 0.92 H
+ *   canvas       184 × 100          1.84 H
+ *   corner       26                 0.26 H  (the bites soften the ends; 26 keeps it off a pill)
+ *   plate split  x = 92             0.92 H  (canvas centre)
+ *   bites        r 17 at (0,50) and (184,50)   0.17 H, cut from both plates
+ *   lens         cx 92, w 56, inset 4          0.56 H
  *
- * Palette: graphite, not bank-blue — it keeps the gold dominant and reads least like a card scheme. Plate A `#0B1020`,
- * plate B `#45506B`, lens `#F5CC00`. On the dark poster the plates invert to `#FAFAFA` / `#FFFFFF` over `#14205A`.
- * The lens colour carries state: gold active · red revoked · grey expired · paper knockout for one-colour.
+ * Colour: body `#1A5F7A`, stub `#7AA2B2`, seal `#D4A843`; revoked seal `#B42318`; expired everything at 55% with a grey
+ * seal `#8A8F98`. One-colour: ink 100% / ink 40% / paper knockout.
  *
- * The lens is a **path, never a clip**: a clip is a boolean, and a boolean cannot overrun the overlap.
+ * Meaning, in one line, for the pack: *two parties and a seal between them, on a ticket — the body is the authority, the
+ * stub is the half someone keeps, and the seal is the record.*
  */
 
 /** The numbers. Exported so a check can disagree with the drawing instead of trusting it. */
 export const VENN = Object.freeze({
-  width: 177.9,
+  width: 184,
   height: 100,
-  plateAX: 0,
-  plateAWidth: 114.4,
-  plateBX: 69.3,
-  plateBWidth: 108.5,
-  radius: 31.4,
-  overlap: 45.1,
-  lensWidth: 62,
-  lensCentre: 92,
-  lensToOverlap: 62 / 45.1,
-  /** the operator's path, on the H = 100 grid: cusps at y = 0 and y = 100, control points ±0.62·w at 18%/82% */
-  lensPath: "M92 0C130.4 18 130.4 82 92 100C53.6 82 53.6 18 92 0Z",
+  radius: 26,
+  /** where the two plates meet, and the seal's centre */
+  split: 92,
+  biteRadius: 17,
+  lensWidth: 56,
+  /** lens width against the span between the bites — 0.56 / 0.66, so it stays a lens and never a bar */
+  lensToSpan: 56 / 66,
+  lensInset: 4,
+  /** the seal, as a path on the H = 100 grid; control points at 0.62 w, 18% / 82% */
+  lensPath: "M92 4C126.7 20.6 126.7 79.4 92 96C57.3 79.4 57.3 20.6 92 4Z",
 });
 
 /** The named surfaces above, as values rather than themes. */
@@ -49,24 +48,23 @@ export const VENN_SURFACES = Object.freeze({
  * a mark that borrows a page tint changes whenever the page does.
  */
 export const VENN_INK = Object.freeze({
-  plateA: "#0B1020",
-  plateB: "#45506B",
-  lens: "#F5CC00",
+  body: "#1A5F7A",
+  stub: "#7AA2B2",
+  seal: "#D4A843",
 });
 
-/** On the dark poster the plates invert, and the lens stays gold. */
-export const VENN_INVERSE = Object.freeze({
-  plateA: "#FAFAFA",
-  plateB: "#FFFFFF",
-  lens: "#F5CC00",
-  field: "#14205A",
+/** State, as the seal colour and — for revoked — the absence of the stub. */
+export const VENN_STATE = Object.freeze({
+  active: { seal: "#D4A843", stub: true, dim: 1 },
+  revoked: { seal: "#B42318", stub: false, dim: 1 },
+  expired: { seal: "#8A8F98", stub: true, dim: 0.55 },
 });
 
-/** One-colour print: ink and a mid grey, lens knocked out to paper. */
+/** One-colour print: ink body, ink 40% stub, paper knockout seal. */
 export const VENN_MONO = Object.freeze({
-  plateA: "#101322",
-  plateB: "#6B7280",
-  lens: "#FFFFFF",
+  body: "#101322",
+  stub: "#9AA0AA",
+  seal: "#FFFFFF",
 });
 
 /** Hex → [r, g, b]. Accepts `#RGB` and `#RRGGBB`; anything else is a programming error, not a colour. */
@@ -105,16 +103,35 @@ export function vennGroup({
   x = 0,
   y = 0,
   width = VENN.width,
-  plate = VENN_INK.plateA,
-  plateB = VENN_INK.plateB,
-  lens = VENN_INK.lens,
+  body = VENN_INK.body,
+  stub = VENN_INK.stub,
+  seal = null,
+  state = "active",
   surface = VENN_SURFACES.paper,
 } = {}) {
   const k = Number(width) / VENN.width;
-  return `<g transform="translate(${x} ${y}) scale(${k})">
-  <rect data-plate="B" data-surface="${String(surface)}" x="${VENN.plateBX}" y="0" width="${VENN.plateBWidth}" height="${VENN.height}" rx="${VENN.radius}" fill="${plateB}"/>
-  <rect data-plate="A" x="${VENN.plateAX}" y="0" width="${VENN.plateAWidth}" height="${VENN.height}" rx="${VENN.radius}" fill="${plate}"/>
-  <path data-lens="1" data-role="lens" d="${VENN.lensPath}" fill="${lens}"/>
+  const variant = VENN_STATE[state] ?? VENN_STATE.active;
+  // The seal's colour IS the state unless a caller overrides it for a one-colour proof.
+  const sealColour = seal ?? variant.seal;
+  // Revoked tears the stub off: the right plate is absent and the tear edge is flat, so the state survives greyscale.
+  const showStub = variant.stub;
+  const dim = variant.dim;
+  const opacity = dim === 1 ? "" : ` opacity="${dim}"`;
+  // The bites are cutting circles at both end mid-heights, drawn as a mask over the plates.
+  const maskId = `ticket-${String(state)}-${VENN.width}`.replace(/[^a-zA-Z0-9_-]/g, "-");
+  return `<g transform="translate(${x} ${y}) scale(${k})"${opacity}>
+  <defs>
+    <mask id="${maskId}" maskUnits="userSpaceOnUse" x="-8" y="-8" width="${VENN.width + 16}" height="${VENN.height + 16}">
+      <rect x="-8" y="-8" width="${VENN.width + 16}" height="${VENN.height + 16}" fill="#FFFFFF"/>
+      <circle data-bite="left" cx="0" cy="50" r="${VENN.biteRadius}" fill="#000000"/>
+      <circle data-bite="right" cx="${VENN.width}" cy="50" r="${VENN.biteRadius}" fill="#000000"/>
+    </mask>
+  </defs>
+  <g mask="url(#${maskId})">
+    <rect data-plate="body" x="0" y="0" width="${VENN.split}" height="${VENN.height}" rx="${VENN.radius}" fill="${body}"/>
+    ${showStub ? `<rect data-plate="stub" x="${VENN.split}" y="0" width="${VENN.width - VENN.split}" height="${VENN.height}" rx="${VENN.radius}" fill="${stub}"/>` : ""}
+  </g>
+  <path data-lens="1" data-role="seal" d="${VENN.lensPath}" fill="${sealColour}"/>
 </g>`;
 }
 
@@ -141,5 +158,5 @@ export function vennSvg({
 }
 
 export function lensPx(markWidth) {
-  return (VENN.overlap / VENN.width) * Number(markWidth);
+  return (VENN.lensWidth / VENN.width) * Number(markWidth);
 }

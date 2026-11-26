@@ -58,10 +58,10 @@ if (!present.has("pass-face.svg")) {
 }
 
 /**
- * The poster mark the `/m/:serial` page renders (#440). The 2026-11-27 venn is two plates one value apart (#460)
- * with the state in the lens; the page paints it inverted over the mandate's tint, so both plates must be present
- * (paper, the second blended against that tint) and the lens must be a distinct filled element. An outlined plate or a missing lens would be the old seal or a stale
- * drawing, and the page would show a different mark from the pass.
+ * The poster mark the `/m/:serial` page renders. The mark is the **ticket** — a body plate, a stub plate and a seal — and
+ * the page paints it inverted over the mandate's tint, so the stub is paper at 62% over that tint. Two properties matter
+ * here and neither is cosmetic: the stub must be a **different value** from the body (one silhouette was the shipped
+ * defect), and **revoked must have no stub at all**, because that absence is the state.
  */
 for (const file of ["mark-active.svg", "mark-revoked.svg", "mark-expired.svg"]) {
   if (!present.has(file)) {
@@ -69,15 +69,19 @@ for (const file of ["mark-active.svg", "mark-revoked.svg", "mark-expired.svg"]) 
     continue;
   }
   const text = readFileSync(join(DIR, file), "utf8");
-  for (const needle of ['data-plate="A"', 'data-plate="B"', 'data-lens="1"']) {
-    if (!text.includes(needle)) problems.push(`${file} has no ${needle} — the venn is not the mark in this file`);
+  const revoked = /revoked/.test(file);
+  if (!text.includes('data-plate="body"')) problems.push(`${file} has no body plate — this is not the ticket mark`);
+  if (!text.includes('data-lens="1"')) problems.push(`${file} has no seal — the state has nowhere to live`);
+  if (revoked && text.includes('data-plate="stub"')) {
+    problems.push(`${file} still draws the stub — revoked is a torn-off stub, and that absence is the state`);
   }
-  // #460: the page loads this SVG over a tint, so both plates must be the same drawing AND different values.
-  // Geometry alone passed a white-on-white poster mark while the pages looked structurally right.
-  const plateA = text.match(/data-plate="A"[^>]*fill="([^"]+)"/)?.[1];
-  const plateB = text.match(/data-plate="B"[^>]*fill="([^"]+)"/)?.[1];
-  if (plateA && plateB && plateA.toLowerCase() === plateB.toLowerCase()) {
-    problems.push(`${file} draws plates A and B in the same fill (${plateA}) — the mark is one silhouette`);
+  if (!revoked && !text.includes('data-plate="stub"')) {
+    problems.push(`${file} has no stub plate — the ticket is not the mark in this file`);
+  }
+  const body = text.match(/data-plate="body"[^>]*fill="([^"]+)"/)?.[1];
+  const stub = text.match(/data-plate="stub"[^>]*fill="([^"]+)"/)?.[1];
+  if (body && stub && body.toLowerCase() === stub.toLowerCase()) {
+    problems.push(`${file} draws body and stub in the same fill (${body}) — the mark is one silhouette`);
   }
 }
 
