@@ -1,0 +1,8 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "paystage-vouchguard",
+  "compatibility_date": "2026-11-23",
+  "observability": {
+    "enabled": true
+  }
+}

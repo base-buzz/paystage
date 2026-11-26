@@ -257,7 +257,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="mt-4 text-xl font-semibold text-ink">Hosted by us</h3>
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-ink/65">
-                  When the mandate store ships (#423/#436), we run signing, pass issuance and the public verification
+                  While this is in build, we run signing, pass issuance and the public verification
                   page. You get a serial and a URL; we never hold the funds. Until then the dashboard is a preview,
                   and it says so on every screen.
                 </p>

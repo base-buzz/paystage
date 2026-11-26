@@ -12,3 +12,8 @@ public/mocks/
 # Rendered by scripts/render-wrangler.mjs from wrangler.toml.template + the repo-root
 # brand.json. Generated so a fork cannot commit one host's domain or Worker name.
 wrangler.toml
+
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example

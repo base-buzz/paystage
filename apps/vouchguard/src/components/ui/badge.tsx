@@ -16,6 +16,8 @@ const badgeVariants = cva(
         active: "border-emerald-600/25 bg-emerald-600/10 text-emerald-700",
         expired: "border-ink/15 bg-ink/5 text-muted",
         revoked: "border-red/25 bg-red/10 text-red",
+        // "Unknown" is a real answer from the API, not a missing one: it means no record for that serial.
+        unknown: "border-ink/20 bg-ink/5 text-muted",
       },
     },
     defaultVariants: {

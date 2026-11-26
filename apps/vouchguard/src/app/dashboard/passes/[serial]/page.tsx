@@ -17,10 +17,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DEMO_PASSES, activityForSerial, passBySerial, type Verdict } from "@/lib/demo-data";
+import { getLivePasses } from "@/lib/live-passes";
 
-export function generateStaticParams() {
-  return DEMO_PASSES.map((pass) => ({ serial: pass.serial }));
-}
+/**
+ * Live serials are not known at build time — they are configured in `brand.json` and can change without a deploy of the
+ * code. So the route renders on demand when a serial is not one of the fixtures, and the page decides which it is.
+ */
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: { params: Promise<{ serial: string }> }): Promise<Metadata> {
   const { serial } = await params;
@@ -41,7 +44,66 @@ export default async function PassDetailPage({ params }: { params: Promise<{ ser
   const { serial } = await params;
   const pass = passBySerial(serial);
 
-  if (!pass) notFound();
+  // A serial this dashboard was not built with is a *live* one: read it from the API rather than 404. The fixtures stay
+  // for the artwork and the activity table (a real mandate has no activity yet); everything a mandate actually knows —
+  // principal, limits, expiry, verdict — comes from the record.
+  if (!pass) {
+    const { passes, fetchedAt, error } = await getLivePasses();
+    const live = passes.find((candidate) => candidate.serial === serial);
+    if (error || !live) notFound();
+    return (
+      <div className="space-y-6">
+        <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-ink">
+          <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />
+          All passes
+        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-mono text-lg font-semibold text-deep">{live.serial}</h1>
+          <StatusBadge status={live.status} />
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">A live mandate</CardTitle>
+            <CardDescription>
+              Read from the API at {new Date(fetchedAt).toISOString().slice(11, 19)}Z — not a fixture.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">Principal</dt>
+              <dd className="mt-0.5 text-ink">{live.principal ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">Per purchase</dt>
+              <dd className="mt-0.5 text-ink">{live.perPayment ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">Window</dt>
+              <dd className="mt-0.5 text-ink">
+                {live.windowAmount ?? "—"} {live.windowLabel}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">Expires</dt>
+              <dd className="mt-0.5 text-ink">{live.expiresAt ? live.expiresAt.slice(0, 10) : "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">A seller sees</dt>
+              <dd className="mt-0.5 text-ink">{live.verdictForSeller ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">Public page</dt>
+              <dd className="mt-0.5">
+                <Link href={`https://paystage.xyz/m/${live.serial}`} className="text-deep hover:underline">
+                  /m/{live.serial.slice(0, 12)}…
+                </Link>
+              </dd>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const activity = activityForSerial(pass.serial);
 

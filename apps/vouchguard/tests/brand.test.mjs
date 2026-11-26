@@ -11,14 +11,21 @@ const valid = () => ({ ...REPO_BRAND });
 
 test("the repository brand.json parses under the demo mode", () => {
   const config = parseBrandConfig(valid(), {});
-  assert.deepEqual(config, REPO_BRAND);
+  // Assert the values, not the object identity: the file also carries the optional read settings (#456), and a
+  // deep-equal against the raw JSON would fail the moment either side gains a field that does not matter here.
+  assert.equal(config.name, REPO_BRAND.name);
+  assert.equal(config.wordmark, REPO_BRAND.wordmark);
+  assert.equal(config.tint, REPO_BRAND.tint);
+  assert.equal(config.domain, REPO_BRAND.domain);
+  assert.equal(config.mode, REPO_BRAND.mode);
+  assert.equal(config.organizationName, REPO_BRAND.organizationName);
 });
 
 test("an unknown key is rejected and named", () => {
   const raw = { ...valid(), colour: "#000000" };
   assert.throws(
     () => parseBrandConfig(raw, {}),
-    /brand\.json: unknown key "colour"\. Allowed keys: name, wordmark, tint, domain, mode, organizationName\./,
+    /brand\.json: unknown key "colour"\. Allowed keys: name, wordmark, tint, domain, mode, organizationName, apiBase, demoSerials\./,
   );
 });
 

@@ -20,6 +20,10 @@ export const BRAND_KEYS = Object.freeze([
   "domain",
   "mode",
   "organizationName",
+  // Optional, and both are about *reading* rather than branding: where the API is, and which serials this dashboard
+  // shows. They live here so a fork can point at its own deployment without a code change (#456).
+  "apiBase",
+  "demoSerials",
 ]);
 
 /** @typedef {"demo" | "hosted" | "apple"} BrandMode */

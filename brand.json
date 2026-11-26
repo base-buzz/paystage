@@ -4,5 +4,9 @@
   "tint": "#1A1F71",
   "domain": "vouchguard.app",
   "mode": "demo",
-  "organizationName": "VouchGuard"
+  "organizationName": "VouchGuard",
+  "apiBase": "https://api.paystage.xyz",
+  "demoSerials": [
+    "vch_gTKNWbbue_J3AI0UNvoKow"
+  ]
 }
