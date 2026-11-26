@@ -106,7 +106,7 @@ mandate_mint_not_configured` rather than defaulting to open.
 **What it returns.** `201` and exactly two fields — never the envelope back:
 
 ```json
-{ "serial": "vch_7F3…", "verificationUrl": "https://paystage.xyz/m/vch_7F3…" }
+{ "serial": "vch_7F3…", "verification_url": "https://paystage.xyz/m/vch_7F3…" }
 ```
 
 **Where the serial comes from.** The signed envelope, full stop. A `serial` in the request body is

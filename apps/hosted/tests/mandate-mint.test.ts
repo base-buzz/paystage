@@ -139,9 +139,9 @@ describe("POST /v1/mandate — the mint", () => {
 
     // Exactly the serial and where to check it — never the envelope back.
     const body = (await res.json()) as Record<string, unknown>;
-    expect(Object.keys(body).sort()).toEqual(["serial", "verificationUrl"]);
+    expect(Object.keys(body).sort()).toEqual(["serial", "verification_url"]);
     expect(body.serial).toBe(mandate.serial);
-    expect(body.verificationUrl).toBe(`${MINT_VERIFICATION_BASE}${mandate.serial}`);
+    expect(body.verification_url).toBe(`${MINT_VERIFICATION_BASE}${mandate.serial}`);
     expect(JSON.stringify(body)).not.toContain("signature");
     expect(JSON.stringify(body)).not.toContain("envelope");
 

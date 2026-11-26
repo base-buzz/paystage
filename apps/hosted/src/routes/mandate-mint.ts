@@ -10,7 +10,7 @@
  * #453 shipped the table, the writer and the public read, but nothing in this tree called the writer, so
  * every serial a person could hold still answered `unknown`. This route is that caller: it takes a
  * **signed** mandate envelope, verifies it with `@paystage/mandate.verify`, writes the row through
- * `writeMandate`, and answers `{ serial, verificationUrl }`.
+ * `writeMandate`, and answers `{ serial, verification_url }`.
  *
  * **Why one route and not a step inside the pass flow.** A pass is a rendering of a mandate, not the
  * moment authority is granted; the same envelope can produce an Apple pass, a Google pass or nothing at
@@ -293,7 +293,7 @@ export function createMandateMintRoutes(options: MandateMintOptions): Hono {
 
     // 8. The serial and where to check it. Never the envelope: a mint response is a receipt that the row
     //    exists, not a second copy of the authority.
-    return c.json({ serial, verificationUrl: `${MINT_VERIFICATION_BASE}${serial}` }, 201, CACHE);
+    return c.json({ serial, verification_url: `${MINT_VERIFICATION_BASE}${serial}` }, 201, CACHE);
   });
 
   return routes;
