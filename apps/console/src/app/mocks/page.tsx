@@ -160,7 +160,7 @@ const STORIES: Story[] = [
         alt: "The mandate page: the same tint, mark and teammate name as the pass, with the limits and an action.",
         title: "The page is the editor",
         caption:
-          "Same tint, same mark, same name as the pass in the wallet — the page is the pass with controls on it. The agent drafts every change; the human is the only one who can approve one.",
+          "Same tint, same mark, same name as the pass in the wallet — the page is the pass with controls on it. The agent drafts every change; the human is the only one who can approve one. AP2 has a word for this screen: a Trusted Surface, a non-agentic interface that renders the mandate to the human.",
       },
       {
         src: "/mocks/frame-pass-changed.png",
