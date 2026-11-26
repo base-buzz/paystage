@@ -30,6 +30,7 @@ import {
   vennMark,
   setupScreenSvg,
   stackedTeammatesSvg,
+  PASS_TOKENS,
 } from "./lib/pass-face.mjs";
 import {
   cancelledSvg,
@@ -204,14 +205,19 @@ if (argv.includes("--frames")) {
  * same function the pass itself uses — is what makes "the mark top-left" the same mark rather than a second
  * drawing. The mark is drawn inverted (paper plates, state-coloured lens) because the page paints it over the
  * mandate's tint, where a deep plate would disappear.
+ *
+ * **The second plate is blended against the surface the page actually paints** (#460): the default poster tint for
+ * the active mark, and `state.deadPlate` for revoked/expired, because `MandateCard` greys the poster for a dead
+ * mandate. Without this the explicit blend would default to paper and the two white plates would merge on the
+ * page, which is the same defect at a smaller scale.
  */
 const MARKS = [
-  ["mark-active.svg", "ACTIVE"],
-  ["mark-revoked.svg", "REVOKED"],
-  ["mark-expired.svg", "EXPIRED"],
+  ["mark-active.svg", "ACTIVE", PASS_TOKENS.posterTints[0]],
+  ["mark-revoked.svg", "REVOKED", PASS_TOKENS.state.deadPlate],
+  ["mark-expired.svg", "EXPIRED", PASS_TOKENS.state.deadPlate],
 ];
-for (const [file, state] of MARKS) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${vennMark({ x: 0, y: 19, size: 100, state, plate: "#FFFFFF" })}</svg>`;
+for (const [file, state, surface] of MARKS) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${vennMark({ x: 0, y: 19, size: 100, state, plate: "#FFFFFF", surface })}</svg>`;
   writeFileSync(join(OUT, file), svg);
   written.push(`${file} — the poster mark, drawn by vennMark()`);
 }

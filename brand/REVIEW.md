@@ -6,9 +6,10 @@ pass renderer also draws. A pick here cannot drift from the product.
 
 ## The pick: the venn
 
-**Chosen 2026-11-27: the venn** — two solid plates, 62 × 62, radius 15, at x = 0 and x = 38, overlap 24 units =
+**Chosen 2026-11-27: the venn** — two plates, 62 × 62, radius 15, at x = 0 and x = 38, overlap 24 units =
 **38.7%**. The lens (the intersection) is the only differentiated element: gold active, red revoked, grey expired,
-paper knockout for one colour.
+paper knockout for one colour. **Revised 2026-11-28 (#460): plate B is 62% of plate A over the surface** — the
+original same-fill pair merged into one silhouette, visible only as a gold lens.
 
 Why this one:
 
@@ -38,7 +39,7 @@ whose whole claim is a boundary that can be open, narrowed or revoked. The lens 
 ## What is here
 
 ```
-mark-venn.svg                          the master: two solid plates, gold lens, transparent
+mark-venn.svg                          the master: plate A 100% / plate B 62%, gold lens, transparent
 mark-venn-{revoked,expired,mono}.svg   the other lens states (paper knockout for one colour)
 mark-venn-{240,120,60,29,16}.png       the sizes the mark is seen at; 29 is the icon slot, 16 the floor
 lockup-vertical.svg|.png               symbol above, wordmark width = symbol width

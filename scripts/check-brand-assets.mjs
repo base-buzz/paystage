@@ -6,11 +6,14 @@
  *
  *   1. **every expected asset exists and is not zero bytes** — a live `pass/pass-face@2x.png` answered 307 with a
  *      zero-byte body while every page around it looked fine, and no check noticed;
- *   2. **the mark's geometry** — two solid plates, 62 × 62 at x = 0 and x = 38, radius 15, the 38.7% overlap, and
+ *   2. **the mark's geometry** — two plates, 62 × 62 at x = 0 and x = 38, radius 15, the 38.7% overlap, and
  *      a lens that is present and at least 3 px wide in the 29 px icon slot. File dimensions would pass a
  *      completely different drawing;
- *   3. **the generated files are readable** — a zero-byte PNG is not an asset, and a stale storyboard frame is how
- *      the old mark reaches the wallet after the master changed.
+ *   3. **the mark's contrast** — plate B against plate A, and the lens against both, sampled from the rendered
+ *      240 px PNG with the WCAG relative-luminance formula. Identical fills passed the geometry assertions
+ *      while the mark rendered as one blob with a gold hole (#460), so geometry alone is not the check;
+ *   4. **the generated files are readable** — a zero-byte PNG is not an asset, and a stale storyboard frame is
+ *      how the old mark reaches the wallet after the master changed.
  *
  * Exit 0 clean · 1 something is wrong (each problem is named) · 2 the kit cannot be read at all.
  */
@@ -21,7 +24,18 @@ const BRAND = "brand";
 const PASS = "apps/console/public/pass";
 const MOCKS = "apps/console/public/mocks";
 const DEMO_PASS = "apps/vouchguard/public/demo/vouch-demo.pkpass";
-const SPEC = Object.freeze({ plates: 2, plate: 62, radius: 15, secondX: 38, overlapRatio: 24 / 62, tolerance: 0.01, lensFloor: 3 });
+const SPEC = Object.freeze({
+  plates: 2,
+  plate: 62,
+  radius: 15,
+  secondX: 38,
+  overlapRatio: 24 / 62,
+  tolerance: 0.01,
+  lensFloor: 3,
+  // #460: plate B must be a visible second value, and the lens must not merge into either plate.
+  plateContrastFloor: 1.6,
+  lensContrastFloor: 1.6,
+});
 
 /** Brand assets that must exist at their documented size. */
 const BRAND_PNGS = [
@@ -86,6 +100,40 @@ try {
 
 function fail(path, why) {
   problems.push(`${path}: ${why}`);
+}
+
+/** WCAG relative luminance of an `#rrggbb` colour. Same formula as `scripts/check-contrast.mjs`. */
+function luminance(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const f = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+
+/** WCAG contrast ratio across two colours, always >= 1. */
+function contrastRatio(a, b) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/**
+ * Sample the three plates of the rendered mark. The 240 px PNG is 100 × 62 units scaled by 2.4, so the
+ * centres are exact: plate A at (31, 31), plate B at (69, 31), the lens at the overlap centre (50, 31).
+ * The assets are opaque there; a transparent sample means the drawing moved and this check is blind.
+ */
+async function sampleMark(path) {
+  const { data, info } = await sharp(path).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const at = (ux, uy) => {
+    const x = Math.round((ux / 100) * info.width);
+    const y = Math.round((uy / 62) * info.height);
+    const i = (y * info.width + x) * info.channels;
+    return {
+      x,
+      y,
+      alpha: data[i + 3],
+      hex: `#${[data[i], data[i + 1], data[i + 2]].map((v) => v.toString(16).padStart(2, "0")).join("")}`,
+    };
+  };
+  return { A: at(31, 31), B: at(69, 31), lens: at(50, 31) };
 }
 
 async function pngSize(path, expectedWidth = null, expectedHeight = null) {
@@ -153,7 +201,7 @@ if (mark) {
   };
   const plates = [...mark.matchAll(/<rect[^>]*data-plate="[AB]"[^>]*>/g)].map((match) => match[0]);
   if (plates.length !== SPEC.plates) {
-    fail(join(BRAND, "mark-venn.svg"), `has ${plates.length} plate(s), expected ${SPEC.plates} solid plates`);
+    fail(join(BRAND, "mark-venn.svg"), `has ${plates.length} plate(s), expected ${SPEC.plates} plates`);
   } else {
     const [a, b] = plates.map((tag) => ({
       x: attr(tag, "x"),
@@ -204,6 +252,39 @@ if (existsSync(mark29) && statSync(mark29).size > 0) {
   if (!/<rect[^>]*data-lens="1"/.test(mark)) fail(join(BRAND, "mark-venn.svg"), "lens element missing");
 }
 
+/**
+ * 3 · contrast, sampled from the rendered pixels rather than inferred from the source fills (#460).
+ *
+ * Geometry passed while both plates were `#1A1F71`; the only thing that catches a one-blob mark is measuring
+ * the pixels it actually produced. Plate B against plate A >= 1.6:1 is the operator's floor; the lens is held
+ * to the same floor against both, which is what "clearly distinct" means as a number.
+ */
+const mark240 = join(BRAND, "mark-venn-240.png");
+if (existsSync(mark240) && statSync(mark240).size > 0) {
+  const samples = await sampleMark(mark240);
+  const named = [["plate A", samples.A], ["plate B", samples.B], ["lens", samples.lens]];
+  for (const [name, sample] of named) {
+    if (sample.alpha !== 255) fail(mark240, `${name} sample at (${sample.x}, ${sample.y}) has alpha ${sample.alpha} — the drawing moved`);
+  }
+  if (named.every(([, sample]) => sample.alpha === 255)) {
+    const plate = contrastRatio(samples.A.hex, samples.B.hex);
+    const lensA = contrastRatio(samples.lens.hex, samples.A.hex);
+    const lensB = contrastRatio(samples.lens.hex, samples.B.hex);
+    console.log(
+      `brand-assets: contrast on ${mark240} — plate B/A ${plate.toFixed(2)}:1 (floor ${SPEC.plateContrastFloor.toFixed(2)}), ` +
+        `lens/A ${lensA.toFixed(2)}:1, lens/B ${lensB.toFixed(2)}:1 (floor ${SPEC.lensContrastFloor.toFixed(2)})`,
+    );
+    if (plate < SPEC.plateContrastFloor) {
+      fail(
+        mark240,
+        `plate B (${samples.B.hex}) against plate A (${samples.A.hex}) is ${plate.toFixed(2)}:1, floor ${SPEC.plateContrastFloor.toFixed(2)}:1 — the plates have merged`,
+      );
+    }
+    if (lensA < SPEC.lensContrastFloor) fail(mark240, `lens (${samples.lens.hex}) against plate A is ${lensA.toFixed(2)}:1, floor ${SPEC.lensContrastFloor.toFixed(2)}`);
+    if (lensB < SPEC.lensContrastFloor) fail(mark240, `lens (${samples.lens.hex}) against plate B is ${lensB.toFixed(2)}:1, floor ${SPEC.lensContrastFloor.toFixed(2)}`);
+  }
+}
+
 /* The 29 px Wallet icon is the other place the lens has to survive. */
 const icon29 = join(PASS, "icon.png");
 if (existsSync(icon29) && statSync(icon29).size > 0) {
@@ -219,4 +300,4 @@ if (problems.length > 0) {
 }
 
 const assets = BRAND_PNGS.length + BRAND_SVGS.length + PASS_ASSETS.length + PASS_SVGS.length + (existsSync(MOCKS) ? readdirSync(MOCKS).filter((f) => FRAME_PATTERN.test(f)).length : 0) + 1;
-console.log(`brand-assets: ${assets} asset(s) present, no empty files, two solid plates at x=0/x=${SPEC.secondX}, overlap ${((SPEC.overlapRatio) * 100).toFixed(1)}%, lens survives the 29 px slot`);
+console.log(`brand-assets: ${assets} asset(s) present, no empty files, two plates at x=0/x=${SPEC.secondX}, overlap ${((SPEC.overlapRatio) * 100).toFixed(1)}%, second plate and lens contrast measured, lens survives the 29 px slot`);

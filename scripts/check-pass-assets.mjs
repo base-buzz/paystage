@@ -58,9 +58,9 @@ if (!present.has("pass-face.svg")) {
 }
 
 /**
- * The poster mark the `/m/:serial` page renders (#440). The 2026-11-27 venn is two solid plates with the state in
- * the lens; the page paints it inverted over the mandate's tint, so both plates must be present (paper) and the
- * lens must be a distinct filled element. An outlined plate or a missing lens would be the old seal or a stale
+ * The poster mark the `/m/:serial` page renders (#440). The 2026-11-27 venn is two plates one value apart (#460)
+ * with the state in the lens; the page paints it inverted over the mandate's tint, so both plates must be present
+ * (paper, the second blended against that tint) and the lens must be a distinct filled element. An outlined plate or a missing lens would be the old seal or a stale
  * drawing, and the page would show a different mark from the pass.
  */
 for (const file of ["mark-active.svg", "mark-revoked.svg", "mark-expired.svg"]) {
@@ -71,6 +71,13 @@ for (const file of ["mark-active.svg", "mark-revoked.svg", "mark-expired.svg"]) 
   const text = readFileSync(join(DIR, file), "utf8");
   for (const needle of ['data-plate="A"', 'data-plate="B"', 'data-lens="1"']) {
     if (!text.includes(needle)) problems.push(`${file} has no ${needle} — the venn is not the mark in this file`);
+  }
+  // #460: the page loads this SVG over a tint, so both plates must be the same drawing AND different values.
+  // Geometry alone passed a white-on-white poster mark while the pages looked structurally right.
+  const plateA = text.match(/data-plate="A"[^>]*fill="([^"]+)"/)?.[1];
+  const plateB = text.match(/data-plate="B"[^>]*fill="([^"]+)"/)?.[1];
+  if (plateA && plateB && plateA.toLowerCase() === plateB.toLowerCase()) {
+    problems.push(`${file} draws plates A and B in the same fill (${plateA}) — the mark is one silhouette`);
   }
 }
 

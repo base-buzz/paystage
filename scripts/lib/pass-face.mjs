@@ -23,7 +23,7 @@
  * and not by the renderer, which is exactly the review-matching this row exists to remove.
  */
 import TOKENS from "../../apps/console/src/lib/pass-tokens.json" with { type: "json" };
-import { vennGroup } from "./venn.mjs";
+import { PLATE_B_ALPHA, VENN_SURFACES, blendHex, vennGroup } from "./venn.mjs";
 
 /** The token object itself, exported so a test can prove both runtimes read the same values. */
 export const PASS_TOKENS = TOKENS;
@@ -54,6 +54,10 @@ function stripArtwork(width, height, revoked, withMark = false) {
   const band = revoked ? RED : "#1B4F8A";
   const v = height * 0.62;
   const x = width * 0.5;
+  // The strip is a gradient (accent → ink) and the mark sits at its centre, so the surface is the
+  // gradient's halfway value. An explicit blend keeps plate B deterministic instead of letting an
+  // SVG opacity sample the gradient per pixel.
+  const markSurface = blendHex(accent, INK, 0.5);
   return `
     <defs>
       <linearGradient id="strip" x1="0" y1="0" x2="1" y2="1">
@@ -62,7 +66,7 @@ function stripArtwork(width, height, revoked, withMark = false) {
       </linearGradient>
     </defs>
     <rect x="0" y="0" width="${width}" height="${height}" fill="url(#strip)"/>
-    ${withMark ? vennMark({ x: x - size / 2, y: (height - size * 0.62) / 2, size, state: revoked ? "REVOKED" : "ACTIVE", plate: PAPER }) : ""}
+    ${withMark ? vennMark({ x: x - size / 2, y: (height - size * 0.62) / 2, size, state: revoked ? "REVOKED" : "ACTIVE", plate: PAPER, surface: markSurface }) : ""}
     <rect x="0" y="${height - Math.max(3, height * 0.05)}" width="${width}" height="${Math.max(3, height * 0.05)}" fill="${band}"/>
   `;
 }
@@ -164,7 +168,7 @@ export function passFaceSvg(face) {
   <rect x="0" y="0" width="${width}" height="${posterH}" fill="${dead ? MUTED : tint}"/>
   <rect x="0" y="${posterH - Math.max(3, posterH * 0.012)}" width="${width}" height="${Math.max(3, posterH * 0.012)}" fill="${dead ? RED : GOLD}"/>
 
-  ${vennMark({ x: pad, y: pad - f(1.2), size: f(8.4), state: dead ? (revoked ? "REVOKED" : "EXPIRED") : "ACTIVE", plate: PAPER })}
+  ${vennMark({ x: pad, y: pad - f(1.2), size: f(8.4), state: dead ? (revoked ? "REVOKED" : "EXPIRED") : "ACTIVE", plate: PAPER, surface: dead ? MUTED : tint })}
   ${label(pad + f(10.4), pad + f(3.2), face.brand ?? "vouchguard", f(TYPE.brand), "#FFFFFF", 500, "0.01em")}
   ${label(pad + f(10.4), pad + f(6.2), teammate ? `via ${teammate.platform ?? teammate.name} · ${teammate.category ?? "agent"}` : (face.vouchedBy ?? "vouched by PayStage"), f(TYPE.subBrand), "rgba(255,255,255,0.72)", 500, "0.03em")}
   ${chip}
@@ -222,21 +226,37 @@ export function passLogoSvg({ width, height, wordmark = "PAYSTAGE" }) {
 }
 
 /**
- * The mark: the venn — two solid plates, 62 × 62 at x = 0 and x = 38, radius 15, lens = state.
+ * The mark: the venn — two plates 62 × 62 at x = 0 and x = 38, radius 15, one value apart, lens = state.
  *
  * Replaces the keyway seal (2026-11-27). The geometry is in `scripts/lib/venn.mjs`, shared with the brand kit,
- * so the mark on the pass, the verification page and the marketing kit is one drawing. Both plates are solid;
- * the lens is the only differentiated element (gold active, red revoked, grey expired, paper knockout for
- * one-colour use). There is no compact variant: a mark with a variant is two marks.
+ * so the mark on the pass, the verification page and the marketing kit is one drawing. Plate A is 100% and
+ * plate B is 62% of it over the surface the mark is painted on (#460); the lens is the only differentiated
+ * element (gold active, red revoked, grey expired, paper knockout for one-colour use). There is no compact
+ * variant: a mark with a variant is two marks.
  *
  * On the pass the mark is used inverted — paper plates on the tinted poster, strip and icon — because a deep
- * plate on the deep field disappears. That is a colour application, not a second drawing.
+ * plate on the deep field disappears. That is a colour application, not a second drawing. `surface` is the
+ * exact colour behind the mark; plate B is blended against it so the raster is deterministic.
  */
-export function vennMark({ x = 0, y = 0, size = 100, state = "ACTIVE", paper = PAPER, gold = GOLD, ink = INK, red = RED, plate = null, id = null } = {}) {
+export function vennMark({
+  x = 0,
+  y = 0,
+  size = 100,
+  state = "ACTIVE",
+  paper = PAPER,
+  gold = GOLD,
+  ink = INK,
+  red = RED,
+  plate = null,
+  surface = VENN_SURFACES.paper,
+  secondOpacity = PLATE_B_ALPHA,
+  plateB = null,
+  id = null,
+} = {}) {
   const s = String(state).toUpperCase();
   const lens = s === "REVOKED" ? red : s === "EXPIRED" ? MUTED : s === "MONO" ? paper : gold;
   const uid = id ?? `venn-${Math.round(x)}-${Math.round(y)}-${Math.round(size)}`;
-  return vennGroup({ x, y, width: Number(size), plate: plate ?? paper, lens, id: uid });
+  return vennGroup({ x, y, width: Number(size), plate: plate ?? paper, lens, surface, secondOpacity, plateB, id: uid });
 }
 
 /** The mark alone, for `icon.png` (29×29 in notifications): the venn, no type. */
@@ -246,7 +266,7 @@ export function passIconSvg({ width, height, revoked = false }) {
   const stroke = Math.max(1.2, h * 0.11);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
   <rect width="${w}" height="${h}" rx="${h * 0.22}" fill="${revoked ? "#6B7280" : DEEP}"/>
-  ${vennMark({ x: (w - w * 0.74) / 2, y: (h - w * 0.74 * 0.62) / 2, size: w * 0.74, state: revoked ? "REVOKED" : "ACTIVE", plate: PAPER })}
+  ${vennMark({ x: (w - w * 0.74) / 2, y: (h - w * 0.74 * 0.62) / 2, size: w * 0.74, state: revoked ? "REVOKED" : "ACTIVE", plate: PAPER, surface: revoked ? "#6B7280" : DEEP })}
 </svg>`;
 }
 
@@ -365,7 +385,7 @@ export function stackedTeammatesSvg({ width = 750, teammates } = {}) {
       return `<g>
       <rect x="${pad}" y="${y}" width="${cardW}" height="${cardH}" rx="${f(3)}" fill="${tint}"/>
       <rect x="${pad}" y="${y}" width="${cardW}" height="${f(0.9)}" rx="${f(0.4)}" fill="${GOLD}"/>
-      ${vennMark({ x: pad + f(4.5), y: y + cardH - f(11.5) + f(7.5) * 0.19, size: f(7.5), state: "ACTIVE", plate: PAPER })}
+      ${vennMark({ x: pad + f(4.5), y: y + cardH - f(11.5) + f(7.5) * 0.19, size: f(7.5), state: "ACTIVE", plate: PAPER, surface: tint })}
       ${labelAt(pad + f(14), y + cardH - f(6.6), t.name, f(5.2), "#FFFFFF", 600, "-0.01em")}
       ${labelAt(pad + f(14), y + cardH - f(2.6), `via ${t.platform} · ${t.category}`, f(2.6), "rgba(255,255,255,0.72)", 500, "0.03em")}
       ${labelAt(w - pad - f(4.5), y + cardH - f(6.6), t.limit, f(5.0), "#FFFFFF", 700, "-0.01em", "end")}

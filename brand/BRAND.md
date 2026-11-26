@@ -8,14 +8,17 @@ what a rebrand must preserve, and why.
 
 ```
 canvas 100 × 62
-plate A (left)   62 × 62, radius 15, solid, x = 0
-plate B (right)  62 × 62, radius 15, solid, x = 38
+plate A (left)   62 × 62, radius 15, 100% ink, x = 0
+plate B (right)  62 × 62, radius 15, 62% ink over the surface, x = 38
 overlap          24 units = 38.7% of a plate
 lens             the intersection, and the only accent
 ```
 
-Two **solid** plates — revised 2026-11-27 by the operator. An outlined second plate needed a small-size variant to survive
-29 px, and a mark with a variant is two marks.
+Two plates **one value apart** — revised 2026-11-28 (#460). An outlined second plate needed a small-size variant to
+survive 29 px, and a mark with a variant is two marks; two plates in the *same* fill merged into one silhouette with a
+gold hole. So plate A is the full ink and plate B is 62% of it over the background — colour, not geometry, separates
+the shapes, as on the Mastercard mark. The blend is computed against the surface (paper, ink, tile or poster tint) and
+written as an opaque hex, so the raster does not change with whatever the SVG is later composited over.
 
 ## State lives in the lens
 
@@ -24,7 +27,7 @@ Two **solid** plates — revised 2026-11-27 by the operator. An outlined second 
 | active | gold `#F7B600` |
 | revoked | red `#B42318` |
 | expired | grey `#5B6472` |
-| one colour / print | paper knockout — the plates separate by tone |
+| one colour / print | ink / ink 40% / paper knockout — the plates separate by tone |
 
 ## Minimum sizes
 

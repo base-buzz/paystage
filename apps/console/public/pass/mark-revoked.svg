@@ -5,7 +5,7 @@
     </clipPath>
   </defs>
   <rect data-plate="A" x="0" y="0" width="62" height="62" rx="15" fill="#FFFFFF"/>
-  <rect data-plate="B" x="38" y="0" width="62" height="62" rx="15" fill="#FFFFFF"/>
+  <rect data-plate="B" data-surface="#5B6472" x="38" y="0" width="62" height="62" rx="15" fill="#c1c4c9"/>
   <g clip-path="url(#venn-0-19-100-a)">
     <rect data-lens="1" x="38" y="0" width="62" height="62" rx="15" fill="#B42318"/>
   </g>

@@ -36,6 +36,7 @@ const conf = join(confDir, "fonts.conf");
 writeFileSync(conf, `<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "fonts.dtd">\n<fontconfig>\n  <dir>${fontDir}</dir>\n  <cachedir>${join(confDir, "cache")}</cachedir>\n</fontconfig>\n`);
 process.env.FONTCONFIG_FILE = conf;
 
+const { vennGroup } = await import("./lib/venn.mjs");
 const TOKENS = JSON.parse(readFileSync("apps/console/src/lib/pass-tokens.json", "utf8"));
 const { ink: INK, deep: DEEP, gold: GOLD, muted: MUTED, red: RED } = TOKENS.palette;
 const PAPER = "#FFFFFF";
@@ -105,18 +106,15 @@ function sceneBillShock(w, h, phase) {
 function sceneCaps(w, h, phase) {
   const f = (n) => (n * Math.min(w, h)) / 100;
   const refusals = Math.round(EXAMPLE.refusals * phase);
-  const plate = (x, y, r) => `<rect x="${x}" y="${y}" width="${r}" height="${r}" rx="${r * 0.24}" fill="${DEEP}"/>`;
-  const plateSize = f(9);
-  const secondX = plateSize * (38 / 62);
+  // The mark is drawn by the shared module rather than by three hand-written rects here, so the 62%
+  // second plate reaches the loop as well (#460). It used to be a local copy of the geometry, which is
+  // exactly how a stale mark survives a brand change.
+  const mark = vennGroup({ x: f(8), y: f(24), width: f(9), plate: DEEP, lens: GOLD, surface: PAPER });
   return ms(
     w,
     h,
     `${t(f(8), f(14), "The pass carries the limits", f(6.4), { weight: 700, spacing: "-0.01em" })}
-     <g>
-       ${plate(f(8), f(24), plateSize)}
-       <rect x="${f(8) + secondX}" y="${f(24)}" width="${plateSize}" height="${plateSize}" rx="${plateSize * 0.24}" fill="${DEEP}"/>
-       <rect x="${f(8) + secondX}" y="${f(24)}" width="${plateSize - secondX}" height="${plateSize}" rx="${plateSize * 0.24}" fill="${GOLD}"/>
-     </g>
+     ${mark}
      ${t(f(8), f(46), `${refusals} refusals`, f(9), { weight: 700, spacing: "-0.02em", colour: INK })}
      ${t(f(8), f(54), `$${EXAMPLE.lostToWrongPayee} lost to a wrong payee`, f(4.6), { colour: MUTED })}
      ${t(f(8), f(62), "every refusal names the rule that fired", f(4.0), { colour: MUTED })}
