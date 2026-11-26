@@ -109,6 +109,12 @@ if (reason === null) {
      * failure as a hook that cannot see the runner (#439): it converts "unknown" into "verified".
      */
     "check-manifest-packages.mjs",
+    /**
+     * `apps/hosted/scripts/conformance.mjs` is what the nightly `cadence` workflow runs, and it was not in this list —
+     * so a broken relative import in it (2026-11-26: `../../packages` from `apps/hosted/scripts/`, which resolves to
+     * `apps/packages`) passed every local check and failed the nightly run at 02:40Z. Fixtures only, no network, ~1s.
+     */
+    "conformance-fixtures.mjs",
   ]) {
     const [script, ...scriptArgs] = cheap.split(" ");
     if (!existsSync(join(ROOT, "scripts", script))) continue;

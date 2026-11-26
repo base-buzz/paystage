@@ -21,7 +21,7 @@ const REPO_RAW = "https://raw.githubusercontent.com/base-buzz/paystage/main";
 
 // #431: our CI checks prove themselves to the gate. Absent PAYSTAGE_PROVENANCE_KEY → `{}`,
 // and every call lands as `unknown`, which is correct and never treated as a failure.
-import { provenanceHeaders } from "../../packages/loadgen/src/provenance.mjs";
+import { provenanceHeaders } from "../../../packages/loadgen/src/provenance.mjs";
 const PROVENANCE = await provenanceHeaders("own-ci");
 
 const TOOLS = [
