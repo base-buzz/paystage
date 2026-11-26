@@ -435,7 +435,6 @@ frameworks, a policy schema and a skill — hence fifteen packages and ten tools
 | `@paystage/ai-sdk` | the same gate as Vercel AI SDK tools | [npm](https://www.npmjs.com/package/@paystage/ai-sdk) |
 | `@paystage/auth-watch` | outstanding ERC-20 / Permit2 / EIP-3009 authorisations | [npm](https://www.npmjs.com/package/@paystage/auth-watch) |
 | `@paystage/channel` | read-only x402 deposit-channel state | [npm](https://www.npmjs.com/package/@paystage/channel) |
-| `@paystage/mandate` | issue, verify and evaluate a scoped, revocable authority | in this repo — first publish pending |
 | `@paystage/policy` | policy schema and loader | [npm](https://www.npmjs.com/package/@paystage/policy) |
 | `@paystage/preflight` | x402 payment preflight (the evaluator) | [npm](https://www.npmjs.com/package/@paystage/preflight) |
 | `@paystage/receipt-verify` | verify a signed receipt without the server | [npm](https://www.npmjs.com/package/@paystage/receipt-verify) |
