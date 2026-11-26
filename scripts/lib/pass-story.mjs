@@ -285,3 +285,239 @@ export function capMidJobSvg({ width = 750 } = {}) {
      ${t(f(8), f(43), "A cap that only stops the first payment is not a cap — this is the case the numbers exist for.", f(2.8), { colour: MUTED, w })}`,
   );
 }
+
+/* ---------------------------------------------------------------------------------------------------------------
+ * Where a frame is rendered.
+ *
+ * The first version of this storyboard drew screens with no chrome, which made every frame look like it came from the
+ * same place. It did not: a preset picker is Safari on an iPhone, the pass is the Wallet app, the biometric prompt is
+ * an iOS system sheet owned by the OS, and provisioning is a hand-off between two apps. So every device frame below
+ * declares its surface, draws that surface's chrome, and the page prints the surface and the transition beside it.
+ * ------------------------------------------------------------------------------------------------------------ */
+
+const PHONE = { w: 420, h: 780, radius: 44, inset: 10 };
+
+/**
+ * The Face ID glyph: four rounded corner brackets, two eyes, a nose and a smile.
+ *
+ * Drawn in a 0..100 space and scaled by `transform`, because computing absolute coordinates for a glyph this small is
+ * how the first two attempts produced a "T" with a smile: the brackets and eyes were there, just outside the box.
+ */
+export function faceIdGlyph({ x, y, size, colour = INK }) {
+  const scale = size / 100;
+  return `<g transform="translate(${x} ${y}) scale(${scale})" fill="none" stroke="${colour}"
+    stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 30 L10 18 Q10 10 18 10 L30 10"/>
+    <path d="M70 10 L82 10 Q90 10 90 18 L90 30"/>
+    <path d="M10 70 L10 82 Q10 90 18 90 L30 90"/>
+    <path d="M70 90 L82 90 Q90 90 90 82 L90 70"/>
+    <path d="M30 36 L42 36" stroke-width="8"/>
+    <path d="M58 36 L70 36" stroke-width="8"/>
+    <path d="M50 34 L50 58 L44 62" stroke-width="6.5"/>
+    <path d="M34 74 Q50 86 66 74" stroke-width="6.5"/>
+  </g>`;
+}
+
+/** A 9:41 iPhone status bar — the only chrome every surface shares. */
+function statusBar(w, dark = false) {
+  const fg = dark ? "#FFFFFF" : INK;
+  return `<g>
+    ${t(w * 0.09, w * 0.055, "9:41", w * 0.032, { colour: fg, weight: 600 })}
+    <rect x="${w * 0.78}" y="${w * 0.032}" width="${w * 0.10}" height="${w * 0.018}" rx="${w * 0.005}" fill="${fg}" opacity="0.9"/>
+    <rect x="${w * 0.90}" y="${w * 0.030}" width="${w * 0.045}" height="${w * 0.022}" rx="${w * 0.006}" fill="none" stroke="${fg}" stroke-width="${w * 0.004}" opacity="0.75"/>
+  </g>`;
+}
+
+/** Safari's bottom URL bar, so a reader can see this is a web page and not the Wallet app. */
+function safariBar(w, h, url) {
+  const barH = w * 0.085;
+  return `<g>
+    <rect x="${w * 0.05}" y="${h - barH - w * 0.03}" width="${w * 0.90}" height="${barH}" rx="${barH / 2}" fill="#EDEAE3"/>
+    ${t(w * 0.50, h - barH / 2 - w * 0.03 + w * 0.012, url, w * 0.026, { colour: MUTED, weight: 500, anchor: "middle" })}
+  </g>`;
+}
+
+/**
+ * A phone frame with the chrome of one surface.
+ *
+ *   "safari"  — a web page: status bar, URL bar, white content
+ *   "sheet"   — an iOS system sheet: the page dimmed behind, the sheet on top (the OS draws this, not us)
+ *   "wallet"  — the Wallet app: black, no browser chrome, the pass floating on it
+ */
+function deviceFrame({ surface, url = "paystage.xyz/grok-bot", content, w = PHONE.w, h = PHONE.h, caption }) {
+  const dark = surface === "wallet";
+  const bg = dark ? "#111214" : "#FFFFFF";
+  const body = surface === "wallet" ? content : content;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <rect width="${w}" height="${h}" rx="${PHONE.radius}" fill="${dark ? "#000000" : "#FFFFFF"}"/>
+  <clipPath id="screen"><rect x="${PHONE.inset}" y="${PHONE.inset}" width="${w - PHONE.inset * 2}" height="${h - PHONE.inset * 2}" rx="${PHONE.radius - 12}"/></clipPath>
+  <g clip-path="url(#screen)">
+    <rect x="${PHONE.inset}" y="${PHONE.inset}" width="${w - PHONE.inset * 2}" height="${h - PHONE.inset * 2}" fill="${bg}"/>
+    ${body}
+  </g>
+  <rect x="${PHONE.inset}" y="${PHONE.inset}" width="${w - PHONE.inset * 2}" height="${h - PHONE.inset * 2}" rx="${PHONE.radius - 12}" fill="none" stroke="#00000022" stroke-width="1.5"/>
+  ${statusBar(w, dark)}
+  ${caption ? t(w * 0.06, h - w * 0.02, caption, w * 0.026, { colour: dark ? "#FFFFFF99" : MUTED }) : ""}
+</svg>`.replace(/\$\{body\}/g, body);
+}
+
+/* ---- Story 1, the four frames that show the actual sequence ---------------------------------------------------- */
+
+const presets = [
+  ["Research", "up to $2.00 each · $20 a day", "reading · APIs", DEEP],
+  ["Errands", "up to $0.50 each · $5 a day", "small buys", "#243447"],
+  ["Build", "up to $1.00 each · $10 a day", "CI · packages", "#1D4B36"],
+  ["Custom…", "set the numbers yourself", "blank form", "#4A2340"],
+];
+
+/**
+ * The four story-1 frames are **phone screens**, so x and y use different scales: x is a share of the width, y a share
+ * of the height. Mixing them is what made the first attempt draw a sheet across the middle of a 780-tall frame.
+ */
+const screenHelpers = (w, h) => ({
+  x: (n) => Math.round(((n * w) / 100) * 100) / 100,
+  y: (n) => Math.round(((n * h) / 100) * 100) / 100,
+});
+
+/**
+ * A four-step strip at the top of each story-1 frame.
+ *
+ * Without it each screen is a separate picture and a reader has to remember where they are; with it the sequence is
+ * legible before reading a word — which is the whole reason the storyboard exists.
+ */
+function stepStrip(X, Y, current) {
+  const steps = ["Pick", "Configure", "Confirm", "Wallet"];
+  return steps
+    .map((label, i) => {
+      const active = i === current;
+      const done = i < current;
+      const cx = X(9 + i * 24.5);
+      const colour = active ? DEEP : done ? DEEP : "#B9B4A8";
+      return `<g>
+        <circle cx="${cx}" cy="${Y(7.2)}" r="${X(2.6)}" fill="${active ? DEEP : done ? DEEP : "none"}" stroke="${colour}" stroke-width="${X(0.5)}"/>
+        ${t(cx, Y(8.4), `${i + 1}`, X(2.6), { colour: active || done ? "#FFFFFF" : "#8A8578", weight: 700, anchor: "middle" })}
+        ${t(cx + X(4.4), Y(8.2), label, X(2.7), { colour: active ? INK : MUTED, weight: active ? 700 : 500 })}
+      </g>`;
+    })
+    .join("");
+}
+
+/** 1a — Safari, choose the job. Nothing is configured yet: this screen is a starting point, not a decision. */
+export function storyPickSvg({ width = PHONE.w, height = PHONE.h } = {}) {
+  const { x: X, y: Y } = screenHelpers(width, height);
+  const rows = presets
+    .map(([title, line, tag, tint], i) => {
+      const y = Y(21) + i * Y(9);
+      return `<g>
+        <rect x="${X(6)}" y="${y}" width="${X(88)}" height="${Y(7.6)}" rx="${X(2.4)}" fill="#FFFFFF" stroke="#E2DED6" stroke-width="1"/>
+        <rect x="${X(9)}" y="${y + Y(1.4)}" width="${X(6)}" height="${Y(4.6)}" rx="${X(1.4)}" fill="${tint}"/>
+        ${t(X(18), y + Y(3.2), title, X(4.4), { weight: 600 })}
+        ${t(X(18), y + Y(5.9), line, X(2.8), { colour: MUTED })}
+        ${t(X(90), y + Y(3.2), tag, X(2.5), { colour: MUTED, anchor: "end" })}
+        ${t(X(90), y + Y(5.9), "›", X(4.0), { colour: MUTED, anchor: "end" })}
+      </g>`;
+    })
+    .join("");
+  return deviceFrame({
+    surface: "safari",
+    url: "paystage.xyz/new",
+    w: width,
+    h: height,
+    content: `
+      ${stepStrip(X, Y, 0)}
+      ${t(X(6), Y(15), "Give a teammate a job", X(5.6), { weight: 700, spacing: "-0.01em" })}
+      ${t(X(6), Y(18), "Pick the job. The numbers arrive filled in.", X(3.0), { colour: MUTED })}
+      ${rows}
+      ${t(X(6), Y(61), "Tap one to configure it. Nothing is issued on this screen.", X(2.7), { colour: MUTED })}
+      ${safariBar(width, height, "paystage.xyz/new")}`,
+  });
+}
+
+/** 1b — Safari, configure. The numbers are editable here, and this is where intent becomes concrete. */
+export function storyConfigureSvg({ width = PHONE.w, height = PHONE.h } = {}) {
+  const { x: X, y: Y } = screenHelpers(width, height);
+  const field = (y, label, value, hint) => `
+    ${t(X(6), y, label, X(2.6), { colour: MUTED, weight: 600, spacing: "0.08em" })}
+    <rect x="${X(6)}" y="${y + Y(1.4)}" width="${X(88)}" height="${Y(6)}" rx="${X(1.6)}" fill="#FFFFFF" stroke="#E2DED6" stroke-width="1"/>
+    ${t(X(8.5), y + Y(5.2), value, X(3.8), { weight: 600 })}
+    ${hint ? t(X(8.5), y + Y(8.6), hint, X(2.5), { colour: MUTED }) : ""}`;
+  return deviceFrame({
+    surface: "safari",
+    url: "paystage.xyz/new/research",
+    w: width,
+    h: height,
+    content: `
+      ${stepStrip(X, Y, 1)}
+      ${t(X(6), Y(14), "Research", X(5.4), { weight: 700, spacing: "-0.01em" })}
+      ${t(X(6), Y(17), "Sliders, not a blank form. Every one is editable.", X(2.9), { colour: MUTED })}
+      ${field(Y(21), "PER PURCHASE", "$2.00")}
+      ${field(Y(31), "PER DAY", "$20.00", "resets at 00:00 UTC")}
+      ${field(Y(41), "EXPIRES", "31 January 2027")}
+      ${field(Y(51), "PAYEES", "any payee the gate can check")}
+      <rect x="${X(6)}" y="${Y(63)}" width="${X(88)}" height="${Y(6.5)}" rx="${X(2.2)}" fill="${DEEP}"/>
+      ${t(X(50), Y(67.2), "Continue", X(4.2), { colour: "#FFFFFF", weight: 700, anchor: "middle" })}
+      ${t(X(6), Y(73), "Next: read back what you are about to grant.", X(2.7), { colour: MUTED })}
+      ${safariBar(width, height, "paystage.xyz/new/research")}`,
+  });
+}
+
+/**
+ * 1c — the **confirmation** step, then the system prompt.
+ *
+ * The order matters, and the first version of this storyboard got it wrong: a person does not pick one of four options
+ * and have Face ID fire. They pick, configure, **read back what they are about to grant**, and only then does the OS
+ * ask for a face. The sheet is the OS's; the page behind it is ours.
+ */
+export function storyConfirmSvg({ width = PHONE.w, height = PHONE.h } = {}) {
+  const { x: X, y: Y } = screenHelpers(width, height);
+  return deviceFrame({
+    surface: "sheet",
+    url: "paystage.xyz/new/research",
+    w: width,
+    h: height,
+    content: `
+      ${stepStrip(X, Y, 2)}
+      ${t(X(6), Y(15), "Confirm the pass", X(5.0), { weight: 700, spacing: "-0.01em" })}
+      ${t(X(6), Y(18.5), "Grok Bot may spend for you, within these numbers.", X(2.9), { colour: MUTED })}
+      <rect x="${X(6)}" y="${Y(21)}" width="${X(88)}" height="${Y(19)}" rx="${X(2.4)}" fill="#FFFFFF" stroke="#E2DED6" stroke-width="1"/>
+      ${t(X(9), Y(24), "PER PURCHASE", X(2.4), { colour: MUTED, weight: 600, spacing: "0.08em" })}
+      ${t(X(9), Y(28), "$2.00", X(5.0), { weight: 700 })}
+      ${t(X(9), Y(31.5), "PER DAY", X(2.4), { colour: MUTED, weight: 600, spacing: "0.08em" })}
+      ${t(X(9), Y(35.5), "$20.00", X(5.0), { weight: 700 })}
+      ${t(X(9), Y(39), "expires 31 Jan · revocable at any time · cannot tap to pay", X(2.5), { colour: MUTED })}
+      <rect x="0" y="${Y(40)}" width="${width}" height="${Y(60)}" fill="#0A0A0A" opacity="0.32"/>
+      <rect x="${X(3)}" y="${Y(46)}" width="${X(94)}" height="${Y(48)}" rx="${X(4.4)}" fill="#F7F5F0"/>
+      ${faceIdGlyph({ x: X(42), y: Y(50), size: X(16) })}
+      ${t(X(50), Y(72), "Confirm with Face ID", X(4.2), { weight: 600, anchor: "middle" })}
+      ${t(X(50), Y(75.5), "the pass is issued only if this succeeds", X(2.8), { colour: MUTED, anchor: "middle" })}
+      <rect x="${X(8)}" y="${Y(78.5)}" width="${X(84)}" height="${Y(0.25)}" fill="#DAD6CC"/>
+      ${t(X(50), Y(83.5), "Cancel", X(3.6), { colour: DEEP, weight: 600, anchor: "middle" })}
+      ${t(X(50), Y(90), "iOS draws this sheet. We choose when it appears.", X(2.5), { colour: MUTED, anchor: "middle" })}`,
+  });
+}
+
+/** 1d — the hand-off: Safari asks Wallet to take the pass. This is the transition, drawn as a transition. */
+export function storyProvisionSvg({ width = PHONE.w, height = PHONE.h } = {}) {
+  const { x: X, y: Y } = screenHelpers(width, height);
+  return deviceFrame({
+    surface: "safari",
+    url: "paystage.xyz/new/research",
+    w: width,
+    h: height,
+    content: `
+      ${stepStrip(X, Y, 3)}
+      ${t(X(6), Y(15), "Adding to Apple Wallet", X(4.8), { weight: 700, spacing: "-0.01em" })}
+      ${t(X(6), Y(18.5), "The pass is signed, then handed to the Wallet app.", X(2.9), { colour: MUTED })}
+      <rect x="${X(10)}" y="${Y(22)}" width="${X(80)}" height="${Y(19)}" rx="${X(3.2)}" fill="${DEEP}"/>
+      ${t(X(14), Y(27), "Grok Bot", X(4.6), { colour: "#FFFFFF", weight: 600 })}
+      ${t(X(14), Y(30.5), "$2.00 each · $20.00 per 24h", X(2.7), { colour: "#FFFFFFB0" })}
+      ${t(X(86), Y(27), "VOUCH", X(3.2), { colour: GOLD, weight: 700, anchor: "end", spacing: "0.12em" })}
+      <rect x="${X(10)}" y="${Y(47)}" width="${X(80)}" height="${Y(7)}" rx="${X(2.2)}" fill="#000000"/>
+      ${t(X(50), Y(51.6), "Add to Apple Wallet", X(3.8), { colour: "#FFFFFF", weight: 600, anchor: "middle" })}
+      <rect x="${X(10)}" y="${Y(56)}" width="${X(80)}" height="${Y(7)}" rx="${X(2.2)}" fill="none" stroke="#CFC9BC" stroke-width="1"/>
+      ${t(X(50), Y(60.6), "Not now", X(3.6), { colour: MUTED, weight: 600, anchor: "middle" })}
+      ${t(X(6), Y(66), "Safari hands the pass to the Wallet app.", X(2.6), { colour: MUTED })}
+      ${t(X(6), Y(69), "After this screen the page holds nothing; the wallet does.", X(2.6), { colour: MUTED })}
+      ${safariBar(width, height, "paystage.xyz/new/research")}`,
+  });
+}

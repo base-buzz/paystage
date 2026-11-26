@@ -52,35 +52,73 @@ type Story = {
  * Frames marked `diagram` are drawn sequences, not screenshots — the word DIAGRAM is on the frame, because a diagram
  * that pretends to be a screen is how a storyboard starts lying.
  */
+/**
+ * Where each frame is rendered. Dave's note, and he was right: the first version drew every screen with the same
+ * chrome, so a preset picker and the Wallet app looked like they came from the same place. They do not.
+ *
+ *   Safari  — a web page on the phone, signed-in nothing, our CSS
+ *   iOS     — a system sheet, drawn by the OS, which we ask for and cannot style
+ *   Wallet  — the Wallet app, native, dark, no browser at all
+ *   diagram — not a screen: a drawn sequence, labelled as such on the frame
+ */
+const SURFACE: Record<string, string> = {
+  "/mocks/story1-pick.png": "iPhone · Safari",
+  "/mocks/story1-configure.png": "iPhone · Safari",
+  "/mocks/story1-confirm.png": "iPhone · iOS system sheet",
+  "/mocks/story1-provision.png": "iPhone · Safari → Wallet",
+  "/mocks/frame-pass-active.png": "iPhone · Wallet (native)",
+  "/mocks/frame-pass-changed.png": "iPhone · Wallet (native)",
+  "/mocks/frame-pass-revoked.png": "iPhone · Wallet (native)",
+  "/mocks/frame-mandate-page.png": "iPhone · Safari",
+  "/mocks/frame-stack.png": "iPhone · Wallet (native)",
+  "/mocks/story3-adjust.png": "iPhone · Safari",
+  "/mocks/story4-revoke.png": "iPhone · Safari",
+  "/mocks/story2-calls.png": "the agent's log, not a screen",
+};
+
 const STORIES: Story[] = [
   {
     title: "1 · Set up a teammate",
     premise: "The human asks for a job; the agent asks for a cap.",
     frames: [
       {
-        src: "/mocks/frame-setup.png",
-        alt: "A setup screen offering four job presets — Research, Errands, Build, Custom — with the numbers already filled in.",
-        title: "Pick a job, not a limit",
+        src: "/mocks/story1-pick.png",
+        alt: "An iPhone screenshot of paystage.xyz/new in Safari: four job presets with their limits, and a step bar reading 1 Pick.",
+        title: "Pick the job",
         caption:
-          "A blank form is homework. The presets are jobs, not amounts, and picking one fills the numbers in — every one stays editable, and Custom… is the blank form for anyone who wants it.",
-        correction:
-          "A proposal, not a shipped screen. Nothing in this repository renders this yet; the copy and the argument are settled and the screen is the cheap part.",
+          "Safari, on the phone. Four presets, each already carrying a limit. Picking one only opens the next screen — nothing is issued here, and no prompt appears.",
       },
       {
-        src: "/mocks/frame-face-id.png",
-        alt: "Three states of the iOS Face ID prompt: our pre-prompt, the system sheet, and the result.",
-        title: "One biometric prompt",
+        src: "/mocks/story1-configure.png",
+        alt: "An iPhone screenshot of the configure screen in Safari with editable fields for per purchase, per day, expiry and payees.",
+        title: "Configure the numbers",
         caption:
-          "Our pre-prompt explains what is being granted; the system sheet is iOS's and we cannot restyle it; the result returns to our page.",
+          "Still Safari. Every number is editable, which is the difference between a preset and a policy: the human changes what they mean, not what we chose.",
+      },
+      {
+        src: "/mocks/story1-confirm.png",
+        alt: "An iPhone screenshot with a read-back of the limits and an iOS Face ID sheet asking to confirm.",
+        title: "Confirm, then Face ID",
+        caption:
+          "The read-back comes first: what is being granted, in numbers, before any biometric. Only then does iOS draw its own sheet with the Face ID glyph. We choose when it appears; we never draw it.",
         correction:
-          "We choose when the prompt appears, never how it looks. A mock that draws its own Face ID sheet is drawing something we will never ship.",
+          "A person does not pick one of four options and have Face ID fire. Pick, configure, read back, confirm — four steps, and the prompt is the fourth.",
+      },
+      {
+        src: "/mocks/story1-provision.png",
+        alt: "An iPhone screenshot in Safari offering Add to Apple Wallet for a signed Vouch pass.",
+        title: "Safari hands it to Wallet",
+        caption:
+          "The pass is signed and handed to the Wallet app. After this screen the page holds nothing — the wallet does. This is a transition between two apps, and it is the step people miss.",
+        correction:
+          "The page cannot show the pass after this point. If the hand-off fails, nothing is provisioned and the serial has no pass to revoke.",
       },
       {
         src: "/mocks/frame-pass-active.png",
-        alt: "A wallet pass in deep indigo with the teammate name, a per-purchase and per-day limit, an expiry and a seal.",
-        title: "The pass arrives",
+        alt: "The pass face in deep indigo with a teammate name, two limits, an expiry and a seal.",
+        title: "In Wallet, native",
         caption:
-          "It looks like a card in the wallet and it cannot tap to pay. No chip, no number, no network mark: a document with a limit on it.",
+          "The Wallet app: no browser chrome, no page, just the card. It looks like a card and it cannot tap to pay — no chip, no number, no network mark.",
       },
     ],
   },
@@ -256,6 +294,23 @@ export default function MocksPage() {
 
           {story.frames.map((frame) => (
             <section key={frame.title} style={{ margin: "2rem 0" }}>
+              {frame.src && SURFACE[frame.src] ? (
+                <p
+                  style={{
+                    display: "inline-block",
+                    fontSize: 12,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    color: "#3C4350",
+                    border: "1px solid #CFC9BC",
+                    borderRadius: 999,
+                    padding: "2px 10px",
+                    margin: "0 0 0.5rem",
+                  }}
+                >
+                  {SURFACE[frame.src]}
+                </p>
+              ) : null}
               <h3>{frame.title}</h3>
               {frame.src ? (
                 // eslint-disable-next-line @next/next/no-img-element -- static assets, no layout shift to optimise

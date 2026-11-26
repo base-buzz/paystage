@@ -42,6 +42,10 @@ import {
   reviewArrivesSvg,
   revokeActionSvg,
   staleVsRevokedSvg,
+  storyConfigureSvg,
+  storyConfirmSvg,
+  storyPickSvg,
+  storyProvisionSvg,
   unknownSerialSvg,
 } from "./lib/pass-story.mjs";
 
@@ -167,6 +171,10 @@ if (argv.includes("--frames")) {
     { file: "frame-pass-revoked.png", svg: passFaceSvg({ ...FACE, width: 750, state: "REVOKED", limit: "$2.00", window: "$20.00 per 24h" }), note: "ended, and the face says so" },
     { file: "frame-stack.png", svg: stackedTeammatesSvg({ width: 750 }), note: "four teammates, four caps, one principal" },
     { file: "frame-setup.png", svg: setupScreenSvg({ width: 750 }), note: "four presets, one tap — the numbers arrive filled in" },
+    { file: "story1-pick.png", svg: storyPickSvg(), note: "Safari — pick the job" },
+    { file: "story1-configure.png", svg: storyConfigureSvg(), note: "Safari — configure the numbers" },
+    { file: "story1-confirm.png", svg: storyConfirmSvg(), note: "iOS system sheet — read back, then Face ID" },
+    { file: "story1-provision.png", svg: storyProvisionSvg(), note: "Safari → Wallet — the hand-off" },
     { file: "story2-calls.png", svg: invisibleCallsSvg({ width: 750 }), note: "forty payments, no notification" },
     { file: "story2-refusal.png", svg: capRefusalSvg({ width: 750 }), note: "a refusal at the cap" },
     { file: "story2-review.png", svg: reviewArrivesSvg({ width: 750 }), note: "a review arriving" },
