@@ -11,10 +11,9 @@ workers_dev = true
 directory = ".open-next/assets"
 binding = "ASSETS"
 
+# Routes, not custom domains: a custom domain requires the hostname to be free, and the zone already carries proxied
+# A/AAAA records at the apex from the registrar import. A route binds to the zone and takes precedence over the origin
+# those records point at, which is the same result without a DNS edit we do not hold a token for.
 [[routes]]
-pattern = "vouchguard.app"
-custom_domain = true
-
-[[routes]]
-pattern = "www.vouchguard.app"
-custom_domain = true
+pattern = "vouchguard.app/*"
+zone_name = "vouchguard.app"
