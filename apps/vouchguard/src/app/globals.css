@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+/*
+ * Values come from apps/console/src/lib/pass-tokens.json via src/lib/tokens.ts and are
+ * applied as inline custom properties on <html> in layout.tsx. Nothing in this file
+ * hardcodes a palette value: change the JSON and the app follows.
+ */
+@theme inline {
+  --color-ink: var(--vg-ink);
+  --color-paper: var(--vg-paper);
+  --color-deep: var(--vg-deep);
+  --color-gold: var(--vg-gold);
+  --color-muted: var(--vg-muted);
+  --color-red: var(--vg-red);
+  --color-tint-1: var(--vg-tint-1);
+  --color-tint-2: var(--vg-tint-2);
+  --color-tint-3: var(--vg-tint-3);
+  --color-tint-4: var(--vg-tint-4);
+  --color-tint-5: var(--vg-tint-5);
+  --color-tint-6: var(--vg-tint-6);
+  --color-tint-7: var(--vg-tint-7);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
+  --radius-2xl: 1.5rem;
+}
+
+:root {
+  --background: var(--vg-paper);
+  --foreground: var(--vg-ink);
+  --card: var(--vg-paper);
+  --card-foreground: var(--vg-ink);
+  --muted-surface: color-mix(in srgb, var(--vg-muted) 7%, var(--vg-paper));
+  --border: color-mix(in srgb, var(--vg-ink) 12%, transparent);
+  --ring: var(--vg-deep);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--vg-gold) 35%, transparent);
+  color: var(--vg-ink);
+}
+
+/* The pass is a card, so it gets a card's shadow — no phone frame around it. */
+.pass-shadow {
+  box-shadow:
+    0 1px 1px color-mix(in srgb, var(--vg-ink) 8%, transparent),
+    0 18px 45px -18px color-mix(in srgb, var(--vg-deep) 45%, transparent);
+}
+
+.paper-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--vg-ink) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--vg-ink) 4%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.dead-plate {
+  filter: grayscale(0.85) brightness(1.02);
+  opacity: 0.85;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

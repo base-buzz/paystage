@@ -1,0 +1,20 @@
+# Deploy method copied from apps/console/wrangler.toml: OpenNext build output served
+# by a Worker with a static-assets binding. Nothing here has been deployed yet; the
+# parent session owns the first deploy.
+name = "vouchguard"
+main = ".open-next/worker.js"
+compatibility_date = "2024-12-30"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[[routes]]
+pattern = "vouchguard.app"
+custom_domain = true
+
+[[routes]]
+pattern = "www.vouchguard.app"
+custom_domain = true
