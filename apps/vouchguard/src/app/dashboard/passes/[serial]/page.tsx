@@ -122,8 +122,8 @@ export default async function PassDetailPage({ params }: { params: Promise<{ ser
                   <dd className="mt-0.5 text-ink">{pass.issued}</dd>
                 </div>
                 <div>
-                  <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">Network</dt>
-                  <dd className="mt-0.5 text-ink">{pass.network}</dd>
+                  <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">Funded by</dt>
+                  <dd className="mt-0.5 text-ink">{pass.fundedFrom}</dd>
                 </div>
                 <div>
                   <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">Issuer line</dt>

@@ -28,7 +28,8 @@ export interface DemoPass {
   expires: string;
   issued: string;
   payees: string[];
-  network: string;
+  /** What funds this pass, in the demo's words. Never a network name: the demo speaks budgets. */
+  fundedFrom: string;
   status: PassStatus;
   statusNote: string;
   tintIndex: number;
@@ -47,7 +48,7 @@ export const DEMO_PASSES: DemoPass[] = [
     expires: "31 Jan 2027",
     issued: "14 Nov 2026",
     payees: ["api.vendor-a.example", "fetch.vendor-b.example"],
-    network: "Base",
+    fundedFrom: "test credits",
     status: "active",
     statusNote: "within its issued window",
     tintIndex: 1,
@@ -64,7 +65,7 @@ export const DEMO_PASSES: DemoPass[] = [
     expires: "31 Jan 2027",
     issued: "02 Nov 2026",
     payees: ["api.vendor-a.example", "fetch.vendor-b.example"],
-    network: "Base",
+    fundedFrom: "test credits",
     status: "revoked",
     statusNote: "revoked 22 Nov 2026 — replaced by VG-7F3A-42D1",
     tintIndex: 3,

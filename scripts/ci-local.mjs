@@ -118,6 +118,9 @@ if (reason === null) {
     /* Three hand-written PKGS lists decide what publishes; this compares them. It ran in CI but not here, so a
        package dropped from one list went red on the runner and green at the desk (2026-11-26). */
     "check-publish-list.mjs",
+    /* #454: the demo's copy must say budget, not crypto. A vocabulary rule is a grep, and a grep that only runs in CI is
+       a rule that ships broken. */
+    "check-demo-vocabulary.mjs",
   ]) {
     const [script, ...scriptArgs] = cheap.split(" ");
     if (!existsSync(join(ROOT, "scripts", script))) continue;
