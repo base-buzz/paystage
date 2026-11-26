@@ -31,6 +31,19 @@ import {
   setupScreenSvg,
   stackedTeammatesSvg,
 } from "./lib/pass-face.mjs";
+import {
+  cancelledSvg,
+  capMidJobSvg,
+  capRefusalSvg,
+  failClosedSvg,
+  invisibleCallsSvg,
+  limitExhaustedSvg,
+  passDeletedNotRevokedSvg,
+  reviewArrivesSvg,
+  revokeActionSvg,
+  staleVsRevokedSvg,
+  unknownSerialSvg,
+} from "./lib/pass-story.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback = null) => {
@@ -154,6 +167,17 @@ if (argv.includes("--frames")) {
     { file: "frame-pass-revoked.png", svg: passFaceSvg({ ...FACE, width: 750, state: "REVOKED", limit: "$2.00", window: "$20.00 per 24h" }), note: "ended, and the face says so" },
     { file: "frame-stack.png", svg: stackedTeammatesSvg({ width: 750 }), note: "four teammates, four caps, one principal" },
     { file: "frame-setup.png", svg: setupScreenSvg({ width: 750 }), note: "four presets, one tap — the numbers arrive filled in" },
+    { file: "story2-calls.png", svg: invisibleCallsSvg({ width: 750 }), note: "forty payments, no notification" },
+    { file: "story2-refusal.png", svg: capRefusalSvg({ width: 750 }), note: "a refusal at the cap" },
+    { file: "story2-review.png", svg: reviewArrivesSvg({ width: 750 }), note: "a review arriving" },
+    { file: "story4-revoke.png", svg: revokeActionSvg({ width: 750 }), note: "one action, the name comes off" },
+    { file: "story4-deleted.png", svg: passDeletedNotRevokedSvg({ width: 750 }), note: "deleting the pass is not revoking it" },
+    { file: "story6-failclosed.png", svg: failClosedSvg({ width: 750 }), note: "service down — fail closed" },
+    { file: "story6-cancelled.png", svg: cancelledSvg({ width: 750 }), note: "Face ID cancelled" },
+    { file: "story6-stale.png", svg: staleVsRevokedSvg({ width: 750 }), note: "a stale image against a live endpoint" },
+    { file: "story6-unknown.png", svg: unknownSerialSvg({ width: 750 }), note: "an unknown serial" },
+    { file: "story6-429.png", svg: limitExhaustedSvg({ width: 750 }), note: "the free allowance runs out" },
+    { file: "story6-capmid.png", svg: capMidJobSvg({ width: 750 }), note: "the cap arrives mid-job" },
   ];
   mkdirSync(OUT, { recursive: true });
   for (const frame of FRAMES) {
