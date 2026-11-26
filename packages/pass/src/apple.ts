@@ -40,6 +40,27 @@ export interface ApplePassArtifact {
   face: PassFace;
 }
 
+/** The back of the pass, shared by both style keys so the two faces cannot disagree about what this is. */
+function backFields(face: PassFace) {
+  return [
+    field(
+      "about",
+      "WHAT THIS IS",
+      "A Vouch spending pass issued under a signed mandate. It records what an agent was authorised to spend; it is not money and it cannot tap to pay.",
+    ),
+    field("verify", "VERIFY", face.verificationUrl),
+    field("code", "SHORT CODE", face.shortCode),
+    field("mandate", "MANDATE ID", face.serial),
+    field("limits", "LIMITS", `${face.perPayment} per purchase; ${face.windowAmount} ${face.windowLabel}; expires ${face.expiryLabel}`),
+    field(
+      "revocation",
+      "REVOCATION",
+      "Revocation is instant server-side. This pass is a reminder; the verification link is authoritative. A revoked or expired mandate invalidates it.",
+    ),
+    field("issuedby", "ISSUED BY", `${face.brand}, ${face.vouchedBy}`),
+  ];
+}
+
 /** Apple's field object. Values are strings; a pass does not localise a mandate's numbers. */
 function field(key: string, label: string, value: string) {
   return { key, label, value };
@@ -58,37 +79,35 @@ function passJson(mandate: Mandate, face: PassFace, identity: { passTypeIdentifi
     foregroundColor: "rgb(255,255,255)",
     backgroundColor: "rgb(26,31,113)",
     labelColor: "rgb(247,182,0)",
-    storeCard: {
+    /**
+     * Two style keys on purpose (#447): `generic` is the face every iOS in the field can draw, and `posterGeneric` is
+     * the iOS 27 poster style, which newer devices prefer when both are present. A pass carries one style key, so this
+     * is the compatibility mechanism rather than a duplicate.
+     *
+     * Unverified until a device renders it: the *field groups inside* `posterGeneric` and its featured-action vocabulary
+     * are assumed to follow the same header/primary/secondary/auxiliary/back shape as every other style. `featuredActions`
+     * is deliberately absent — an invented action type is worse than a missing one, and a phone will tell us in ten
+     * seconds once the certificate exists (#432).
+     */
+    generic: {
+      headerFields: [field("principal", "PRINCIPAL", face.principal)],
       primaryFields: [field("limit", "UP TO", face.perPayment)],
       secondaryFields: [
-        field("principal", "PRINCIPAL", face.principal),
+        field("window", "WINDOW", `${face.windowAmount} ${face.windowLabel}`),
         field("expires", "EXPIRES", face.expiryLabel),
       ],
-      auxiliaryFields: [
+      auxiliaryFields: [field("serial", "SERIAL", face.serial)],
+      backFields: backFields(face),
+    },
+    posterGeneric: {
+      headerFields: [field("principal", "PRINCIPAL", face.principal)],
+      primaryFields: [field("limit", "UP TO", face.perPayment)],
+      secondaryFields: [
         field("window", "WINDOW", `${face.windowAmount} ${face.windowLabel}`),
-        field("serial", "SERIAL", face.serial),
+        field("expires", "EXPIRES", face.expiryLabel),
       ],
-      backFields: [
-        field(
-          "about",
-          "WHAT THIS IS",
-          "A Vouch spending pass issued under a signed mandate. It records what an agent was authorised to spend; it is not money and it cannot tap to pay.",
-        ),
-        field("verify", "VERIFY", face.verificationUrl),
-        field("code", "SHORT CODE", face.shortCode),
-        field("mandate", "MANDATE ID", face.serial),
-        field(
-          "limits",
-          "LIMITS",
-          `${face.perPayment} per purchase; ${face.windowAmount} ${face.windowLabel}; expires ${face.expiryLabel}`,
-        ),
-        field(
-          "revocation",
-          "REVOCATION",
-          "Revocation is instant server-side. This pass is a reminder; the verification link is authoritative. A revoked or expired mandate invalidates it.",
-        ),
-        field("issuedby", "ISSUED BY", `${face.brand}, ${face.vouchedBy}`),
-      ],
+      auxiliaryFields: [field("serial", "SERIAL", face.serial)],
+      backFields: backFields(face),
     },
     barcodes: [
       {

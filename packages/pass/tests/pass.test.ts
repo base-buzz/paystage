@@ -228,20 +228,26 @@ describe("@paystage/pass — the Apple archive", () => {
       now: NOW,
     });
     const pass = JSON.parse(artifact.passJson.toString("utf8"));
-    const back = Object.fromEntries(pass.storeCard.backFields.map((field: { key: string; value: string }) => [field.key, field.value]));
+    const back = Object.fromEntries(pass.generic.backFields.map((field: { key: string; value: string }) => [field.key, field.value]));
 
     expect(pass.serialNumber).toBe(mandate.serial);
+    // #447: both style keys, because a pass carries one and the two iOS generations disagree about which.
+    expect(pass.generic).toBeDefined();
+    expect(pass.posterGeneric).toBeDefined();
+    expect(pass.posterGeneric.backFields).toEqual(pass.generic.backFields);
     expect(pass.passTypeIdentifier).toBe("pass.xyz.paystage.vouch");
     expect(pass.teamIdentifier).toBe("TEAM12345");
-    expect(pass.storeCard.primaryFields[0]).toMatchObject({ label: "UP TO", value: "$2.00" });
-    expect(pass.storeCard.secondaryFields).toEqual(
+    expect(pass.generic.primaryFields[0]).toMatchObject({ label: "UP TO", value: "$2.00" });
+    // The principal moved to the header and the window to the secondary row when the poster face arrived: a poster
+    // reads top-down, and a header is the only place iOS puts the holder's name at poster size.
+    expect(pass.generic.headerFields).toEqual(
+      expect.arrayContaining([expect.objectContaining({ key: "principal", value: "Northwind Ltd" })]),
+    );
+    expect(pass.generic.secondaryFields).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ key: "principal", value: "Northwind Ltd" }),
+        expect.objectContaining({ key: "window", value: "$20.00 per 24h" }),
         expect.objectContaining({ key: "expires", value: "1 Dec 2026" }),
       ]),
-    );
-    expect(pass.storeCard.auxiliaryFields).toEqual(
-      expect.arrayContaining([expect.objectContaining({ key: "window", value: "$20.00 per 24h" })]),
     );
     expect(pass.barcodes).toEqual([
       expect.objectContaining({
