@@ -1,64 +1,72 @@
 /**
- * The venn: two 62 × 62 plates, radius 15, the second at x = 38 — **one value apart** (#460).
+ * The mark, **final**: the narrow-lens construction on an H = 100 grid, graphite palette.
  *
- * Why this file exists rather than a copy in each renderer: the brand kit, the Wallet pass, the
- * verification page and the storyboard all draw the same mark, and the only thing that has stopped
- * them drifting is one source of numbers. The geometry below is the whole specification:
+ * Two rounded plates — one ink, one slate — and a **gold lens that is a shape of its own**: a path with cusps at the top
+ * and bottom edges, overrunning the geometric overlap by **1.375×** (62 against 45.1). That overrun is the idea. A lens
+ * drawn as the boolean intersection of the plates reads as a bar or a battery, and two earlier attempts shipped exactly
+ * that; the check asserts this ratio from the source so it cannot drift back.
  *
- *   canvas 100 × 62
- *   plate A (left)   62 × 62, radius 15, solid, x = 0
- *   plate B (right)  62 × 62, radius 15, x = 38, 62% of plate A over the surface
- *   overlap          24 units = 24/62 = 38.7% of a plate
- *   lens             the intersection, and the only differentiated element
+ * Everything is a ratio of the height, so the kit rebuilds at any size:
  *
- * **Why plate B is a second colour, not the same fill.** Two plates in one fill merge into one
- * silhouette — the defect this file previously shipped. Mastercard separates its shapes by colour,
- * not by geometry: red, then orange-yellow, and the overlap is a third value because the two blend.
- * So plate A is 100% of the ink and plate B is 62% of it over whatever the mark sits on. There is
- * still no outline and therefore still no small-size variant.
+ *   canvas    177.9 × 100          1.779 H
+ *   plate A   x 0,      w 114.4, rx 31.4     1.144 H · rx 0.314 H
+ *   plate B   x 69.3,   w 108.5, rx 31.4     0.693 H · 1.085 H
+ *   overlap   45.1                  0.451 H
+ *   lens      x 61 → 123, cx 92, full height 0.62 H · cx 0.92 H
  *
- * **Why the blend is computed, not an `opacity` attribute.** An SVG `fill-opacity` makes the raster
- * depend on whatever is behind it when the SVG is composited: the same file on paper and on ink
- * would produce two different plate colours, and a PNG would bake in whichever surface the renderer
- * happened to use. This module computes the blended hex for an explicit `surface` instead, so the
- * output is deterministic and sampled contrast is a fact rather than a viewing condition.
+ * Palette: graphite, not bank-blue — it keeps the gold dominant and reads least like a card scheme. Plate A `#0B1020`,
+ * plate B `#45506B`, lens `#F5CC00`. On the dark poster the plates invert to `#FAFAFA` / `#FFFFFF` over `#14205A`.
+ * The lens colour carries state: gold active · red revoked · grey expired · paper knockout for one-colour.
  *
- * The surfaces that actually exist in this repo, and the value passed for each:
- *   - `paper`  #FFFFFF — brand marks, lockups, OG card, contact sheet top row, one-colour print;
- *   - `ink`    #101322 — the contact sheet bottom row (inverse plates);
- *   - `deep`   #1A1F71 — favicon/app tiles (inverse plates on the deep field);
- *   - the pass poster tints (`pass-tokens.json → posterTints`) and the Wallet strip's gradient
- *     midpoint — the pass draws inverse paper plates over those, and the caller passes the exact
- *     surface it paints (the strip uses the gradient's halfway colour, since the mark is centred).
- * A caller that omits `surface` gets `paper`, which is what the transparent brand PNGs are for.
- *
- * The lens is drawn as plate B clipped to plate A. That is the actual intersection of the two
- * rounded rectangles — not an approximation, and not a third shape drawn by hand.
+ * The lens is a **path, never a clip**: a clip is a boolean, and a boolean cannot overrun the overlap.
  */
 
 /** The numbers. Exported so a check can disagree with the drawing instead of trusting it. */
 export const VENN = Object.freeze({
-  width: 100,
-  height: 62,
-  plate: 62,
-  radius: 15,
-  plateA: 0,
-  plateB: 38,
-  overlap: 24,
-  lensRatio: 24 / 62,
+  width: 177.9,
+  height: 100,
+  plateAX: 0,
+  plateAWidth: 114.4,
+  plateBX: 69.3,
+  plateBWidth: 108.5,
+  radius: 31.4,
+  overlap: 45.1,
+  lensWidth: 62,
+  lensCentre: 92,
+  lensToOverlap: 62 / 45.1,
+  /** the operator's path, on the H = 100 grid: cusps at y = 0 and y = 100, control points ±0.62·w at 18%/82% */
+  lensPath: "M92 0C130.4 18 130.4 82 92 100C53.6 82 53.6 18 92 0Z",
 });
-
-/** Plate B's share of plate A's value. 62% is the operator's number (#460), not a taste call. */
-export const PLATE_B_ALPHA = 0.62;
-
-/** The one-colour print equivalent: ink / ink 40% / paper knockout. */
-export const MONO_PLATE_B_ALPHA = 0.4;
 
 /** The named surfaces above, as values rather than themes. */
 export const VENN_SURFACES = Object.freeze({
   paper: "#FFFFFF",
   ink: "#101322",
-  deep: "#1A1F71",
+});
+
+/**
+ * The mark's own three values. Not page tints: the operator's construction separates the plates by saturated colour, and
+ * a mark that borrows a page tint changes whenever the page does.
+ */
+export const VENN_INK = Object.freeze({
+  plateA: "#0B1020",
+  plateB: "#45506B",
+  lens: "#F5CC00",
+});
+
+/** On the dark poster the plates invert, and the lens stays gold. */
+export const VENN_INVERSE = Object.freeze({
+  plateA: "#FAFAFA",
+  plateB: "#FFFFFF",
+  lens: "#F5CC00",
+  field: "#14205A",
+});
+
+/** One-colour print: ink and a mid grey, lens knocked out to paper. */
+export const VENN_MONO = Object.freeze({
+  plateA: "#101322",
+  plateB: "#6B7280",
+  lens: "#FFFFFF",
 });
 
 /** Hex → [r, g, b]. Accepts `#RGB` and `#RRGGBB`; anything else is a programming error, not a colour. */
@@ -97,62 +105,41 @@ export function vennGroup({
   x = 0,
   y = 0,
   width = VENN.width,
-  plate = "#1A1F71",
-  lens = "#F7B600",
+  plate = VENN_INK.plateA,
+  plateB = VENN_INK.plateB,
+  lens = VENN_INK.lens,
   surface = VENN_SURFACES.paper,
-  secondOpacity = PLATE_B_ALPHA,
-  plateB = null,
-  id = "venn",
 } = {}) {
-  const plateColour = String(plate);
-  const lensColour = String(lens);
-  // Explicit second fill wins; otherwise the 62% (or mono 40%) blend is computed from the surface.
-  const secondColour = plateB === null ? blendHex(plateColour, surface, secondOpacity) : String(plateB);
-  // Ids must be unique when several marks share one SVG (the stacked-teammates frame).
-  const clip = `${id}-a`.replace(/[^a-zA-Z0-9_-]/g, "-");
-  const k = width / VENN.width;
+  const k = Number(width) / VENN.width;
   return `<g transform="translate(${x} ${y}) scale(${k})">
-  <defs>
-    <clipPath id="${clip}">
-      <rect x="${VENN.plateA}" y="0" width="${VENN.plate}" height="${VENN.plate}" rx="${VENN.radius}"/>
-    </clipPath>
-  </defs>
-  <rect data-plate="A" x="${VENN.plateA}" y="0" width="${VENN.plate}" height="${VENN.plate}" rx="${VENN.radius}" fill="${plateColour}"/>
-  <rect data-plate="B" data-surface="${String(surface)}" x="${VENN.plateB}" y="0" width="${VENN.plate}" height="${VENN.plate}" rx="${VENN.radius}" fill="${secondColour}"/>
-  <g clip-path="url(#${clip})">
-    <rect data-lens="1" x="${VENN.plateB}" y="0" width="${VENN.plate}" height="${VENN.plate}" rx="${VENN.radius}" fill="${lensColour}"/>
-  </g>
+  <rect data-plate="B" data-surface="${String(surface)}" x="${VENN.plateBX}" y="0" width="${VENN.plateBWidth}" height="${VENN.height}" rx="${VENN.radius}" fill="${plateB}"/>
+  <rect data-plate="A" x="${VENN.plateAX}" y="0" width="${VENN.plateAWidth}" height="${VENN.height}" rx="${VENN.radius}" fill="${plate}"/>
+  <path data-lens="1" data-role="lens" d="${VENN.lensPath}" fill="${lens}"/>
 </g>`;
 }
 
+/**
+ * The mark alone as a complete SVG. Width is the controlling dimension; the height follows the master's ratio.
+ */
 /** The mark alone as a complete SVG, transparent behind it. Width is the controlling dimension. */
 export function vennSvg({
-  width = 100,
-  plate = "#1A1F71",
-  lens = "#F7B600",
+  width = 272,
+  plate = VENN_INK.plateA,
+  plateB = VENN_INK.plateB,
+  lens = VENN_INK.lens,
   background = null,
   surface = background ?? VENN_SURFACES.paper,
-  secondOpacity = PLATE_B_ALPHA,
-  plateB = null,
   label = "Venn mark",
 } = {}) {
   const w = Number(width);
   const h = Math.round((w * VENN.height) / VENN.width);
-  const bg = background ? `<rect width="${w}" height="${h}" fill="${background}"/>` : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}">
-  ${bg}${vennGroup({ width: w, plate, lens, surface, secondOpacity, plateB })}
+  const bg = background === null ? "" : `<rect width="${w}" height="${h}" fill="${background}"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${VENN.width} ${VENN.height}" role="img" aria-label="${label}">
+  ${bg}
+  ${vennGroup({ width: VENN.width, plate, plateB, lens, surface })}
 </svg>`;
 }
 
-/** State → lens colour. The only place the mapping lives. */
-export const VENN_LENS = Object.freeze({
-  ACTIVE: "#F7B600",
-  REVOKED: "#B42318",
-  EXPIRED: "#5B6472",
-  MONO: "#FFFFFF",
-});
-
-/** Lens width in px at a given mark width: the 24-unit overlap as a fraction of the 100-unit canvas. */
 export function lensPx(markWidth) {
   return (VENN.overlap / VENN.width) * Number(markWidth);
 }

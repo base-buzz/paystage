@@ -15,7 +15,7 @@
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { MONO_PLATE_B_ALPHA, PLATE_B_ALPHA, VENN, VENN_SURFACES, lensPx, vennGroup } from "./lib/venn.mjs";
+import { VENN, VENN_INK, VENN_MONO, VENN_SURFACES, lensPx, vennGroup } from "./lib/venn.mjs";
 
 /**
  * Fonts before sharp, or every label on the contact sheets is a row of tofu boxes. Same source the pass renderer
@@ -66,19 +66,20 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
  */
 function markVenn({
   size = 240,
-  plate = DEEP,
-  lens = GOLD,
+  plate = VENN_INK.plateA,
+  plateB = VENN_INK.plateB,
+  lens = VENN_INK.lens,
   background = null,
   surface = background ?? VENN_SURFACES.paper,
-  secondOpacity = PLATE_B_ALPHA,
-  plateB = null,
   state = "ACTIVE",
 } = {}) {
   const w = Number(size);
   const h = Math.round((w * VENN.height) / VENN.width);
   const bg = background ? `<rect width="${w}" height="${h}" fill="${background}"/>` : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="PayStage venn, ${String(state).toLowerCase()}">
-  ${bg}${vennGroup({ width: w, plate, lens, surface, secondOpacity, plateB })}
+  // The wrapper's viewBox already maps 272×153 into w×h, so the group is drawn at its own scale — scaling it twice
+  // rendered the mark at ~3 px inside a 29 px canvas, which is how the icon slot goes blank.
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${VENN.width} ${VENN.height}" role="img" aria-label="PayStage venn, ${String(state).toLowerCase()}">
+  ${bg}${vennGroup({ width: VENN.width, plate, plateB, lens, surface })}
 </svg>`;
 }
 
@@ -115,7 +116,7 @@ function wordmark({ width = 900, mode = "solid" }) {
  * Vertical lockup, Mastercard construction: symbol above, wordmark beneath, wordmark width = symbol width.
  * `textLength` pins the wordmark to the symbol's width for any name, so the lockup stays right without measuring.
  */
-function lockupVertical({ width = 900, markWidth = 560, plate = DEEP, lens = GOLD, ink = INK, background = PAPER, secondOpacity = PLATE_B_ALPHA } = {}) {
+function lockupVertical({ width = 900, markWidth = 560, plate = VENN_INK.plateA, plateB = VENN_INK.plateB, lens = VENN_INK.lens, ink = INK, background = PAPER } = {}) {
   const W = Number(markWidth);
   const markH = (W * VENN.height) / VENN.width;
   const pad = Math.round(W * 0.1);
@@ -128,7 +129,7 @@ function lockupVertical({ width = 900, markWidth = 560, plate = DEEP, lens = GOL
   const subY = Math.round(wordY + subSize * 1.9);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${h}" viewBox="0 0 ${width} ${h}">
   <rect width="${width}" height="${h}" fill="${background}"/>
-  ${vennGroup({ x: (Number(width) - W) / 2, y: pad, width: W, plate, lens, surface: background, secondOpacity })}
+  ${vennGroup({ x: (Number(width) - W) / 2, y: pad, width: W, plate, plateB: plateB ?? undefined, lens, surface: background })}
   <text x="${cx}" y="${wordY}" text-anchor="middle" font-family="${SANS}" font-size="${wordSize}" font-weight="700"
         letter-spacing="${-wordSize * 0.02}" fill="${ink}" stroke="${ink}" stroke-width="${wordSize * 0.019}"
         textLength="${W}" lengthAdjust="spacingAndGlyphs">${esc(WORDMARK)}</text>
@@ -138,7 +139,7 @@ function lockupVertical({ width = 900, markWidth = 560, plate = DEEP, lens = GOL
 }
 
 /** Horizontal lockup: mark left, wordmark right, gap = 0.5 × mark width. For headers and narrow contexts. */
-function lockupHorizontal({ width = 1200, markWidth = 260, plate = DEEP, lens = GOLD, ink = INK, background = PAPER, secondOpacity = PLATE_B_ALPHA } = {}) {
+function lockupHorizontal({ width = 1200, markWidth = 260, plate = VENN_INK.plateA, plateB = VENN_INK.plateB, lens = VENN_INK.lens, ink = INK, background = PAPER } = {}) {
   const W = Number(markWidth);
   const markH = (W * VENN.height) / VENN.width;
   const gap = Math.round(W * 0.5);
@@ -148,7 +149,7 @@ function lockupHorizontal({ width = 1200, markWidth = 260, plate = DEEP, lens = 
   const markY = Math.round((h - markH) / 2);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${h}" viewBox="0 0 ${width} ${h}">
   <rect width="${width}" height="${h}" fill="${background}"/>
-  ${vennGroup({ x, y: markY, width: W, plate, lens, surface: background, secondOpacity })}
+  ${vennGroup({ x, y: markY, width: W, plate, plateB: plateB ?? undefined, lens, surface: background })}
   <text x="${x + W + gap}" y="${Math.round(h / 2 + wordSize * 0.36)}" font-family="${SANS}" font-size="${wordSize}"
         font-weight="700" letter-spacing="${-wordSize * 0.02}" fill="${ink}" stroke="${ink}"
         stroke-width="${wordSize * 0.019}">${esc(WORDMARK)}</text>
@@ -160,7 +161,7 @@ function lockupHorizontal({ width = 1200, markWidth = 260, plate = DEEP, lens = 
  * single-colour contexts. The second plate is a second *value* of the same ink, not a second colour.
  */
 function lockupMono({ width = 1200, markWidth = 260 } = {}) {
-  return lockupHorizontal({ width, markWidth, plate: INK, lens: PAPER, ink: INK, background: PAPER, secondOpacity: MONO_PLATE_B_ALPHA });
+  return lockupHorizontal({ width, markWidth, plate: VENN_MONO.plateA, plateB: VENN_MONO.plateB, lens: VENN_MONO.lens, ink: INK, background: PAPER });
 }
 
 /* ------------------------------------------------ write ---------------------------------------------------------- */
@@ -185,7 +186,7 @@ const STATES = [
   ["-expired", "EXPIRED", MUTED],
 ];
 for (const [suffix, state, lens] of STATES) {
-  const svg = markVenn({ size: 240, plate: DEEP, lens, state });
+  const svg = markVenn({ size: 240, plate: VENN_INK.plateA, plateB: VENN_INK.plateB, lens, state });
   writeFileSync(join(OUT, `mark-venn${suffix}.svg`), svg);
   written.push(join(OUT, `mark-venn${suffix}.svg`));
 }
@@ -196,7 +197,7 @@ for (const px of MARK_SIZES) {
 // One-colour proof: ink plates at 100% / 40%, paper lens. A separate file, not a mode switch on the live mark.
 writeFileSync(
   join(OUT, "mark-venn-mono.svg"),
-  markVenn({ size: 240, plate: INK, lens: PAPER, background: PAPER, surface: PAPER, secondOpacity: MONO_PLATE_B_ALPHA, state: "MONO" }),
+  markVenn({ size: 240, plate: VENN_MONO.plateA, plateB: VENN_MONO.plateB, lens: VENN_MONO.lens, background: PAPER, surface: PAPER, state: "MONO" }),
 );
 written.push(join(OUT, "mark-venn-mono.svg"));
 
@@ -230,19 +231,19 @@ for (const px of [16, 32, 48, 180, 512]) {
 const og = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="${PAPER}"/>
   <rect x="0" y="0" width="1200" height="10" fill="${GOLD}"/>
-  <g transform="translate(80 96)">${vennGroup({ width: 150, plate: DEEP, lens: GOLD, surface: PAPER })}</g>
+  <g transform="translate(80 96)">${vennGroup({ width: 150, plate: VENN_INK.plateA, plateB: VENN_INK.plateB, lens: VENN_INK.lens, surface: PAPER })}</g>
   <text x="262" y="176" font-family="${SANS}" font-size="64" font-weight="700" letter-spacing="-1.3" fill="${INK}" stroke="${INK}" stroke-width="1.2">PayStage</text>
   <text x="80" y="330" font-family="${SANS}" font-size="56" font-weight="700" letter-spacing="-1.2" fill="${INK}" stroke="${INK}" stroke-width="1">Stop the payment before it&#8217;s signed.</text>
   <text x="80" y="392" font-family="${SANS}" font-size="28" font-weight="500" fill="${MUTED}">A read-only gate for x402 payments on Base.</text>
   <text x="80" y="560" font-family="${SANS}" font-size="24" font-weight="600" letter-spacing="2.4" fill="${DEEP}">PAYSTAGE.XYZ</text>
-  <g transform="translate(980 470)">${vennGroup({ width: 120, plate: DEEP, lens: GOLD, surface: PAPER })}</g>
+  <g transform="translate(980 470)">${vennGroup({ width: 120, plate: VENN_INK.plateA, plateB: VENN_INK.plateB, lens: VENN_INK.lens, surface: PAPER })}</g>
 </svg>`;
 writeFileSync(join(OUT, "og-1200x630.svg"), og);
 await sharp(Buffer.from(og)).png().toFile(join(OUT, "og-1200x630.png"));
 
 await contactSheet();
 console.log(`brand-kit: wrote ${written.length} SVG source(s) + PNG exports to ${OUT}/`);
-console.log(`brand-kit: mark = venn (plate A 100% / plate B 62% over the surface, 62×62 r15 at x=0 and x=38); lens ${lensPx(29).toFixed(2)} px at 29 px (floor 3)`);
+console.log(`brand-kit: mark = venn (operator construction: 272×153, plates 175/166 rx48 at x=0/106, lens a path 120 wide — wider than the 69 overlap); lens ${lensPx(29).toFixed(2)} px at 29 px (floor 3)`);
 
 /* ------------------------------------------------ contact sheet --------------------------------------------------- */
 
@@ -253,7 +254,7 @@ console.log(`brand-kit: mark = venn (plate A 100% / plate B 62% over the surface
 async function contactSheet() {
   const tiles = [];
   for (const px of [240, 120, 60, 29, 16]) {
-    const onPaper = await sharp(Buffer.from(markVenn({ size: px, plate: DEEP, lens: GOLD, surface: PAPER }))).png().toBuffer();
+    const onPaper = await sharp(Buffer.from(markVenn({ size: px, plate: VENN_INK.plateA, plateB: VENN_INK.plateB, lens: VENN_INK.lens, surface: PAPER }))).png().toBuffer();
     const onInk = await sharp(Buffer.from(markVenn({ size: px, plate: PAPER, lens: GOLD, surface: INK }))).png().toBuffer();
     tiles.push({ px, onPaper, onInk });
   }

@@ -23,7 +23,7 @@
  * and not by the renderer, which is exactly the review-matching this row exists to remove.
  */
 import TOKENS from "../../apps/console/src/lib/pass-tokens.json" with { type: "json" };
-import { PLATE_B_ALPHA, VENN_SURFACES, blendHex, vennGroup } from "./venn.mjs";
+import { VENN_SURFACES, blendHex, vennGroup } from "./venn.mjs";
 
 /** The token object itself, exported so a test can prove both runtimes read the same values. */
 export const PASS_TOKENS = TOKENS;
@@ -249,14 +249,13 @@ export function vennMark({
   red = RED,
   plate = null,
   surface = VENN_SURFACES.paper,
-  secondOpacity = PLATE_B_ALPHA,
   plateB = null,
   id = null,
 } = {}) {
   const s = String(state).toUpperCase();
   const lens = s === "REVOKED" ? red : s === "EXPIRED" ? MUTED : s === "MONO" ? paper : gold;
   const uid = id ?? `venn-${Math.round(x)}-${Math.round(y)}-${Math.round(size)}`;
-  return vennGroup({ x, y, width: Number(size), plate: plate ?? paper, lens, surface, secondOpacity, plateB, id: uid });
+  return vennGroup({ x, y, width: Number(size), plate: plate ?? paper, plateB: plateB ?? undefined, lens, surface });
 }
 
 /** The mark alone, for `icon.png` (29×29 in notifications): the venn, no type. */

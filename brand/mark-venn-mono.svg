@@ -1,14 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="240" height="149" viewBox="0 0 240 149" role="img" aria-label="PayStage venn, mono">
-  <rect width="240" height="149" fill="#FFFFFF"/><g transform="translate(0 0) scale(2.4)">
-  <defs>
-    <clipPath id="venn-a">
-      <rect x="0" y="0" width="62" height="62" rx="15"/>
-    </clipPath>
-  </defs>
-  <rect data-plate="A" x="0" y="0" width="62" height="62" rx="15" fill="#101322"/>
-  <rect data-plate="B" data-surface="#FFFFFF" x="38" y="0" width="62" height="62" rx="15" fill="#9fa1a7"/>
-  <g clip-path="url(#venn-a)">
-    <rect data-lens="1" x="38" y="0" width="62" height="62" rx="15" fill="#FFFFFF"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="135" viewBox="0 0 177.9 100" role="img" aria-label="PayStage venn, mono">
+  <rect width="240" height="135" fill="#FFFFFF"/><g transform="translate(0 0) scale(1)">
+  <rect data-plate="B" data-surface="#FFFFFF" x="69.3" y="0" width="108.5" height="100" rx="31.4" fill="#6B7280"/>
+  <rect data-plate="A" x="0" y="0" width="114.4" height="100" rx="31.4" fill="#101322"/>
+  <path data-lens="1" data-role="lens" d="M92 0C130.4 18 130.4 82 92 100C53.6 82 53.6 18 92 0Z" fill="#FFFFFF"/>
 </g>
 </svg>
