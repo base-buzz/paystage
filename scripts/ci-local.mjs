@@ -115,6 +115,9 @@ if (reason === null) {
      * `apps/packages`) passed every local check and failed the nightly run at 02:40Z. Fixtures only, no network, ~1s.
      */
     "conformance-fixtures.mjs",
+    /* Three hand-written PKGS lists decide what publishes; this compares them. It ran in CI but not here, so a
+       package dropped from one list went red on the runner and green at the desk (2026-11-26). */
+    "check-publish-list.mjs",
   ]) {
     const [script, ...scriptArgs] = cheap.split(" ");
     if (!existsSync(join(ROOT, "scripts", script))) continue;
