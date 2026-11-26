@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   applicationName: brand.name,
   robots: { index: true, follow: true },
   alternates: { canonical: view.homepage },
-  icons: { icon: "/pass/icon@2x.png", apple: "/pass/icon@3x.png" },
+  icons: { icon: "/pass/icon-2x.png", apple: "/pass/icon-3x.png" },
   openGraph: {
     type: "website",
     url: view.homepage,

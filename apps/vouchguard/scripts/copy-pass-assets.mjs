@@ -79,6 +79,18 @@ if (problems.length > 0) {
  */
 cpSync(join(PUBLIC, "pass", "pass-face@2x.png"), join(PUBLIC, "pass", "pass-face-2x.png"));
 
+/*
+ * The same normalisation applies to the icons, and the favicon is the one asset every page loads: `/pass/icon@2x.png`
+ * answers 307 because Cloudflare normalises `@` in a path, so a strict client (and a crawler) sees an empty redirect
+ * body. Aliases without the `@`, and the metadata points at these.
+ */
+for (const [from, to] of [
+  ["icon@2x.png", "icon-2x.png"],
+  ["icon@3x.png", "icon-3x.png"],
+]) {
+  cpSync(join(PUBLIC, "pass", from), join(PUBLIC, "pass", to));
+}
+
 // Only the storyboard frames this lander uses. story2/frame-pass are the wallet and
 // activity frames; story1-pick/configure/confirm/provision are the four-step sequence.
 const KEEP = /^(story1-(pick|configure|confirm|provision)|story2-.*|frame-pass-.*)\.png$/;
