@@ -122,7 +122,7 @@ const FACE = {
   principal: arg("principal", "Northwind Ltd"),
   brand: arg("brand", "vouchguard"),
   serial: arg("serial", "vch-7F3"),
-  network: arg("network", "Base"),
+  fundedFrom: arg("funded-from", "test credits"),
   // v3: the poster carries the teammate's name, so a render has to know whose pass it is.
   teammate: {
     name: arg("teammate", "Grok Bot"),

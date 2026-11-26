@@ -86,7 +86,7 @@ function stripArtwork(width, height, revoked, withMark = false) {
  * @param {string} face.expiry           e.g. "31 Jan 2027"
  * @param {string} face.principal        the entity the mandate is issued to, e.g. "Northwind Ltd"
  * @param {string} face.serial           e.g. "vch-7F3", stable and readable aloud
- * @param {string} [face.network]        e.g. "Base"
+ * @param {string} [face.fundedFrom]     what pays for it, e.g. "test credits" — a budget, never a chain (#454)
  * @param {string} [face.brand]          the wordmark; a parameter because the name is a working one
  * @param {string} [face.vouchedBy]      the sibling line under the wordmark
  * @param {string} [face.qrCells]        a 2D array of 0/1 when a real QR is available; omitted = no code drawn
@@ -193,8 +193,8 @@ export function passFaceSvg(face) {
   <rect x="${pad}" y="${posterH + height * 0.345}" width="${width - pad * 2}" height="${f(0.2)}" fill="${dead ? "#E3E0D8" : "#DDD9CF"}"/>
 
   ${verify}
-  ${label(boxRight, box.y + f(4.2), "NETWORK", f(TYPE.meta), MUTED, 650, "0.14em")}
-  ${label(boxRight, box.y + f(9), face.network ?? "Base", f(TYPE.metaValue), INK, 600, "0.02em")}
+  ${label(boxRight, box.y + f(4.2), "FUNDED BY", f(TYPE.meta), MUTED, 650, "0.14em")}
+  ${label(boxRight, box.y + f(9), face.fundedFrom ?? "test credits", f(TYPE.metaValue), INK, 600, "0.02em")}
   ${label(boxRight, box.y + f(14), "ISSUED BY", f(TYPE.meta), MUTED, 650, "0.14em")}
   ${label(boxRight, box.y + f(18.8), "PayStage", f(TYPE.metaValue), INK, 600, "0.01em")}
 
