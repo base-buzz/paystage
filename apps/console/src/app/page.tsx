@@ -112,6 +112,10 @@ const STRUCTURED_DATA = {
         "x402 payment safety for AI agents: evaluate a payment against your policy before the wallet signs. Returns pay, review or do_not_pay with the rule that fired. Read-only, holds no keys, never signs.",
       offers: { "@type": "Offer", price: "0.002", priceCurrency: "USD", description: "Per hosted evaluation over x402; the packages are free and MIT licensed." },
       isAccessibleForFree: true,
+      // #476: the machine-readable cross-reference, in the direction the engine can offer it — the reference instance and
+      // the source are the two things an integrator needs next, and a crawler cannot infer either from prose.
+      codeRepository: "https://github.com/base-buzz/paystage",
+      relatedLink: "https://vouchguard.app",
       license: "https://github.com/base-buzz/paystage/blob/main/LICENSE",
       featureList: [
         "Preflight an x402 payment against a local policy before signing",

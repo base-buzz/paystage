@@ -16,10 +16,16 @@
 import { existsSync, readFileSync } from "node:fs";
 
 const PAGES = [
-  { app: "apps/vouchguard", html: "apps/vouchguard/.next/server/app/index.html", label: "vouchguard.app/" },
+  { label: "vouchguard.app/", html: "apps/vouchguard/.next/server/app/index.html" },
+  { label: "paystage.xyz/", html: "apps/console/.next/server/app/index.html" },
 ];
 
-const FORBIDDEN = ["aggregateRating", "ratingValue", "review", "offers", "priceCurrency"];
+/**
+ * Invented markup is the failure this guards. A **price** is not invented — `paystage.xyz` publishes a real per-evaluation
+ * price and an `Offer` that states it is checkable elsewhere. A **rating** is invented, because there is no rating to give:
+ * nobody has reviewed us and we are not going to author the review ourselves.
+ */
+const FORBIDDEN_TYPES = ["AggregateRating", "Rating", "Review"];
 
 const problems = [];
 let checked = 0;
@@ -33,6 +39,12 @@ for (const page of PAGES) {
   if (blocks.length === 0) {
     problems.push(`${page.label}: no JSON-LD block in the built HTML — a crawler gets no entity`);
     continue;
+  }
+
+  const union = blocks.join("\n");
+  const other = page.label.startsWith("vouchguard") ? "paystage.xyz" : "vouchguard.app";
+  if (!union.includes(other)) {
+    problems.push(`${page.label}: no JSON-LD block names ${other} — the two brands are unrelated to an engine`);
   }
 
   for (const block of blocks) {
@@ -52,14 +64,19 @@ for (const page of PAGES) {
         if (!node[field]) problems.push(`${page.label}: SoftwareApplication is missing ${field}`);
       }
     }
-    for (const banned of FORBIDDEN) {
-      if (block.includes(banned)) {
-        problems.push(`${page.label}: JSON-LD carries \`${banned}\` — invented markup is a false claim a crawler will repeat`);
+    for (const banned of FORBIDDEN_TYPES) {
+      if (new RegExp(`"@type"\\s*:\\s*"${banned}"`).test(block)) {
+        problems.push(`${page.label}: JSON-LD declares a ${banned} — there is no rating to give, and inventing one is a false claim a crawler repeats`);
       }
     }
-    // The relationship to the engine is the machine-readable version of the sentence the page says in prose.
-    if (!/paystage\.xyz/.test(block)) {
-      problems.push(`${page.label}: JSON-LD never mentions paystage.xyz — the two brands are unrelated to an engine`);
+    /**
+     * The cross-reference, in whichever direction the page is: the engine names the instance, the instance names the engine.
+     * This is the machine-readable version of the sentence each page says in prose, and the thing that would drift if the
+     * two blocks were maintained separately by hand.
+     */
+    const other = page.label.startsWith("vouchguard") ? "paystage\.xyz" : "vouchguard\.app";
+    if (!new RegExp(other).test(block)) {
+      problems.push(`${page.label}: JSON-LD does not name ${other.replace("\\", "")} — the two brands are unrelated to an engine`);
     }
   }
 }
@@ -74,4 +91,4 @@ if (problems.length > 0) {
   for (const problem of problems) console.error("  " + problem);
   process.exit(1);
 }
-console.log(`structured-data: ${checked} page(s) carry a valid JSON-LD entity with no invented ratings or offers`);
+console.log(`structured-data: ${checked} page(s) carry a valid JSON-LD entity, cross-referenced both ways, with no invented ratings`);
