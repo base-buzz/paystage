@@ -383,7 +383,7 @@ describe("two denominators", () => {
   it("says which denominator a count uses, and warns when it is not recorded", () => {
     const sentence = checkedSellersDenominators(CHECKED_SELLERS);
     expect(sentence).toContain("100 resources across 34 hosts");
-    expect(sentence).toContain("per **resource**, not per host");
+    expect(sentence).toContain("per resource, not per host");
     expect(checkedSellersDenominators({ ...CHECKED_SELLERS, denominators: null })).toContain("not recorded");
   });
 });

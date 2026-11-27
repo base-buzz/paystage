@@ -280,7 +280,7 @@ export function checkedSellersDenominators(snapshot: CheckedSellersSnapshot): st
     : "";
   return (
     `${formatCount(d.resources)} resources across ${formatCount(d.hosts)} hosts${carrier}. ` +
-    `Every count on this page is per **resource**, not per host: the ${formatCount(d.resourcesOver8kb)} challenges over 8 KB ` +
+    `Every count on this page is per resource, not per host: the ${formatCount(d.resourcesOver8kb)} challenges over 8 KB ` +
     `belong to ${formatCount(d.hostsOver8kb)} of those hosts.`
   );
 }
