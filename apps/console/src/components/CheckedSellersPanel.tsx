@@ -3,6 +3,7 @@ import {
   challengeLabel,
   checkedSellerView,
   checkedSellersCoverage,
+  checkedSellersDialects,
   checkedSellersGap,
   checkedSellersMethod,
   checkedSellersMethodSplit,
@@ -57,6 +58,10 @@ export function CheckedSellersPanel({ snapshot = CHECKED_SELLERS }: { snapshot?:
 
       <p>
         <strong>POST-only resources.</strong> {checkedSellersMethodSplit(snapshot)}
+      </p>
+
+      <p style={{ marginTop: 10 }}>
+        <strong>Challenge dialects.</strong> {checkedSellersDialects(snapshot)}
       </p>
 
       <div

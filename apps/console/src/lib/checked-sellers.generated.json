@@ -46,6 +46,39 @@
       "405": 6
     }
   },
+  "dialectSplit": {
+    "v2": 96,
+    "legacy": 0,
+    "both": 0,
+    "none": 4,
+    "total": 100,
+    "noChallenge": [
+      {
+        "host": "x402engine.app",
+        "resource": "https://x402engine.app/api/tts/elevenlabs",
+        "status": 200,
+        "firstStatus": 200
+      },
+      {
+        "host": "api.gondola-ai.com",
+        "resource": "https://api.gondola-ai.com/v1/chat/completions",
+        "status": 400,
+        "firstStatus": 405
+      },
+      {
+        "host": "api.getanyapi.com",
+        "resource": "https://api.getanyapi.com/v1/run/twitter.search",
+        "status": 400,
+        "firstStatus": 401
+      },
+      {
+        "host": "api.surplusintelligence.ai",
+        "resource": "https://api.surplusintelligence.ai/v1/chat/completions",
+        "status": 400,
+        "firstStatus": 404
+      }
+    ]
+  },
   "rowsNamed": 9,
   "entriesCoveredByName": 63,
   "rows": [

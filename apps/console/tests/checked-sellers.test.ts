@@ -8,6 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { CheckedSellersPanel } from "@/components/CheckedSellersPanel";
 import {
+  checkedSellersDialects,
   CHECKED_SELLERS,
   checkedSellerView,
   checkedSellersMethod,
@@ -323,5 +324,40 @@ describe("the generator and its --check", () => {
       expect(row.priceMatched).toBeNull();
       expect(row.screening).toBeNull();
     }
+  });
+});
+
+/**
+ * The challenge composition (#495). The page said how many resources answer only on POST and never which dialect they speak, so a
+ * reader could not tell whether the ecosystem had settled on v2 or was split. These assertions pin the numbers to the committed
+ * record — and the four hosts that answered nothing are named, because "4 did not" is uncheckable without them.
+ */
+describe("challenge dialects", () => {
+  it("publishes the measured composition", () => {
+    const split = CHECKED_SELLERS.dialectSplit;
+    expect(split).not.toBeNull();
+    expect(split!.v2).toBe(96);
+    expect(split!.legacy).toBe(0);
+    expect(split!.both).toBe(0);
+    expect(split!.none).toBe(4);
+    expect(split!.v2 + split!.legacy + split!.both + split!.none).toBe(split!.total);
+  });
+
+  it("names every resource that answered no challenge, with its status", () => {
+    const none = CHECKED_SELLERS.dialectSplit!.noChallenge;
+    expect(none).toHaveLength(4);
+    for (const row of none) {
+      expect(row.host.length).toBeGreaterThan(0);
+      expect(row.status === null && row.firstStatus === null).toBe(false);
+    }
+    const sentence = checkedSellersDialects(CHECKED_SELLERS);
+    for (const row of none) expect(sentence).toContain(row.host);
+    expect(sentence).toContain("none used the legacy header");
+  });
+
+  it("says the dialects are not recorded rather than inventing a split", () => {
+    const sentence = checkedSellersDialects({ ...CHECKED_SELLERS, dialectSplit: null });
+    expect(sentence).toContain("not recorded");
+    expect(sentence).not.toContain("0 of");
   });
 });

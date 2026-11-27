@@ -146,6 +146,7 @@ function finalize(snapshot) {
     /** The published method split (#466), derived from the probe's own per-resource method counts. Null when the
      * source run did not record it, in which case the page says it is not recorded rather than inventing a count. */
     methodSplit: snapshot.methodSplit ?? null,
+    dialectSplit: snapshot.dialectSplit ?? null,
     rowsNamed: rows.length,
     entriesCoveredByName: rows.reduce((total, row) => total + row.endpointsChecked, 0),
     rows,
@@ -197,6 +198,34 @@ function fromProbeJson(path) {
       `checked-sellers: ${path} records ${methodSplit.post} POST-only resources but the firstStatus counts do not add up to that — refusing to publish a status split that disagrees with the method count`,
     );
   }
+  /**
+   * The challenge composition (#495): how many resources answered a **v2** challenge, how many used the **legacy** header, and which
+   * answered none at all. Derived per row, never typed — and the four that answered no challenge are named with the status each
+   * returned, because "4 did not" without names is a number a reader cannot check.
+   */
+  const rows = Array.isArray(data.rows) ? data.rows : [];
+  const dialects = { v2: 0, legacy: 0, both: 0, none: 0 };
+  const noChallenge = [];
+  for (const row of rows) {
+    const version = row?.x402_version ?? row?.x402Version ?? null;
+    if (version === "2") dialects.v2 += 1;
+    else if (version === "legacy") dialects.legacy += 1;
+    else if (version === "both") dialects.both += 1;
+    else {
+      dialects.none += 1;
+      noChallenge.push({
+        host: String(row?.host ?? "unknown"),
+        resource: String(row?.resource ?? ""),
+        status: row?.status ?? null,
+        firstStatus: row?.firstStatus ?? null,
+      });
+    }
+  }
+  const dialectSplit =
+    rows.length > 0 && dialects.v2 + dialects.legacy + dialects.both + dialects.none === rows.length
+      ? { ...dialects, total: rows.length, noChallenge: noChallenge.slice(0, 8) }
+      : null;
+
   if (methodSplit && methodSplit.answered !== data.aggregate?.result?.correct402) {
     fail(
       1,
@@ -205,6 +234,7 @@ function fromProbeJson(path) {
   }
 
   const snapshot = {
+    dialectSplit,
     verifiedOn: data.verifiedOn,
     timeZone: data.timeZone ?? "UTC",
     method: data.method,

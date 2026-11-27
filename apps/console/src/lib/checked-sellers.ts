@@ -83,6 +83,18 @@ export interface CheckedSellersSnapshot {
     answered: number;
     postOnlyFirstStatus: Record<string, number>;
   } | null;
+  /**
+   * The challenge composition (#495), counted per resource from the probe rows: which x402 dialect each answered. `none` are
+   * the resources that answered no challenge at all, named with the status each returned. Null when the run did not record it.
+   */
+  dialectSplit: {
+    v2: number;
+    legacy: number;
+    both: number;
+    none: number;
+    total: number;
+    noChallenge: { host: string; resource: string; status: number | string | null; firstStatus: number | string | null }[];
+  } | null;
   rows: CheckedSellerRow[];
 }
 
@@ -214,4 +226,30 @@ export function screeningLabel(row: CheckedSellerRow): string {
   return row.screening.onVerifiedPayeeList
     ? `on the verified-payee list (${row.screening.verifiedPayeeListGeneratedAt})`
     : `not on the verified-payee list (${row.screening.verifiedPayeeListGeneratedAt})`;
+}
+
+/**
+ * The challenge composition (#495): measured, and published nowhere until now.
+ *
+ * The page said how many resources answer **only on POST**; it never said which x402 dialect they speak, so a reader could not tell
+ * whether the ecosystem had settled on v2 or was split. The 2026-11-27 run settles it for this sample: **96 v2, 0 legacy, 4 none** —
+ * and an earlier six-seller observation that "sellers are split across dialects" is now one data point against 96.
+ *
+ * The four that answered no challenge are named with the status each returned, because "4 did not" without names is a number a
+ * reader cannot check and cannot chase.
+ */
+export function checkedSellersDialects(snapshot: CheckedSellersSnapshot): string {
+  const split = snapshot.dialectSplit;
+  if (!split || !Number.isFinite(split.total) || split.total <= 0) {
+    return "The challenge dialects for this run were not recorded, so the page does not publish them.";
+  }
+  const named = split.noChallenge
+    .map((row) => `${row.host} (${row.status ?? "no status"})`)
+    .join(", ");
+  const legacy = split.legacy === 0 ? "none used the legacy header" : `${formatCount(split.legacy)} used the legacy header`;
+  return (
+    `${formatCount(split.v2)} of ${formatCount(split.total)} resources answered a v2 challenge, ${legacy}` +
+    (split.both > 0 ? `, ${formatCount(split.both)} answered both` : "") +
+    (split.none > 0 ? `, and ${formatCount(split.none)} answered none at all: ${named}.` : ".")
+  );
 }
