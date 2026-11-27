@@ -1,10 +1,10 @@
 {
- "generatedAt": "2026-11-26T18:00:02.829Z",
+ "generatedAt": "2026-11-27T18:00:03.831Z",
  "source": "docs/backlog.md",
  "counts": {
-  "total": 335,
-  "open": 53,
-  "done": 282
+  "total": 364,
+  "open": 66,
+  "done": 298
  },
  "droppedForSafety": 0,
  "redactedFields": 9,
@@ -3313,20 +3313,30 @@
   {
    "n": 447,
    "title": "Adopt iOS 27's poster pass style — the keys are verified, the render is not",
-   "done": false,
+   "done": true,
    "size": null,
-   "summary": "posterGeneric is a top-level style dictionary; older devices fall back through a second style block in the **same** pass.json; featured actions are an array of at most two, with types from Apple's own vocabulary.…",
+   "summary": "169b718 (CI, console-ci, deploy-console green, awaited): pass.json now carries **both** generic and posterGeneric. A Wallet pass holds exactly one style key, so shipping two *is* the compatibility mechanism rather than duplication…",
    "doneWhen": "the generator emits **both** posterGeneric and generic for one serial, a check asserts both keys are present, and a device shows the poster with the classic face as fallback.",
-   "gate": null,
+   "gate": "identity — what remains needs a real signing certificate and a phone to render it (#415, #432), which is an operator",
    "ref": null
   },
   {
    "n": 448,
    "title": "brand.json and a conformance runner, so a fork is fifteen minutes",
-   "done": false,
+   "done": true,
    "size": null,
-   "summary": "from docs/proposals/vouchguard-deployment-model.md: a fork should change name, wordmark, tint, domain and mode in **one file** and deploy without touching the renderer. **drop if**: the dashboard's config already does this…",
+   "summary": "(CI green, awaited): brand.json at the repo root is the **only** place name, wordmark, tint, domain, mode and organizationName are written — verified by grepping the app for the old literals, not by hoping.…",
    "doneWhen": "those five values come from one file, a fork with that file alone deploys, npm run conformance passes our fixtures, and mode: \"apple\" with no certificate **fails loudly** instead of emitting an unsigned pass.",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 449,
+   "title": "The \"daily\" supply series can only advance weekly, and the page promises 48 hours",
+   "done": false,
+   "size": "S",
+   "summary": "found 2026-11-26 while the board's supply check went red at exactly 48h. bin/market-collect.mjs --supply derives its row's run_date from the **inventory file name** (run_date: file.replace('.json','')), and writes with on_conflict=run_date + merge-duplicates.…",
+   "doneWhen": null,
    "gate": null,
    "ref": null
   },
@@ -3357,6 +3367,286 @@
    "size": null,
    "summary": "(CI, console-ci, deploy-console green, awaited; /glossary verified live): /glossary defines **Trusted Surface**, **Open Mandate**, **Closed Mandate**, **Mandate Receipt** and **Mandate Content**, each with a \"what we used to call it\" column so an older reader…",
    "doneWhen": "those terms are used consistently across the lander, the specs and the pass docs; a glossary page defines each **with attribution** and states plainly that we adopt the vocabulary, not the protocol; and no older conflicting term survives.",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 453,
+   "title": "The mandate store — the one missing table under every VouchGuard surface",
+   "done": true,
+   "size": null,
+   "summary": "00df368, migration applied, **proven end to end against the live stack**: public.mandates keyed by serial with tenant_id, state, scope, issued_at, expires_at, principal, agent, the **signed envelope verbatim**, revoked_at and revocation.…",
+   "doneWhen": "a migration creates a mandates table keyed by serial with tenant_id, state, scope, issued_at, expires_at, and the **signed envelope stored verbatim** (the signature is the record, not a column of copies);…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 454,
+   "title": "The demo speaks budgets, not crypto",
+   "done": true,
+   "size": null,
+   "summary": "the pass detail no longer names a network — it says **\"Funded by · test credits\"** — and the vocabulary rule is now a check, scripts/check-demo-vocabulary.mjs, wired into ci-local.…",
+   "doneWhen": "grep -riE \"usdc|wallet|onchain|on-chain|chain|gas|network\" apps/vouchguard/src returns nothing **user-visible** (code comments and CSS class names may keep their words; the check must distinguish, or the vocabulary moves wholesale…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 455,
+   "title": "The mint route — the caller the mandate store has been waiting for",
+   "done": true,
+   "size": null,
+   "summary": "deployed and **proven against production**: POST /v1/mandate takes a signed envelope, verifies it against the same JWKS a seller reads, writes through writeMandate, and answers 201 { serial, verification_url } — two keys, never the envelope back.…",
+   "doneWhen": "POST /v1/mandate (or the mint step of the pass flow — pick one and say why) takes a **signed** mandate envelope, verifies it, writes the row through writeMandate, and returns the serial plus the verification URL;…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 456,
+   "title": "The dashboard reads real mandates — the minted serial replaces the fixture",
+   "done": true,
+   "size": null,
+   "summary": "0d62c43 (CI green): the dashboard fetches the serials it is configured for from GET /v1/mandate/:serial at request time and renders live state — principal, limits, expiry, status — with the fetch time beside it.…",
+   "doneWhen": "the dashboard lists the serials it is told about (an operator-controlled list, not a scan of the table), fetches each from GET /v1/mandate/:serial at request time, and renders **live state** — principal, limits, expiry, status…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 457,
+   "title": "Publish the brand pack at /brand — for the SME that is going to fork it",
+   "done": true,
+   "size": null,
+   "summary": "deployed, **verified live**: vouchguard.app/brand answers 200 with the MIT statement, the six steps, the full brand.json surface, may-change vs must-not, the minimum-size table (lockup 90 · horizontal 110 · mark 16 · lens ≥3) and the three tests.…",
+   "doneWhen": "/brand exists on vouchguard.app and carries the MIT statement, the six steps, the brand.json fields, npm run brand:render / brand:verify, an explicit **may change / must not change** list, the minimum-size table (lockup 90 px, horizontal 11…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 458,
+   "title": "Cloudflare Search for Agents — one toggle, but the token cannot reach it",
+   "done": false,
+   "size": null,
+   "summary": "enabling it on a zone creates an AI Search instance, crawls the site, and exposes /.well-known/search?q=… under **our own domain**, returning Markdown;…",
+   "doneWhen": "the instance exists for paystage.xyz; /.well-known/search?q=census returns our own Markdown; the injected meta tags are present on the lander and **absent on /dashboard**; the indexed URL list has been read rather than assumed;…",
+   "gate": "identity — the AI Search instance is an account-level Cloudflare resource and our token gets 403 on it, so enabling it needs an operator-issued token with that scope (token scope) · S · source: operator via research session, 2026-11-26",
+   "ref": null
+  },
+  {
+   "n": 459,
+   "title": "The loop — 30 seconds, three scenes, rendered not recorded",
+   "done": true,
+   "size": null,
+   "summary": "scripts/render-loop.mjs renders **240 frames** — 30 s at 4 fps — at 1080×1080 and 1920×1080 from one source, in brand/loop/, with three stills committed and the frames gitignored (17 MB is a build product, not an artefact).…",
+   "doneWhen": "one command renders both aspect ratios from one source; every frame is deterministic (same input, same bytes); the numbers in scene 1 and 2 come from files, not from strings typed into the renderer, so they can be refreshed after a measurem…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 460,
+   "title": "The mark is one blob with a gold hole — plate B needs its own value",
+   "done": true,
+   "size": null,
+   "summary": "(CI, console-ci, deploy-console green, awaited; redeployed and verified live): plate A #1A1F71, plate **B the same at 62% over its surface**, lens gold. Three values — two plates and an intersection…",
+   "doneWhen": "every generated asset is re-cut from the corrected master (site, pass face, favicons, lockups, OG, the loop), the demo pass is re-signed, and the check asserts **plate contrast**…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 461,
+   "title": "\"Holds no keys\" is a claim nobody has tried to break",
+   "done": true,
+   "size": "S",
+   "summary": "awaited): scripts/check-no-keys.mjs, wired into ci-local, so the sentence the site publishes is attacked on every run rather than asserted once. **what it actually tests**: no PEM private key in any shipped source;…",
+   "doneWhen": "a check runs in CI that fails on a key-shaped string in a built artifact or a tarball we publish, **or** the report states which of (a)/(b)/(c) cannot be automated and the public sentence is reworded to what we did test",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 462,
+   "title": "The mark is a ticket, and the state is in the silhouette",
+   "done": false,
+   "size": null,
+   "summary": "supersedes #460's venn, which superseded #457's seal. Operator's choice C: 184 × 100 canvas, corner 26, a bite of r 17 out of each end, the split at x = 92, and an amber seal 56 wide between a teal body (#1A5F7A) and a slate stub (#7AA2B2).…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 463,
+   "title": "/verify and /v/:serial — the pages a counterparty uses, which are the reason the pass exists",
+   "done": true,
+   "size": null,
+   "summary": "2026-11-27** in edc64ba (CI, console-ci, deploy-console green, awaited) and **verified live**: /verify 200, a real serial answers *\"This pass is active\"*, an unknown serial answers **\"Do not trust the pass\"**…",
+   "doneWhen": "/verify takes a serial (pasted, or from a QR) and answers one of **active / revoked / expired / unknown** in plain words with what to do next; /v/:serial shows the same facts read-only…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 464,
+   "title": "The census records a status code but not which x402 dialect the seller speaks",
+   "done": true,
+   "size": null,
+   "summary": "premise was wrong — in our favour.** The probe now records x402_version, challenge_header_bytes, the raw challenge headers, method_that_402s and not_paywalled per row;…",
+   "doneWhen": "the census carries a version column, /lab can state \"N of 100 speak v2\" from data, and the probe stores the raw header per host so the derivation can be re-checked without re-probing.",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 465,
+   "title": "llms.txt is asserted, not validated",
+   "done": false,
+   "size": null,
+   "summary": "we wrote an agent-facing file and then told agents to read it. Nothing checks its structure or that it links the pages the site map calls canonical. **drop if a published validator already passes it**…",
+   "doneWhen": "a check parses apps/console/.../llms.txt (and llms-full.txt) and fails on a malformed structure (H1 = project name, blockquote summary, H2 sections, link lists), fails on a dead internal link, and fails when a canonical page (/verify, /bran…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 466,
+   "title": "The census knows more than the page shows — POST-only resources and the price's JSON path",
+   "done": false,
+   "size": null,
+   "summary": "two proposals from the 2026-11-27 research rounds, merged because both are \"the data is already in the file, the published sentence is not\".…",
+   "doneWhen": "the published surfaces state the method per resource (or the count of POST-only resources), the price extractor has a documented shape map with one fixture per shape, and a probe row whose price matches no shape is unknown rather than a num…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 467,
+   "title": "The mark, final: the scalloped ticket with the Lucide print — and a rebuild that takes ten seconds",
+   "done": false,
+   "size": null,
+   "summary": "supersedes #462. Shipped 2026-11-27 in 0c5555f (CI, console-ci, deploy-console green, awaited), deployed and verified live: /pass/pass-face-2x.png 200/73,425 b with the ticket in the header, /brand 200, the demo pass re-signed at 14,394 b.…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 468,
+   "title": "The brand pack, with files and pictures — and the rule a fork must keep",
+   "done": false,
+   "size": null,
+   "summary": "/brand said *\"take the mark\"* and served nothing: /brand/pack.zip, /brand/ticket.svg, /brand/brand.json all **404**, and the page contained **zero** images. A brand page with no pictures and no downloads.…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 469,
+   "title": "Verification lives on one domain, and it is the engine's",
+   "done": false,
+   "size": null,
+   "summary": "paystage.xyz/verify answered 200 while vouchguard.app/verify and /v/:serial both **404**d, so a stranger holding a VouchGuard pass or scanning its QR got a dead end on the brand's own domain and had to know the engine's name to check anything.…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 470,
+   "title": "Does USDC on Base honour ERC-1271 for an EIP-3009 transferWithAuthorization?",
+   "done": true,
+   "size": null,
+   "summary": "enforcement rests on this and it is **assumed, not known** (#437 builds a session-key account on it). One smart-account payer, one real transfer, and the answer decides the shape of two large builds.…",
+   "doneWhen": "a recorded Base **testnet** transaction — a contract payer signs transferWithAuthorization, and it either succeeds (1271 honoured) or reverts (not) — with tx hash and block in the repo, and one line in the design doc saying which.…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 471,
+   "title": "Org units on a mandate, and a roll-up that sums children",
+   "done": false,
+   "size": null,
+   "summary": "a staff/manager/director story needs the tree before any page can show it: unit on the mandate and a query that totals a subtree's spend and refusals. **no permission model in this row**: reading a roll-up is a read;…",
+   "doneWhen": "mandates carry org_unit (nullable, because a single-person install has no tree); GET /v1/public/rollup?unit= returns spend, refusals and mandate counts for a unit **and its descendants**;…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 472,
+   "title": "Refusals where a manager actually looks: by person and by rule",
+   "done": false,
+   "size": null,
+   "summary": "the verdicts exist and nobody reads them where they would change behaviour. A team lead needs *\"three people blocked by the $50 rule, eleven times this week\"* — the productivity signal, and the thing that makes controls tolerable rather than resented.…",
+   "doneWhen": "a team page lists refusals grouped by person and by the rule that fired, with counts and a date range; a weekly digest email states the same three numbers; and the page says plainly that a refusal is **not** a failed payment…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 473,
+   "title": "Offboarding and export — the two things a director checks before trusting any of this",
+   "done": false,
+   "size": null,
+   "summary": "a revoked person's next payment must fail, and the CSV must contain every decision rather than only the payments that succeeded. **why the CSV matters more than it looks**: an export that contains only successes is an audit trail that cannot show the controls…",
+   "doneWhen": "revoking a mandate makes the very next payment attempt fail with a named reason (on testnet, with a tx); the export contains **refusals and revisions as well as payments**, one row per decision, with the rule that fired;…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 474,
+   "title": "The accrual export — one line per vendor per cost centre for a month, with evidence underneath",
+   "done": false,
+   "size": null,
+   "summary": "the research says the thing enterprise finance actually buys is not a dashboard but an **invoice-shaped object**: a period accrual the ERP can code. Micropayments dissolve the invoice, and the invoice is the accounting unit companies are built on.…",
+   "doneWhen": "for a date range, the export emits **one row per vendor per cost centre**: period, vendor, cost centre, currency, total spend, count, refusals with the rule that fired, and a hash of the evidence behind the row;…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 475,
+   "title": "VouchGuard has no privacy page, no terms and no security.txt",
+   "done": true,
+   "size": null,
+   "summary": "(+ aa8eb34), CI green, deployed and verified live: /privacy 200/15,568 b · /terms 200/13,757 b · /.well-known/security.txt 200 (with the RFC's mandatory Expires) · /sitemap.xml now lists all four public pages.…",
+   "doneWhen": "vouchguard.app/privacy states in plain sentences what we hold (mandate metadata: principal label, limits, expiry, serial, state…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 476,
+   "title": "No structured data on either site — the machine-readable layer stops at OpenGraph",
+   "done": true,
+   "size": null,
+   "summary": "f0e3026 (CI green, awaited), deployed and verified live: vouchguard.app now carries one @graph with an **Organization** (sameAs: paystage.xyz) and a **SoftwareApplication** (name, description, license, codeRepository, isBasedOn).…",
+   "doneWhen": "the VouchGuard lander carries one JSON-LD block describing the **Organization** (name, url, sameAs to the engine) and the **SoftwareApplication** (name, description, licence MIT, repository, applicationCategory), the engine site carries its…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 477,
+   "title": "/pricing — the site says the thing is free and had no page saying so",
+   "done": true,
+   "size": null,
+   "summary": "vouchguard.app/pricing in 2ab2976 (200/19,085 b) and paystage.xyz/pricing in 94eab0e (200/15,081 b), both deployed and verified live. **the brand side leads with the ceiling**: free while in build, then what free does *not* mean…",
+   "doneWhen": "/pricing states the price (free while in build), what you get, and — the part that earns trust — the **limits** of free: no service level, no support contract, no custodian relationship, and an explicit promise that a future price change wi…",
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 478,
+   "title": "/docs was a 404, and our own copy told people to read it",
+   "done": false,
+   "size": null,
+   "summary": "the quickstart pointed at a page that did not exist. Shipped 2026-11-27 in b7ffd73 (CI, console-ci, deploy-console green), deployed and verified live: paystage.xyz/docs 200/18,448 b.…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 479,
+   "title": "backlog-tick was right: 100 minutes of shipping with the ledger standing still",
+   "done": false,
+   "size": null,
+   "summary": "the monitor's window is 90 minutes and it went red while I shipped seven product commits without filing a row for them. The commits were real; the record of *why* they exist was not, which is the half that survives the session.…",
+   "doneWhen": null,
+   "gate": null,
+   "ref": null
+  },
+  {
+   "n": 480,
+   "title": "/mocks becomes a six-page storybook, with a status chip per story and per frame",
+   "done": false,
+   "size": null,
+   "summary": "one scroll hides which frames are drawn and which are aspirations; six pages expose it, and a chip on each index card makes the gap a feature rather than a confession.…",
+   "doneWhen": null,
    "gate": null,
    "ref": null
   }
