@@ -37,7 +37,7 @@ const STEPS: { title: string; body: string; command?: string }[] = [
   },
   {
     title: "3 · Render the assets",
-    body: "One command runs the kit, the pass, the storyboard, the loop, both checks and the demo pass re-sign — it aborts at the first failure.",
+    body: "One command runs the kit, the pass, the storyboard, the loop, both checks and the demo pass re-sign — it aborts at the first failure. It needs one TrueType font for the contact-sheet labels: Next&apos;s bundled Noto if the app workspaces are installed, otherwise any font via BRAND_FONT_DIR. Without one it stops and says so rather than drawing tofu boxes — that is the failure we would rather have.",
     command: "npm run brand:rebuild",
   },
   {

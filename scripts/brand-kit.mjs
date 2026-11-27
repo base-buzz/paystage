@@ -28,6 +28,19 @@ const FONT_CANDIDATES = [
   "node_modules/next/dist/compiled/@vercel/og/noto-sans-v27-latin-regular.ttf",
   "apps/console/node_modules/next/dist/compiled/@vercel/og",
   "node_modules/next/dist/compiled/@vercel/og",
+  /**
+   * A **fresh clone** has no `node_modules/next` at the root and may not have installed the apps' workspaces yet, so the two paths
+   * above depend on an install order the page never states. `/brand` tells a stranger to run `npm run brand:render` from a clone, and
+   * that promise has to hold with whatever fonts the machine already has (#488).
+   */
+  ...(process.env.BRAND_FONT_DIR ? [process.env.BRAND_FONT_DIR] : []),
+  ...["/usr/share/fonts/truetype", "/usr/share/fonts", "/System/Library/Fonts"]
+    .filter(existsSync)
+    .flatMap((root) =>
+      readdirSync(root, { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => join(root, d.name)),
+    ),
 ];
 const fontDir = FONT_CANDIDATES.find(
   (d) => existsSync(d) && (d.endsWith(".ttf") || readdirSync(d).some((f) => /\.(ttf|otf)$/i.test(f))),
@@ -43,7 +56,11 @@ if (fontDir) {
   );
   process.env.FONTCONFIG_FILE = conf;
 } else {
-  console.error("brand-kit: no font found — contact-sheet labels would be tofu boxes; looked in " + FONT_CANDIDATES.join(", "));
+  console.error(
+    "brand-kit: no font found — contact-sheet labels would be tofu boxes; looked in " +
+      FONT_CANDIDATES.join(", ") +
+      ". Install a font (any .ttf in /usr/share/fonts/truetype) or set BRAND_FONT_DIR.",
+  );
   process.exit(2);
 }
 
