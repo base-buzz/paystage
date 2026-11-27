@@ -6,8 +6,10 @@ import {
   evaluateWithChallengeIdempotency,
   normalizePaymentRequired,
   buildReviewPacket,
+  type MandateEvaluationInput,
 } from "@paystage/preflight";
 import { BUNDLE_STORE_VAR, type BundleStore } from "../bundle-store.js";
+import type { MandateSource } from "./mandate.js";
 import { parsePolicyCached } from "../policy-cache.js";
 import { checkAddressRisk } from "../address-risk.js";
 import { checkHostReputation, youngestSignal, YOUNG_DOMAIN_DAYS } from "../host-reputation.js";
@@ -18,21 +20,75 @@ import {
   resolveRpcUrl,
 } from "@paystage/auth-watch";
 
-export const evaluateRoutes = new Hono<{ Variables: { bundleStore: BundleStore | undefined } }>();
+export function createEvaluateRoutes(
+  options: { mandateSource?: MandateSource } = {},
+): Hono<{ Variables: { bundleStore: BundleStore | undefined } }> {
+  const routes = new Hono<{ Variables: { bundleStore: BundleStore | undefined } }>();
 
-evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
+/**
+ * Parse the optional `mandate` field (#473).
+ *
+ * A mandate is an *additional* restriction: it can only narrow what the policy already allows, so a
+ * malformed one fails closed (the evaluator names `mandate.malformed`) rather than falling back to the
+ * looser policy. This function only rejects shapes that cannot be read at all; the rule-level validation
+ * — including the revocation check — stays in the evaluator so the rule names cannot drift.
+ *
+ * The caller supplies the envelope and any revocation statements it has seen, exactly as the evaluator's
+ * contract says: signatures are verified before this point (`@paystage/mandate`'s `verify`), because this
+ * synchronous evaluator holds no keys. The hosted route does not invent a revocation from a claim; it
+ * will only refuse a payment when the caller passes a statement naming that serial.
+ */
+function parseMandateInput(
+  raw: unknown,
+): { ok: true; value: MandateEvaluationInput | undefined } | { ok: false; detail: string } {
+  if (raw === undefined) return { ok: true, value: undefined };
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    return { ok: false, detail: "`mandate` must be an object, not a scalar or an array." };
+  }
+  const input = raw as Record<string, unknown>;
+  if (input.mandate === null || typeof input.mandate !== "object" || Array.isArray(input.mandate)) {
+    return { ok: false, detail: "`mandate.mandate` must be the signed mandate envelope object." };
+  }
+  if (input.history !== undefined && !Array.isArray(input.history)) {
+    return { ok: false, detail: "`mandate.history` must be an array of settled payments." };
+  }
+  if (input.revocations !== undefined && !Array.isArray(input.revocations)) {
+    return { ok: false, detail: "`mandate.revocations` must be an array of verified revocation statements." };
+  }
+  return {
+    ok: true,
+    value: {
+      mandate: input.mandate as MandateEvaluationInput["mandate"],
+      ...(input.history === undefined ? {} : { history: input.history as MandateEvaluationInput["history"] }),
+      ...(input.revocations === undefined
+        ? {}
+        : { revocations: input.revocations as MandateEvaluationInput["revocations"] }),
+    },
+  };
+}
+
+routes.post("/v1/evaluate_mcp_payment", async (c) => {
   let body: unknown;
   try {
     body = await c.req.json();
   } catch {
     return c.json(PROBLEMS.invalidJson(), 400);
   }
-  const b = body as { payment_required?: unknown; policy?: unknown; agent_id?: unknown };
+  const b = body as {
+    payment_required?: unknown;
+    policy?: unknown;
+    agent_id?: unknown;
+    mandate?: unknown;
+  };
   if (!b || typeof b !== "object" || b.payment_required == null) {
     return c.json(PROBLEMS.missingPaymentRequired(), 400);
   }
   if (b.agent_id !== undefined && typeof b.agent_id !== "string") {
     return c.json(PROBLEMS.agentIdType(), 400);
+  }
+  const mandate = parseMandateInput(b.mandate);
+  if (!mandate.ok) {
+    return c.json(PROBLEMS.invalidMandate(mandate.detail), 400);
   }
   try {
     const normalized = normalizePaymentRequired(b.payment_required as never);
@@ -56,7 +112,55 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
     const decision = await evaluateWithChallengeIdempotency(normalized, policy, {
       now: evaluatedAt,
       ...(typeof b.agent_id === "string" ? { agentId: b.agent_id } : {}),
+      // #473: a revoked mandate must refuse the very next payment. The evaluator has supported this
+      // since #412; the hosted route was the missing seam, so a caller could not exercise it here.
+      ...(mandate.value === undefined ? {} : { mandate: mandate.value }),
     });
+
+    /**
+     * #473 — the server's own revocation record outranks the caller's claim.
+     *
+     * The evaluator can only refuse a revocation it is handed, and an offboarded agent is exactly the
+     * caller with a reason not to hand one over. When a mandate is supplied, the hosted service checks
+     * its own `mandates` row by serial and refuses if that row says `revoked`, whether or not the body
+     * carried a statement. A store that cannot be read does not read as "clean": the verdict becomes
+     * `review` rather than `pay`, because "we could not check" and "we checked, it is active" are
+     * different answers. No store configured (a deployment without Supabase) skips the lookup.
+     */
+    if (mandate.value !== undefined && options.mandateSource !== undefined) {
+      const serial = mandate.value.mandate.serial;
+      if (typeof serial === "string" && serial.length > 0) {
+        try {
+          const stored = await options.mandateSource.get(serial);
+          if (stored?.status === "revoked") {
+            const detail = `hosted mandate record marks serial ${serial} revoked (checked ${evaluatedAt.toISOString()})`;
+            decision.decision = "do_not_pay";
+            decision.reasons = [`mandate.revoked: ${detail}`, ...decision.reasons];
+            decision.steps.push({
+              seq: decision.steps.length + 1,
+              rule: "accept.mandate.revoked",
+              scope: "accept",
+              outcome: "fail",
+              detail,
+            });
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          if (decision.decision === "pay") {
+            const detail = `mandate revocation state could not be read: ${message}`;
+            decision.decision = "review";
+            decision.reasons = [detail, ...decision.reasons];
+            decision.steps.push({
+              seq: decision.steps.length + 1,
+              rule: "accept.mandate.revocation_unreadable",
+              scope: "accept",
+              outcome: "fail",
+              detail,
+            });
+          }
+        }
+      }
+    }
 
     /**
      * A second source, consulted only when the answer is `pay`.
@@ -226,6 +330,16 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
 
     return c.json({
       ...decision,
+      /**
+       * #473: the machine-readable rule names, alongside the prose `reasons`.
+       *
+       * This route has always returned `reasons` and `steps`, but never a `reason_codes` field — so the
+       * request logger's `parseDecisionFromResponse` stored an empty array for every refusal it saw, and
+       * the refusals page and the decisions export could only say `not recorded`. The codes here are not
+       * a new judgement: they are the rules the transcript already marked `fail`, in the order they ran.
+       * That makes the next refusal audit-able without changing any verdict.
+       */
+      reason_codes: decision.steps.filter((step) => step.outcome === "fail").map((step) => step.rule),
       receipt,
       ...(bundleId !== undefined ? { bundle_id: bundleId } : {}),
       bundle_stored: bundleStored,
@@ -245,13 +359,13 @@ evaluateRoutes.post("/v1/evaluate_mcp_payment", async (c) => {
  * Implemented as a forward to the canonical path rather than a second copy of the handler: two copies of a payment evaluator
  * drift, and the drift would be invisible until a caller got a different verdict from the alias.
  */
-evaluateRoutes.post("/v1/paid/evaluate_mcp_payment", async (c) => {
+routes.post("/v1/paid/evaluate_mcp_payment", async (c) => {
   const url = new URL(c.req.url);
   url.pathname = "/v1/evaluate_mcp_payment";
-  return evaluateRoutes.fetch(new Request(url.toString(), c.req.raw));
+  return routes.fetch(new Request(url.toString(), c.req.raw));
 });
 
-evaluateRoutes.post("/v1/evaluate_outstanding_auths", async (c) => {
+routes.post("/v1/evaluate_outstanding_auths", async (c) => {
   let body: unknown;
   try {
     body = await c.req.json();
@@ -305,3 +419,6 @@ evaluateRoutes.post("/v1/evaluate_outstanding_auths", async (c) => {
     );
   }
 });
+
+  return routes;
+}

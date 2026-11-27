@@ -23,6 +23,17 @@ const PAYMENT_BODY = {
     payment_required: { type: "object", description: "The decoded x402 challenge being considered" },
     policy: { type: "object", description: "The spend policy to evaluate it against" },
     agent_id: { type: "string", description: "Optional agent identifier for per-agent budgets" },
+    mandate: {
+      type: "object",
+      description:
+        "Optional scoped, revocable authority (#473). Supply the signed envelope and any verified revocation statements; a revoked serial refuses the payment with `accept.mandate.revoked`.",
+      properties: {
+        mandate: { type: "object", description: "The signed mandate envelope" },
+        history: { type: "array", description: "Settled payments inside the window, for the rolling total" },
+        revocations: { type: "array", description: "Verified revocation statements naming the serial" },
+      },
+      required: ["mandate"],
+    },
   },
 } as const;
 

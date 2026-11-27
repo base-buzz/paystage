@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { healthRoutes } from "./routes/health.js";
-import { evaluateRoutes } from "./routes/evaluate.js";
+import { createEvaluateRoutes } from "./routes/evaluate.js";
 import { publicStatusRoutes } from "./routes/public-status.js";
 import { receiptKeyRoutes } from "./routes/receipt-key.js";
 import { PROBLEMS } from "./problem.js";
@@ -494,7 +494,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
     app.use("*", (c, next) => (c.get("paystageFree") === true ? next() : payMw(c, next)));
   }
 
-  app.route("/", evaluateRoutes);
+  app.route("/", createEvaluateRoutes({ mandateSource }));
 
   // Remote MCP endpoint. Mounted outside the payment gate on purpose: the gate protects the
   // *evaluation* service, and an MCP client that cannot complete an x402 handshake still

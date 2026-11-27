@@ -106,6 +106,17 @@ export const PROBLEMS = {
       fix: "Pass the 0x-prefixed address whose outstanding allowances you want listed.",
       ...(instance !== undefined ? { instance } : {}),
     }),
+  invalidMandate: (detail: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "invalid_mandate",
+      title: "The mandate input is malformed",
+      detail,
+      retriable: false,
+      field: "mandate",
+      fix: "Send `mandate: { mandate, history?, revocations? }` with the signed envelope and arrays for history/revocations, or omit the field to evaluate without a mandate.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
   evaluationFailed: (message: string, instance?: string) =>
     problem({
       status: 400,
