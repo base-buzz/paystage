@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><g data-mark="paystage-ticket" data-state="revoked" transform="translate(0 19) scale(0.281)" aria-label="PayStage ticket">
   <defs>
-    <mask id="paystage-ticket-mask-4" maskUnits="userSpaceOnUse" x="0" y="0" width="356" height="208">
+    <mask id="paystage-ticket-mask-5" maskUnits="userSpaceOnUse" x="0" y="0" width="356" height="208">
       <rect x="0" y="0" width="356" height="208" fill="#FFFFFF"/>
       <circle data-scallop="1" cx="5" cy="5" r="17.68" fill="#000000"/><circle data-scallop="2" cx="351" cy="5" r="17.68" fill="#000000"/><circle data-scallop="3" cx="5" cy="203" r="17.68" fill="#000000"/><circle data-scallop="4" cx="351" cy="203" r="17.68" fill="#000000"/><circle data-notch="left" cx="0" cy="104" r="21.84" fill="#000000"/><circle data-notch="right" cx="356" cy="104" r="21.84" fill="#000000"/>
     </mask>
   </defs>
   <rect data-body="1" x="5" y="5" width="346" height="198"
-        rx="28" fill="#FFFFFF" mask="url(#paystage-ticket-mask-4)"/>
+        rx="28" fill="#FFFFFF" mask="url(#paystage-ticket-mask-5)"/>
   <g data-print-set="lucide/fingerprint-pattern" data-print-grid="24" data-print-stroke="2"
       data-print-stroke-scale="1" data-print-scale="5.027"
       transform="translate(117.68 43.68) scale(5.027)"

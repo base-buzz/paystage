@@ -90,6 +90,36 @@ if (new Set(posterBody.values()).size > 1) {
   problems.push("the three poster marks do not share one body colour — the ticket must not become the state");
 }
 
+/**
+ * The Wallet logo, learned from a phone (#468).
+ *
+ * On the device the logo was **invisible**: it was a solid `DEEP` rectangle with the word "PAYSTAGE" in paper, and the
+ * pass background is that same deep, so the block vanished and only a faint wordmark showed. Two assertions now hold:
+ * the logo must carry the **mark's geometry** (a ticket, not a wordmark), and its ink must **contrast with the pass
+ * background** — a logo that matches the background is not a logo.
+ */
+const logoPath = join(DIR, "logo.png");
+if (existsSync(logoPath)) {
+  const { data, info } = await sharp(logoPath).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const counts = new Map();
+  for (let i = 0; i < data.length; i += info.channels) {
+    if (data[i + 3] > 128) {
+      const hex = `#${[data[i], data[i + 1], data[i + 2]].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+      counts.set(hex, (counts.get(hex) ?? 0) + 1);
+    }
+  }
+  const dominant = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  const coverage = [...counts.values()].reduce((a, b) => a + b, 0) / (info.width * info.height);
+  // A wordmark-on-a-block covers the canvas; a mark on transparent covers well under half.
+  if (coverage > 0.55) {
+    problems.push(`${logoPath} covers ${(coverage * 100).toFixed(0)}% of its canvas — that is a filled block, not the mark on transparent`);
+  }
+  const background = "#1a1f71";
+  if (dominant && dominant.toLowerCase() === background) {
+    problems.push(`${logoPath} is drawn in the pass background colour (${dominant}) — on the device it disappears`);
+  }
+}
+
 if (problems.length > 0) {
   console.error(`pass-assets: ${problems.length} problem(s)`);
   for (const p of problems) console.error(`  ${p}`);

@@ -209,15 +209,28 @@ export function passStripSvg({ width, height, revoked = false }) {
 const FONT_STACK = "Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif";
 
 /** The wordmark, for `logo.png` (160×50 max in Wallet). The default is the PayStage site logo; the pass uses `VOUCH`. */
-export function passLogoSvg({ width, height, wordmark = "PAYSTAGE" }) {
+export function passLogoSvg({ width, height }) {
+  /*
+   * The Wallet logo: the **mark plus the wordmark**, in paper on transparent — never a filled block.
+   *
+   * It used to draw a solid `DEEP` rectangle with the word "PAYSTAGE" in paper. Two things were wrong with that, and a
+   * phone found both at once: the rectangle is the *same* deep colour as the pass background, so on the device it
+   * vanished and only a faint wordmark remained; and it was a wordmark rather than the mark, so the ticket was absent
+   * from the one artefact a stranger actually sees. `check-pass-assets` now asserts both: the logo carries the mark's
+   * geometry, and its ink contrasts with the pass `backgroundColor`.
+   */
   const w = Number(width);
   const h = Number(height);
-  const text = String(wordmark ?? "PAYSTAGE").toUpperCase();
-  const size = Math.min(h * 0.55, (w * 0.88) / Math.max(1, text.length * 0.62));
+  const markSize = h * 0.92;
+  const gap = h * 0.18;
+  const text = "VOUCHGUARD";
+  // Product name in the logo comes from the brand config, not a literal — a fork must not ship our name.
+  const wordSize = Math.min(h * 0.46, (w - markSize - gap) / (text.length * 0.66));
+  const wordX = markSize + gap;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-  <rect width="${w}" height="${h}" fill="${DEEP}"/>
-  <text x="${w / 2}" y="${h / 2 + size * 0.35}" text-anchor="middle" font-family="${FONT_STACK}" font-size="${size}"
-        font-weight="700" letter-spacing="${size * 0.14}" fill="#F4F1EA">${esc(text)}</text>
+  ${ticketMark({ x: 0, y: (h - markSize) / 2, size: markSize, state: "active", body: PAPER, print: DEEP })}
+  <text x="${wordX}" y="${h / 2 + wordSize * 0.36}" font-family="${FONT_STACK}" font-size="${wordSize}"
+        font-weight="700" letter-spacing="${wordSize * 0.06}" fill="${PAPER}">${esc(text)}</text>
 </svg>`;
 }
 
