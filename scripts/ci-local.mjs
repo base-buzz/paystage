@@ -112,6 +112,9 @@ if (reason === null) {
        the freshness ledger: every asset is hashed against its masters, so a half-run `brand:rebuild` is red here. */
     "check-brand-assets.mjs",
     "check-hardcoded-paths.mjs",
+    /* #497: the directory page and its JSON must read one snapshot, every row must be dated and sourced, and a demand
+       figure may not appear without x402scan's name and capture date. */
+    "check-directory.mjs",
     /**
      * In `ci.yml` but not in this list until 2026-11-26, which is how a new package (`@paystage/mandate`) reached main
      * with CI red while `ci-local` said green. A local gate that runs a different set of checks than CI is the same
@@ -315,6 +318,7 @@ try {
     "check-env-vars.mjs",
     "check-route-styles.mjs",
     "check-route-docs.mjs",
+    "check-directory.mjs",
     "check-workflows.mjs",
     "check-script-bins.mjs",
     "check-hosted-deps.mjs",

@@ -1,0 +1,2529 @@
+{
+  "schema": "x402-merchant-directory/v1",
+  "$schema": "/directory.schema.json",
+  "generatedAt": "2026-11-27T17:58:53.633Z",
+  "verifiedOn": "2026-11-27",
+  "firstVerifiedOn": "2026-11-24",
+  "source": {
+    "census": {
+      "name": "checked-sellers-probe",
+      "verifiedOn": "2026-11-27",
+      "generatedAt": "2026-11-27T17:58:53.633Z",
+      "method": "GET, one POST retry on error status",
+      "predicate": "@paystage/x402-guard isCorrectChallenge (built dist)"
+    },
+    "history": [
+      {
+        "name": "checked-sellers-probe",
+        "verifiedOn": "2026-11-24"
+      }
+    ],
+    "demand": {
+      "source": "x402scan",
+      "url": "https://www.x402scan.com/all",
+      "capturedOn": "2026-11-27",
+      "level": "recipient",
+      "note": "Payments and USD value x402scan attributes to the payTo address across every resource that pays it, not sales of this resource. A recipient with no x402scan match is 'not known', never 0."
+    }
+  },
+  "ordering": {
+    "by": "priceUsd",
+    "direction": "ascending",
+    "tieBreak": "host, then resource",
+    "reason": "Price is the one field comparable across unlike services; the order is not a ranking of quality, and nobody paid to be listed."
+  },
+  "taxonomy": [
+    {
+      "id": "data",
+      "label": "Data & records",
+      "definition": "Returns a record or dataset about the world: market prices, weather, filings, on-chain state, profiles, enrichment, or extracted page content.",
+      "count": 44
+    },
+    {
+      "id": "search",
+      "label": "Search & discovery",
+      "definition": "Takes a query and returns matches or a shortlist: web, social, scholarly, regulatory, or keyword search.",
+      "count": 18
+    },
+    {
+      "id": "inference",
+      "label": "Model inference",
+      "definition": "Runs a model to generate or score content: chat, messages, image generation, AI answers, AI verdicts, reranking, or similarity.",
+      "count": 9
+    },
+    {
+      "id": "payments",
+      "label": "Payments & checkout",
+      "definition": "Moves value or returns payment execution, quote, or receipt data.",
+      "count": 5
+    },
+    {
+      "id": "infra",
+      "label": "Infrastructure & security",
+      "definition": "Operational and security primitives: status, time, DNS, dependency checks, URL safety, screening, and redaction.",
+      "count": 18
+    },
+    {
+      "id": "other",
+      "label": "Other",
+      "definition": "Does not fit the five above: a novelty endpoint and an agent messaging network in this census.",
+      "count": 2
+    }
+  ],
+  "counts": {
+    "resources": 96,
+    "hosts": 30,
+    "censusRows": 100,
+    "notAnswered": 4,
+    "byCategory": {
+      "data": 44,
+      "search": 18,
+      "inference": 9,
+      "payments": 5,
+      "infra": 18,
+      "other": 2
+    },
+    "withDemand": 77,
+    "withoutDemand": 19
+  },
+  "rows": [
+    {
+      "host": "api.clawfetch.ai",
+      "resource": "https://api.clawfetch.ai/fetch",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.001,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2276,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xc2afB91833f4dE19542A025872C6085cC29185eB",
+      "x402scan": null
+    },
+    {
+      "host": "api.exa.ai",
+      "resource": "https://api.exa.ai/contents",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.001,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana",
+        "eip155:480",
+        "eip155:5042"
+      ],
+      "challengeBytes": 8168,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x6d6E695b09861467c7d462f5AAF31cF3540B9192",
+      "x402scan": null
+    },
+    {
+      "host": "stormstation247.com",
+      "resource": "https://stormstation247.com/api/weather",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.001,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3260,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x44adc7d3199486730d6346f2dc2424de97124700",
+      "x402scan": {
+        "recipient": "0x44adc7d3199486730d6346f2dc2424de97124700",
+        "url": "https://www.x402scan.com/recipient/0x44adc7d3199486730d6346f2dc2424de97124700",
+        "payments": 8245,
+        "valueUsd": 9.766,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/find/person",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.001,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2812,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/lookup/person-dossier",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.001,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 4076,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/lookup/person-email-status",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.001,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1976,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/lookup/person-profile",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.001,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3664,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/search",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.001,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2320,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent402.tools",
+      "resource": "https://agent402.tools/api/perp-basis",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.002,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Polygon",
+        "Arbitrum One",
+        "eip155:143",
+        "Avalanche C-Chain",
+        "eip155:1329",
+        "OP Mainnet",
+        "eip155:4663",
+        "Celo",
+        "eip155:57073",
+        "eip155:5042",
+        "Solana",
+        "Stellar",
+        "algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k"
+      ],
+      "challengeBytes": 9276,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xaBF4FAbd7c416fB67202E5f9002389Fc75e2a9D0",
+      "x402scan": {
+        "recipient": "0xabf4fabd7c416fb67202e5f9002389fc75e2a9d0",
+        "url": "https://www.x402scan.com/recipient/0xabf4fabd7c416fb67202e5f9002389fc75e2a9d0",
+        "payments": 216,
+        "valueUsd": 5.484022,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent402.tools",
+      "resource": "https://agent402.tools/api/perp-funding",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.002,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Polygon",
+        "Arbitrum One",
+        "eip155:143",
+        "Avalanche C-Chain",
+        "eip155:1329",
+        "OP Mainnet",
+        "eip155:4663",
+        "Celo",
+        "eip155:57073",
+        "eip155:5042",
+        "Solana",
+        "Stellar",
+        "algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k"
+      ],
+      "challengeBytes": 10164,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xaBF4FAbd7c416fB67202E5f9002389Fc75e2a9D0",
+      "x402scan": {
+        "recipient": "0xabf4fabd7c416fb67202e5f9002389fc75e2a9d0",
+        "url": "https://www.x402scan.com/recipient/0xabf4fabd7c416fb67202e5f9002389fc75e2a9d0",
+        "payments": 216,
+        "valueUsd": 5.484022,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "api.sitecheck-api.workers.dev",
+      "resource": "https://api.sitecheck-api.workers.dev/api/github/user",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.002,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana",
+        "eip155:5042",
+        "Polygon",
+        "Arbitrum One",
+        "eip155:480",
+        "OP Mainnet",
+        "Celo",
+        "Stellar",
+        "XRP Ledger"
+      ],
+      "challengeBytes": 5824,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xb8491F953e6860D3b5840b73c60883Ff099ceAfA",
+      "x402scan": {
+        "recipient": "0xb8491f953e6860d3b5840b73c60883ff099ceafa",
+        "url": "https://www.x402scan.com/recipient/0xb8491f953e6860d3b5840b73c60883ff099ceafa",
+        "payments": 27,
+        "valueUsd": 0.073,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "blockrun.ai",
+      "resource": "https://blockrun.ai/api/v1/chat/completions",
+      "category": "inference",
+      "categoryBasis": "path",
+      "priceUsd": 0.002,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2392,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xe9030014F5DAe217d0A152f02A043567b16c1aBf",
+      "x402scan": null
+    },
+    {
+      "host": "stableenrich.dev",
+      "resource": "https://stableenrich.dev/api/exa/contents",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.002,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana"
+      ],
+      "challengeBytes": 1940,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x325bdF6F7efAB24a2210c48c1b64cAb2eAe1d430",
+      "x402scan": {
+        "recipient": "0x325bdf6f7efab24a2210c48c1b64cab2eae1d430",
+        "url": "https://www.x402scan.com/recipient/0x325bdf6f7efab24a2210c48c1b64cab2eae1d430",
+        "payments": 467,
+        "valueUsd": 12.6732,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/web-read",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.002,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2212,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "x402.tbs-digital.com",
+      "resource": "https://x402.tbs-digital.com/weather/current",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.002,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 6952,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xd6fCE15298Fc9D60f867d9455D497177Da9BFB0a",
+      "x402scan": {
+        "recipient": "0xd6fce15298fc9d60f867d9455d497177da9bfb0a",
+        "url": "https://www.x402scan.com/recipient/0xd6fce15298fc9d60f867d9455d497177da9bfb0a",
+        "payments": 51,
+        "valueUsd": 0.102,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "x402.twit.sh",
+      "resource": "https://x402.twit.sh/tweets/by/id",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.0025,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3032,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9dBA414637c611a16BEa6f0796BFcbcBdc410df8",
+      "x402scan": {
+        "recipient": "0x9dba414637c611a16bea6f0796bfcbcbdc410df8",
+        "url": "https://www.x402scan.com/recipient/0x9dba414637c611a16bea6f0796bfcbcbdc410df8",
+        "payments": 206,
+        "valueUsd": 1.0215,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "api.solenrich.com",
+      "resource": "https://api.solenrich.com/entrypoints/enrich-token-full/invoke",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.004,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Solana",
+      "chains": [
+        "Solana",
+        "Base"
+      ],
+      "challengeBytes": 3872,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe",
+      "x402scan": null
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/agentsearch-web-extract-v1",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3704,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/agentsearch-web-search-v1",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3668,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/clinical-trials",
+      "category": "search",
+      "categoryBasis": "listing-description",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3228,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/debarment-exclusion",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3276,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/dns-whois-rdap",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3256,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/enforcement-actions",
+      "category": "search",
+      "categoryBasis": "listing-description",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3136,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/export-control-screen",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3140,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/federal-register",
+      "category": "search",
+      "categoryBasis": "listing-description",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3164,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/fund-etf-holdings",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3112,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/infinifi",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 5716,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/kr-apt-trades-v1",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 4620,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/literature-search",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3212,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/meadow",
+      "category": "other",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 5808,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/med-safety",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3292,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/meme-watch",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 4548,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/named-entity-recognition",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3936,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/package-advisories",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3684,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/pii-redaction",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3116,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/prompt-injection-detect",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3268,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/pump-check",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 4028,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/reranking",
+      "category": "inference",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3268,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/sanctions-watchlist-screen",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3188,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/sec-8k-event-stream",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3264,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/sec-edgar-xbrl",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3072,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/sec-holdings",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3440,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/semantic-similarity",
+      "category": "inference",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3204,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/sentiment-classification",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3548,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/table-extraction",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3124,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent.pocket.network",
+      "resource": "https://agent.pocket.network/v1/taint-check",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 5552,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xF732ea490c5766071785a2310523f7fA2CEbB829",
+      "x402scan": {
+        "recipient": "0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "url": "https://www.x402scan.com/recipient/0xf732ea490c5766071785a2310523f7fa2cebb829",
+        "payments": 4126,
+        "valueUsd": 20.63,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "automaton-tx-explainer.vercel.app",
+      "resource": "https://automaton-tx-explainer.vercel.app/v1/url-safety",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana"
+      ],
+      "challengeBytes": 3212,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x679af3a893eDd0AeF4ac4c7776Ba581b238C0717",
+      "x402scan": null
+    },
+    {
+      "host": "glim.sh",
+      "resource": "https://glim.sh/api/v1/twitter/search",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Solana",
+      "chains": [
+        "Solana",
+        "Base"
+      ],
+      "challengeBytes": 3928,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "9MkM5Ra48KFcSv9HDQ8sb3C3r5HjouEwGQ6sp1cx1vde",
+      "x402scan": null
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/lookup/company-profile",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2224,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/lookup/person-email",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3144,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "www.api-xpay.com",
+      "resource": "https://www.api-xpay.com/x402/ip",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1804,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x589a2314a2E05F45e40C4823Da3Ba58D421dB3d8",
+      "x402scan": {
+        "recipient": "0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "url": "https://www.x402scan.com/recipient/0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "payments": 45204,
+        "valueUsd": 665.8,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "www.api-xpay.com",
+      "resource": "https://www.api-xpay.com/x402/network",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1944,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x589a2314a2E05F45e40C4823Da3Ba58D421dB3d8",
+      "x402scan": {
+        "recipient": "0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "url": "https://www.x402scan.com/recipient/0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "payments": 45204,
+        "valueUsd": 665.8,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "www.api-xpay.com",
+      "resource": "https://www.api-xpay.com/x402/payment",
+      "category": "payments",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2180,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x589a2314a2E05F45e40C4823Da3Ba58D421dB3d8",
+      "x402scan": {
+        "recipient": "0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "url": "https://www.x402scan.com/recipient/0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "payments": 45204,
+        "valueUsd": 665.8,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "www.api-xpay.com",
+      "resource": "https://www.api-xpay.com/x402/ping",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1824,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x589a2314a2E05F45e40C4823Da3Ba58D421dB3d8",
+      "x402scan": {
+        "recipient": "0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "url": "https://www.x402scan.com/recipient/0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "payments": 45204,
+        "valueUsd": 665.8,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "www.api-xpay.com",
+      "resource": "https://www.api-xpay.com/x402/quote",
+      "category": "payments",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2016,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x589a2314a2E05F45e40C4823Da3Ba58D421dB3d8",
+      "x402scan": {
+        "recipient": "0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "url": "https://www.x402scan.com/recipient/0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "payments": 45204,
+        "valueUsd": 665.8,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "www.api-xpay.com",
+      "resource": "https://www.api-xpay.com/x402/random",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1904,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x589a2314a2E05F45e40C4823Da3Ba58D421dB3d8",
+      "x402scan": {
+        "recipient": "0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "url": "https://www.x402scan.com/recipient/0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "payments": 45204,
+        "valueUsd": 665.8,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "www.api-xpay.com",
+      "resource": "https://www.api-xpay.com/x402/status",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1908,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x589a2314a2E05F45e40C4823Da3Ba58D421dB3d8",
+      "x402scan": {
+        "recipient": "0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "url": "https://www.x402scan.com/recipient/0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "payments": 45204,
+        "valueUsd": 665.8,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "www.api-xpay.com",
+      "resource": "https://www.api-xpay.com/x402/time",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1852,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x589a2314a2E05F45e40C4823Da3Ba58D421dB3d8",
+      "x402scan": {
+        "recipient": "0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "url": "https://www.x402scan.com/recipient/0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "payments": 45204,
+        "valueUsd": 665.8,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "www.api-xpay.com",
+      "resource": "https://www.api-xpay.com/x402/uuid",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1844,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x589a2314a2E05F45e40C4823Da3Ba58D421dB3d8",
+      "x402scan": {
+        "recipient": "0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "url": "https://www.x402scan.com/recipient/0x589a2314a2e05f45e40c4823da3ba58d421db3d8",
+        "payments": 45204,
+        "valueUsd": 665.8,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "x402.ottoai.services",
+      "resource": "https://x402.ottoai.services/tweet-search",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana"
+      ],
+      "challengeBytes": 6424,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x0E84dDEdAaE6A779c462C22a59F301EC31B6b808",
+      "x402scan": {
+        "recipient": "0x0e84ddedaae6a779c462c22a59f301ec31b6b808",
+        "url": "https://www.x402scan.com/recipient/0x0e84ddedaae6a779c462c22a59f301ec31b6b808",
+        "payments": 39,
+        "valueUsd": 0.351,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "x402.twit.sh",
+      "resource": "https://x402.twit.sh/users/by/username",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.005,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3080,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9dBA414637c611a16BEa6f0796BFcbcBdc410df8",
+      "x402scan": {
+        "recipient": "0x9dba414637c611a16bea6f0796bfcbcbdc410df8",
+        "url": "https://www.x402scan.com/recipient/0x9dba414637c611a16bea6f0796bfcbcbdc410df8",
+        "payments": 206,
+        "valueUsd": 1.0215,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "x402.twit.sh",
+      "resource": "https://x402.twit.sh/tweets/search",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.006,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 4372,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9dBA414637c611a16BEa6f0796BFcbcBdc410df8",
+      "x402scan": {
+        "recipient": "0x9dba414637c611a16bea6f0796bfcbcbdc410df8",
+        "url": "https://www.x402scan.com/recipient/0x9dba414637c611a16bea6f0796bfcbcbdc410df8",
+        "payments": 206,
+        "valueUsd": 1.0215,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "api.exa.ai",
+      "resource": "https://api.exa.ai/search",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.007,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana",
+        "eip155:480",
+        "eip155:5042"
+      ],
+      "challengeBytes": 8468,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x6d6E695b09861467c7d462f5AAF31cF3540B9192",
+      "x402scan": null
+    },
+    {
+      "host": "blockrun.ai",
+      "resource": "https://blockrun.ai/api/v1/pm/markets/search",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.0085,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1216,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x6E007731870EDe419CfB31889Cd5C4493CEcb04c",
+      "x402scan": null
+    },
+    {
+      "host": "agents.dyoeway.org",
+      "resource": "https://agents.dyoeway.org/verify",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.01,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2808,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x834b189A1c087d0af169A905454979952F59e8AC",
+      "x402scan": null
+    },
+    {
+      "host": "api.agents-trust.com",
+      "resource": "https://api.agents-trust.com/recommend",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.01,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana",
+        "algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k"
+      ],
+      "challengeBytes": 7280,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x96368628b679a459FE69815bacCa5CB0232AC397",
+      "x402scan": {
+        "recipient": "0x96368628b679a459fe69815bacca5cb0232ac397",
+        "url": "https://www.x402scan.com/recipient/0x96368628b679a459fe69815bacca5cb0232ac397",
+        "payments": 31,
+        "valueUsd": 0.31,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "api.kadec0.xyz",
+      "resource": "https://api.kadec0.xyz/v1/weather",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.01,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2528,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x4df66B6c140778fe0717880A7c6dDE5Ea53AcDeA",
+      "x402scan": {
+        "recipient": "0x4df66b6c140778fe0717880a7c6dde5ea53acdea",
+        "url": "https://www.x402scan.com/recipient/0x4df66b6c140778fe0717880a7c6dde5ea53acdea",
+        "payments": 447,
+        "valueUsd": 13.92,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "api.zerion.io",
+      "resource": "https://api.zerion.io/v1/wallets/:address/positions",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.01,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana"
+      ],
+      "challengeBytes": 2636,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xD07C06a650a88bBCF4f0c4fbf2c6c08c9a60AcC6",
+      "x402scan": null
+    },
+    {
+      "host": "ladyfortunalx402.vercel.app",
+      "resource": "https://ladyfortunalx402.vercel.app/api/fortune",
+      "category": "other",
+      "categoryBasis": "path",
+      "priceUsd": 0.01,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2348,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x88a4CDea106f18e919613a4EAeD8efdb2183E9ea",
+      "x402scan": null
+    },
+    {
+      "host": "stableenrich.dev",
+      "resource": "https://stableenrich.dev/api/exa/search",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.01,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana"
+      ],
+      "challengeBytes": 2068,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x325bdF6F7efAB24a2210c48c1b64cAb2eAe1d430",
+      "x402scan": {
+        "recipient": "0x325bdf6f7efab24a2210c48c1b64cab2eae1d430",
+        "url": "https://www.x402scan.com/recipient/0x325bdf6f7efab24a2210c48c1b64cab2eae1d430",
+        "payments": 467,
+        "valueUsd": 12.6732,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "stormstation247.com",
+      "resource": "https://stormstation247.com/api/radar",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.01,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 4220,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x44adc7d3199486730d6346f2dc2424de97124700",
+      "x402scan": {
+        "recipient": "0x44adc7d3199486730d6346f2dc2424de97124700",
+        "url": "https://www.x402scan.com/recipient/0x44adc7d3199486730d6346f2dc2424de97124700",
+        "payments": 8245,
+        "valueUsd": 9.766,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/find/company",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.01,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2280,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/linkedin/profile-view",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.01,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2528,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/research",
+      "category": "inference",
+      "categoryBasis": "path",
+      "priceUsd": 0.01,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1972,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "x402.twit.sh",
+      "resource": "https://x402.twit.sh/tweets/user",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.01,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3244,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9dBA414637c611a16BEa6f0796BFcbcBdc410df8",
+      "x402scan": {
+        "recipient": "0x9dba414637c611a16bea6f0796bfcbcbdc410df8",
+        "url": "https://www.x402scan.com/recipient/0x9dba414637c611a16bea6f0796bfcbcbdc410df8",
+        "payments": 206,
+        "valueUsd": 1.0215,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "blockrun.ai",
+      "resource": "https://blockrun.ai/api/v1/exa/answer",
+      "category": "inference",
+      "categoryBasis": "path",
+      "priceUsd": 0.011,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1392,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xe9030014F5DAe217d0A152f02A043567b16c1aBf",
+      "x402scan": null
+    },
+    {
+      "host": "blockrun.ai",
+      "resource": "https://blockrun.ai/api/v1/exa/search",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.011,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2600,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xe9030014F5DAe217d0A152f02A043567b16c1aBf",
+      "x402scan": null
+    },
+    {
+      "host": "blockrun.ai",
+      "resource": "https://blockrun.ai/api/v1/messages",
+      "category": "inference",
+      "categoryBasis": "path",
+      "priceUsd": 0.011,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2736,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xe9030014F5DAe217d0A152f02A043567b16c1aBf",
+      "x402scan": null
+    },
+    {
+      "host": "api.kadec0.xyz",
+      "resource": "https://api.kadec0.xyz/v1/token-price",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.02,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2584,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x4df66B6c140778fe0717880A7c6dDE5Ea53AcDeA",
+      "x402scan": {
+        "recipient": "0x4df66b6c140778fe0717880a7c6dde5ea53acdea",
+        "url": "https://www.x402scan.com/recipient/0x4df66b6c140778fe0717880a7c6dde5ea53acdea",
+        "payments": 447,
+        "valueUsd": 13.92,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "api.kadec0.xyz",
+      "resource": "https://api.kadec0.xyz/v1/trending-coins",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.02,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1952,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x4df66B6c140778fe0717880A7c6dDE5Ea53AcDeA",
+      "x402scan": {
+        "recipient": "0x4df66b6c140778fe0717880a7c6dde5ea53acdea",
+        "url": "https://www.x402scan.com/recipient/0x4df66b6c140778fe0717880a7c6dde5ea53acdea",
+        "payments": 447,
+        "valueUsd": 13.92,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "ax1-new.vercel.app",
+      "resource": "https://ax1-new.vercel.app/api/dashboard/q-verdict/resource",
+      "category": "inference",
+      "categoryBasis": "path",
+      "priceUsd": 0.02,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 9940,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x7284D41b5b852F2bd4c99bDf95043D84452d299C",
+      "x402scan": {
+        "recipient": "0x7284d41b5b852f2bd4c99bdf95043d84452d299c",
+        "url": "https://www.x402scan.com/recipient/0x7284d41b5b852f2bd4c99bdf95043d84452d299c",
+        "payments": 202527,
+        "valueUsd": 3732.6405,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "console.ax1.vc",
+      "resource": "https://console.ax1.vc/api/dashboard/q-verdict/resource",
+      "category": "inference",
+      "categoryBasis": "path",
+      "priceUsd": 0.02,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 9912,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x7284D41b5b852F2bd4c99bDf95043D84452d299C",
+      "x402scan": {
+        "recipient": "0x7284d41b5b852f2bd4c99bdf95043d84452d299c",
+        "url": "https://www.x402scan.com/recipient/0x7284d41b5b852f2bd4c99bdf95043d84452d299c",
+        "payments": 202527,
+        "valueUsd": 3732.6405,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "shopperpulse.theaslangroupllc.com",
+      "resource": "https://shopperpulse.theaslangroupllc.com/api/safety/merchant",
+      "category": "infra",
+      "categoryBasis": "path",
+      "priceUsd": 0.02,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana",
+        "Polygon",
+        "Arbitrum One",
+        "eip155:480",
+        "eip155:143",
+        "eip155:196",
+        "eip155:999",
+        "algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k",
+        "XRP Ledger",
+        "BNB Smart Chain"
+      ],
+      "challengeBytes": 9360,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x50ab2018c06c6E4eAA9BA52057Eb55eD284912fc",
+      "x402scan": null
+    },
+    {
+      "host": "x402.clashofcoins.com",
+      "resource": "https://x402.clashofcoins.com/shop/x402/buy",
+      "category": "payments",
+      "categoryBasis": "path",
+      "priceUsd": 0.02,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2232,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x8b29DABD6fBb5A09DAcbC7978eaed66A8540721d",
+      "x402scan": {
+        "recipient": "0x8b29dabd6fbb5a09dacbc7978eaed66a8540721d",
+        "url": "https://www.x402scan.com/recipient/0x8b29dabd6fbb5a09dacbc7978eaed66a8540721d",
+        "payments": 5814,
+        "valueUsd": 116.242,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "x402.sniperx.fun",
+      "resource": "https://x402.sniperx.fun/api/v1/token/activities/smarttraders_kol",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.02,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Solana",
+      "chains": [
+        "Solana"
+      ],
+      "challengeBytes": 1992,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "Bd2xS189uhhnxUeBeVF3JFXrg8zQgrvqZtpqh8hgkCEQ",
+      "x402scan": {
+        "recipient": "bd2xs189uhhnxuebevf3jfxrg8zqgrvqztpqh8hgkceq",
+        "url": "https://www.x402scan.com/recipient/bd2xs189uhhnxuebevf3jfxrg8zqgrvqztpqh8hgkceq",
+        "payments": 1136,
+        "valueUsd": 22.663,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "x402.sniperx.fun",
+      "resource": "https://x402.sniperx.fun/api/v1/token/activities/smarttraders_smartmoney",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.02,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Solana",
+      "chains": [
+        "Solana"
+      ],
+      "challengeBytes": 2020,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "Bd2xS189uhhnxUeBeVF3JFXrg8zQgrvqZtpqh8hgkCEQ",
+      "x402scan": {
+        "recipient": "bd2xs189uhhnxuebevf3jfxrg8zqgrvqztpqh8hgkceq",
+        "url": "https://www.x402scan.com/recipient/bd2xs189uhhnxuebevf3jfxrg8zqgrvqztpqh8hgkceq",
+        "payments": 1136,
+        "valueUsd": 22.663,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "x402.sniperx.fun",
+      "resource": "https://x402.sniperx.fun/api/v1/token/activities/smarttraders_whale",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.02,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Solana",
+      "chains": [
+        "Solana"
+      ],
+      "challengeBytes": 2000,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "Bd2xS189uhhnxUeBeVF3JFXrg8zQgrvqZtpqh8hgkCEQ",
+      "x402scan": {
+        "recipient": "bd2xs189uhhnxuebevf3jfxrg8zqgrvqztpqh8hgkceq",
+        "url": "https://www.x402scan.com/recipient/bd2xs189uhhnxuebevf3jfxrg8zqgrvqztpqh8hgkceq",
+        "payments": 1136,
+        "valueUsd": 22.663,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "stableenrich.dev",
+      "resource": "https://stableenrich.dev/api/firecrawl/search",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.0252,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana"
+      ],
+      "challengeBytes": 2392,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x325bdF6F7efAB24a2210c48c1b64cAb2eAe1d430",
+      "x402scan": {
+        "recipient": "0x325bdf6f7efab24a2210c48c1b64cab2eae1d430",
+        "url": "https://www.x402scan.com/recipient/0x325bdf6f7efab24a2210c48c1b64cab2eae1d430",
+        "payments": 467,
+        "valueUsd": 12.6732,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "agent402.tools",
+      "resource": "https://agent402.tools/api/onchain-sql",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.03,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Polygon",
+        "Arbitrum One",
+        "eip155:143",
+        "Avalanche C-Chain",
+        "eip155:1329",
+        "OP Mainnet",
+        "eip155:4663",
+        "Celo",
+        "eip155:57073",
+        "eip155:5042",
+        "Solana",
+        "Stellar",
+        "algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k"
+      ],
+      "challengeBytes": 10024,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xaBF4FAbd7c416fB67202E5f9002389Fc75e2a9D0",
+      "x402scan": {
+        "recipient": "0xabf4fabd7c416fb67202e5f9002389fc75e2a9d0",
+        "url": "https://www.x402scan.com/recipient/0xabf4fabd7c416fb67202e5f9002389fc75e2a9d0",
+        "payments": 216,
+        "valueUsd": 5.484022,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "keywords.duoleads.com",
+      "resource": "https://keywords.duoleads.com/v1/keyword-ideas",
+      "category": "search",
+      "categoryBasis": "path",
+      "priceUsd": 0.04,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 5456,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xCD673f7e1daD254347AEab6be0DEFe8b9C6b3A39",
+      "x402scan": null
+    },
+    {
+      "host": "blockrun.ai",
+      "resource": "https://blockrun.ai/api/v1/images/generations",
+      "category": "inference",
+      "categoryBasis": "path",
+      "priceUsd": 0.041,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2092,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xe9030014F5DAe217d0A152f02A043567b16c1aBf",
+      "x402scan": null
+    },
+    {
+      "host": "api.linkedpanda.com",
+      "resource": "https://api.linkedpanda.com/agent/v1/profiles/enrich",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.05,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 3348,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0xe740D5701749D262dA5E4Fcb9f814c5B6D91Cf46",
+      "x402scan": null
+    },
+    {
+      "host": "keyring-agent.blockchhub.link",
+      "resource": "https://keyring-agent.blockchhub.link/api/send-native",
+      "category": "payments",
+      "categoryBasis": "path",
+      "priceUsd": 0.05,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1760,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x17cd53C04D707eF0Dd615EF56c633f02915a7905",
+      "x402scan": {
+        "recipient": "0x17cd53c04d707ef0dd615ef56c633f02915a7905",
+        "url": "https://www.x402scan.com/recipient/0x17cd53c04d707ef0dd615ef56c633f02915a7905",
+        "payments": 792,
+        "valueUsd": 39.6,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "keyring-agent.blockchhub.link",
+      "resource": "https://keyring-agent.blockchhub.link/api/send-token",
+      "category": "payments",
+      "categoryBasis": "path",
+      "priceUsd": 0.05,
+      "priceUnit": "request",
+      "method": "GET",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 1748,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x17cd53C04D707eF0Dd615EF56c633f02915a7905",
+      "x402scan": {
+        "recipient": "0x17cd53c04d707ef0dd615ef56c633f02915a7905",
+        "url": "https://www.x402scan.com/recipient/0x17cd53c04d707ef0dd615ef56c633f02915a7905",
+        "payments": 792,
+        "valueUsd": 39.6,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "win.oneshotagent.com",
+      "resource": "https://win.oneshotagent.com/v1/tools/lookup/person-posts",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.07,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base"
+      ],
+      "challengeBytes": 2580,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x9fb365E4E9385E2a39FeBAd70368267e6f571d9A",
+      "x402scan": {
+        "recipient": "0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "url": "https://www.x402scan.com/recipient/0x9fb365e4e9385e2a39febad70368267e6f571d9a",
+        "payments": 105,
+        "valueUsd": 0.686,
+        "source": "x402scan",
+        "capturedOn": "2026-11-27"
+      }
+    },
+    {
+      "host": "api.arkm.com",
+      "resource": "https://api.arkm.com/x402/intelligence/address",
+      "category": "data",
+      "categoryBasis": "default",
+      "priceUsd": 0.2,
+      "priceUnit": "request",
+      "method": "POST",
+      "chain": "Base",
+      "chains": [
+        "Base",
+        "Solana"
+      ],
+      "challengeBytes": 4444,
+      "firstVerifiedOn": "2026-11-24",
+      "lastVerifiedOn": "2026-11-27",
+      "verifiedSource": "checked-sellers-probe",
+      "payTo": "0x942bD3E3073543c674Efc0C378D5bcE20f9120C1",
+      "x402scan": null
+    }
+  ]
+}

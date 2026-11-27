@@ -3279,3 +3279,65 @@ html[data-theme="light"] .lp-aurora span,
     font-size: 15px;
   }
 }
+
+/* ---------- x402 merchant directory (#497) ---------- */
+
+/* Nine columns do not fit the 780px prose measure, so this page gets its own width while keeping `.lp-prose`'s
+   typography. The table scrolls inside its own box on a phone via the rule above; it never pushes the page sideways. */
+.lp-prose.directory-page {
+  max-width: 1180px;
+}
+
+.directory-page table {
+  font-size: 13.5px;
+}
+
+.directory-page th,
+.directory-page td {
+  padding-right: 14px;
+}
+
+.directory-page td {
+  line-height: 1.45;
+}
+
+.directory-page td .lp-note {
+  font-size: 12.5px;
+}
+
+.directory-page td a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.directory-page caption {
+  text-align: left;
+  padding-bottom: 10px;
+}
+
+.directory-taxonomy {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px 24px;
+}
+
+.directory-taxonomy li {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.directory-taxonomy-count {
+  display: inline-block;
+  min-width: 2.5ch;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.directory-taxonomy .lp-note {
+  display: block;
+  margin-top: 2px;
+}
