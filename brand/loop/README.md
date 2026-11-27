@@ -1,6 +1,7 @@
 # The loop
 
 Rendered by `node scripts/render-loop.mjs` at 4 fps for 30s → 120 frames per aspect.
+The three tracked stills in `stills/` are rendered from the same scene functions.
 
 ```bash
 # assemble (ffmpeg is not installed in this container)

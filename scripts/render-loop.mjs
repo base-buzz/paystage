@@ -36,9 +36,9 @@ const conf = join(confDir, "fonts.conf");
 writeFileSync(conf, `<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "fonts.dtd">\n<fontconfig>\n  <dir>${fontDir}</dir>\n  <cachedir>${join(confDir, "cache")}</cachedir>\n</fontconfig>\n`);
 process.env.FONTCONFIG_FILE = conf;
 
-const { ticketGroup } = await import("./lib/mark.mjs");
+const { ticketGroup, MARK_COLOURS } = await import("./lib/mark.mjs");
 const TOKENS = JSON.parse(readFileSync("apps/console/src/lib/pass-tokens.json", "utf8"));
-const { ink: INK, deep: DEEP, gold: GOLD, muted: MUTED, red: RED } = TOKENS.palette;
+const { ink: INK, deep: DEEP, muted: MUTED } = TOKENS.palette;
 const PAPER = "#FFFFFF";
 const SANS = "Noto Sans, -apple-system, Helvetica Neue, Arial, sans-serif";
 
@@ -61,14 +61,17 @@ const TOTAL = FPS * SECONDS;
 
 /**
  * The geometry check, run first: an animation of a superseded mark is the most expensive kind of stale, so this refuses
- * to render one.
+ * to render one. `brand:rebuild` passes `--no-check` because it regenerates every asset in one run and verifies once at
+ * the end; a standalone run still guards itself.
  */
-try {
-  execFileSync(process.execPath, ["scripts/check-brand-assets.mjs"], { stdio: "pipe" });
-} catch (error) {
-  console.error("render-loop: the brand check failed, so this will not render an animation of a mark that is out of date.");
-  console.error(String(error.stdout ?? "").split("\n").slice(0, 6).join("\n"));
-  process.exit(1);
+if (!args.includes("--no-check")) {
+  try {
+    execFileSync(process.execPath, ["scripts/check-brand-assets.mjs"], { stdio: "pipe" });
+  } catch (error) {
+    console.error("render-loop: the brand check failed, so this will not render an animation of a mark that is out of date.");
+    console.error(String(error.stdout ?? "").split("\n").slice(0, 6).join("\n"));
+    process.exit(1);
+  }
 }
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -106,10 +109,10 @@ function sceneBillShock(w, h, phase) {
 function sceneCaps(w, h, phase) {
   const f = (n) => (n * Math.min(w, h)) / 100;
   const refusals = Math.round(EXAMPLE.refusals * phase);
-  // The mark is drawn by the shared module rather than by three hand-written rects here, so the 62%
-  // second plate reaches the loop as well (#460). It used to be a local copy of the geometry, which is
-  // exactly how a stale mark survives a brand change.
-  const mark = ticketGroup({ x: f(8), y: f(24), width: f(9), plate: DEEP, lens: GOLD, surface: PAPER });
+  // The mark is drawn by the shared module rather than by three hand-written rects here, so a change to the ticket
+  // geometry reaches the loop as well. It used to be a local copy, which is exactly how a stale mark survives a brand
+  // change.
+  const mark = ticketGroup({ x: f(8), y: f(24), width: f(9), body: MARK_COLOURS.body, state: "active" });
   return ms(
     w,
     h,
@@ -158,9 +161,27 @@ for (const { name, w, h } of SIZES) {
   }
 }
 
+/**
+ * The three stills used in the deck and the README. They are the same functions as the frames — not hand-picked
+ * screenshots — so a mark change reaches them with the rest of the loop. `brand/loop/stills/` is tracked; the 240 frames
+ * are a build product and stay ignored.
+ */
+mkdirSync("brand/loop/stills", { recursive: true });
+const STILLS = [
+  ["scene-1-bill-shock", sceneBillShock, 0.82],
+  ["scene-2-caps", sceneCaps, 0.82],
+  ["scene-3-two-doors", sceneDoors, 0.92],
+];
+for (const [name, draw, phase] of STILLS) {
+  const png = await sharp(Buffer.from(draw(1080, 1080, phase))).png().toBuffer();
+  writeFileSync(join("brand/loop/stills", `${name}.png`), png);
+  written.push(join("brand/loop/stills", `${name}.png`));
+}
+
 writeFileSync(
   "brand/loop/README.md",
-  `# The loop\n\nRendered by \`node scripts/render-loop.mjs\` at ${FPS} fps for ${SECONDS}s → ${TOTAL} frames per aspect.\n\n` +
+  `# The loop\n\nRendered by \`node scripts/render-loop.mjs\` at ${FPS} fps for ${SECONDS}s → ${TOTAL} frames per aspect.\n` +
+    `The three tracked stills in \`stills/\` are rendered from the same scene functions.\n\n` +
     `\`\`\`bash\n# assemble (ffmpeg is not installed in this container)\nffmpeg -framerate ${FPS} -i square-%04d.png -pix_fmt yuv420p loop-square.mp4\nffmpeg -framerate ${FPS} -i wide-%04d.png -pix_fmt yuv420p loop-wide.mp4\n\`\`\`\n\n` +
     `The numbers in scenes 1 and 2 are a **stated example**, not a measurement: they live in \`EXAMPLE\` at the top of the\n` +
     `script so a real reading can replace them. Re-run after a mark change — the script refuses if the brand check fails,\n` +

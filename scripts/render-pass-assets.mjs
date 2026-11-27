@@ -17,7 +17,7 @@
  * Exit 0 wrote everything · 2 no usable font (a render with no font is a grid of tofu boxes, so this refuses
  * rather than shipping one) · 3 sharp is not installed · 4 a write failed.
  */
-import { mkdirSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {
@@ -30,7 +30,6 @@ import {
   ticketMark,
   setupScreenSvg,
   stackedTeammatesSvg,
-  PASS_TOKENS,
 } from "./lib/pass-face.mjs";
 import {
   cancelledSvg,
@@ -203,27 +202,37 @@ if (argv.includes("--frames")) {
  *
  * The page is HTML and cannot call `ticketMark()`, so it renders this file instead. Generating it here — from the
  * same function the pass itself uses — is what makes "the mark top-left" the same mark rather than a second
- * drawing. The mark is drawn inverted (paper plates, state-coloured lens) because the page paints it over the
- * mandate's tint, where a deep plate would disappear.
- *
- * **The second plate is blended against the surface the page actually paints** (#460): the default poster tint for
- * the active mark, and `state.deadPlate` for revoked/expired, because `MandateCard` greys the poster for a dead
- * mandate. Without this the explicit blend would default to paper and the two white plates would merge on the
- * page, which is the same defect at a smaller scale.
+ * drawing. The mark is drawn inverted (a paper ticket body on the page's tint) because a teal body on a teal or deep
+ * poster would disappear; the **print** carries the state: ink active, red revoked, the spec's grey expired.
  */
 const MARKS = [
-  ["mark-active.svg", "ACTIVE", PASS_TOKENS.posterTints[0]],
-  ["mark-revoked.svg", "REVOKED", PASS_TOKENS.state.deadPlate],
-  ["mark-expired.svg", "EXPIRED", PASS_TOKENS.state.deadPlate],
+  ["mark-active.svg", "ACTIVE"],
+  ["mark-revoked.svg", "REVOKED"],
+  ["mark-expired.svg", "EXPIRED"],
 ];
-for (const [file, state, surface] of MARKS) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${ticketMark({ x: 0, y: 19, size: 100, state, plate: "#FFFFFF", surface })}</svg>`;
+for (const [file, state] of MARKS) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${ticketMark({ x: 0, y: 19, size: 100, state })}</svg>`;
   writeFileSync(join(OUT, file), svg);
   written.push(`${file} — the poster mark, drawn by ticketMark()`);
 }
 
 // The SVG beside the PNG, so the lander can inline exactly what was rasterised.
 writeFileSync(join(OUT, "pass-face.svg"), passFaceSvg({ ...FACE, width: 750 }));
+
+/**
+ * `@paystage/pass` carries its own copy of the icon and strip so the generator works outside the monorepo; its test
+ * compares those bytes with this directory. Writing them here keeps the copy honest instead of relying on someone
+ * remembering `cp`. The logo is deliberately **not** copied: the package's logo is the Vouch sibling wordmark, and the
+ * test asserts it differs from the site wordmark.
+ */
+if (resolve(OUT) === resolve("apps/console/public/pass")) {
+  const pkgAssets = "packages/pass/assets";
+  mkdirSync(pkgAssets, { recursive: true });
+  for (const name of ["icon.png", "strip.png"]) {
+    copyFileSync(join(OUT, name), join(pkgAssets, name));
+    written.push(`${name} → ${pkgAssets}/${name} (the @paystage/pass copy)`);
+  }
+}
 
 console.log(`render-pass-assets: ${written.length} asset(s) + the source SVG in ${OUT} (state ${STATE}, font ${fontDir})`);
 for (const line of written) console.log(`  ${line}`);

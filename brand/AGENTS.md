@@ -11,7 +11,7 @@ must not, and the trick that makes any name fit.
 |---|---|
 | `name` | product name in prose, titles and the footer |
 | `wordmark` | the text beside the mark |
-| `tint` | the accent, applied as `--vg-brand` — used for the lens, never for the plates |
+| `tint` | the accent, applied as `--vg-brand` — never to the mark's ticket or print |
 | `domain` | the domain the worker is deployed to |
 | `mode` | `demo` · `hosted` · `apple` (`apple` refuses to build without a certificate) |
 | `organizationName` | the legal name behind the pass's "issued by" line |
@@ -29,22 +29,23 @@ say so rather than copying it.
 
 ## What you must not change
 
-- **the mark's geometry**: the ticket — 184 × 100, corner 26, a bite of **r 17** out of each end, the split at x = 92,
-  and the seal 56 wide between them.
-- **the seal is the only accent**: amber active, red revoked, grey expired, paper knockout for one colour.
-- **the state stays in the silhouette**: revoked removes the stub. Do not "tidy" that away — it is why the mark works in
-  greyscale and at 16 px.
-- **the minimum sizes**: vertical lockup 90 px, horizontal 110 px, mark 16 px, seal ≥ 3 px. There is no simplified
-  variant — below the floor the bites go, so you use the mark alone or do not show state.
+- **the mark's geometry**: the ticket — 356 × 208, body inset 5 with radius 28, **4** concave corner scallops
+  (r = 0.085 H), **2** larger mid notches (r = 0.105 H) at each end's mid-height, straight edges between them.
+- **the print**: Lucide `fingerprint-pattern`, all nine paths, 24-grid, stroke 2, 58% of H. It is the only ink.
+- **state lives in the print**: white active, `#B42318` revoked, `#8A8F98` expired, paper knockout for one colour.
+  The ticket is one teal object; do not move state into the silhouette.
+- **no amber in the mark**: gold belongs to the site and the pass face, never the logo.
+- **the three tiers**: full ≥142 px, reduced 64–141 (print stroke thickened), icon <64 (square teal tile, radius 22%,
+  white print at 56%). Do not scale the full drawing below 64 px — that is the sliver.
 - **the honesty lines**: no custody, no tap to pay, not a payment card, and a seller can verify it without trusting
   the holder.
 
 ## Commands
 
 ```bash
-npm run brand:render   # regenerate the mark, lockups, favicons, pass face, OG card
-npm run brand:verify   # geometry, sizes and zero-byte assets — fails loudly
-npm run conformance    # the fixture kit the product already ships
+npm run brand:rebuild   # kit → pass → frames → loop → checks → demo pass re-sign → ledger
+npm run brand:verify    # ratio, scallops/notches, print, no amber, tiers, freshness — fails loudly
+npm run conformance     # the fixture kit the product already ships
 ```
 
 ## The wordmark fitting trick
@@ -60,8 +61,9 @@ That is why the lockup works for "Northwind Ltd" and for a three-letter name wit
 
 ## Before you ship
 
-1. `npm run brand:render` then `npm run brand:verify` — both exit 0.
-2. Look at the mark at **29 px** and at **16 px**. If it reads as a letter or a smudge, stop.
-3. Print it in black on white: the two plates must still separate.
+1. `npm run brand:rebuild` — every step exits 0, including both checks and the demo pass re-sign.
+2. Look at the mark at **240 / 142 / 89 / 64 px** and the tile at **29 / 16 px**. The notches must read at 89; if the
+   ticket is a sliver, use the tile rather than shrinking the full drawing.
+3. Print the ticket in black on white: the print must knock out and the four scallops must still show.
 4. Read the pass aloud to someone who has never seen it. If they cannot say "this permits payment, up to this much,
    until then", the copy is wrong.

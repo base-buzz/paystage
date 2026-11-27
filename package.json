@@ -12,6 +12,8 @@
     "conformance": "node scripts/conformance.mjs",
     "check:live": "node scripts/check-deployed-sha.mjs --remote && node scripts/check-mcp-live.mjs && node scripts/check-receipt-live.mjs && node scripts/check-sanctions-live.mjs",
     "brand:render": "node scripts/brand-kit.mjs",
+    "brand:rebuild": "node scripts/brand-rebuild.mjs",
+    "brand:manifest": "node scripts/record-brand-manifest.mjs",
     "brand:verify": "node scripts/check-brand-assets.mjs"
   },
   "devDependencies": {

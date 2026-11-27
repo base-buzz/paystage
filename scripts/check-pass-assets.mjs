@@ -58,31 +58,36 @@ if (!present.has("pass-face.svg")) {
 }
 
 /**
- * The poster mark the `/m/:serial` page renders. The mark is the **ticket** — a body plate, a stub plate and a seal — and
- * the page paints it inverted over the mandate's tint, so the stub is paper at 62% over that tint. Two properties matter
- * here and neither is cosmetic: the stub must be a **different value** from the body (one silhouette was the shipped
- * defect), and **revoked must have no stub at all**, because that absence is the state.
+ * The poster mark the `/m/:serial` page renders. The mark is the **ticket** — a teal body with four corner scallops,
+ * two mid notches and the Lucide print — and the page paints it with a paper body over the mandate's tint, so the
+ * **print** is the state colour (ink active, red revoked, the spec's grey expired). Three properties matter here and
+ * none is cosmetic: the body must be present, the print must be the nine-path set, and the state must live in the print's
+ * stroke rather than the silhouette (the settled 2026-11-27 spec; the old "revoked tears the stub" rule is gone).
  */
-for (const file of ["mark-active.svg", "mark-revoked.svg", "mark-expired.svg"]) {
+const posterMarks = ["mark-active.svg", "mark-revoked.svg", "mark-expired.svg"];
+const posterBody = new Map();
+for (const file of posterMarks) {
   if (!present.has(file)) {
     problems.push(`${file} is missing — the /m page would draw a different mark from the pass`);
     continue;
   }
   const text = readFileSync(join(DIR, file), "utf8");
-  const revoked = /revoked/.test(file);
-  if (!text.includes('data-plate="body"')) problems.push(`${file} has no body plate — this is not the ticket mark`);
-  if (!text.includes('data-lens="1"')) problems.push(`${file} has no seal — the state has nowhere to live`);
-  if (revoked && text.includes('data-plate="stub"')) {
-    problems.push(`${file} still draws the stub — revoked is a torn-off stub, and that absence is the state`);
+  if (!text.includes('data-body="1"')) problems.push(`${file} has no ticket body — this is not the mark`);
+  if (!text.includes('data-print-set="lucide/fingerprint-pattern"')) {
+    problems.push(`${file} does not carry the Lucide fingerprint-pattern print`);
   }
-  if (!revoked && !text.includes('data-plate="stub"')) {
-    problems.push(`${file} has no stub plate — the ticket is not the mark in this file`);
+  const paths = [...text.matchAll(/<path\b[^>]*data-print="1"/g)].length;
+  if (paths !== 9) problems.push(`${file} has ${paths} print paths, Lucide has 9`);
+  const body = text.match(/data-body="1"[^>]*fill="([^"]+)"/)?.[1] ?? text.match(/fill="([^"]+)"[^>]*data-body="1"/)?.[1];
+  if (body) posterBody.set(file, body.toLowerCase());
+  const print = text.match(/<g\b[^>]*data-print-set="[^"]*"[^>]*stroke="([^"]+)"/)?.[1];
+  const expected = file.includes("revoked") ? "#b42318" : file.includes("expired") ? "#8a8f98" : "#101322";
+  if (print && print.toLowerCase() !== expected) {
+    problems.push(`${file} prints in ${print}, expected ${expected} — the state lives in the print`);
   }
-  const body = text.match(/data-plate="body"[^>]*fill="([^"]+)"/)?.[1];
-  const stub = text.match(/data-plate="stub"[^>]*fill="([^"]+)"/)?.[1];
-  if (body && stub && body.toLowerCase() === stub.toLowerCase()) {
-    problems.push(`${file} draws body and stub in the same fill (${body}) — the mark is one silhouette`);
-  }
+}
+if (new Set(posterBody.values()).size > 1) {
+  problems.push("the three poster marks do not share one body colour — the ticket must not become the state");
 }
 
 if (problems.length > 0) {

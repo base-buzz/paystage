@@ -15,7 +15,7 @@ import { PASS_TOKEN_CSS } from "@/lib/pass-token-css";
  *
  * Order is the pass's own:
  *
- *  1. **the poster**: the mandate's tint, the venn mark top-left, the status chip top-right. This is the pass's
+ *  1. **the poster**: the mandate's tint, the ticket mark top-left, the status chip top-right. This is the pass's
  *     head, not a page header — the site header is hidden for this route in `mandate.css`;
  *  2. **the fields**, in the pass's order and type scale — `$2.00 each purchase · $20.00 per 24h`, then EXPIRES,
  *     then PRINCIPAL;

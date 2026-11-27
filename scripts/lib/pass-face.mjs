@@ -23,7 +23,7 @@
  * and not by the renderer, which is exactly the review-matching this row exists to remove.
  */
 import TOKENS from "../../apps/console/src/lib/pass-tokens.json" with { type: "json" };
-import { MARK_SURFACES, blendHex, ticketGroup } from "./mark.mjs";
+import { MARK_COLOURS, ticketGroup, tileSvg } from "./mark.mjs";
 
 /** The token object itself, exported so a test can prove both runtimes read the same values. */
 export const PASS_TOKENS = TOKENS;
@@ -54,10 +54,6 @@ function stripArtwork(width, height, revoked, withMark = false) {
   const band = revoked ? RED : "#1B4F8A";
   const v = height * 0.62;
   const x = width * 0.5;
-  // The strip is a gradient (accent → ink) and the mark sits at its centre, so the surface is the
-  // gradient's halfway value. An explicit blend keeps plate B deterministic instead of letting an
-  // SVG opacity sample the gradient per pixel.
-  const markSurface = blendHex(accent, INK, 0.5);
   return `
     <defs>
       <linearGradient id="strip" x1="0" y1="0" x2="1" y2="1">
@@ -66,7 +62,7 @@ function stripArtwork(width, height, revoked, withMark = false) {
       </linearGradient>
     </defs>
     <rect x="0" y="0" width="${width}" height="${height}" fill="url(#strip)"/>
-    ${withMark ? ticketMark({ x: x - size / 2, y: (height - size * 0.62) / 2, size, state: revoked ? "REVOKED" : "ACTIVE", plate: PAPER, surface: markSurface }) : ""}
+    ${withMark ? ticketMark({ x: x - size / 2, y: (height - size * 0.62) / 2, size, state: revoked ? "REVOKED" : "ACTIVE" }) : ""}
     <rect x="0" y="${height - Math.max(3, height * 0.05)}" width="${width}" height="${Math.max(3, height * 0.05)}" fill="${band}"/>
   `;
 }
@@ -94,9 +90,9 @@ function stripArtwork(width, height, revoked, withMark = false) {
 /**
  * Per-teammate tint, deterministic from the teammate's name.
  *
- * All seven are AA with white text, and **gold is deliberately absent**: gold belongs to the lens and the state, and a
- * teammate colour that could be mistaken for a state signal is worse than no colour at all. Deterministic so the same
- * teammate looks the same on every device and in every render — a colour that changes per run is decoration.
+ * All seven are AA with white text, and **gold is deliberately absent**: gold belongs to the pass face and the site,
+ * and a teammate colour that could be mistaken for a state signal is worse than no colour at all. Deterministic so the
+ * same teammate looks the same on every device and in every render — a colour that changes per run is decoration.
  */
 export const POSTER_TINTS = TOKENS.posterTints;
 
@@ -168,7 +164,7 @@ export function passFaceSvg(face) {
   <rect x="0" y="0" width="${width}" height="${posterH}" fill="${dead ? MUTED : tint}"/>
   <rect x="0" y="${posterH - Math.max(3, posterH * 0.012)}" width="${width}" height="${Math.max(3, posterH * 0.012)}" fill="${dead ? RED : GOLD}"/>
 
-  ${ticketMark({ x: pad, y: pad - f(1.2), size: f(8.4), state: dead ? (revoked ? "REVOKED" : "EXPIRED") : "ACTIVE", plate: PAPER, surface: dead ? MUTED : tint })}
+  ${ticketMark({ x: pad, y: pad - f(1.2), size: f(8.4), state: dead ? (revoked ? "REVOKED" : "EXPIRED") : "ACTIVE" })}
   ${label(pad + f(10.4), pad + f(3.2), face.brand ?? "vouchguard", f(TYPE.brand), "#FFFFFF", 500, "0.01em")}
   ${label(pad + f(10.4), pad + f(6.2), teammate ? `via ${teammate.platform ?? teammate.name} · ${teammate.category ?? "agent"}` : (face.vouchedBy ?? "vouched by PayStage"), f(TYPE.subBrand), "rgba(255,255,255,0.72)", 500, "0.03em")}
   ${chip}
@@ -226,17 +222,13 @@ export function passLogoSvg({ width, height, wordmark = "PAYSTAGE" }) {
 }
 
 /**
- * The mark: the venn — two plates 62 × 62 at x = 0 and x = 38, radius 15, one value apart, lens = state.
+ * The mark on the pass: the **ticket**, applied inverted.
  *
- * Replaces the keyway seal (2026-11-27). The geometry is in `scripts/lib/mark.mjs`, shared with the brand kit,
- * so the mark on the pass, the verification page and the marketing kit is one drawing. Plate A is 100% and
- * plate B is 62% of it over the surface the mark is painted on (#460); the lens is the only differentiated
- * element (gold active, red revoked, grey expired, paper knockout for one-colour use). There is no compact
- * variant: a mark with a variant is two marks.
- *
- * On the pass the mark is used inverted — paper plates on the tinted poster, strip and icon — because a deep
- * plate on the deep field disappears. That is a colour application, not a second drawing. `surface` is the
- * exact colour behind the mark; plate B is blended against it so the raster is deterministic.
+ * The geometry is in `scripts/lib/mark.mjs`, shared with the brand kit, so the pass, the verification page and the
+ * marketing kit are one drawing. On the pass the ticket is painted as a **paper** body on the tinted poster (a teal
+ * body on a teal tint would disappear), so the ink is the state colour: ink active, red revoked, the spec's grey
+ * expired. The state still lives in the print, never in the silhouette — that is the settled spec, and it is what makes
+ * the three pass marks one drawing with three inks.
  */
 export function ticketMark({
   x = 0,
@@ -244,43 +236,31 @@ export function ticketMark({
   size = 100,
   state = "active",
   paper = PAPER,
-  gold = GOLD,
   ink = INK,
   red = RED,
   body = null,
-  stub = null,
-  surface = MARK_SURFACES.paper,
-  id = null,
+  print = null,
+  strokeScale = 1,
 } = {}) {
-  // The ticket mark carries state in two places: the seal colour and, for revoked, the missing stub. On the pass poster the
-  // plates invert to paper so the mark reads on the tint; the seal keeps its state colour.
   const s = String(state).toUpperCase();
-  const seal = s === "REVOKED" ? red : s === "EXPIRED" ? MUTED : s === "MONO" ? paper : gold;
   const stateKey = s === "REVOKED" ? "revoked" : s === "EXPIRED" ? "expired" : "active";
-  // On the poster the plates invert to paper; the stub is paper at 62% over the tint so the two plates stay distinct —
-  // the same rule the mark uses on paper, applied to the field it actually sits on.
-  const stubColour = stub ?? blendHex(paper, surface, 0.62);
+  const printColour =
+    print ?? (s === "REVOKED" ? red : s === "EXPIRED" ? MARK_COLOURS.print.expired : ink);
   return ticketGroup({
     x,
     y,
     width: Number(size),
     body: body ?? paper,
-    stub: stubColour,
-    seal,
+    print: printColour,
     state: stateKey,
-    surface,
+    strokeScale,
   });
 }
 
-/** The mark alone, for `icon.png` (29×29 in notifications): the venn, no type. */
-export function passIconSvg({ width, height, revoked = false }) {
-  const w = Number(width);
-  const h = Number(height);
-  const stroke = Math.max(1.2, h * 0.11);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-  <rect width="${w}" height="${h}" rx="${h * 0.22}" fill="${revoked ? "#6B7280" : DEEP}"/>
-  ${ticketMark({ x: (w - w * 0.74) / 2, y: (h - w * 0.74 * 0.62) / 2, size: w * 0.74, state: revoked ? "REVOKED" : "ACTIVE", plate: PAPER, surface: revoked ? "#6B7280" : DEEP })}
-</svg>`;
+/** The mark alone, for `icon.png` (29×29 in notifications): the square tile, no type. */
+export function passIconSvg({ width, height }) {
+  const s = Math.min(Number(width), Number(height));
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">${tileSvg({ size: s })}</svg>`;
 }
 
 /**
@@ -370,7 +350,7 @@ export function mandatePageSvg({ width = 750, state = "ACTIVE", limit = "$2.00",
  * Frame 8 (#438 follow-on): **four teammates, four passes, one principal.**
  *
  * The single face argues what a pass *is*; this argues what a household of them looks like — a different tint per
- * teammate, a different cap per job, the same venn and the same "you tap Manage" line. Drawn from the same tokens as
+ * teammate, a different cap per job, the same ticket and the same "you tap Manage" line. Drawn from the same tokens as
  * the face so a reader cannot tell the two apart except by count.
  */
 export function stackedTeammatesSvg({ width = 750, teammates } = {}) {
@@ -398,7 +378,7 @@ export function stackedTeammatesSvg({ width = 750, teammates } = {}) {
       return `<g>
       <rect x="${pad}" y="${y}" width="${cardW}" height="${cardH}" rx="${f(3)}" fill="${tint}"/>
       <rect x="${pad}" y="${y}" width="${cardW}" height="${f(0.9)}" rx="${f(0.4)}" fill="${GOLD}"/>
-      ${ticketMark({ x: pad + f(4.5), y: y + cardH - f(11.5) + f(7.5) * 0.19, size: f(7.5), state: "ACTIVE", plate: PAPER, surface: tint })}
+      ${ticketMark({ x: pad + f(4.5), y: y + cardH - f(11.5) + f(7.5) * 0.19, size: f(7.5), state: "ACTIVE" })}
       ${labelAt(pad + f(14), y + cardH - f(6.6), t.name, f(5.2), "#FFFFFF", 600, "-0.01em")}
       ${labelAt(pad + f(14), y + cardH - f(2.6), `via ${t.platform} · ${t.category}`, f(2.6), "rgba(255,255,255,0.72)", 500, "0.03em")}
       ${labelAt(w - pad - f(4.5), y + cardH - f(6.6), t.limit, f(5.0), "#FFFFFF", 700, "-0.01em", "end")}

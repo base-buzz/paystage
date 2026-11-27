@@ -34,12 +34,12 @@ const STEPS: { title: string; body: string; command?: string }[] = [
   },
   {
     title: "3 · Render the assets",
-    body: "The mark, lockups, favicons, the pass face and the social card are generated from the mark's geometry, not drawn by hand.",
-    command: "npm run brand:render",
+    body: "One command runs the kit, the pass, the storyboard, the loop, both checks and the demo pass re-sign — it aborts at the first failure.",
+    command: "npm run brand:rebuild",
   },
   {
     title: "4 · Verify what came out",
-    body: "The check asserts geometry, not just file names: two plates, the 38.7% overlap, a lens that survives 29 px, and no zero-byte asset.",
+    body: "The check asserts geometry, not just file names: 1.71 ±0.02, exactly four concave scallops and two mid notches counted from the source, the nine-path Lucide print at stroke 2, no amber, and every tier file at 142/89/64 plus the 29/58/87 tiles.",
     command: "npm run brand:verify",
   },
   {
@@ -55,16 +55,17 @@ const STEPS: { title: string; body: string; command?: string }[] = [
 
 const MAY_CHANGE = [
   "the name and the wordmark",
-  "the tint — one accent, used for the lens",
+  "the tint — the accent the site uses; it never enters the mark",
   "the domain and the worker name",
   "the Apple certificate, and whose account it belongs to",
   "the copy, as long as it stays plain and specific",
 ];
 
 const MUST_NOT = [
-  "the mark's geometry — two plates, 62 × 62, radius 15, overlap 24 units (38.7%)",
-  "the lens as the only accent — gold active, red revoked, grey expired, paper knockout for one colour",
-  "the minimum sizes — lockup 90 px, horizontal lockup 110 px, mark 16 px, lens ≥ 3 px",
+  "the mark's geometry — 356 × 208, body inset 5, radius 28, four corner scallops at 0.085 H, two larger mid notches at 0.105 H",
+  "the print — Lucide fingerprint-pattern, all nine paths, 24-grid, stroke 2, 58% of H; state is white active, red revoked, grey expired, paper knockout for one colour",
+  "the three tiers — full ≥142 px, reduced 64–141 with a thickened print stroke, icon <64 px as the square teal tile",
+  "the minimum sizes — lockup 90 px, horizontal lockup 110 px, full ticket 142 px, reduced 64 px",
   "the honesty lines — no custody, no tap to pay, not a payment card",
   "the claim that a seller can verify it without trusting the holder",
 ];
@@ -72,14 +73,15 @@ const MUST_NOT = [
 const SIZES = [
   ["Vertical lockup", "90 px wide", "below that: the mark alone"],
   ["Horizontal lockup", "110 px wide", "below that: the mark alone"],
-  ["The mark", "16 px", "there is no simplified version"],
-  ["The lens (state)", "3 px", "below that: do not show state"],
+  ["Full ticket", "142 px wide", "below that: the reduced drawing"],
+  ["Reduced ticket", "64 px wide", "below that: the square tile"],
+  ["Icon tile", "29 px", "PassKit / favicon; the print still reads"],
 ];
 
 const TESTS = [
   "Three-second test on the pass: a stranger says \"permits payment\", names the limit, names the teammate.",
-  "29 px test: the mark reads as a mark — not a letter (V, B, O, 8) and not a smudge.",
-  "One-colour test: printed black on white, the plates still separate and the lens still reads.",
+  "29 px test: the tile reads as a mark — not a letter (V, B, O, 8) and not a smudge.",
+  "One-colour test: printed black on white, the ticket still reads and the print is a knockout.",
 ];
 
 export default function BrandPage() {

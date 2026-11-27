@@ -1,0 +1,152 @@
+/**
+ * The generated-asset ledger: what was built, from which masters, and when.
+ *
+ * A rebrand used to be five commands in a remembered order. The failure mode that follows is not "the command was
+ * missing" but **a half-run that looks finished**: the kit regenerates, someone forgets the pass, every image on disk
+ * exists, and the wallet keeps the old mark. Content hashes make that unshippable — an asset whose bytes do not match the
+ * ledger, or a master whose bytes no longer match the one the assets were built from, is a red check.
+ *
+ * The ledger lives beside the generated assets (`brand/asset-manifest.json`) and is rewritten by
+ * `scripts/record-brand-manifest.mjs` at the end of `npm run brand:rebuild`.
+ */
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
+
+/** The inputs that can change a pixel. If one of these changes, every generated asset is suspect. */
+export const MASTERS = Object.freeze([
+  "scripts/lib/mark.mjs",
+  "scripts/lib/brand-manifest.mjs",
+  "scripts/lib/pass-face.mjs",
+  "scripts/lib/pass-story.mjs",
+  "scripts/brand-kit.mjs",
+  "scripts/render-pass-assets.mjs",
+  "scripts/render-loop.mjs",
+  "scripts/sign-demo-pass.mjs",
+  "apps/console/src/lib/pass-tokens.json",
+]);
+
+export const MANIFEST_PATH = "brand/asset-manifest.json";
+
+const BRAND_FILE = /^(mark|lockup|favicon|sheet|wordmark|og)-.*\.(svg|png)$/;
+
+/** Every generated file, in a stable order. Missing directories are skipped rather than faked. */
+export function listGeneratedAssets() {
+  const assets = [];
+  const walk = (dir, test) => {
+    if (!existsSync(dir)) return;
+    for (const name of readdirSync(dir).sort()) {
+      const path = join(dir, name);
+      if (statSync(path).isFile() && test(name)) assets.push(path);
+    }
+  };
+  walk("brand", (name) => BRAND_FILE.test(name));
+  walk("brand/loop/stills", () => true);
+  if (existsSync("brand/loop/README.md")) assets.push("brand/loop/README.md");
+  walk("apps/console/public/pass", () => true);
+  walk("packages/pass/assets", () => true);
+  walk("apps/console/public/mocks", () => true);
+  if (existsSync("apps/vouchguard/public/demo/vouch-demo.pkpass")) {
+    assets.push("apps/vouchguard/public/demo/vouch-demo.pkpass");
+  }
+  return assets.sort();
+}
+
+export function sha256File(path) {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+/** The current master hashes, and one combined hash a single asset can record. */
+export function currentMasters() {
+  const hashes = {};
+  for (const path of MASTERS) {
+    if (!existsSync(path)) continue;
+    hashes[path] = sha256File(path);
+  }
+  return hashes;
+}
+
+export function combinedHash(masters) {
+  return createHash("sha256")
+    .update(JSON.stringify(Object.entries(masters).sort(([a], [b]) => a.localeCompare(b))))
+    .digest("hex");
+}
+
+/** Build the ledger that `record-brand-manifest.mjs` writes. */
+export function buildManifest(now = new Date()) {
+  const masters = currentMasters();
+  const masterHash = combinedHash(masters);
+  const assets = {};
+  for (const path of listGeneratedAssets()) {
+    assets[path] = { sha256: sha256File(path), bytes: statSync(path).size, master: masterHash };
+  }
+  return {
+    tool: "scripts/record-brand-manifest.mjs",
+    generatedAt: now.toISOString(),
+    masterHash,
+    masters,
+    assets,
+  };
+}
+
+/**
+ * Read the ledger and compare it with the working tree. Returns named problems, empty when clean.
+ *
+ * Three things are checked, because each has shipped a stale asset before:
+ *   1. every master still has the bytes it had when the assets were generated;
+ *   2. every generated file still has the bytes recorded for it;
+ *   3. no generated file exists that the ledger does not know about.
+ */
+export function freshnessProblems() {
+  if (!existsSync(MANIFEST_PATH)) {
+    return [`${MANIFEST_PATH} is missing — run \`npm run brand:rebuild\` so every asset is hashed`];
+  }
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(MANIFEST_PATH, "utf8"));
+  } catch {
+    return [`${MANIFEST_PATH} is not valid JSON — run \`npm run brand:rebuild\``];
+  }
+  const problems = [];
+  const masters = currentMasters();
+  const recordedMasters = manifest.masters ?? {};
+  for (const path of MASTERS) {
+    if (!(path in masters)) {
+      problems.push(`${path}: master input is missing`);
+      continue;
+    }
+    if (!(path in recordedMasters)) {
+      problems.push(`${path}: not recorded in ${MANIFEST_PATH} — run \`npm run brand:rebuild\``);
+      continue;
+    }
+    if (recordedMasters[path] !== masters[path]) {
+      problems.push(
+        `${path}: changed since the assets were generated — the generated files are older than their master; run \`npm run brand:rebuild\``,
+      );
+    }
+  }
+  const currentMasterHash = combinedHash(masters);
+  if (manifest.masterHash && manifest.masterHash !== currentMasterHash) {
+    problems.push(
+      `${MANIFEST_PATH}: master hash ${manifest.masterHash.slice(0, 12)} does not match the working tree (${currentMasterHash.slice(0, 12)}) — assets are stale`,
+    );
+  }
+  const recorded = manifest.assets ?? {};
+  const present = listGeneratedAssets();
+  for (const path of present) {
+    const entry = recorded[path];
+    if (!entry) {
+      problems.push(`${path}: generated but not in ${MANIFEST_PATH} — run \`npm run brand:rebuild\``);
+      continue;
+    }
+    if (entry.sha256 !== sha256File(path)) {
+      problems.push(`${path}: bytes differ from ${MANIFEST_PATH} — regenerated or edited without recording; run \`npm run brand:rebuild\``);
+    }
+  }
+  for (const path of Object.keys(recorded)) {
+    if (!present.includes(path)) {
+      problems.push(`${path}: recorded in ${MANIFEST_PATH} but missing on disk`);
+    }
+  }
+  return problems;
+}
