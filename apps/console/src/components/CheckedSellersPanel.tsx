@@ -5,6 +5,7 @@ import {
   checkedSellersCoverage,
   checkedSellersGap,
   checkedSellersMethod,
+  checkedSellersMethodSplit,
   checkedSellersSummaries,
   formatCheckedCalls,
   priceMatchLabel,
@@ -54,6 +55,10 @@ export function CheckedSellersPanel({ snapshot = CHECKED_SELLERS }: { snapshot?:
         <strong>Method.</strong> {checkedSellersMethod(snapshot)}
       </p>
 
+      <p>
+        <strong>POST-only resources.</strong> {checkedSellersMethodSplit(snapshot)}
+      </p>
+
       <div
         style={{
           display: "grid",
@@ -95,6 +100,11 @@ export function CheckedSellersPanel({ snapshot = CHECKED_SELLERS }: { snapshot?:
           ))}
         </tbody>
       </table>
+
+      <p className="lp-list-caption">
+        Prices are read from <code>accepts[].amount</code>. A resource whose price shape we do not recognise is{" "}
+        <strong>unknown</strong>, not <code>$0</code>: it is left out of the price comparison rather than counted as free.
+      </p>
 
       {view.withheld > 0 ? (
         <p style={{ margin: "8px 0 0", fontSize: 12.5, lineHeight: 1.55, color: "var(--lp-amber, #b45309)" }}>

@@ -1,6 +1,6 @@
 {
-  "verifiedOn": "2026-11-23",
-  "timeZone": "NZDT",
+  "verifiedOn": "2026-11-27",
+  "timeZone": "UTC",
   "method": "GET, one POST retry on error status",
   "aggregate": {
     "sample": {
@@ -17,16 +17,16 @@
       "getProbes": 100,
       "postRetries": 25,
       "endpointRequests": 125,
-      "indexPages": 50,
-      "totalRequests": 175,
+      "indexPages": 0,
+      "totalRequests": 125,
       "requestCap": 200
     },
     "result": {
-      "correct402": 97,
+      "correct402": 96,
       "no402": 1,
-      "error": 2,
-      "priceCompared": 74,
-      "priceMatched": 74,
+      "error": 3,
+      "priceCompared": 96,
+      "priceMatched": 96,
       "hostsCarryingTopEntries": 33,
       "topEntries": 100,
       "mcpNonResponsivePercent": 26
@@ -35,6 +35,15 @@
       "path": "/mcp",
       "entries": 153,
       "sampled": 2000
+    }
+  },
+  "methodSplit": {
+    "get": 74,
+    "post": 22,
+    "answered": 96,
+    "postOnlyFirstStatus": {
+      "404": 16,
+      "405": 6
     }
   },
   "rowsNamed": 9,
@@ -46,7 +55,7 @@
       "endpointsChecked": 1,
       "endpointsCorrect": 1,
       "challengeCorrect": true,
-      "verifiedOn": "2026-11-23",
+      "verifiedOn": "2026-11-27",
       "method": "GET, one POST retry on error status",
       "priceMatched": null,
       "screening": null
@@ -57,7 +66,7 @@
       "endpointsChecked": 9,
       "endpointsCorrect": 9,
       "challengeCorrect": true,
-      "verifiedOn": "2026-11-23",
+      "verifiedOn": "2026-11-27",
       "method": "GET, one POST retry on error status",
       "priceMatched": null,
       "screening": null
@@ -68,7 +77,7 @@
       "endpointsChecked": 1,
       "endpointsCorrect": 1,
       "challengeCorrect": true,
-      "verifiedOn": "2026-11-23",
+      "verifiedOn": "2026-11-27",
       "method": "GET, one POST retry on error status",
       "priceMatched": null,
       "screening": null
@@ -79,7 +88,7 @@
       "endpointsChecked": 29,
       "endpointsCorrect": 29,
       "challengeCorrect": true,
-      "verifiedOn": "2026-11-23",
+      "verifiedOn": "2026-11-27",
       "method": "GET, one POST retry on error status",
       "priceMatched": null,
       "screening": null
@@ -90,7 +99,7 @@
       "endpointsChecked": 1,
       "endpointsCorrect": 1,
       "challengeCorrect": true,
-      "verifiedOn": "2026-11-23",
+      "verifiedOn": "2026-11-27",
       "method": "GET, one POST retry on error status",
       "priceMatched": null,
       "screening": null
@@ -101,7 +110,7 @@
       "endpointsChecked": 6,
       "endpointsCorrect": 6,
       "challengeCorrect": true,
-      "verifiedOn": "2026-11-23",
+      "verifiedOn": "2026-11-27",
       "method": "GET, one POST retry on error status",
       "priceMatched": null,
       "screening": null
@@ -112,7 +121,7 @@
       "endpointsChecked": 12,
       "endpointsCorrect": 12,
       "challengeCorrect": true,
-      "verifiedOn": "2026-11-23",
+      "verifiedOn": "2026-11-27",
       "method": "GET, one POST retry on error status",
       "priceMatched": null,
       "screening": null
@@ -123,7 +132,7 @@
       "endpointsChecked": 3,
       "endpointsCorrect": 3,
       "challengeCorrect": true,
-      "verifiedOn": "2026-11-23",
+      "verifiedOn": "2026-11-27",
       "method": "GET, one POST retry on error status",
       "priceMatched": null,
       "screening": null
@@ -134,7 +143,7 @@
       "endpointsChecked": 1,
       "endpointsCorrect": 1,
       "challengeCorrect": true,
-      "verifiedOn": "2026-11-23",
+      "verifiedOn": "2026-11-27",
       "method": "GET, one POST retry on error status",
       "priceMatched": null,
       "screening": null

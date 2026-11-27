@@ -11,6 +11,7 @@ import {
   CHECKED_SELLERS,
   checkedSellerView,
   checkedSellersMethod,
+  checkedSellersMethodSplit,
   hasVerification,
   type CheckedSellerRow,
   type CheckedSellersSnapshot,
@@ -78,15 +79,55 @@ function render(value: CheckedSellersSnapshot): string {
 describe("the page names its verification date and method", () => {
   it("renders the date, the method paragraph and the honest limit from the record", () => {
     const html = render(CHECKED_SELLERS);
-    expect(html).toContain("2026-11-23");
-    expect(html).toContain("NZDT");
+    expect(html).toContain("2026-11-27");
+    expect(html).toContain("(UTC)");
     expect(html).toContain("Method.");
     expect(html).toContain("50 pages × 100 entries = 5,000");
-    expect(html).toContain("175 requests in all, inside the 200 cap");
+    expect(html).toContain("125 requests in all, inside the 200 cap");
     expect(html).toContain("33 hosts carry all 100 entries");
     expect(html).toContain("about 26% of listed MCP servers never answer");
     expect(html).toContain("differentiates at the top and says nothing about the tail");
     expect(html).toContain("not a ranking of quality and not an endorsement");
+  });
+
+  it("publishes the POST-only split and its GET statuses from the record, not typed counts (#466)", () => {
+    const html = render(CHECKED_SELLERS);
+    const split = CHECKED_SELLERS.methodSplit!;
+    const statuses = split.postOnlyFirstStatus;
+    expect(html).toContain(
+      `${split.post} of ${split.answered} resources answer only on POST — ${statuses["405"]} with 405 and ${statuses["404"]} with 404 for a GET; either way a GET-only client gets no price.`,
+    );
+    // The real count the 2026-11-27 census supports: 22 of the 96 that answered a 402, 6 at 405 and 16 at 404.
+    expect(split).toEqual({ get: 74, post: 22, answered: 96, postOnlyFirstStatus: { "404": 16, "405": 6 } });
+    expect(html).toContain("22 of 96 resources answer only on POST");
+  });
+
+  it("a changed method split changes the sentence, and an unrecorded split is not invented", () => {
+    const changed = snapshot();
+    changed.methodSplit = { get: 80, post: 7, answered: 87, postOnlyFirstStatus: { "405": 7 } };
+    expect(checkedSellersMethodSplit(changed)).toBe(
+      "7 of 87 resources answer only on POST — 7 with 405 for a GET; either way a GET-only client gets no price.",
+    );
+    changed.methodSplit = null;
+    expect(checkedSellersMethodSplit(changed)).toContain("was not recorded");
+    expect(render(changed)).not.toContain("answer only on POST");
+  });
+
+  it("renders a host whose price is unknown rather than omitting the row (§466)", () => {
+    const unknownPrice: CheckedSellerRow = { ...baseRow, host: "no-price.example", priceMatched: null };
+    const html = render(snapshot([unknownPrice]));
+    expect(html).toContain("no-price.example");
+    expect(html).toContain("unknown — not recorded per host");
+    expect(html).not.toContain("no-price.example</td><td>0</td>");
+  });
+
+  it("states the price's JSON path and that an unknown shape is not $0", () => {
+    const html = render(CHECKED_SELLERS);
+    expect(html).toContain("accepts[].amount");
+    expect(html).toContain("unknown");
+    expect(html).toContain("not");
+    expect(html).toContain("$0");
+    expect(html).toContain("left out of the price comparison");
   });
 
   it("builds the method paragraph from the record's figures, not from typed numbers", () => {
@@ -105,7 +146,7 @@ describe("the page names its verification date and method", () => {
     changed.aggregate.result.correct402 = 42;
     const html = render(changed);
     expect(html).toContain("42 of 100 endpoints answered a correct 402");
-    expect(html).not.toContain("97 of 100 endpoints answered a correct 402");
+    expect(html).not.toContain("96 of 100 endpoints answered a correct 402");
   });
 
   it("does not present the per-row price and screening gaps as facts", () => {
@@ -168,8 +209,8 @@ describe("the committed record carries a date and a method on every row", () => 
   });
 
   it("is the dated probe run, not the build date", () => {
-    expect(CHECKED_SELLERS.verifiedOn).toBe("2026-11-23");
-    expect(CHECKED_SELLERS.timeZone).toBe("NZDT");
+    expect(CHECKED_SELLERS.verifiedOn).toBe("2026-11-27");
+    expect(CHECKED_SELLERS.timeZone).toBe("UTC");
   });
 });
 

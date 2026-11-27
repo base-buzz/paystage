@@ -71,6 +71,18 @@ export interface CheckedSellersSnapshot {
   };
   rowsNamed: number;
   entriesCoveredByName: number;
+  /**
+   * The method that produced each 402, from the probe's own `method_that_402s` counts (#466): `post` resources
+   * answer only to POST, `answered` is the number that answered a 402 on either method, and `postOnlyFirstStatus`
+   * counts the HTTP status a GET gets for those POST-only resources. Null when the source run did not record the
+   * split; the page then says so rather than inventing a count.
+   */
+  methodSplit: {
+    get: number;
+    post: number;
+    answered: number;
+    postOnlyFirstStatus: Record<string, number>;
+  } | null;
   rows: CheckedSellerRow[];
 }
 
@@ -118,6 +130,36 @@ export function checkedSellersMethod(snapshot: CheckedSellersSnapshot): string {
   return `On ${snapshot.verifiedOn} (${snapshot.timeZone}) a read-only run sampled the Bazaar discovery index — ${formatCount(sample.pages)} pages × ${formatCount(sample.perPage)} entries = ${formatCount(sample.entries)} of the catalogue's ${formatCount(sample.catalogueEntries)} — ranked that sample by ${aggregate.rankingField} and took the top ${formatCount(aggregate.topEntries)} (${formatCount(aggregate.callsMax)} calls down to ${formatCount(aggregate.callsMin)}). Each endpoint got one GET; the ${formatCount(probes.postRetries)} that returned an error status were retried once with POST (${formatCount(probes.totalRequests)} requests in all, inside the ${formatCount(probes.requestCap)} cap). A row counts as a correct challenge only when the reply is a 402 whose payment-required header parses and names a payTo with a numeric amount; a price comparison matched when that amount equalled the price Bazaar advertised. This checks the top of the catalogue, not the market: ${formatCount(result.hostsCarryingTopEntries)} hosts carry all ${formatCount(result.topEntries)} entries, and a separate MCP liveness probe found about ${formatCount(result.mcpNonResponsivePercent)}% of listed MCP servers never answer at all, so it differentiates at the top and says nothing about the tail. **What separates the hosts that carry those entries: nothing we can measure.** A follow-up on 2026-11-23 compared the top quartile against the rest on price, schema, method count and latency and found no separation (price p=0.13; latency +16.5 ms against a 167 ms same-host control spread, p=0.87), so the concentration is real and its cause is not in the metadata.`;
 }
 
+/**
+ * The method split in one sentence (#466), from the probe's per-resource `method_that_402s` counts.
+ *
+ * This is the fact a client needs before it follows the list: a GET-only client cannot fetch a resource that only
+ * answers POST, so the published count of those resources is part of the table's meaning, not a footnote. Both
+ * numbers come from the record; nothing here is typed. A run that did not record the split renders as not recorded.
+ */
+export function checkedSellersMethodSplit(snapshot: CheckedSellersSnapshot): string {
+  const split = snapshot.methodSplit;
+  if (
+    !split ||
+    !Number.isFinite(split.post) ||
+    !Number.isFinite(split.answered) ||
+    split.answered <= 0 ||
+    split.post < 0 ||
+    split.post > split.answered
+  ) {
+    return "The method split for this run was not recorded, so the page does not publish it.";
+  }
+  const statuses = Object.entries(split.postOnlyFirstStatus ?? {})
+    .filter(([, count]) => Number.isFinite(count) && count > 0)
+    .sort((left, right) => left[1] - right[1] || left[0].localeCompare(right[0]));
+  const counted = statuses.map(([status, count]) => `${formatCount(count)} with ${status}`);
+  const statusPhrase =
+    counted.length === 0
+      ? ""
+      : ` — ${counted.length === 1 ? counted[0] : `${counted.slice(0, -1).join(", ")} and ${counted.at(-1)}`} for a GET`;
+  return `${formatCount(split.post)} of ${formatCount(split.answered)} resources answer only on POST${statusPhrase}; either way a GET-only client gets no price.`;
+}
+
 /** The run-level summaries above the table; each is built from the record, so a changed record changes the sentence. */
 export function checkedSellersSummaries(snapshot: CheckedSellersSnapshot): string[] {
   const { aggregate } = snapshot;
@@ -162,7 +204,8 @@ export function challengeLabel(row: CheckedSellerRow): string {
 }
 
 export function priceMatchLabel(row: CheckedSellerRow): string {
-  if (row.priceMatched === null) return "not recorded per host";
+  /** An unrecognised price shape is unknown, not `$0` and not a row to drop: the row stays, the price comparison does not. */
+  if (row.priceMatched === null) return "unknown — not recorded per host";
   return row.priceMatched ? "matched the advertisement" : "did not match the advertisement";
 }
 

@@ -143,6 +143,9 @@ function finalize(snapshot) {
     timeZone: snapshot.timeZone,
     method: snapshot.method,
     aggregate: snapshot.aggregate,
+    /** The published method split (#466), derived from the probe's own per-resource method counts. Null when the
+     * source run did not record it, in which case the page says it is not recorded rather than inventing a count. */
+    methodSplit: snapshot.methodSplit ?? null,
     rowsNamed: rows.length,
     entriesCoveredByName: rows.reduce((total, row) => total + row.endpointsChecked, 0),
     rows,
@@ -165,6 +168,40 @@ function fromProbeJson(path) {
   const named = Number(data.rowsNamed ?? hosts.length);
   if (!Number.isFinite(named) || named <= 0 || named > hosts.length) {
     fail(1, `checked-sellers: ${path} has rowsNamed=${data.rowsNamed} but ${hosts.length} host rows — refusing to invent a table size`);
+  }
+
+  const methodThat402s = data.aggregate?.result?.dialect?.methodThat402s ?? null;
+  /** The GET status a POST-only resource answers, counted from the probe's own per-resource firstStatus (#466). */
+  const postOnlyFirstStatus = {};
+  for (const row of Array.isArray(data.rows) ? data.rows : []) {
+    if (row?.status === 402 && row?.method === "POST" && row?.firstStatus != null) {
+      const status = String(row.firstStatus);
+      postOnlyFirstStatus[status] = (postOnlyFirstStatus[status] ?? 0) + 1;
+    }
+  }
+  const methodSplit =
+    methodThat402s && Number.isFinite(methodThat402s.GET) && Number.isFinite(methodThat402s.POST)
+      ? {
+          get: methodThat402s.GET,
+          post: methodThat402s.POST,
+          answered: methodThat402s.GET + methodThat402s.POST,
+          postOnlyFirstStatus,
+        }
+      : null;
+  if (
+    methodSplit &&
+    Object.values(methodSplit.postOnlyFirstStatus).reduce((total, n) => total + n, 0) !== methodSplit.post
+  ) {
+    fail(
+      1,
+      `checked-sellers: ${path} records ${methodSplit.post} POST-only resources but the firstStatus counts do not add up to that — refusing to publish a status split that disagrees with the method count`,
+    );
+  }
+  if (methodSplit && methodSplit.answered !== data.aggregate?.result?.correct402) {
+    fail(
+      1,
+      `checked-sellers: ${path} says ${methodSplit.answered} resources answered a 402 by GET or POST but ${data.aggregate?.result?.correct402} correct — refusing to publish a method split that disagrees with the count`,
+    );
   }
 
   const snapshot = {
@@ -190,6 +227,7 @@ function fromProbeJson(path) {
       },
       tail: data.aggregate?.tail,
     },
+    methodSplit,
     rows: [...hosts]
       .sort((left, right) => right.calls30d - left.calls30d || left.host.localeCompare(right.host))
       .slice(0, named),

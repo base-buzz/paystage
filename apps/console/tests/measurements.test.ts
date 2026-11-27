@@ -114,8 +114,13 @@ describe("the checker fails where the registry would rot", () => {
       value.entries = value.entries.filter((e) => e.name !== "checked-sellers.result.correct402");
     });
     const result = run(file);
+    const rendered = JSON.parse(
+      readFileSync(join(ROOT, "apps/console/src/lib/checked-sellers.generated.json"), "utf8"),
+    ).aggregate.result.correct402;
     expect(result.status).toBe(1);
-    expect(result.stdout).toContain("page apps/console/src/lib/checked-sellers.ts renders aggregate.result.correct402 = 97");
+    expect(result.stdout).toContain(
+      `page apps/console/src/lib/checked-sellers.ts renders aggregate.result.correct402 = ${rendered}`,
+    );
     expect(result.stdout).toContain("has no entry for it");
   });
 
