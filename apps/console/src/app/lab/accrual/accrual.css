@@ -1,0 +1,210 @@
+/* `/lab/accrual` (#474) — scoped so landing.css stays the shared surface. */
+
+.accrual-page {
+  min-height: 100vh;
+}
+
+.accrual-wrap {
+  max-width: 1180px;
+  padding-top: 104px;
+  padding-bottom: 72px;
+}
+
+.accrual-hero {
+  max-width: 960px;
+  margin-bottom: 28px;
+}
+
+.accrual-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-mint);
+}
+
+.accrual-eyebrow::before {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.accrual-hero h1 {
+  margin: 0 0 18px;
+  font-size: clamp(30px, 4.6vw, 50px);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  max-width: 24ch;
+}
+
+.accrual-lede {
+  margin: 0 0 14px;
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--lp-dim);
+  max-width: 88ch;
+}
+
+.accrual-lede--hero {
+  color: var(--lp-text);
+  font-size: 16.5px;
+}
+
+.accrual-lede code,
+.accrual-note code,
+.accrual-definition code,
+.accrual-link code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 0.92em;
+  color: var(--lp-mint);
+}
+
+.accrual-link {
+  margin: 18px 0 0;
+  font-size: 15px;
+}
+
+.accrual-link a {
+  color: var(--lp-mint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.accrual-definition {
+  margin: 22px 0;
+  padding: 16px 18px;
+  border-left: 2px solid var(--lp-mint);
+  background: color-mix(in srgb, var(--lp-mint) 7%, transparent);
+  color: var(--lp-text);
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 96ch;
+}
+
+.accrual-facts {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin: 24px 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--lp-line);
+}
+
+.accrual-facts dt {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-dim);
+}
+
+.accrual-facts dd {
+  margin: 6px 0 0;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-text);
+}
+
+.accrual-panel {
+  margin-top: 34px;
+  padding-top: 18px;
+  border-top: 1px solid var(--lp-line);
+}
+
+.accrual-panel h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+
+.accrual-note {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--lp-dim);
+  max-width: 100ch;
+}
+
+.accrual-empty {
+  color: var(--lp-dim);
+  font-size: 14px;
+}
+
+.accrual-table-scroll {
+  overflow-x: auto;
+}
+
+.accrual-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.accrual-table th,
+.accrual-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--lp-line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.accrual-table th {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-dim);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.accrual-table code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  color: var(--lp-text);
+  word-break: break-all;
+}
+
+.accrual-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.accrual-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--lp-dim);
+}
+
+.accrual-window {
+  font-size: 11px;
+  color: var(--lp-dim);
+  white-space: nowrap;
+}
+
+.accrual-hash {
+  display: block;
+  max-width: 22ch;
+  color: var(--lp-dim) !important;
+  word-break: break-all;
+}
+
+@media (max-width: 900px) {
+  .accrual-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .accrual-wrap {
+    padding-top: 84px;
+  }
+
+  .accrual-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -63,6 +63,11 @@ export function RefusalsView({ view, truncated = false }: { view: RefusalView; t
         <code>not recorded</code>.
       </p>
 
+      <p className="refusals-export">
+        Finance view: <a href="/lab/accrual">the accrual export</a> groups settled payments by vendor,
+        cost centre and month, in integer micro-USDC, with the hash of the decisions behind each row.
+      </p>
+
       {truncated ? (
         <p className="refusals-caveat">
           This read hit its 5,000-row cap, so the totals below are a floor, not the full window. The page has no

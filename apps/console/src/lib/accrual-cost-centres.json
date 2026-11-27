@@ -1,0 +1,5 @@
+{
+  "_readme": "Finance edits this file. Keys are pay_to addresses (lower-case), values are the accounting cost centre for that vendor. A vendor missing here is exported as `unassigned`; the export never infers a cost centre from a payment. Changing this file changes the /lab/accrual page and its CSV/JSON after the console is rebuilt and deployed.",
+  "default": "unassigned",
+  "vendors": {}
+}
