@@ -15,6 +15,8 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 
+import { MARK_COLOURS } from "./lib/mark.mjs";
+
 const DIR = resolve(process.argv[2] ?? "apps/console/public/pass");
 
 /** Apple's storeCard table, as used by `render-pass-assets.mjs`. */
@@ -81,7 +83,16 @@ for (const file of posterMarks) {
   const body = text.match(/data-body="1"[^>]*fill="([^"]+)"/)?.[1] ?? text.match(/fill="([^"]+)"[^>]*data-body="1"/)?.[1];
   if (body) posterBody.set(file, body.toLowerCase());
   const print = text.match(/<g\b[^>]*data-print-set="[^"]*"[^>]*stroke="([^"]+)"/)?.[1];
-  const expected = file.includes("revoked") ? "#b42318" : file.includes("expired") ? "#8a8f98" : "#101322";
+  /**
+   * The poster palette lives in `scripts/lib/mark.mjs` — three files used to spell it out independently, which is how the on-body and
+   * on-paper tones drifted apart in the first place (#487). One source, read here.
+   */
+  const expected = (file.includes("revoked")
+    ? MARK_COLOURS.printOnPaper.revoked
+    : file.includes("expired")
+      ? MARK_COLOURS.printOnPaper.expired
+      : MARK_COLOURS.printOnPaper.active
+  ).toLowerCase();
   if (print && print.toLowerCase() !== expected) {
     problems.push(`${file} prints in ${print}, expected ${expected} — the state lives in the print`);
   }

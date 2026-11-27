@@ -103,6 +103,19 @@ const PASS_SVGS = ["pass-face.svg", "mark-active.svg", "mark-revoked.svg", "mark
 /** Frames that bake in the face or the mark; each can go stale alone. */
 const FRAME_PATTERN = /^(frame-(pass|stack|mandate|face|setup)|story[0-9]-).*\.png$/;
 
+/** WCAG 2.x relative luminance of an `#rrggbb` string. */
+function wcagLuminance(hex) {
+  const channel = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const linear = channel.map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+}
+
+/** WCAG contrast ratio, always >= 1. */
+function contrastRatio(a, b) {
+  const [hi, lo] = [wcagLuminance(a), wcagLuminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 const problems = [];
 
 if (!existsSync(BRAND)) {
@@ -401,10 +414,16 @@ function isAmberHex(hex) {
 }
 
 /* 7 · the pass poster marks are the same ticket, with the state in the print */
+/**
+ * The **poster** marks (pass face, print PDFs) sit on paper, where the dark tones read and the light on-body tones would vanish —
+ * so they carry their own palette. Keeping the two surfaces separate is what let `#B42318` stay correct on paper while the on-body
+ * tile stopped using it at 1.08:1 (#487).
+ */
+const POSTER_PRINT = MARK_COLOURS.printOnPaper;
 for (const [file, state] of [
-  ["mark-active.svg", "#101322"],
-  ["mark-revoked.svg", MARK_COLOURS.print.revoked],
-  ["mark-expired.svg", MARK_COLOURS.print.expired],
+  ["mark-active.svg", POSTER_PRINT.active],
+  ["mark-revoked.svg", POSTER_PRINT.revoked],
+  ["mark-expired.svg", POSTER_PRINT.expired],
 ]) {
   const path = join(PASS, file);
   if (!existsSync(path)) continue;
@@ -414,6 +433,26 @@ for (const [file, state] of [
   if (!svg.includes(`stroke="${state}"`)) fail(path, `the print is not ${state} — that is the state colour`);
   const circles = [...svg.matchAll(/<circle\b[^>]*>/g)].filter((m) => attr(m[0], "data-scallop") !== null).length;
   if (circles !== MARK.scallop.count) fail(path, `has ${circles} scallop(s), expected ${MARK.scallop.count}`);
+}
+
+/* 7b · the on-body print must be visible against the body, per state (#487) */
+{
+  const bodyHex = MARK_COLOURS.body.toLowerCase();
+  const bodyLum = wcagLuminance(bodyHex);
+  for (const [state, hex] of Object.entries(MARK_COLOURS.print)) {
+    const ratio = contrastRatio(hex, bodyHex);
+    if (ratio < 3) {
+      problems.push(
+        `mark print "${state}" ${hex} is ${ratio.toFixed(2)}:1 against the body ${MARK_COLOURS.body} — under the 3:1 floor for ` +
+          "graphics, so that state is invisible on the ticket (this is the defect #487 was filed for)",
+      );
+    }
+  }
+  console.log(
+    `brand-assets: on-body print contrast — ${Object.entries(MARK_COLOURS.print)
+      .map(([state, hex]) => `${state} ${hex} ${contrastRatio(hex, bodyHex).toFixed(2)}:1`)
+      .join(" · ")}`,
+  );
 }
 
 /* 8 · freshness: every generated asset matches the ledger, and the masters have not moved under it */

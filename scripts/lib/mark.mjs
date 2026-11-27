@@ -6,9 +6,14 @@
  *
  * The ticket is the coloured object; the **print is the ink**, and therefore the state:
  *
- *   active   #FFFFFF white
- *   revoked  #B42318 red
- *   expired  #8A8F98 grey
+ *   active   #FFFFFF white      7.09:1 on the body
+ *   revoked  #FFB4AB light red  4.18:1 on the body
+ *   expired  #C7CBD1 light grey 4.35:1 on the body
+ *
+ * **The dot tones are for on-body use; the paper tones above are on-body.** `#B42318` at 1.08:1 and `#8A8F98` at 2.18:1 were the
+ * first choice and are invisible on teal — the mark carried its state in a colour nobody could see for two of three states (#487).
+ * The dark tones remain correct on paper (the pass face, print on white), which is why both live here with their surface named
+ * rather than one replacing the other.
  *   one-colour  paper knockout on ink
  *
  * The silhouette is deliberately **not** the state any more — the settled spec moved state into the print. What the
@@ -90,7 +95,9 @@ export const MARK_COLOURS = Object.freeze({
   body: "#1A5F7A",
   paper: "#FFFFFF",
   ink: "#101322",
-  print: Object.freeze({ active: "#FFFFFF", revoked: "#B42318", expired: "#8A8F98" }),
+  print: Object.freeze({ active: "#FFFFFF", revoked: "#FFB4AB", expired: "#C7CBD1" }),
+  /** On paper (white), where the dark tones read and the light ones vanish. */
+  printOnPaper: Object.freeze({ active: "#101322", revoked: "#B42318", expired: "#6B7280" }),
   mono: Object.freeze({ body: "#101322", print: "#FFFFFF" }),
 });
 

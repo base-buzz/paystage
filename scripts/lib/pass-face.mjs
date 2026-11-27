@@ -257,8 +257,12 @@ export function ticketMark({
 } = {}) {
   const s = String(state).toUpperCase();
   const stateKey = s === "REVOKED" ? "revoked" : s === "EXPIRED" ? "expired" : "active";
+  /**
+   * Poster marks sit on paper, so they use the **paper** tones: the dark red and a mid grey read there, while the light on-body
+   * tones would vanish (#487). One palette per surface, chosen by what the ink sits on rather than by state alone.
+   */
   const printColour =
-    print ?? (s === "REVOKED" ? red : s === "EXPIRED" ? MARK_COLOURS.print.expired : ink);
+    print ?? (s === "REVOKED" ? red : s === "EXPIRED" ? MARK_COLOURS.printOnPaper.expired : ink);
   return ticketGroup({
     x,
     y,
