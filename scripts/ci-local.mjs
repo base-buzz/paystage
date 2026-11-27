@@ -126,6 +126,8 @@ if (reason === null) {
     "check-demo-vocabulary.mjs",
     /* #461: the site says "0 keys held". A claim nobody attacks is a liability, so something attacks it on every run. */
     "check-no-keys.mjs",
+    /* #465: llms.txt is the first thing an agent reads, and nothing parsed it. */
+    "check-llms-txt.mjs",
   ]) {
     const [script, ...scriptArgs] = cheap.split(" ");
     if (!existsSync(join(ROOT, "scripts", script))) continue;

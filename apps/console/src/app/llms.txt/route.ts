@@ -151,6 +151,19 @@ PayStage 是面向 AI 智能体（AI agent）的 **x402 支付安全层**：在�
 关键词（供检索）：x402、支付安全、支付前校验、智能体支付、agent 支付拦截、盗币地址检查、钱包授权检查、
 消费限额、MCP 工具、USDC、Base。
 
+## Pages on this site
+
+An agent that reads only the API misses the pages a person reads. These are canonical, and each answers one question:
+
+- https://paystage.xyz/verify — check a pass or mandate by serial; answers active, revoked, expired or unknown
+- https://paystage.xyz/glossary — the AP2 vocabulary (mandate, trusted surface, verifier), with attribution
+- https://paystage.xyz/lab — the seller categories, and our caveat that these are endpoints, not categories
+- https://paystage.xyz/mocks — the storyboards: the problem, the caps arriving, the month after
+- https://paystage.xyz/state-of-x402 — the measured state of the ecosystem, with a source per cell
+- https://paystage.xyz/lists — where we appear, and where we are not listed
+- https://paystage.xyz/try — the five-minute first call
+- https://paystage.xyz/llms-full.txt — this file with the full text instead of the map
+
 ## Links
 
 - Website: https://paystage.xyz
