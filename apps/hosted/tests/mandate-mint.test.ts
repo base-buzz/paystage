@@ -22,7 +22,14 @@ import { MANDATE_SERIAL_RE } from "../src/routes/mandate.js";
  * route verifies against its public half. No fixture, no secret, no network, no database.
  */
 
-const NOW = new Date("2026-11-26T12:00:00.000Z");
+/**
+ * The clock, taken from the real one.
+ *
+ * This used to be a hardcoded `2026-11-26T12:00Z`, and the default expiry was `NOW + 24h` — so the mint tests passed for
+ * exactly one day and then failed with `expected 'expired' to be 'active'`, which reads like a mint bug and is a calendar.
+ * A fixture that expires is a test that lies about a regression. Offsets stay relative to this, so nothing else changes.
+ */
+const NOW = new Date();
 const KID = "test-mint-key";
 /** A literal test token. Not a secret and not valid anywhere: the deployment value is a Wrangler secret. */
 const TOKEN = "mint-token-for-tests-only";
