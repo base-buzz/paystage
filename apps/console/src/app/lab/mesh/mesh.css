@@ -1,0 +1,750 @@
+/* `/lab/mesh` (#482) — scoped so landing.css stays the shared surface. */
+
+.mesh-wrap {
+  padding-top: 104px;
+  padding-bottom: 64px;
+}
+
+.mesh-hero {
+  max-width: 980px;
+  margin-bottom: 34px;
+}
+
+.mesh-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-mint);
+}
+
+.mesh-eyebrow::before {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.mesh-hero h1 {
+  margin: 0 0 18px;
+  font-size: clamp(32px, 4.8vw, 54px);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  font-weight: 600;
+  max-width: 20ch;
+}
+
+.mesh-lede {
+  margin: 0 0 14px;
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--lp-dim);
+  max-width: 86ch;
+}
+
+.mesh-lede--hero {
+  color: var(--lp-text);
+  font-size: 16.5px;
+}
+
+.mesh-lede code,
+.mesh-panel code,
+.mesh-table code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 0.92em;
+  color: var(--lp-mint);
+}
+
+.mesh-lede a,
+.mesh-panel a,
+.mesh-footer a {
+  color: var(--lp-mint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.mesh-hero-facts {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin: 24px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--lp-line);
+}
+
+.mesh-hero-facts div {
+  min-width: 0;
+}
+
+.mesh-hero-facts dt {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.mesh-hero-facts dd {
+  margin: 4px 0 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lp-text);
+}
+
+.mesh-panel {
+  margin-top: 22px;
+  padding: 24px;
+  border: 1px solid var(--lp-line);
+  border-radius: 16px;
+  background:
+    radial-gradient(700px 220px at 12% 0%, color-mix(in oklab, var(--lp-mint) 5%, transparent), transparent 68%),
+    var(--lp-panel);
+}
+
+.mesh-panel--refusal {
+  border-color: color-mix(in oklab, var(--lp-red) 34%, var(--lp-line));
+  background:
+    radial-gradient(700px 220px at 12% 0%, color-mix(in oklab, var(--lp-red) 7%, transparent), transparent 68%),
+    var(--lp-panel);
+}
+
+.mesh-panel--provenance {
+  border-color: color-mix(in oklab, var(--lp-mint) 36%, var(--lp-line));
+  background:
+    radial-gradient(900px 280px at 20% 0%, color-mix(in oklab, var(--lp-mint) 9%, transparent), transparent 70%),
+    var(--lp-panel);
+}
+
+.mesh-panel-head {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) minmax(220px, 0.55fr);
+  gap: 14px;
+  align-items: start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--lp-line-soft);
+}
+
+.mesh-panel-n {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  color: var(--lp-mint);
+  padding-top: 3px;
+}
+
+.mesh-panel-heading h2 {
+  margin: 0;
+  font-size: clamp(21px, 2.4vw, 28px);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.mesh-panel-question {
+  margin: 5px 0 0;
+  font-size: 14px;
+  color: var(--lp-dim);
+}
+
+.mesh-panel-meta {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--lp-faint);
+  text-align: right;
+}
+
+.mesh-panel-body {
+  padding-top: 18px;
+}
+
+.mesh-proof {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 22px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--lp-line-soft);
+}
+
+.mesh-proof dt {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.mesh-proof dd {
+  margin: 5px 0 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--lp-dim);
+}
+
+.mesh-panel > .mesh-proof > div:first-child dt {
+  color: var(--lp-mint);
+}
+
+.mesh-panel--refusal > .mesh-proof > div:first-child dt {
+  color: var(--lp-red);
+}
+
+/* ---------- mesh diagram ---------- */
+
+.mesh-figure {
+  margin: 18px 0 8px;
+  border: 1px solid var(--lp-line-soft);
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--lp-bg) 55%, transparent);
+  overflow: hidden;
+}
+
+.mesh-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 420px;
+}
+
+.mesh-svg text {
+  fill: var(--lp-text);
+}
+
+.mesh-svg-col {
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--lp-dim) !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mesh-svg-node {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.mesh-svg-sub {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 10.5px;
+  fill: var(--lp-faint) !important;
+}
+
+.mesh-figcaption {
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--lp-line-soft);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--lp-faint);
+}
+
+.mesh-figcaption code {
+  color: var(--lp-mint);
+}
+
+/* ---------- sample table ---------- */
+
+.mesh-sample-head {
+  margin-top: 24px;
+}
+
+.mesh-sample-head h3 {
+  margin: 0 0 5px;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.mesh-sample-head p {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--lp-dim);
+  max-width: 90ch;
+}
+
+.mesh-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--lp-line-soft);
+  border-radius: 10px;
+}
+
+.mesh-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.mesh-table th,
+.mesh-table td {
+  padding: 9px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--lp-line-soft);
+}
+
+.mesh-table th {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+  font-weight: 600;
+}
+
+.mesh-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.mesh-table td:nth-child(4) {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+.mesh-tx-link {
+  white-space: nowrap;
+}
+
+.mesh-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- heatmap ---------- */
+
+.mesh-heat-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-top: 16px;
+}
+
+.mesh-heat {
+  display: grid;
+  gap: 2px;
+  min-width: 900px;
+}
+
+.mesh-heat-corner,
+.mesh-heat-hour,
+.mesh-heat-label,
+.mesh-heat-cell {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 10.5px;
+  line-height: 1;
+}
+
+.mesh-heat-corner,
+.mesh-heat-hour {
+  color: var(--lp-faint);
+  padding: 4px 3px;
+  text-align: center;
+}
+
+.mesh-heat-corner {
+  text-align: left;
+  padding-left: 8px;
+}
+
+.mesh-heat-label {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: var(--lp-dim);
+  white-space: nowrap;
+}
+
+.mesh-heat-label--others {
+  color: var(--lp-mint);
+  font-weight: 600;
+}
+
+.mesh-heat-label--total {
+  color: var(--lp-faint);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+.mesh-heat-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  border-radius: 3px;
+  color: var(--lp-text);
+  font-size: 9.5px;
+}
+
+.mesh-heat-cell--others {
+  color: var(--lp-text);
+}
+
+.mesh-heat-cell--total {
+  color: var(--lp-dim);
+  border-top: 1px solid var(--lp-line);
+  border-radius: 0;
+  font-size: 9px;
+}
+
+.mesh-heat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 12px;
+  font-size: 11.5px;
+  color: var(--lp-faint);
+}
+
+.mesh-heat-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mesh-heat-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* ---------- refusals ---------- */
+
+.mesh-refusal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 18px;
+  margin-top: 18px;
+  align-items: start;
+}
+
+.mesh-refusal-figure {
+  margin: 0;
+  border: 1px solid color-mix(in oklab, var(--lp-red) 30%, var(--lp-line));
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--lp-red) 4%, var(--lp-bg));
+  overflow: hidden;
+}
+
+.mesh-refusal-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.mesh-refusal-svg text {
+  fill: var(--lp-text);
+}
+
+.mesh-refusal-day {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 10px;
+  fill: var(--lp-faint) !important;
+}
+
+.mesh-refusal-day-n {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 9px;
+  fill: var(--lp-faint) !important;
+}
+
+.mesh-refusal-callout {
+  font-size: 11.5px;
+  font-weight: 600;
+  fill: var(--lp-red) !important;
+}
+
+.mesh-refusal-axis {
+  font-size: 10px;
+  fill: var(--lp-faint) !important;
+}
+
+.mesh-refusal-figure figcaption {
+  padding: 9px 12px 11px;
+  border-top: 1px solid color-mix(in oklab, var(--lp-red) 22%, var(--lp-line));
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--lp-dim);
+}
+
+.mesh-refusal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.mesh-refusal-list li {
+  padding: 10px 12px;
+  border: 1px solid color-mix(in oklab, var(--lp-red) 28%, var(--lp-line));
+  border-left: 3px solid var(--lp-red);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--lp-red) 5%, transparent);
+}
+
+.mesh-refusal-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 10.5px;
+  color: var(--lp-faint);
+}
+
+.mesh-refusal-decision {
+  color: var(--lp-red);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.mesh-refusal-flow {
+  margin: 5px 0 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--lp-text);
+}
+
+.mesh-refusal-reason {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--lp-dim);
+}
+
+.mesh-refusal-notx {
+  margin: 5px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--lp-red);
+}
+
+/* ---------- value flow ---------- */
+
+.mesh-value-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+  margin-top: 18px;
+}
+
+.mesh-value-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid var(--lp-line);
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--lp-mint) 4%, var(--lp-panel));
+}
+
+.mesh-value-label {
+  font-size: 10.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.mesh-value-side strong {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: clamp(20px, 2.5vw, 30px);
+  letter-spacing: -0.02em;
+  color: var(--lp-mint);
+}
+
+.mesh-value-sub {
+  font-size: 11.5px;
+  color: var(--lp-dim);
+}
+
+.mesh-value-middle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--lp-mint);
+}
+
+.mesh-value-line {
+  height: 1px;
+  flex: 1;
+  background: var(--lp-mint);
+  opacity: 0.55;
+}
+
+.mesh-value-arrow {
+  font-size: 20px;
+}
+
+.mesh-value-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--lp-line-soft);
+}
+
+.mesh-value-facts dt {
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.mesh-value-facts dd {
+  margin: 4px 0 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  color: var(--lp-text);
+}
+
+.mesh-value-pass {
+  color: var(--lp-mint) !important;
+}
+
+.mesh-value-fail {
+  color: var(--lp-red) !important;
+}
+
+.mesh-value-assertion {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border: 1px dashed color-mix(in oklab, var(--lp-mint) 36%, var(--lp-line));
+  border-radius: 10px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--lp-dim);
+}
+
+/* ---------- provenance ---------- */
+
+.mesh-provenance-claim {
+  margin: 0 0 16px;
+  font-size: clamp(20px, 2.6vw, 30px);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  color: var(--lp-mint);
+  font-weight: 600;
+}
+
+.mesh-provenance-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 22px;
+}
+
+.mesh-provenance-grid p {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--lp-dim);
+}
+
+.mesh-provenance-grid strong {
+  color: var(--lp-text);
+}
+
+.mesh-provenance-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--lp-line-soft);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--lp-bg) 55%, transparent);
+}
+
+.mesh-provenance-facts dt {
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.mesh-provenance-facts dd {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--lp-text);
+}
+
+.mesh-provenance-facts a {
+  color: var(--lp-mint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.mesh-provenance-note {
+  margin: 10px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--lp-line-soft);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--lp-dim);
+}
+
+.mesh-footer {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--lp-line);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--lp-faint);
+}
+
+.mesh-footer p {
+  margin: 0 0 6px;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 980px) {
+  .mesh-hero-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .mesh-panel-head {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+  .mesh-panel-meta {
+    grid-column: 2;
+    text-align: left;
+  }
+  .mesh-refusal-grid,
+  .mesh-provenance-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mesh-value-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .mesh-wrap {
+    padding-top: 84px;
+  }
+  .mesh-panel {
+    padding: 18px;
+  }
+  .mesh-proof {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mesh-value-flow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mesh-value-middle {
+    transform: rotate(90deg);
+    height: 44px;
+  }
+  .mesh-hero-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

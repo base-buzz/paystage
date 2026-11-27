@@ -105,6 +105,9 @@ if (reason === null) {
     /* #480: `/mocks/index.json` is generated from the page's own data. A hand edit, a missing image, a fifth frame
        or a card chip more mature than its frames is red here, not in a review. */
     "check-mocks-index.mjs",
+    /* #482: `/lab/mesh` renders a committed snapshot. A missing latest.json, a row without a tx, a
+       filename/window mismatch, or aggregates that stop summing to the rows is red here. */
+    "check-soak-mesh.mjs",
     /* #457: the kit's geometry, the generated sizes, the zero-byte class of failure, and — since the mark change —
        the freshness ledger: every asset is hashed against its masters, so a half-run `brand:rebuild` is red here. */
     "check-brand-assets.mjs",
@@ -293,6 +296,7 @@ try {
     "check-pass-assets.mjs",
     "check-brand-assets.mjs",
     "check-mocks-index.mjs",
+    "check-soak-mesh.mjs",
     "check-doc-links.mjs",
     "check-published-links.mjs",
     "check-badges.mjs",
