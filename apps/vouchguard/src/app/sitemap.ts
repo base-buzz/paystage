@@ -10,11 +10,14 @@ import { view } from "@/lib/brand-config";
  * sitemap nobody trusts.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
+  // `view.homepage` is a full URL with trailing slash in some modes; a sitemap with `//brand` is a URL a crawler normalises
+  // and we would rather not rely on that.
+  const base = view.homepage.replace(/\/+$/, "");
   const lastModified = new Date();
   return [
-    { url: view.homepage, lastModified, changeFrequency: "weekly", priority: 1 },
-    { url: `${view.homepage}/brand`, lastModified, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${view.homepage}/privacy`, lastModified, changeFrequency: "yearly", priority: 0.4 },
-    { url: `${view.homepage}/terms`, lastModified, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${base}/`, lastModified, changeFrequency: "weekly", priority: 1 },
+    { url: `${base}/brand`, lastModified, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/privacy`, lastModified, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${base}/terms`, lastModified, changeFrequency: "yearly", priority: 0.4 },
   ];
 }
