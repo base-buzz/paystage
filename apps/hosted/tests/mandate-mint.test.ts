@@ -2,7 +2,12 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { generateSerial, issue, revoke, type Mandate, type MandateScope } from "@paystage/mandate";
 import { createApp, type AppEnv } from "../src/app.js";
-import { DuplicateMandateError, createMemoryMandateStore, type MandateStore } from "../src/mandate-store.js";
+import {
+  DuplicateMandateError,
+  createMemoryMandateStore,
+  type MandateStore,
+  type NewMandateRow,
+} from "../src/mandate-store.js";
 import { MINT_SERIAL_RE, MINT_VERIFICATION_BASE, type VerificationKey } from "../src/routes/mandate-mint.js";
 import { MANDATE_SERIAL_RE } from "../src/routes/mandate.js";
 
@@ -430,6 +435,95 @@ describe("POST /v1/mandate — the owner check", () => {
     const res = await app.request("/v1/mandate", mintRequest({ envelope: mandate }));
     expect(res.status).toBe(409);
     expect((await refusal(res)).error).toBe("mandate_already_minted");
+  });
+});
+
+describe("POST /v1/mandate — the optional org unit (#471)", () => {
+  /** A store that keeps the inserted row so the column, not just the status, is asserted. */
+  function capturingStore(): { store: MandateStore; rows: () => NewMandateRow[] } {
+    const inner = createMemoryMandateStore();
+    const rows: NewMandateRow[] = [];
+    return {
+      store: {
+        get: (serial) => inner.get(serial),
+        insert: async (row) => {
+          rows.push(row);
+          await inner.insert(row);
+        },
+        revoke: (serial, revocation, revokedAt) => inner.revoke(serial, revocation, revokedAt),
+      },
+      rows: () => rows,
+    };
+  }
+
+  it("stores the supplied org_unit without touching the signed envelope", async () => {
+    const key = await makeKeyPair();
+    const { store, rows } = capturingStore();
+    const app = appWith(store, key);
+    const mandate = await signedMandate(key);
+
+    const res = await app.request(
+      "/v1/mandate",
+      mintRequest({ envelope: mandate, org_unit: "tenant-test/engineering/platform" }),
+    );
+    expect(res.status).toBe(201);
+    expect(rows()).toHaveLength(1);
+    expect(rows()[0]?.org_unit).toBe("tenant-test/engineering/platform");
+    // The allocation label is not signed: the verified envelope is byte-for-byte what it was.
+    expect(rows()[0]?.envelope).toEqual(mandate);
+    expect(JSON.stringify(rows()[0]?.envelope)).not.toContain("org_unit");
+  });
+
+  it("accepts an absent org_unit and writes no column, so a single-person install still mints", async () => {
+    const key = await makeKeyPair();
+    const { store, rows } = capturingStore();
+    const app = appWith(store, key);
+    const mandate = await signedMandate(key);
+
+    const res = await app.request("/v1/mandate", mintRequest({ envelope: mandate }));
+    expect(res.status).toBe(201);
+    expect(rows()).toHaveLength(1);
+    // Omitted, not null: the insert must also work before the migration adds the column.
+    expect(rows()[0]).not.toHaveProperty("org_unit");
+  });
+
+  it("refuses an org_unit belonging to another tenant, before any row exists", async () => {
+    const key = await makeKeyPair();
+    const { store, rows } = capturingStore();
+    const app = appWith(store, key);
+    const mandate = await signedMandate(key);
+
+    const res = await app.request(
+      "/v1/mandate",
+      mintRequest({ envelope: mandate, org_unit: "another-tenant/engineering" }),
+    );
+    expect(res.status).toBe(400);
+    expect((await refusal(res)).error).toBe("mandate_org_unit_invalid");
+    expect(rows()).toHaveLength(0);
+  });
+
+  it("refuses a malformed or ambiguous path rather than normalising it", async () => {
+    const key = await makeKeyPair();
+    const { store, rows } = capturingStore();
+    const app = appWith(store, key);
+    const mandate = await signedMandate(key);
+
+    for (const orgUnit of [
+      "Tenant-Test/Engineering", // not lowercase
+      "tenant-test/", // trailing slash
+      "tenant-test//platform", // empty segment
+      "tenant-test/engineering/", // trailing slash
+      "tenant-test/eng_platform", // a LIKE wildcard character
+      "tenant-test/engineering/../platform", // traversal
+    ]) {
+      const res = await app.request(
+        "/v1/mandate",
+        mintRequest({ envelope: mandate, org_unit: orgUnit }),
+      );
+      expect(res.status, orgUnit).toBe(400);
+      expect((await refusal(res)).error, orgUnit).toBe("mandate_org_unit_invalid");
+    }
+    expect(rows()).toHaveLength(0);
   });
 });
 

@@ -4,6 +4,7 @@ import "../../landing.css";
 import "./refusals.css";
 
 import { RefusalsView } from "@/components/RefusalsView";
+import { RollupDivisionTotal } from "@/components/RollupDivisionTotal";
 import {
   buildRefusalView,
   formatRefusalTime,
@@ -11,6 +12,7 @@ import {
   REFUSAL_WINDOW_DAYS,
   type RefusalRow,
 } from "@/lib/refusals";
+import { fetchRollup, rollupApiBase, rollupUnit } from "@/lib/rollup";
 import { selectRowsStrict } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +29,11 @@ export const dynamic = "force-dynamic";
  * Read path: SERVER ONLY, through `selectRowsStrict`, so "no rows" and "could not read" render differently.
  * The events table has a public read policy, but the service key is still used: the page must state when the
  * read failed rather than print a zero that looks like a quiet week.
+ *
+ * #471 adds one division total above the refusals. It is fetched from `GET /v1/public/rollup`, not
+ * recomputed here: a page-side copy of the subtree arithmetic would be a second implementation, and the
+ * first disagreement would leave a manager looking at the wrong total. If the endpoint cannot answer, the
+ * panel says so and shows no figure.
  */
 export const metadata: Metadata = {
   title: "Refusals — the control working",
@@ -47,7 +54,12 @@ export default async function RefusalsPage() {
     "&order=ts.desc" +
     `&limit=${LIMIT}`;
 
-  const result = await selectRowsStrict<RefusalRow>("events", query);
+  // Two independent reads: the refusal rows and the #471 division total. The division total is the
+  // endpoint's answer, not a second aggregation of these rows.
+  const [result, division] = await Promise.all([
+    selectRowsStrict<RefusalRow>("events", query),
+    fetchRollup(rollupUnit(), { apiBase: rollupApiBase() }),
+  ]);
 
   if (!result.ok) {
     return (
@@ -62,6 +74,8 @@ export default async function RefusalsPage() {
               zero: an unreadable database and a quiet week are different facts.
             </p>
           </header>
+
+          <RollupDivisionTotal state={division} />
 
           <p className="refusals-control" role="note">
             {REFUSAL_CONTROL_LINE}
@@ -87,7 +101,11 @@ export default async function RefusalsPage() {
   return (
     <main className="lp refusals-page">
       <div className="lp-wrap">
-        <RefusalsView view={view} truncated={result.rows.length >= LIMIT} />
+        <RefusalsView
+          view={view}
+          truncated={result.rows.length >= LIMIT}
+          division={<RollupDivisionTotal state={division} />}
+        />
       </div>
     </main>
   );

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   formatRange,
   PAYER_NOT_RECORDED,
@@ -13,8 +14,20 @@ import { decisionExportHref } from "@/lib/decision-export";
  * A refusal is a decision, not an error: it belongs beside the payments, not in an incident feed. The page
  * therefore leads with the count and the rule, never with "failed". The only alerting-shaped thing here is a
  * paragraph explaining why there is none.
+ *
+ * `division` is the #471 roll-up panel, supplied by the page so this view does not read a second source. It
+ * sits under the header, above the refusal facts: the division total is the context in which a team lead
+ * reads the refusals, and it is the endpoint's own answer rather than a re-aggregation of these rows.
  */
-export function RefusalsView({ view, truncated = false }: { view: RefusalView; truncated?: boolean }) {
+export function RefusalsView({
+  view,
+  truncated = false,
+  division,
+}: {
+  view: RefusalView;
+  truncated?: boolean;
+  division?: ReactNode;
+}) {
   const range = formatRange(view);
   const empty = view.total === 0;
 
@@ -50,6 +63,8 @@ export function RefusalsView({ view, truncated = false }: { view: RefusalView; t
           </div>
         </dl>
       </header>
+
+      {division}
 
       <p className="refusals-control" role="note">
         {REFUSAL_CONTROL_LINE}

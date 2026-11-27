@@ -10,5 +10,5 @@ content does.
 
 | File | Size (bytes) | mtime (UTC) | sha256 |
 | --- | ---: | --- | --- |
-| [`SECURITY.md`](SECURITY.md) | 11572 | 2026-11-25T21:11:51Z | `11fa51e128ec77902bb4b34f027878000ea8a14b11f60e4415b52936a39f2acd` |
+| [`SECURITY.md`](SECURITY.md) | 11771 | 2026-11-27T23:23:05Z | `eae9c49154497f3b956754a25cf89b0eb02c43b06498e87fa467910443d2121f` |
 | [`packages/preflight/KNOWN_DRAINERS.md`](packages/preflight/KNOWN_DRAINERS.md) | 6496 | 2026-11-25T19:11:00Z | `fcfe0cc88f5f6fe60faf08a768034e23e4b6ea8d52367e3261f233273e93ec96` |

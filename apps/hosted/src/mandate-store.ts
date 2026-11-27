@@ -51,6 +51,12 @@ export interface MandateRow {
   principal: string;
   agent: string;
   envelope: Mandate;
+  /**
+   * The allocation path (#471), e.g. `paystage/engineering/platform`, or null for the tenant root.
+   * Optional on insert so a deployment can mint before the operator applies the migration: a row with
+   * no `org_unit` is the root, not an error.
+   */
+  org_unit: string | null;
   revoked_at: string | null;
   revocation: Revocation | null;
   created_at: string;
@@ -59,7 +65,10 @@ export interface MandateRow {
 export type NewMandateRow = Pick<
   MandateRow,
   "serial" | "tenant_id" | "state" | "scope" | "issued_at" | "expires_at" | "principal" | "agent" | "envelope"
->;
+> & {
+  /** Present only when the mint supplied one; omitted entirely when absent (pre-migration safe). */
+  org_unit?: string | null;
+};
 
 /** The write half. Reads go through the endpoint's `MandateSource`; writes are a server-side concern. */
 export interface MandateWriter {
@@ -223,6 +232,12 @@ export interface WriteMandateOptions {
    * asking for a state the envelope contradicts is refused rather than silently overridden.
    */
   state?: "active" | "expired";
+  /**
+   * Optional org-unit path (#471). Not signed, so it is not read from the envelope; the mint validates
+   * it against the tenant and passes it here. Absent/undefined inserts no column at all, which keeps a
+   * mint working in the window before the migration is applied.
+   */
+  orgUnit?: string | null;
 }
 
 /**
@@ -275,6 +290,9 @@ export async function writeMandate(
     agent: signed.agent,
     // Exactly the object `verify` accepted, signature included.
     envelope: signed,
+    // Absent unless the mint supplied a validated path: the column itself may not exist yet (the
+    // operator has not applied #471's migration), and an omitted key keeps that mint working.
+    ...(options.orgUnit !== undefined && options.orgUnit !== null ? { org_unit: options.orgUnit } : {}),
   });
   return { serial: signed.serial, state: implied };
 }

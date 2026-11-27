@@ -55,6 +55,7 @@
 import { Hono } from "hono";
 import { verify, type Revocation, type VerifyOptions } from "@paystage/mandate";
 import { PROBLEMS } from "../problem.js";
+import { parseOrgUnitForTenant } from "../org-unit.js";
 import {
   DuplicateMandateError,
   writeMandate,
@@ -201,7 +202,8 @@ export function createMandateMintRoutes(options: MandateMintOptions): Hono {
       return c.json(PROBLEMS.mandateMintUnauthorized(), 401, CACHE);
     }
 
-    // 3. The body is `{ envelope, revocations?, serial? }`. Only `envelope` and `revocations` are read.
+    // 3. The body is `{ envelope, revocations?, serial?, org_unit? }`. `envelope`, `revocations` and the
+    //    optional allocation label are read; a body-level `serial` is never read (see step 5).
     let body: unknown;
     try {
       body = await c.req.json();
@@ -218,6 +220,20 @@ export function createMandateMintRoutes(options: MandateMintOptions): Hono {
         400,
         CACHE,
       );
+    }
+
+    // 3b. The optional allocation label (#471). It is not signed and not part of the envelope — it is
+    //     the tenant's own placement of the mandate in its tree — so it is validated here and stored in
+    //     its own column. Absent is normal: a single-person install has no tree, and the row sits at the
+    //     tenant root. Present-but-wrong is refused rather than normalised, because a path is later used
+    //     as a prefix and a quietly-corrected unit is an allocation nobody wrote.
+    let orgUnit: string | null = null;
+    if (body.org_unit !== undefined && body.org_unit !== null) {
+      const parsedOrgUnit = parseOrgUnitForTenant(body.org_unit, options.tenantId);
+      if (!parsedOrgUnit.ok) {
+        return c.json(PROBLEMS.mandateOrgUnitInvalid(parsedOrgUnit.reason), 400, CACHE);
+      }
+      orgUnit = parsedOrgUnit.value;
     }
 
     // 4. Verify. The signature is checked before expiry inside `verify`, so an expired envelope here is
@@ -275,6 +291,7 @@ export function createMandateMintRoutes(options: MandateMintOptions): Hono {
         tenantId: options.tenantId,
         verify: { keys },
         now,
+        orgUnit,
       });
     } catch (error) {
       if (error instanceof DuplicateMandateError) {

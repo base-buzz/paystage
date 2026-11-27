@@ -251,3 +251,124 @@
   text-underline-offset: 2px;
   font-weight: 600;
 }
+
+/* Division total (#471): one number from the roll-up endpoint, at the top of the page a team lead
+   already reads. An unavailable figure is rendered as words, never as "$0.00". */
+.division-total {
+  margin: 0 0 26px;
+  padding: 22px 24px 24px;
+  border: 1px solid color-mix(in oklab, var(--lp-mint) 34%, var(--lp-line));
+  border-radius: 16px;
+  background:
+    radial-gradient(700px 180px at 8% 0%, color-mix(in oklab, var(--lp-mint) 10%, transparent), transparent 72%),
+    var(--lp-panel);
+}
+
+.division-total h2 {
+  margin: 0 0 8px;
+  font-size: clamp(20px, 2.6vw, 28px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--lp-text);
+}
+
+.division-total h2 code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  color: var(--lp-mint);
+}
+
+.division-total__value {
+  margin: 10px 0 8px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--lp-text);
+}
+
+.division-total__value span {
+  font-size: 0.42em;
+  letter-spacing: 0.08em;
+  color: var(--lp-faint);
+}
+
+.division-total__value--unavailable {
+  font-size: clamp(22px, 3vw, 30px);
+  color: var(--lp-dim);
+}
+
+.division-total__reason {
+  margin: 6px 0 12px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--lp-dim);
+  max-width: 88ch;
+}
+
+.division-total__facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--lp-line);
+}
+
+.division-total__facts dt {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.division-total__facts dd {
+  margin: 4px 0 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 14px;
+  color: var(--lp-text);
+}
+
+.division-total__children {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 13px;
+  color: var(--lp-dim);
+}
+
+.division-total__children li {
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.division-total__children code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  color: var(--lp-mint);
+}
+
+.division-total__source {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--lp-faint);
+  overflow-wrap: anywhere;
+}
+
+.division-total__source code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  color: var(--lp-dim);
+}
+
+.division-total--unreadable {
+  border-color: var(--lp-line);
+}
+
+@media (max-width: 720px) {
+  .division-total__facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

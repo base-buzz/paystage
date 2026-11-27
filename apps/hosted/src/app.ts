@@ -13,6 +13,8 @@ import { openapiRoutes } from "./routes/openapi.js";
 import { createRunsRoutes } from "./routes/runs.js";
 import { createWalletsRoutes } from "./routes/wallets.js";
 import { createMandateRoutes, type MandateSource } from "./routes/mandate.js";
+import { createRollupRoutes } from "./routes/rollup.js";
+import { supabaseRollupStore, type RollupStore } from "./rollup-store.js";
 import {
   createMandateMintRoutes,
   type MandateMintOptions,
@@ -102,6 +104,11 @@ export interface CreateAppOptions {
    * `RECEIPT_SIGNING_KEY_PKCS8` / `RECEIPT_SIGNING_KEYS_RETIRED`.
    */
   mandateMint?: Partial<Omit<MandateMintOptions, "store">>;
+  /**
+   * Test/deployment seam for the org-unit roll-up (#471). Defaults to the Supabase store when both
+   * bindings are set; with none the route answers 503 rather than an invented zero total.
+   */
+  rollupStore?: RollupStore;
 }
 
 function nonEmpty(v: string | undefined): v is string {
@@ -233,6 +240,9 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   // injected memory store in a test is read back by the same route the production store is.
   const mandateStore = opts.mandateStore ?? supabaseMandateStore(env);
   const mandateSource = opts.mandateSource ?? mandateStore;
+  // The roll-up (#471) reads the same table but a different column set; it gets its own seam so a test
+  // can exercise subtree aggregation without a database.
+  const rollupStore = opts.rollupStore ?? supabaseRollupStore(env);
   app.use("*", async (c, next) => {
     c.set(BUNDLE_STORE_VAR, bundleStore);
     await next();
@@ -405,6 +415,9 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   // Mounted before the payment gate on purpose (#423).
   const mandateRoutes = createMandateRoutes(mandateSource);
   app.route("/", mandateRoutes);
+  // A roll-up is a read (#471): public, read-only, and mounted before the payment gate. No permission
+  // model lives here; who may see a tree is a separate session's design.
+  app.route("/", createRollupRoutes({ store: rollupStore }));
   // The mint (#455) is the write half of the same record: not a paid evaluation, and gated by a
   // service token rather than by x402, so it is mounted outside the payment middleware too.
   const mandateMintRoutes = createMandateMintRoutes({

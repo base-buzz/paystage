@@ -248,6 +248,56 @@ export const PROBLEMS = {
       fix: "Pass either the short code from the pass face (vch- followed by exactly three alphanumerics, e.g. vch-7F3) or the full URL-safe serial (vch_ followed by 22-64 characters).",
       ...(instance !== undefined ? { instance } : {}),
     }),
+  mandateOrgUnitInvalid: (reason: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "mandate_org_unit_invalid",
+      title: "That is not an org unit this tenant can use",
+      detail: reason,
+      retriable: false,
+      field: "org_unit",
+      fix: "Send a lowercase slash-separated path whose first segment is the mint tenant, e.g. paystage/engineering/platform; or omit the field — a mandate with no unit is the tenant root.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  /**
+   * The roll-up (#471) is a public read, so a bad unit is a client error and an unreadable store is a
+   * 503. Neither is allowed to arrive as a zero total: a zero that means "not read" is the number this
+   * endpoint exists to avoid.
+   */
+  rollupUnitRequired: (instance?: string) =>
+    problem({
+      status: 400,
+      code: "rollup_unit_required",
+      title: "The roll-up needs a unit",
+      detail: "No `unit` query parameter was supplied, so there is no subtree to total.",
+      retriable: false,
+      field: "unit",
+      fix: "Call /v1/public/rollup?unit=<tenant> (or <tenant>/<division>/...) with a path whose first segment is the tenant.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  rollupInvalidUnit: (reason: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "rollup_invalid_unit",
+      title: "That is not an org unit path",
+      detail: reason,
+      retriable: false,
+      field: "unit",
+      fix: "Use lowercase slash-separated segments, 1-63 chars of a-z, 0-9 and '-' each, starting and ending alphanumeric, e.g. paystage/engineering/platform. The first segment is the tenant.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  rollupSourceUnavailable: (instance?: string) =>
+    problem({
+      status: 503,
+      code: "rollup_source_unavailable",
+      title: "The roll-up source did not answer",
+      detail:
+        "The mandate or event store rejected the read. No total is returned, because zero is not a safe substitute for 'could not read'.",
+      retriable: true,
+      retryAfterSeconds: 5,
+      fix: "Retry after the indicated delay. Do not read this as an empty division.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
   mandateSourceUnavailable: (instance?: string) =>
     problem({
       status: 503,
