@@ -92,6 +92,15 @@ describe("hosted app", () => {
       }>;
     };
 
+    /**
+     * Our own challenge must stay small (#494). Seven of the 96 resources we probed send headers over 8,192 bytes — one at 10,164 —
+     * and many gateways and proxies cap **total** headers at 8 KB, so a client behind one fails on those hosts with no useful error.
+     * The fix on our side is not to be one of them: a 2 KB ceiling leaves room for the ordinary headers a request already carries.
+     */
+    expect(hdr as string).toBeTruthy();
+    const headerBytes = Buffer.byteLength(hdr as string, "utf8");
+    expect(headerBytes).toBeLessThan(2048);
+
     const accepts = decoded.accepts ?? [];
     expect(accepts.length).toBeGreaterThan(0);
     expect(accepts[0]?.network).toBe("eip155:84532");

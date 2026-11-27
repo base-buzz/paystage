@@ -8,6 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { CheckedSellersPanel } from "@/components/CheckedSellersPanel";
 import {
+  checkedSellersOversize,
   checkedSellersDenominators,
   checkedSellersDialects,
   CHECKED_SELLERS,
@@ -385,5 +386,34 @@ describe("two denominators", () => {
     expect(sentence).toContain("100 resources across 34 hosts");
     expect(sentence).toContain("per resource, not per host");
     expect(checkedSellersDenominators({ ...CHECKED_SELLERS, denominators: null })).toContain("not recorded");
+  });
+});
+
+/**
+ * Header sizes (#494). Seven of 96 challenges exceed the 8,192-byte line many proxies allow for the whole header block; the biggest is
+ * 10,164. The test pins the count, the extremes and the offender, because a sentence that drifts from the data would still read fine.
+ */
+describe("oversize challenges", () => {
+  it("pins the measured range and the offenders", () => {
+    const h = CHECKED_SELLERS.headerBytes;
+    expect(h).not.toBeNull();
+    expect(h!.measured).toBe(96);
+    expect(h!.min).toBe(1216);
+    expect(h!.median).toBe(3142);
+    expect(h!.max).toBe(10164);
+    expect(h!.limit).toBe(8192);
+    expect(h!.oversize).toHaveLength(7);
+    expect(h!.oversize[0].bytes).toBe(10164);
+    expect(h!.oversize[0].host).toBe("agent402.tools");
+    for (const row of h!.oversize) expect(row.bytes).toBeGreaterThan(h!.limit);
+  });
+
+  it("names them, counts them, and says so when nothing was recorded", () => {
+    const sentence = checkedSellersOversize(CHECKED_SELLERS);
+    expect(sentence).toContain("8,192");
+    expect(sentence).toContain("10,164");
+    expect(sentence).toContain("agent402.tools");
+    expect(sentence).toContain("under 2 KB");
+    expect(checkedSellersOversize({ ...CHECKED_SELLERS, headerBytes: null })).toContain("not recorded");
   });
 });

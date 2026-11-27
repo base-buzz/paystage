@@ -8,6 +8,7 @@ import {
   checkedSellersGap,
   checkedSellersMethod,
   checkedSellersMethodSplit,
+  checkedSellersOversize,
   checkedSellersSummaries,
   formatCheckedCalls,
   priceMatchLabel,
@@ -67,6 +68,10 @@ export function CheckedSellersPanel({ snapshot = CHECKED_SELLERS }: { snapshot?:
 
       <p style={{ marginTop: 10 }}>
         <strong>Two denominators.</strong> {checkedSellersDenominators(snapshot)}
+      </p>
+
+      <p style={{ marginTop: 10 }}>
+        <strong>Header size.</strong> {checkedSellersOversize(snapshot)}
       </p>
 
       <div

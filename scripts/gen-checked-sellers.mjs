@@ -149,6 +149,7 @@ function finalize(snapshot) {
     dialectSplit: snapshot.dialectSplit ?? null,
     /** Both denominators (#499): resources and hosts. One host can carry 29 of the 100 resources. */
     denominators: snapshot.denominators ?? null,
+    headerBytes: snapshot.headerBytes ?? null,
     rowsNamed: rows.length,
     entriesCoveredByName: rows.reduce((total, row) => total + row.endpointsChecked, 0),
     rows,
@@ -229,6 +230,34 @@ function fromProbeJson(path) {
    * reader cannot tell apart unless the page says which one it is using.
    */
   const hostSet = new Set(rows.map((row) => String(row?.host ?? "")).filter(Boolean));
+  /**
+   * The challenges that break an 8 KB proxy (#494). Sorted by size, because the first entry is the one to quote: a single resource
+   * sending 10,164 bytes is a compatibility failure with a name, not a statistic.
+   */
+  const oversize = rows
+    .filter((row) => Number(row?.challenge_header_bytes) > 8192)
+    .map((row) => ({
+      host: String(row?.host ?? ""),
+      resource: String(row?.resource ?? ""),
+      bytes: Number(row?.challenge_header_bytes),
+    }))
+    .sort((a, b) => b.bytes - a.bytes);
+
+  const headerSizes = rows
+    .map((row) => Number(row?.challenge_header_bytes))
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((a, b) => a - b);
+  const headerBytes = {
+    measured: headerSizes.length,
+    min: headerSizes[0] ?? null,
+    median: headerSizes.length === 0 ? null : headerSizes.length % 2 === 1
+      ? headerSizes[(headerSizes.length - 1) / 2]
+      : Math.round((headerSizes[headerSizes.length / 2 - 1] + headerSizes[headerSizes.length / 2]) / 2),
+    max: headerSizes.at(-1) ?? null,
+    limit: 8192,
+    oversize,
+  };
+
   const denominators = {
     resources: rows.length,
     hosts: hostSet.size,
@@ -254,6 +283,7 @@ function fromProbeJson(path) {
 
   const snapshot = {
     dialectSplit,
+    headerBytes,
     denominators,
     verifiedOn: data.verifiedOn,
     timeZone: data.timeZone ?? "UTC",

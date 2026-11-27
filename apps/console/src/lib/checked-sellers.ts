@@ -106,6 +106,18 @@ export interface CheckedSellersSnapshot {
     hostsOver8kb: number;
     largestHost: (string | number)[] | null;
   } | null;
+  /**
+   * Challenge header sizes (#494). Seven resources send more than **8,192 bytes**, which is what a gateway or proxy commonly allows
+   * for the *whole* header block — so a client behind one fails on those hosts with no useful error. Sorted largest first.
+   */
+  headerBytes: {
+    measured: number;
+    min: number | null;
+    median: number | null;
+    max: number | null;
+    limit: number;
+    oversize: { host: string; resource: string; bytes: number }[];
+  } | null;
   rows: CheckedSellerRow[];
 }
 
@@ -282,5 +294,33 @@ export function checkedSellersDenominators(snapshot: CheckedSellersSnapshot): st
     `${formatCount(d.resources)} resources across ${formatCount(d.hosts)} hosts${carrier}. ` +
     `Every count on this page is per resource, not per host: the ${formatCount(d.resourcesOver8kb)} challenges over 8 KB ` +
     `belong to ${formatCount(d.hostsOver8kb)} of those hosts.`
+  );
+}
+
+/**
+ * The challenges that break an 8 KB proxy (#494).
+ *
+ * A gateway or corporate proxy commonly caps the **whole** header block at 8,192 bytes, so a resource that sends a 10,164-byte
+ * challenge fails there before the payment is ever signed — and the client sees a truncated or rejected request, not a price. The
+ * sentence names the offenders with their sizes because "7 exceed 8 KB" is a statistic and "agent402.tools sends 10,164" is a bug
+ * report someone can act on.
+ */
+export function checkedSellersOversize(snapshot: CheckedSellersSnapshot): string {
+  const h = snapshot.headerBytes;
+  if (!h || !Number.isFinite(h.measured) || h.measured === 0) {
+    return "The challenge sizes for this run were not recorded, so the page does not publish them.";
+  }
+  const range = `Challenge headers run from ${formatCount(h.min ?? 0)} bytes to ${formatCount(h.max ?? 0)}, median ${formatCount(h.median ?? 0)}.`;
+  if (h.oversize.length === 0) {
+    return `${range} None exceeds the ${formatCount(h.limit)}-byte line many proxies allow.`;
+  }
+  const named = h.oversize
+    .slice(0, 4)
+    .map((row) => `${row.host} at ${formatCount(row.bytes)}`)
+    .join(", ");
+  const more = h.oversize.length > 4 ? `, and ${formatCount(h.oversize.length - 4)} more` : "";
+  return (
+    `${range} ${formatCount(h.oversize.length)} exceed the ${formatCount(h.limit)}-byte line many gateways and proxies allow for the ` +
+    `whole header block — ${named}${more} — so a client behind one fails there with no useful error. Our own challenge stays under 2 KB.`
   );
 }

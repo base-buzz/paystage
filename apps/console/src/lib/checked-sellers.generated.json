@@ -89,6 +89,50 @@
       29
     ]
   },
+  "headerBytes": {
+    "measured": 96,
+    "min": 1216,
+    "median": 3142,
+    "max": 10164,
+    "limit": 8192,
+    "oversize": [
+      {
+        "host": "agent402.tools",
+        "resource": "https://agent402.tools/api/perp-funding",
+        "bytes": 10164
+      },
+      {
+        "host": "agent402.tools",
+        "resource": "https://agent402.tools/api/onchain-sql",
+        "bytes": 10024
+      },
+      {
+        "host": "ax1-new.vercel.app",
+        "resource": "https://ax1-new.vercel.app/api/dashboard/q-verdict/resource",
+        "bytes": 9940
+      },
+      {
+        "host": "console.ax1.vc",
+        "resource": "https://console.ax1.vc/api/dashboard/q-verdict/resource",
+        "bytes": 9912
+      },
+      {
+        "host": "shopperpulse.theaslangroupllc.com",
+        "resource": "https://shopperpulse.theaslangroupllc.com/api/safety/merchant",
+        "bytes": 9360
+      },
+      {
+        "host": "agent402.tools",
+        "resource": "https://agent402.tools/api/perp-basis",
+        "bytes": 9276
+      },
+      {
+        "host": "api.exa.ai",
+        "resource": "https://api.exa.ai/search",
+        "bytes": 8468
+      }
+    ]
+  },
   "rowsNamed": 9,
   "entriesCoveredByName": 63,
   "rows": [
