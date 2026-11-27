@@ -1,0 +1,172 @@
+/*
+ * `/verify` and `/v/[serial]` — the counterparty pages, in the same paper, tint and type scale as `/m/[serial]`.
+ *
+ * `mandate.css` supplies the pass card, the poster head, the status chip and the fact rows. This file adds only the
+ * pieces a form needs: the stack, the input, the button and the answer sentence. Every colour and size still comes
+ * from the pass tokens, so a token change moves these pages with the pass.
+ */
+
+.verify-stack {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.verify-form-card {
+  overflow: hidden;
+}
+
+/* A compact tint band, not the full pass poster: this card is a form, and a 4:1 band would be a picture of a pass
+   rather than a place to type. The gold rule is the pass's own rule. */
+.verify-form-head {
+  background: var(--pass-tint);
+  color: #ffffff;
+  padding: calc(var(--pass-pad) * 100cqw) calc(var(--pass-pad) * 100cqw);
+  border-bottom: 3px solid var(--pass-gold);
+}
+
+.verify-form-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6cqw;
+}
+
+.verify-form-wordmark {
+  font-size: calc(var(--pass-type-brand) * 1cqw);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.verify-form-vouched {
+  font-size: calc(var(--pass-type-sub-brand) * 1cqw);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.verify-form-title {
+  margin: 2.6cqw 0 0;
+  font-size: calc(var(--pass-type-value) * 1cqw);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.verify-form-lede {
+  margin: 1.2cqw 0 0;
+  font-size: calc(var(--pass-type-caption) * 1cqw);
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.verify-form-body {
+  padding: calc(var(--pass-pad) * 100cqw);
+}
+
+.verify-label {
+  display: block;
+  margin: 0 0 1.5cqw;
+  font-size: calc(var(--pass-type-field-label) * 1cqw);
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pass-muted);
+}
+
+.verify-input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2.4cqw;
+}
+
+.verify-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 3cqw;
+  border: 1px solid color-mix(in oklab, var(--pass-muted) 32%, transparent);
+  border-radius: 10px;
+  background: var(--pass-paper);
+  color: var(--pass-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.verify-input::placeholder {
+  color: color-mix(in oklab, var(--pass-muted) 70%, transparent);
+}
+
+.verify-input:focus-visible {
+  outline: 3px solid color-mix(in oklab, var(--pass-deep) 35%, transparent);
+  outline-offset: 1px;
+}
+
+.verify-button {
+  min-height: 44px;
+  padding: 0 4cqw;
+  border: 0;
+  border-radius: 10px;
+  background: var(--pass-tint);
+  color: #ffffff;
+  font: inherit;
+  font-size: calc(var(--pass-type-caption) * 1cqw);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.verify-button:hover {
+  background: var(--pass-deep);
+}
+
+.verify-button:focus-visible {
+  outline: 3px solid color-mix(in oklab, var(--pass-deep) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.verify-hint {
+  margin: 2.4cqw 0 0;
+  font-size: calc(var(--pass-type-meta) * 1cqw);
+  line-height: 1.45;
+  color: var(--pass-muted);
+}
+
+/* The answer is the point of the page, so it gets the pass's value size. */
+.verify-sentence {
+  font-size: calc(var(--pass-type-field) * 1cqw);
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.verify-next {
+  margin-top: 1.6cqw;
+}
+
+/* The full-record fact list is longer than the pass's two-column row on a narrow phone; one column keeps the
+   labels beside their values readable. */
+.verify-facts {
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--pass-pad) * 100cqw * 0.7);
+}
+
+@media (min-width: 420px) {
+  .verify-input-row {
+    flex-direction: row;
+  }
+
+  .verify-input {
+    flex: 1 1 auto;
+  }
+
+  .verify-button {
+    flex: 0 0 auto;
+  }
+
+  .verify-facts {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}

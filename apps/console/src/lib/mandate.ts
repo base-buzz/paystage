@@ -32,12 +32,20 @@ export interface MandatePrincipal {
   assertion: "self";
 }
 
+/** The verdict the public endpoint publishes for the party considering the pass. */
+export type SellerVerdict = "trust" | "do_not_trust" | "unknown";
+
 /** The subset of the endpoint's body this page renders. Extra response fields are not represented. */
 export interface MandatePayload {
   serial: string;
   status: MandateStatus;
   scope: MandateScope | null;
   principal: MandatePrincipal | null;
+  /**
+   * Optional on the type because `/m/:serial` predates the counterparty pages and does not read it. The endpoint
+   * always sends it; a payload without one is rendered as `unknown`, never as trust.
+   */
+  verdict_for_seller?: SellerVerdict | null;
   as_of: string;
 }
 
@@ -79,6 +87,10 @@ function isStatus(value: unknown): value is MandateStatus {
   return value === "active" || value === "revoked" || value === "expired" || value === "unknown";
 }
 
+function isVerdict(value: unknown): value is SellerVerdict {
+  return value === "trust" || value === "do_not_trust" || value === "unknown";
+}
+
 function parseScope(value: unknown): MandateScope | null {
   if (!isRecord(value)) return null;
   const { per_payment, window_amount, window_seconds, expires_at } = value;
@@ -113,12 +125,14 @@ export function parseMandatePayload(raw: unknown): MandatePayload | null {
   const scope = parseScope(raw.scope);
   const principal = parsePrincipal(raw.principal);
 
+  const verdict = isVerdict(raw.verdict_for_seller) ? raw.verdict_for_seller : null;
+
   if (status === "unknown") {
-    return { serial: raw.serial, status, scope: null, principal: null, as_of: raw.as_of };
+    return { serial: raw.serial, status, scope: null, principal: null, verdict_for_seller: verdict, as_of: raw.as_of };
   }
   if (scope === null || principal === null) return null;
 
-  return { serial: raw.serial, status, scope, principal, as_of: raw.as_of };
+  return { serial: raw.serial, status, scope, principal, verdict_for_seller: verdict, as_of: raw.as_of };
 }
 
 /**

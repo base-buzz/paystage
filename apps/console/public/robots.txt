@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+# A serial is a capability, not a directory entry: neither the form nor a record page is for crawlers.
+Disallow: /verify
+Disallow: /v/
 
 Sitemap: https://paystage.xyz/sitemap.xml

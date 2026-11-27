@@ -84,6 +84,7 @@ export function SiteHeader() {
           <Link href="/lists">{lang === "zh" ? "名单" : "Lists"}</Link>
           <Link href="/glossary">{lang === "zh" ? "术语表" : "Glossary"}</Link>
           <Link href="/console">{lang === "zh" ? "控制台" : "Console"}</Link>
+          <Link href="/verify">{lang === "zh" ? "验证" : "Verify"}</Link>
         </nav>
 
         <div className="site-actions" ref={menuRef}>
@@ -135,6 +136,7 @@ export function SiteHeader() {
                 <Link href={lang === "zh" ? "/zh#why" : "/#why"}>{lang === "zh" ? "为什么现在" : "Why now"}</Link>
                 <Link href={lang === "zh" ? "/zh#agents" : "/#agents"}>{lang === "zh" ? "面向智能体" : "For agents"}</Link>
                 <Link href="/console">{lang === "zh" ? "控制台" : "Console"}</Link>
+                <Link href="/verify">{lang === "zh" ? "验证" : "Verify"}</Link>
               </div>
 
               <div className="site-menu-group">

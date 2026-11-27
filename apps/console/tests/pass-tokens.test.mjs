@@ -101,10 +101,16 @@ describe("both sides point at that file, not at a copy", () => {
     expect(source).toMatch(/from "\.\/pass-tokens\.json"/);
   });
 
-  it("the card takes its tokens from the page-side module", () => {
+  it("the card takes its tokens from the shared token-CSS module", () => {
     const source = readFileSync(join(HERE, "../src/components/MandateCard.tsx"), "utf8");
-    expect(source).toMatch(/from "@\/lib\/pass-tokens"/);
+    expect(source).toMatch(/from "@\/lib\/pass-token-css"/);
     expect(source).not.toMatch(/#[0-9A-Fa-f]{6}/); // no palette literal typed into the component
+  });
+
+  it("the shared token-CSS module reads the page-side module", () => {
+    const source = readFileSync(join(HERE, "../src/lib/pass-token-css.ts"), "utf8");
+    expect(source).toMatch(/from "@\/lib\/pass-tokens"/);
+    expect(source).not.toMatch(/#[0-9A-Fa-f]{6}/); // no second palette typed into a page
   });
 
   it("the renderer imports the same JSON, as JSON", () => {
