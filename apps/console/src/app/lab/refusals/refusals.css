@@ -235,3 +235,19 @@
     padding-top: 88px;
   }
 }
+
+/* The export link is one line under the control band: visible on the page a manager already reads,
+   never a hidden endpoint. */
+.refusals-export {
+  margin: -10px 0 22px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--lp-dim);
+}
+
+.refusals-export a {
+  color: var(--lp-mint);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+}

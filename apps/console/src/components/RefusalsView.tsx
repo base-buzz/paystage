@@ -5,6 +5,7 @@ import {
   REFUSAL_CONTROL_LINE,
   type RefusalView,
 } from "@/lib/refusals";
+import { decisionExportHref } from "@/lib/decision-export";
 
 /**
  * The refusals record, server-rendered with no client JavaScript.
@@ -52,6 +53,14 @@ export function RefusalsView({ view, truncated = false }: { view: RefusalView; t
 
       <p className="refusals-control" role="note">
         {REFUSAL_CONTROL_LINE}
+      </p>
+
+      <p className="refusals-export">
+        <a href={decisionExportHref(view.windowStart, view.windowEnd)}>
+          Download every decision in this window as CSV
+        </a>{" "}
+        — refusals, reviews, payments and failures, one row per decision, with <code>reason_codes</code> or{" "}
+        <code>not recorded</code>.
       </p>
 
       {truncated ? (
