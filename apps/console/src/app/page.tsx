@@ -495,7 +495,9 @@ export default function LandingPage() {
               </ul>
               <p className="lp-hero-note" style={{ marginTop: 20 }}>
                 PayStage runs in the agent&apos;s process, reads one policy file, and
-                fails closed.
+                blocks every <code>do_not_pay</code> — and blocks a <code>review</code> too once you set{" "}
+                <code>onReview: &quot;refuse&quot;</code>. Out of the box a review pays, because a guard that stops
+                uncertain calls stops the good ones with them.
               </p>
             </div>
           </div>
