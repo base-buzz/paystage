@@ -1,10 +1,10 @@
 {
   "tool": "scripts/record-brand-manifest.mjs",
-  "generatedAt": "2026-11-27T04:55:56.705Z",
-  "masterHash": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193",
+  "generatedAt": "2026-11-27T18:03:29.427Z",
+  "masterHash": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04",
   "masters": {
     "scripts/lib/mark.mjs": "3638bc09e5e5620d0e378197593345402aad977666caf28d580cbe1d0f27b9bd",
-    "scripts/lib/brand-manifest.mjs": "350170d13f1935a08ffd30a75b535167c74b0774ab5516d4046a284a33eb0ef2",
+    "scripts/lib/brand-manifest.mjs": "f3880e41d4562c471719818d88507388350f4e376ec397dcf38a6d3d6b9dfaef",
     "scripts/lib/pass-face.mjs": "c55e699bb7d853efa56369d0ae02317f13ccce9f4b1640d23c9e620a3963cda8",
     "scripts/lib/pass-story.mjs": "37a5c3efcefdbebd0801279fbf4e3bcec9aad65fa5c242105faec255badd4f7f",
     "scripts/brand-kit.mjs": "4a3fd38e03ff86f625278a2a84d596205b8c545c861fe0580c95bb2d057d96c0",
@@ -17,402 +17,402 @@
     "apps/console/public/mocks/frame-face-id.png": {
       "sha256": "d6e854f2b3e6033fc07c3e24c05e55e35bdc33f20270978de379a114ad6db1c6",
       "bytes": 14447,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/frame-mandate-page.png": {
       "sha256": "cf648290d00a451f3dad6ffbf221dc6e8cc2cffd89bda013abdc785afa59cff0",
       "bytes": 52266,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/frame-pass-active.png": {
       "sha256": "ab355041d4d779387715dd5d41523d6f2652847e2874c6b52431f489ee8851a1",
       "bytes": 73334,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/frame-pass-changed.png": {
       "sha256": "dde1be9b5e856c0a00d5a83400412d38d9517cdad32a01f8445d90a5715c6f4f",
       "bytes": 73093,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/frame-pass-revoked.png": {
       "sha256": "047d10a973556fe5e8188f15cb1171e82216d90e02df9e1b390365564e4801db",
       "bytes": 72915,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/frame-setup.png": {
       "sha256": "ed63833f7dba05fc578ed7cfdab7cc92e3d0994801bb6ed11d96e860ecff7eb0",
       "bytes": 57549,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/frame-stack.png": {
       "sha256": "557726a605b517beb433471628955dc7afff3fc8d98e9b050d6c392b60386a25",
       "bytes": 55097,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/icon.png": {
       "sha256": "064355e7f4dd05d27ff610411e356a6b3a38dfaf44c44d7bcecd3b02dfe33697",
       "bytes": 851,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/icon@2x.png": {
       "sha256": "a7bf9aff190fc57cc9865871982ff18abc1457b0e0d7435accfb72b53fa5d734",
       "bytes": 1675,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/icon@3x.png": {
       "sha256": "e2f14fa3c2645668ec10325ee47777a669a56de0d273fb72d85d40c288b7f508",
       "bytes": 2448,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/logo.png": {
       "sha256": "f62fb344ae5f4a3b387fac226440de667b25e04cf821bad85b8af34ffb995b8d",
       "bytes": 2088,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/pass-face@2x.png": {
       "sha256": "3ed0c7435965a1b959e5c034515d4e09458200f76e0d46251db213491f051ef0",
       "bytes": 73425,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story1-configure.png": {
       "sha256": "3328ba54eeccae7a63f648eedbde420a7ea4012ee12228f68862cd4a30946a50",
       "bytes": 35568,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story1-confirm.png": {
       "sha256": "e9dcc27691c57c18c666e625484fab630682ce822323ea7700da77cd920e145b",
       "bytes": 35913,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story1-pick.png": {
       "sha256": "88ac6f9a26606bfa4bcf1362365dd430fd19485c634a33042de7216c0c02a05f",
       "bytes": 40848,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story1-provision.png": {
       "sha256": "0d58d47f09b62c112cc3339323eba03094779c79ae588b67b6a536711023dd03",
       "bytes": 34739,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story2-calls.png": {
       "sha256": "3dd1e83f7d61cf1cda47c2becd2519d80ece5cb99c303e79ad2842fa9bd94146",
       "bytes": 68692,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story2-refusal.png": {
       "sha256": "8eb6d6891be40184c6816dcca2c2ee293229c4f0e6d24af03e47f1cf375a4fe8",
       "bytes": 42645,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story2-review.png": {
       "sha256": "2c1a0dc4f5115fdcc3c9f2be0a5631dffdbee9a4d58deaf8569eca09b0898271",
       "bytes": 37922,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story4-deleted.png": {
       "sha256": "038829c865ad8186bb2555e5764d7671e10d495d8049e1e155d4063510e799d4",
       "bytes": 47819,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story4-revoke.png": {
       "sha256": "310cc11e69b3448781fad1faf54be7add61cdd276f4aa3cfa7a0c34c14d3f61e",
       "bytes": 31570,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story6-429.png": {
       "sha256": "42b2408904bdd395fb4658202b69c7d16ddecd2111c4c724a92da93358c06bf1",
       "bytes": 38828,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story6-cancelled.png": {
       "sha256": "aa1d404d6a9567177141a9449337146c039c49c791f3a817b1959146ae29e3ff",
       "bytes": 39312,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story6-capmid.png": {
       "sha256": "bc5cdd3555df842fd7965b4877cbe841f64ce40e2e29b187ba09cc10b480f18d",
       "bytes": 27523,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story6-failclosed.png": {
       "sha256": "a8aa9e8c49eaf4de4fefd0d84d20a157c8d58d8c1868a3a1f0331a7ed030d627",
       "bytes": 54567,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story6-stale.png": {
       "sha256": "ca6515caca358ab34e6be562c0a2d5dee096f235674d225150210d5ea3b88196",
       "bytes": 43488,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/story6-unknown.png": {
       "sha256": "5be142c909ec792d03b10366bd3c894c287d400f9bbf639ab9d20c14169478d1",
       "bytes": 32405,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/strip.png": {
       "sha256": "c1f28f60fc132c253a147d57927ad54c3d7c9f64ec342e2dfd59cb96070ba896",
       "bytes": 4129,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/mocks/strip@2x.png": {
       "sha256": "15956465a2a73b34522d3ff7808679ca597fab4304442a6480065f971972de98",
       "bytes": 10153,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/pass/icon.png": {
       "sha256": "064355e7f4dd05d27ff610411e356a6b3a38dfaf44c44d7bcecd3b02dfe33697",
       "bytes": 851,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/pass/icon@2x.png": {
       "sha256": "a7bf9aff190fc57cc9865871982ff18abc1457b0e0d7435accfb72b53fa5d734",
       "bytes": 1675,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/pass/icon@3x.png": {
       "sha256": "e2f14fa3c2645668ec10325ee47777a669a56de0d273fb72d85d40c288b7f508",
       "bytes": 2448,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/pass/logo.png": {
       "sha256": "f62fb344ae5f4a3b387fac226440de667b25e04cf821bad85b8af34ffb995b8d",
       "bytes": 2088,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/pass/mark-active.svg": {
       "sha256": "e7d5bdebeabbe229b5fa50e9cea1017845a3a0e8d51721df74eb07b2e69cc6d8",
       "bytes": 1818,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/pass/mark-expired.svg": {
       "sha256": "b6d8ddcfb75301890af3d5b244a317ba075cf08591abb8a12fbf0b6b3a847985",
       "bytes": 1819,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/pass/mark-revoked.svg": {
       "sha256": "f85755f2da51084790c6af8660509719d4933fabbbe3680a328b94f516beb7db",
       "bytes": 1819,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/pass/pass-face.svg": {
       "sha256": "fea548fcc5f662a2d95d8a8703ed5dfab64d076035c59178a0359c07fed75d8a",
       "bytes": 6858,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/pass/pass-face@2x.png": {
       "sha256": "3ed0c7435965a1b959e5c034515d4e09458200f76e0d46251db213491f051ef0",
       "bytes": 73425,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/pass/strip.png": {
       "sha256": "c1f28f60fc132c253a147d57927ad54c3d7c9f64ec342e2dfd59cb96070ba896",
       "bytes": 4129,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/console/public/pass/strip@2x.png": {
       "sha256": "15956465a2a73b34522d3ff7808679ca597fab4304442a6480065f971972de98",
       "bytes": 10153,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "apps/vouchguard/public/demo/vouch-demo.pkpass": {
       "sha256": "2df6787c14aa00c3b2a5c1e3f352e677c791d72e9a98d5d7b6353ef6a5a767ed",
       "bytes": 14242,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/favicon-16.png": {
       "sha256": "f8fe57f58fcd1c45f4c9c597ee56862c05f1ad2dc26ae258b50d81c0c9cd0ff3",
       "bytes": 474,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/favicon-180.png": {
       "sha256": "065964c965870cfa69b841c8f1d5fd369e2b2d83557a3783557a2b7a96da9589",
       "bytes": 5795,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/favicon-32.png": {
       "sha256": "50d3d72cbf5d3ef77d621e00f8dc5e4ff60ab86cca1f8a4ab10ec0ce483c621e",
       "bytes": 970,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/favicon-48.png": {
       "sha256": "f6cc51242463388a8de1444aa477f5ca0ca4f2b61bf023a0feab58b98a07a86b",
       "bytes": 1484,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/favicon-512.png": {
       "sha256": "8c861da518328d8e9bc1a7e35e9b452888db7f7c73eda8be06c6822360e7afc3",
       "bytes": 21795,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/lockup-horizontal.png": {
       "sha256": "3091c23eb527416d72d4cfb2ef3415233af32c116a596c0b70caf20ce8ecb60b",
       "bytes": 21189,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/lockup-horizontal.svg": {
       "sha256": "7f78653f1c0b66a7fb9eda41045341d8e489a7921160b52b51c82e4a5dc2ac8d",
       "bytes": 2115,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/lockup-mono.png": {
       "sha256": "8e96d28db351b7aae54aeeaf9ff75e0badff2d634f99ca736dbe885195ab8e2d",
       "bytes": 20056,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/lockup-mono.svg": {
       "sha256": "a911720870af750c29ec2bb10896e3d5fc2f5b238856ee97ccb9dcf1799e9f47",
       "bytes": 2115,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/lockup-vertical.png": {
       "sha256": "41a418cd3c6f89dbd5a42a780ac20c25a7d487b260fab6fdc7a0bacf929e1c09",
       "bytes": 35697,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/lockup-vertical.svg": {
       "sha256": "04ad8d677c3fe660d57fa0c3075fba335dd941f8148b3b17e841bfed4f1556e9",
       "bytes": 2441,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/loop/README.md": {
       "sha256": "a00ae548d9927fc5e1bf86fc10683464d54205cd15335858e28219cd7e321bc5",
       "bytes": 704,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/loop/stills/scene-1-bill-shock.png": {
       "sha256": "5d706b105296e85ae0fd24eb21af2f5ce9c1c3d2a18fdce64f857ee118102086",
       "bytes": 72467,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/loop/stills/scene-2-caps.png": {
       "sha256": "cac8a01668601f1ee8ba3ee1213e36ea4476ec32e2dedc6f5177578597165138",
       "bytes": 70815,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/loop/stills/scene-3-two-doors.png": {
       "sha256": "ac4485bfc841d08ee4397d12503e1f9c9ec87049487683acdc8d5cafa11096f4",
       "bytes": 75340,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-full-142.png": {
       "sha256": "3303799487a48911ba2fa2e2d298f4485fc382a4e93c390df372e3c91119c588",
       "bytes": 1384,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-full-240-expired.png": {
       "sha256": "20aede79803b698878cc3fdf1ca20f52731da404b3924a39a601dcb0fd6aa2c1",
       "bytes": 3528,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-full-240-revoked.png": {
       "sha256": "1af8b82b0eda07518666fb687f86d14192d99e101f376ae63d7f9f70b11a8c81",
       "bytes": 3589,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-full-240.png": {
       "sha256": "cf97d083c0a4b345eca6692bb86a44dc6ff270dfc22694196ef3ee99cc300f88",
       "bytes": 3651,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-full-expired.svg": {
       "sha256": "aa25ff534466a7c1dc30612fe3c811f88f1c676d7d8dd080a967758750f0c2c9",
       "bytes": 1889,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-full-mono.svg": {
       "sha256": "5f204e262ce0d7e3451d1fe807cd33d392cb2c851e0cbca96b38a5c87145940f",
       "bytes": 1888,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-full-revoked.svg": {
       "sha256": "9aefc204a43c9ba63402614253b9466626b5228c535f0062df22ca764bc6f5d7",
       "bytes": 1889,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-full.svg": {
       "sha256": "8cb50e4db768668061b40f76ef8f5ec7a147be8fe2608cf32e7ba6d56a12b051",
       "bytes": 1888,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-icon-29.png": {
       "sha256": "e1bebd17ca8871700d4ae693f94e4274a65f6cd68bcaae10d480f708162797c1",
       "bytes": 871,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-icon-58.png": {
       "sha256": "580f7e596a1d943438b5effddb69cdef7d63bc66f8101662c63cd9e223eebeca",
       "bytes": 1739,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-icon-87.png": {
       "sha256": "2112ae5b8c23cf166595186ec6d8631843ba32a10b4f7ec50e8efca25b9cde1c",
       "bytes": 2580,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-icon.svg": {
       "sha256": "04cdf7caa441bbd6fb5c9e01422287ade00cb648f3da377647e70c1c3ba53f45",
       "bytes": 1040,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-reduced-64.png": {
       "sha256": "8822a05d97e73926be6d447636f58b1e391244006063c2a334ddf490d870b60f",
       "bytes": 328,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-reduced-89.png": {
       "sha256": "6ce566c21c59186dbad29a52d117790d18032406323ded7d068d14db9abf0c9b",
       "bytes": 516,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/mark-reduced.svg": {
       "sha256": "7092fe3b9537d07e01703d79749afa7aa4a550233d64637845d517739b093def",
       "bytes": 1894,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/og-1200x630.png": {
       "sha256": "8733065969263d1b2e3137faa897751a0aa3cf6fe76adcdd1e1731b818068c1f",
       "bytes": 52325,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/og-1200x630.svg": {
       "sha256": "479d3802b944b7600e1be093db7105b7fa4a64e2281665778f0b8df2f6b0375b",
       "bytes": 4594,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/sheet-ticket.png": {
       "sha256": "3b984516b006f5611caf55f00ba3d1349d57c54ca21b1052c062611569392597",
       "bytes": 68765,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/wordmark-plain.svg": {
       "sha256": "b456564a7062f96f89f4626410f0b7b7d2a1e28bfe36ac4189c04352d66b1a40",
       "bytes": 387,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/wordmark-solid.svg": {
       "sha256": "0f645fc3d1c68e610572260f143d14d1a18ad5b6865f278524efa9a916485f6c",
       "bytes": 452,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "brand/wordmark-split.svg": {
       "sha256": "b966a627aa39aa11b691604c810da4e5147d6fe3102951f30db4787a0cbf2acd",
       "bytes": 621,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "packages/pass/assets/icon.png": {
       "sha256": "064355e7f4dd05d27ff610411e356a6b3a38dfaf44c44d7bcecd3b02dfe33697",
       "bytes": 851,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "packages/pass/assets/logo.png": {
       "sha256": "869889afc0f7c9e1be41f6c9ec9dc7f1996f484cce6da5c4e1ac94c15f6e5c2f",
       "bytes": 2240,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     },
     "packages/pass/assets/strip.png": {
       "sha256": "c1f28f60fc132c253a147d57927ad54c3d7c9f64ec342e2dfd59cb96070ba896",
       "bytes": 4129,
-      "master": "eac0d570e125dc18f7d9454e00ba223c939031e2358251a98dd7e2674c0f7193"
+      "master": "9627aa183d4732b8211da61d831cbfb2d00bc3c4f91a12a546da0f99ea000c04"
     }
   }
 }

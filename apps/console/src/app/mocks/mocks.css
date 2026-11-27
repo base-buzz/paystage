@@ -1,0 +1,603 @@
+/*
+ * `/mocks` — the storybook shell.
+ *
+ * Structure only in the page components; every colour comes from the same `--lp-*` tokens the landing page uses, so
+ * light mode follows the theme. The one thing that is deliberately not theme-aware is the thumbnail plate: the
+ * drawings are on paper, and a screenshot of a pass should keep its paper background in both themes.
+ *
+ * The sticky caption + swapping frame is CSS only. Each frame is a tall grid row; the caption and the media both stick
+ * under the site header, so the caption holds while the reader scrolls and the next row's frame covers the last. No
+ * client component, no observer, no motion — the page reads with JavaScript disabled.
+ */
+
+.mocks-page {
+  min-height: 100vh;
+  padding: 112px 0 96px;
+  background: var(--lp-bg);
+  color: var(--lp-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.mocks-page ::selection {
+  background: rgba(110, 231, 183, 0.24);
+}
+
+.mocks-shell {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.mocks-page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.mocks-page a:focus-visible {
+  outline: 2px solid var(--lp-mint);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* ---------- the one chip --------------------------------------------------------------- */
+
+.mocks-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  padding: 5px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mocks-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.mocks-chip--drawn {
+  color: var(--lp-dim);
+  border-color: color-mix(in oklab, var(--lp-dim) 42%, transparent);
+}
+
+.mocks-chip--live {
+  color: var(--lp-mint);
+  border-color: color-mix(in oklab, var(--lp-mint) 52%, transparent);
+  background: color-mix(in oklab, var(--lp-mint) 10%, transparent);
+}
+
+.mocks-chip--not-built {
+  color: var(--lp-amber);
+  border-color: color-mix(in oklab, var(--lp-amber) 52%, transparent);
+  background: color-mix(in oklab, var(--lp-amber) 10%, transparent);
+}
+
+/* ---------- shared type ---------------------------------------------------------------- */
+
+.mocks-eyebrow {
+  margin: 0 0 16px;
+  color: var(--lp-mint);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.mocks-page h1 {
+  margin: 0 0 20px;
+  max-width: 900px;
+  font-size: clamp(36px, 5.4vw, 64px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+
+.mocks-page code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: color-mix(in oklab, currentColor 9%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+
+/* ---------- the index ------------------------------------------------------------------ */
+
+.mocks-index-head {
+  max-width: 860px;
+  margin: 0 0 52px;
+}
+
+.mocks-lead {
+  max-width: 780px;
+  margin: 0 0 18px;
+  color: var(--lp-dim);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.mocks-lead strong {
+  color: var(--lp-text);
+  font-weight: 600;
+}
+
+.mocks-index-order {
+  margin: 0;
+  color: var(--lp-faint);
+  font-size: 13px;
+}
+
+.mocks-index-order a {
+  color: var(--lp-mint);
+  border-bottom: 1px solid color-mix(in oklab, var(--lp-mint) 45%, transparent);
+}
+
+.mocks-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.mocks-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--lp-line);
+  border-radius: 16px;
+  background: var(--lp-panel);
+  transition: transform 140ms ease, border-color 140ms ease;
+}
+
+.mocks-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--lp-mint) 40%, var(--lp-line));
+}
+
+.mocks-card-thumb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  padding: 14px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--lp-line);
+  background: #efede7;
+}
+
+/* The drawings are on paper; contain keeps the whole screen visible instead of cropping the top of a phone. */
+.mocks-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.mocks-card-n {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  padding: 4px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.84);
+  color: #24262b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.mocks-card-noimage {
+  color: #6b6862;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mocks-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+}
+
+.mocks-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--lp-faint);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mocks-card-body h2 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.mocks-card-premise {
+  margin: 0;
+  color: var(--lp-dim);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.mocks-card-meta {
+  margin: 0;
+  color: var(--lp-faint);
+  font-size: 12px;
+}
+
+.mocks-card-cta {
+  margin-top: auto;
+  padding-top: 8px;
+  color: var(--lp-mint);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.mocks-index-foot {
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid var(--lp-line);
+  color: var(--lp-faint);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.mocks-index-foot p {
+  max-width: 760px;
+  margin: 0;
+}
+
+/* ---------- a story --------------------------------------------------------------------- */
+
+.mocks-breadcrumb {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 40px;
+  color: var(--lp-faint);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.mocks-breadcrumb a {
+  color: var(--lp-dim);
+}
+
+.mocks-breadcrumb a:hover {
+  color: var(--lp-mint);
+}
+
+.mocks-story-head {
+  max-width: 820px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--lp-line);
+}
+
+.mocks-premise {
+  max-width: 760px;
+  margin: 0 0 24px;
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+.mocks-head-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  color: var(--lp-faint);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.mocks-note {
+  max-width: 760px;
+  margin: 0 0 20px;
+  color: var(--lp-dim);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.mocks-live-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid color-mix(in oklab, var(--lp-mint) 45%, transparent);
+  color: var(--lp-mint);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mocks-live-link:hover {
+  border-bottom-color: var(--lp-mint);
+}
+
+.mocks-nolink {
+  max-width: 760px;
+  margin: 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--lp-amber);
+  color: var(--lp-dim);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.mocks-frame-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--lp-line);
+}
+
+.mocks-frame-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--lp-line);
+  border-radius: 999px;
+  color: var(--lp-dim);
+  font-size: 12px;
+}
+
+.mocks-frame-nav a:hover {
+  border-color: color-mix(in oklab, var(--lp-mint) 45%, var(--lp-line));
+  color: var(--lp-text);
+}
+
+.mocks-frame-nav-n {
+  color: var(--lp-faint);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.mocks-frames {
+  margin-top: 0;
+}
+
+.mocks-frame {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: clamp(24px, 5vw, 80px);
+  align-items: start;
+  min-height: 92vh;
+  padding: clamp(40px, 6vw, 76px) 0;
+  border-bottom: 1px solid var(--lp-line);
+  scroll-margin-top: 96px;
+}
+
+.mocks-frame-caption {
+  position: sticky;
+  top: 104px;
+}
+
+.mocks-frame-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: var(--lp-faint);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.mocks-frame-caption h2 {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+}
+
+.mocks-frame-anchor:hover {
+  color: var(--lp-mint);
+}
+
+.mocks-surface {
+  margin: 0 0 18px;
+  color: var(--lp-faint);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mocks-frame-caption > p:not(.mocks-surface) {
+  margin: 0 0 16px;
+  color: var(--lp-dim);
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+
+.mocks-correction {
+  margin: 0 0 16px;
+  padding: 2px 0 2px 14px;
+  border-left: 3px solid var(--lp-mint);
+  color: var(--lp-dim);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.mocks-frame-media {
+  position: sticky;
+  top: 104px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 420px;
+  margin: 0;
+  padding: clamp(12px, 2vw, 22px);
+  border: 1px solid var(--lp-line);
+  border-radius: 18px;
+  background: var(--lp-panel);
+}
+
+.mocks-frame-media img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 190px);
+  height: auto;
+  margin: auto;
+  border: 1px solid color-mix(in oklab, var(--lp-line) 70%, transparent);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.mocks-frame-absent {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 360px;
+  padding: 28px;
+  border: 1px dashed color-mix(in oklab, var(--lp-mint) 38%, var(--lp-line));
+  border-radius: 12px;
+  color: var(--lp-dim);
+  text-align: center;
+}
+
+.mocks-frame-absent p {
+  max-width: 360px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.mocks-frame-absent strong {
+  color: var(--lp-text);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mocks-not {
+  max-width: 820px;
+  margin: 0;
+  padding: 40px 0;
+  border-bottom: 1px solid var(--lp-line);
+}
+
+.mocks-not h2 {
+  margin: 0 0 10px;
+  color: var(--lp-mint);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.mocks-not p {
+  margin: 0;
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.mocks-pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding-top: 32px;
+}
+
+.mocks-pager a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border: 1px solid var(--lp-line);
+  border-radius: 12px;
+  color: var(--lp-text);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.mocks-pager a:hover {
+  border-color: color-mix(in oklab, var(--lp-mint) 40%, var(--lp-line));
+}
+
+.mocks-pager a span {
+  color: var(--lp-faint);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.mocks-pager-next {
+  text-align: right;
+}
+
+/* ---------- small screens: the sticky stage is a desktop affordance --------------------- */
+
+@media (max-width: 900px) {
+  .mocks-page {
+    padding-top: 88px;
+  }
+
+  .mocks-frame {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    gap: 24px;
+  }
+
+  .mocks-frame-caption,
+  .mocks-frame-media {
+    position: static;
+  }
+
+  .mocks-frame-media {
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .mocks-frame-media img {
+    max-height: none;
+  }
+
+  .mocks-pager {
+    grid-template-columns: 1fr;
+  }
+
+  .mocks-pager-next {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mocks-card {
+    transition: none;
+  }
+
+  .mocks-card:hover {
+    transform: none;
+  }
+}

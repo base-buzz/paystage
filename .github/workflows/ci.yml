@@ -63,6 +63,9 @@ jobs:
       - run: node scripts/check-registry-probe.mjs
       - run: node scripts/check-changelog.mjs
       - run: node scripts/check-route-styles.mjs
+      # The six story routes and the machine-readable index share one source; a stale index, a fifth frame or an
+      # image that does not exist is a failed claim, so it fails here.
+      - run: node scripts/check-mocks-index.mjs
       - run: node scripts/check-provenance.mjs
       - run: node scripts/check-new-deps.mjs --base origin/main
       - run: node scripts/check-i18n-discovery.mjs

@@ -1,0 +1,273 @@
+{
+  "stories": [
+    {
+      "n": 1,
+      "slug": "setup",
+      "title": "Set up a teammate",
+      "premise": "The human asks for a job; the agent asks for a cap.",
+      "status": "drawn",
+      "statusNote": "Four drawings, no live issuer route: the screens are rendered from the same layout modules that draw the pass, and the setup route they depict is not in the app.",
+      "notThis": "Not a working issuer flow: these four screens are drawings, and the setup route they show is not built.",
+      "link": null,
+      "linkNote": null,
+      "frames": [
+        {
+          "id": "f1-pick",
+          "file": "/mocks/story1-pick.png",
+          "status": "drawn",
+          "title": "Pick the job",
+          "surface": "iPhone · Safari",
+          "diagram": false,
+          "alt": "An iPhone screenshot of paystage.xyz/new in Safari: four job presets with their limits, and a step bar reading 1 Pick.",
+          "caption": "Safari, on the phone. Four presets, each already carrying a limit. Picking one only opens the next screen — nothing is issued here, and no prompt appears."
+        },
+        {
+          "id": "f1-configure",
+          "file": "/mocks/story1-configure.png",
+          "status": "drawn",
+          "title": "Configure the numbers",
+          "surface": "iPhone · Safari",
+          "diagram": false,
+          "alt": "An iPhone screenshot of the configure screen in Safari with editable fields for per purchase, per day, expiry and payees.",
+          "caption": "Still Safari. Every number is editable, which is the difference between a preset and a policy: the human changes what they mean, not what we chose."
+        },
+        {
+          "id": "f1-confirm",
+          "file": "/mocks/story1-confirm.png",
+          "status": "drawn",
+          "title": "Confirm, then Face ID",
+          "surface": "iPhone · iOS system sheet",
+          "diagram": false,
+          "alt": "An iPhone screenshot with a read-back of the limits and an iOS Face ID sheet asking to confirm.",
+          "caption": "The read-back comes first: what is being granted, in numbers, before any biometric. Only then does iOS draw its own sheet with the Face ID glyph. We choose when it appears; we never draw it.",
+          "correction": "A person does not pick one of four options and have Face ID fire. Pick, configure, read back, confirm — four steps, and the prompt is the fourth."
+        },
+        {
+          "id": "f1-provision",
+          "file": "/mocks/story1-provision.png",
+          "status": "drawn",
+          "title": "Safari hands it to Wallet",
+          "surface": "iPhone · Safari → Wallet",
+          "diagram": false,
+          "alt": "An iPhone screenshot in Safari offering Add to Apple Wallet for a signed Vouch pass.",
+          "caption": "The pass is signed and handed to the Wallet app. After this screen the page holds nothing — the wallet does. This is a transition between two apps, and it is the step people miss.",
+          "correction": "The page cannot show the pass after this point. If the hand-off fails, nothing is provisioned and the serial has no pass to revoke."
+        }
+      ]
+    },
+    {
+      "n": 2,
+      "slug": "works",
+      "title": "The teammate works",
+      "premise": "Forty payments happen and the human sees none of them.",
+      "status": "drawn",
+      "statusNote": "Three drawings of a fixture. The product's API produces verdicts, but no endpoint produced this table, and no screen here is a live dashboard.",
+      "notThis": "Not a dashboard you can open: the list is a fixture, and every number on it is invented for the drawing.",
+      "link": null,
+      "linkNote": null,
+      "frames": [
+        {
+          "id": "f2-calls",
+          "file": "/mocks/story2-calls.png",
+          "status": "drawn",
+          "title": "The work nobody watches",
+          "surface": "the agent's log, not a screen",
+          "diagram": false,
+          "alt": "A list of payments with times, payees, amounts and verdicts, headed 40 payments today and notifications sent: 0.",
+          "caption": "This list is the whole user-visible surface of an agent spending money. The human sees it when they go looking, which is the design and not an outage.",
+          "correction": "Every value here is a fixture. No endpoint produced this table, and the page would rather say so than let a screenshot imply a workload that does not exist yet."
+        },
+        {
+          "id": "f2-refusal",
+          "file": "/mocks/story2-refusal.png",
+          "status": "drawn",
+          "title": "A refusal at the cap",
+          "surface": "the agent's verdict, not a screen",
+          "diagram": false,
+          "alt": "A do_not_pay verdict naming the per-payment cap, the payee, and that no signature was produced.",
+          "caption": "The agent receives the rule that fired and the numbers, then stops. A refusal that says only \"outside policy\" is a support ticket, not an answer."
+        },
+        {
+          "id": "f2-review",
+          "file": "/mocks/story2-review.png",
+          "status": "drawn",
+          "title": "A review arriving",
+          "surface": "the agent's verdict, not a screen",
+          "diagram": false,
+          "alt": "A review verdict carrying the amount, its share of the allowance, the checks run and the checks skipped.",
+          "caption": "The middle verdict: not a yes, not a no. It carries what was checked and — the part nobody else prints — what was not, including whether the seller delivers."
+        }
+      ]
+    },
+    {
+      "n": 3,
+      "slug": "adjust",
+      "title": "The human adjusts",
+      "premise": "The limit is too low. The agent asks; the human taps.",
+      "status": "drawn",
+      "statusNote": "Two drawings. The live /m/:serial page is read-only; the change controls in the first drawing are not built, so there is no manage page to link.",
+      "notThis": "Not a manage page: the live record page is read-only, so there is nothing here to click that changes a limit.",
+      "link": null,
+      "linkNote": "No live link: there is no manage page. The live /m/:serial page is read-only and offers no control that could change a limit.",
+      "frames": [
+        {
+          "id": "f3-page",
+          "file": "/mocks/frame-mandate-page.png",
+          "status": "drawn",
+          "title": "The page would be the editor",
+          "surface": "iPhone · Safari",
+          "diagram": false,
+          "alt": "The mandate page drawing: the same tint, mark and teammate name as the pass, with the limits and change controls.",
+          "caption": "Same tint, same mark, same name as the pass in the wallet — in this drawing the page is the pass with controls on it. The agent drafts every change; the human is the only one who can approve one. AP2 has a word for this screen: a Trusted Surface, a non-agentic interface that renders the mandate to the human.",
+          "correction": "The live /m/:serial page is read-only. The change… and remove controls in this drawing are not built, and the live page says so instead of offering a control that cannot work."
+        },
+        {
+          "id": "f3-changed",
+          "file": "/mocks/frame-pass-changed.png",
+          "status": "drawn",
+          "title": "The pass would update",
+          "surface": "iPhone · Wallet (native)",
+          "diagram": false,
+          "alt": "The same pass after a change, with the new limits on the face.",
+          "caption": "One tap, and the wallet pass shows the new numbers. There is no second card to keep in sync.",
+          "correction": "Nothing writes a changed pass today: this is the second half of the same drawing, not a screen the product can reach."
+        }
+      ]
+    },
+    {
+      "n": 4,
+      "slug": "stops",
+      "title": "The human stops",
+      "premise": "One action, and the name comes off.",
+      "status": "drawn",
+      "statusNote": "Three drawings. Revocation is modelled as a separate signed statement; the revoke screen here is a drawing, and the live record page has no revoke control.",
+      "notThis": "Not a revoke button: the screen is a drawing, and the live record page cannot stop a pass.",
+      "link": null,
+      "linkNote": null,
+      "frames": [
+        {
+          "id": "f4-revoke",
+          "file": "/mocks/story4-revoke.png",
+          "status": "drawn",
+          "title": "One action",
+          "surface": "iPhone · Safari",
+          "diagram": false,
+          "alt": "A page with one primary action: Stop this pass.",
+          "caption": "Revocation is a signed statement, not an edit: the pass is immutable, so stopping it is a second object that names the serial. A revocation that needs re-signing is one that gets lost in a queue.",
+          "correction": "The live /m/:serial page has no revoke control. This drawing shows the action a client would send, not a button shipped on the record page."
+        },
+        {
+          "id": "f4-revoked",
+          "file": "/mocks/frame-pass-revoked.png",
+          "status": "drawn",
+          "title": "The face says so",
+          "surface": "iPhone · Wallet (native)",
+          "diagram": false,
+          "alt": "The same pass in grey with a REVOKED state, all colour removed.",
+          "caption": "The pass keeps its place in the wallet and loses its colour and its claim. Nothing is deleted, so nothing can be quietly restored."
+        },
+        {
+          "id": "f4-deleted",
+          "file": "/mocks/story4-deleted.png",
+          "status": "drawn",
+          "title": "Deleting the pass is not revoking it",
+          "surface": "a diagram, not a screen",
+          "diagram": true,
+          "alt": "A diagram comparing removing the pass from the wallet with revoking it.",
+          "caption": "The misunderstanding worth a frame: removing the image from a phone changes nothing on the server. Only revocation changes what the endpoint says to a stranger."
+        }
+      ]
+    },
+    {
+      "n": 5,
+      "slug": "checks",
+      "title": "A stranger checks",
+      "premise": "Someone has never heard of us and wants one answer.",
+      "status": "live",
+      "statusNote": "One drawing and one live page. /verify answers active, revoked, expired or unknown today; the four-card stack is a drawing.",
+      "notThis": "Not a gallery of real passes: the four cards are a drawing, and /verify only answers the serial you give it.",
+      "link": {
+        "href": "https://paystage.xyz/verify",
+        "label": "Check a pass at /verify"
+      },
+      "linkNote": null,
+      "frames": [
+        {
+          "id": "f5-stack",
+          "file": "/mocks/frame-stack.png",
+          "status": "drawn",
+          "title": "Four teammates, one principal",
+          "surface": "iPhone · Wallet (native)",
+          "diagram": false,
+          "alt": "Four passes fanned like cards, each a different tint with its own teammate name and cap.",
+          "caption": "Each teammate gets its own cap and its own tint, and revoking one leaves the others alone.",
+          "correction": "The caps are set by hand, one at a time. The agent may draft a change, but it cannot add a teammate or raise a cap."
+        },
+        {
+          "id": "f5-verify",
+          "file": null,
+          "status": "live",
+          "title": "The scan page — live",
+          "surface": "the live page, not a drawing",
+          "diagram": false,
+          "alt": null,
+          "caption": "A stranger scans the QR and lands on one page with one answer: active, revoked, expired or unknown. That page is /verify, and the link below is the page itself rather than a picture of it.",
+          "correction": "No image on purpose: a screenshot of /verify would go stale, and the live page is one click away."
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "slug": "fails",
+      "title": "Something goes wrong",
+      "premise": "The cases nobody puts in a demo.",
+      "status": "drawn",
+      "statusNote": "Four drawings of failure states. Two further drawings (unknown serial, cap mid-job) are not shown, because a story carries at most four frames.",
+      "notThis": "Not a live incident feed: the failures are drawings of the state machine, not screenshots of an outage.",
+      "link": null,
+      "linkNote": null,
+      "frames": [
+        {
+          "id": "f6-failclosed",
+          "file": "/mocks/story6-failclosed.png",
+          "status": "drawn",
+          "title": "Our service is down",
+          "surface": "a diagram, not a screen",
+          "diagram": true,
+          "alt": "A three-step diagram: the agent asks for a verdict, the adapter refuses, no signature is produced.",
+          "caption": "Fail closed, by design: an unreachable gate is not an approval. The alternative turns every outage into an unguarded spending window."
+        },
+        {
+          "id": "f6-cancelled",
+          "file": "/mocks/story6-cancelled.png",
+          "status": "drawn",
+          "title": "Face ID cancelled",
+          "surface": "a diagram, not a screen",
+          "diagram": true,
+          "alt": "A diagram: the biometric prompt is cancelled, so no mandate exists to spend.",
+          "caption": "Nothing is issued, so there is nothing to spend and nothing to revoke. The agent learns why and stops."
+        },
+        {
+          "id": "f6-stale",
+          "file": "/mocks/story6-stale.png",
+          "status": "drawn",
+          "title": "A stale image, a live answer",
+          "surface": "a diagram, not a screen",
+          "diagram": true,
+          "alt": "A diagram comparing a screenshot that says active with a live endpoint that answers revoked.",
+          "caption": "The QR is the authority, not the picture. An old image is a claim about the past — which is also why a pass cannot be verified offline."
+        },
+        {
+          "id": "f6-429",
+          "file": "/mocks/story6-429.png",
+          "status": "drawn",
+          "title": "The free allowance runs out",
+          "surface": "an API response, not a screen",
+          "diagram": false,
+          "alt": "A 429 body saying the free tier is exhausted, that the service is working, and where the paid path is.",
+          "caption": "A caller must be able to tell \"capped\" from \"broken\". The body names the cap, says the service is working, and gives the reset."
+        }
+      ]
+    }
+  ]
+}
