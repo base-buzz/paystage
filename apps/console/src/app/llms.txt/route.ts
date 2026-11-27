@@ -163,6 +163,7 @@ An agent that reads only the API misses the pages a person reads. These are cano
 - https://paystage.xyz/lists — where we appear, and where we are not listed
 - https://paystage.xyz/try — the five-minute first call
 - https://paystage.xyz/llms-full.txt — this file with the full text instead of the map
+- https://vouchguard.app — the reference instance: a wallet pass carrying an SME's agent limits, plus the MIT brand pack to fork it
 
 ## Links
 

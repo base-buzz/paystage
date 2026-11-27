@@ -128,6 +128,8 @@ if (reason === null) {
     "check-no-keys.mjs",
     /* #465: llms.txt is the first thing an agent reads, and nothing parsed it. */
     "check-llms-txt.mjs",
+    /* #468: every domain we own must have an agent entry point, and the two brands must name each other. */
+    "check-agent-entry.mjs",
   ]) {
     const [script, ...scriptArgs] = cheap.split(" ");
     if (!existsSync(join(ROOT, "scripts", script))) continue;

@@ -207,6 +207,18 @@ export const PAYSTAGE_MANIFEST = {
   ],
   version: PACKAGE_VERSIONS["@paystage/mcp"],
   license: "MIT",
+  /**
+   * The sibling brand. The engine and the SME site are one product with two marks, so an agent that finds either must be
+   * able to reach the other without a human telling it they belong together (#468).
+   */
+  related: [
+    {
+      name: "VouchGuard",
+      homepage: "https://vouchguard.app",
+      llms_txt: "https://vouchguard.app/llms.txt",
+      role: "reference instance",
+    },
+  ],
   homepage: "https://paystage.xyz",
   repository: "https://github.com/base-buzz/paystage",
   socials: SOCIALS,
