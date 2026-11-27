@@ -103,7 +103,7 @@ export const LISTS = {
       "verified_at": "2026-11-18"
     }
   ],
-  "generatedAt": "2026-11-26",
+  "generatedAt": "2026-11-27",
   "coverage": {
     "numerator": 229,
     "rawTotal": 233,
@@ -734,13 +734,13 @@ export const LISTS = {
     "toBlock": 62730782,
     "completeSinceDeployment": false,
     "coverageNote": "archive history before block 51000000 is not served by the public RPC; entries before that block are absent, not empty",
-    "collectedAt": "2026-11-26T23:42:12.461Z",
+    "collectedAt": "2026-11-24T23:42:15.622Z",
     "enforced": true,
     "enforcedBy": "preflight accept.payee_blacklisted_onchain",
     "enforcedReason": "Circle blacklisted this address on Base (eip155:8453 USDC Blacklisted event) — a contract-level freeze by the issuer, not an OFAC listing",
     "delistingTracked": true,
     "freshness": {
-      "upstreamChangedAt": "2026-11-26T23:42:12.461Z",
+      "upstreamChangedAt": "2026-11-24T23:42:15.622Z",
       "basis": "collection",
       "reviewedAt": null,
       "hasUpstreamFeed": true
@@ -755,7 +755,7 @@ export const LISTS = {
     "growth": {
       "retrievals": [
         {
-          "at": "2026-11-26T23:42:12.461Z",
+          "at": "2026-11-24T23:42:15.622Z",
           "count": 84
         }
       ]
@@ -763,7 +763,7 @@ export const LISTS = {
     "refreshInfo": {
       "command": "node /work/ops/bin/circle-blacklist.mjs",
       "where": "hourly canary — bin/canary-digest.sh (same run as OFAC)",
-      "lastRunAt": "2026-11-26T23:42:12.461Z",
+      "lastRunAt": "2026-11-24T23:42:15.622Z",
       "status": "ok",
       "lastResult": "enforced 84 distinct addresses across blocks 51000000–62730782"
     },
