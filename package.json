@@ -14,6 +14,7 @@
     "brand:render": "node scripts/brand-kit.mjs",
     "brand:rebuild": "node scripts/brand-rebuild.mjs",
     "brand:manifest": "node scripts/record-brand-manifest.mjs",
+    "brand:pngs": "node scripts/gen-brand-png-module.mjs",
     "brand:verify": "node scripts/check-brand-assets.mjs"
   },
   "devDependencies": {

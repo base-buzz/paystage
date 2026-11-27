@@ -11,11 +11,12 @@
  *   2. pass assets (face, strip, icon, state marks)
  *   3. storyboard frames (same layout functions, into the mock surface)
  *   4. loop frames and stills
- *   5. record the asset ledger
- *   6. check-brand-assets (five geometry checks + freshness)
- *   7. check-pass-assets (Apple sizes + the poster mark)
- *   8. re-sign the demo .pkpass
- *   9. record the ledger again, so the signed archive is the one on record
+ *   5. embed the tier PNGs the pack route serves
+ *   6. record the asset ledger
+ *   7. check-brand-assets (geometry, tiers, the pack versus brand.json, freshness)
+ *   8. check-pass-assets (Apple sizes + the poster mark)
+ *   9. re-sign the demo .pkpass
+ *  10. record the ledger again, so the signed archive is the one on record
  *
  *   npm run brand:rebuild
  *
@@ -30,6 +31,8 @@ const STEPS = [
   { label: "pass assets", args: ["scripts/render-pass-assets.mjs"] },
   { label: "storyboard frames", args: ["scripts/render-pass-assets.mjs", "--out", "apps/console/public/mocks", "--frames"] },
   { label: "loop", args: ["scripts/render-loop.mjs", "--no-check"] },
+  /* The pack route serves these bytes from a Worker, so they are embedded after the kit renders them. */
+  { label: "embed pack PNGs", args: ["scripts/gen-brand-png-module.mjs"] },
   { label: "record ledger", args: ["scripts/record-brand-manifest.mjs"] },
   { label: "check brand", args: ["scripts/check-brand-assets.mjs"] },
   { label: "check pass", args: ["scripts/check-pass-assets.mjs"] },

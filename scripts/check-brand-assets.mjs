@@ -13,15 +13,33 @@
  *   5. **no amber anywhere in the mark**, in source or in the rendered pixels — gold belongs to the site and the pass
  *      face, never to the logo;
  *   6. **tier assets exist** at 142/89/64 wide plus the 29/58/87 tiles, and the tier boundary is the source's.
+ *   7. **the downloaded pack agrees with `brand.json`**: the zip is built through the same module the page renders
+ *      from, its `brand.json` is compared with the repository's (name and all), and `VERSION`/`README.txt` carry the
+ *      spec date.
+ *   8. **the embedded tier PNGs are the ones `brand/` just rendered** — a stale Worker copy is red here, not in
+ *      production.
+ *   9. **our own demo copy never says "pay with" beside the mark** — the one rule a fork breaks by accident.
  *
  * Plus the freshness ledger: every generated file is hashed in `brand/asset-manifest.json` against the masters, so a
  * half-run regeneration is not shippable.
  *
  * Exit 0 clean · 1 something is wrong (each problem is named) · 2 the kit cannot be read at all.
  */
+import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { MARK, MARK_COLOURS, MARK_PALETTE, tierForWidth } from "./lib/mark.mjs";
+import {
+  PACK_PNG_NAMES,
+  PACK_SVG_NAMES,
+  PACK_VERSION_DATE,
+  buildBrandPack,
+  readStoreZip,
+} from "./lib/brand-pack.mjs";
+import {
+  BRAND_PNG_SHA256,
+  BRAND_PNGS as EMBEDDED_BRAND_PNGS,
+} from "../apps/vouchguard/src/lib/brand-pngs.generated.mjs";
 import { freshnessProblems } from "./lib/brand-manifest.mjs";
 
 const BRAND = "brand";
@@ -400,6 +418,153 @@ for (const [file, state] of [
 
 /* 8 · freshness: every generated asset matches the ledger, and the masters have not moved under it */
 for (const problem of freshnessProblems()) problems.push(problem);
+
+/* 9 · the downloadable pack and the repository's brand.json cannot disagree */
+{
+  const BRAND_FILE = "brand.json";
+  const PACK_ROUTE = "apps/vouchguard/src/app/brand/vg-brand-pack.zip/route.ts";
+  if (!existsSync(PACK_ROUTE)) {
+    fail(PACK_ROUTE, "is missing — the download would 404");
+  } else {
+    const route = readFileSync(PACK_ROUTE, "utf8");
+    if (!/from "\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/brand\.json"/.test(route)) {
+      fail(PACK_ROUTE, "does not import the repository's brand.json");
+    }
+    if (!/buildBrandPack\(\{\s*brand:\s*brandJson/.test(route)) {
+      fail(PACK_ROUTE, "does not pass the repository's brand.json to buildBrandPack");
+    }
+    if (!/BRAND_PNGS/.test(route)) {
+      fail(PACK_ROUTE, "does not use the generated PNG exports");
+    }
+  }
+  if (!existsSync(BRAND_FILE)) {
+    fail(BRAND_FILE, "is missing — the pack has nothing to name it");
+  } else {
+    let brandJson;
+    try {
+      brandJson = JSON.parse(readFileSync(BRAND_FILE, "utf8"));
+    } catch (error) {
+      fail(BRAND_FILE, `is not valid JSON (${error instanceof Error ? error.message : String(error)})`);
+    }
+    if (brandJson) {
+      const pngs = {};
+      for (const name of PACK_PNG_NAMES) {
+        const path = join(BRAND, name);
+        if (!existsSync(path)) fail("brand-pack", `${name} is missing — the pack would be incomplete`);
+        else pngs[name] = readFileSync(path);
+      }
+      if (Object.keys(pngs).length === PACK_PNG_NAMES.length) {
+        try {
+          const entries = readStoreZip(buildBrandPack({ brand: brandJson, pngs }));
+          const decode = (name) => (entries.has(name) ? new TextDecoder().decode(entries.get(name)) : null);
+          const expected = [
+            "README.txt",
+            "VERSION",
+            "LICENCE",
+            "LICENCE-LUCIDE",
+            "brand.json",
+            ...PACK_SVG_NAMES.map((name) => `svg/${name}`),
+            ...PACK_PNG_NAMES.map((name) => `png/${name}`),
+          ];
+          for (const name of expected) {
+            if (!entries.has(name)) fail("brand-pack", `the zip has no ${name}`);
+          }
+          const zippedBrand = decode("brand.json");
+          if (zippedBrand === null) {
+            fail("brand-pack", "the zip has no brand.json");
+          } else {
+            let parsed;
+            try {
+              parsed = JSON.parse(zippedBrand);
+            } catch {
+              fail("brand-pack", "the zip's brand.json is not JSON");
+            }
+            if (parsed) {
+              if (parsed.name !== brandJson.name) {
+                fail(
+                  "brand-pack",
+                  `the zip's brand.json names ${JSON.stringify(parsed.name)}, the repo's names ${JSON.stringify(brandJson.name)}`,
+                );
+              }
+              if (JSON.stringify(parsed) !== JSON.stringify(brandJson)) {
+                fail("brand-pack", "the zip's brand.json does not match the repository's brand.json");
+              }
+            }
+          }
+          const version = decode("VERSION")?.trim();
+          if (version !== PACK_VERSION_DATE) {
+            fail("brand-pack", `VERSION is ${JSON.stringify(version)}, expected ${JSON.stringify(PACK_VERSION_DATE)}`);
+          }
+          const readme = decode("README.txt") ?? "";
+          if (!readme.includes(`Version — ${PACK_VERSION_DATE}`)) {
+            fail("brand-pack", `README.txt does not repeat "Version — ${PACK_VERSION_DATE}"`);
+          }
+          for (const name of PACK_SVG_NAMES) {
+            const svg = decode(`svg/${name}`) ?? "";
+            if (!svg.includes('xmlns="http://www.w3.org/2000/svg"')) {
+              fail("brand-pack", `svg/${name} is not a complete SVG`);
+            }
+          }
+          for (const name of PACK_PNG_NAMES) {
+            const data = entries.get(`png/${name}`);
+            if (!data || data.length < 8 || data[0] !== 0x89 || data[1] !== 0x50 || data[2] !== 0x4e || data[3] !== 0x47) {
+              fail("brand-pack", `png/${name} is not a PNG`);
+            }
+          }
+        } catch (error) {
+          fail("brand-pack", `the pack cannot be built or read (${error instanceof Error ? error.message : String(error)})`);
+        }
+      }
+    }
+  }
+}
+
+/* 10 · the embedded tier PNGs are the bytes brand/ just rendered; a stale Worker copy is a red check */
+{
+  const GENERATED = "apps/vouchguard/src/lib/brand-pngs.generated.mjs";
+  for (const name of PACK_PNG_NAMES) {
+    const path = join(BRAND, name);
+    if (!existsSync(path)) continue;
+    const actual = createHash("sha256").update(readFileSync(path)).digest("hex");
+    if (BRAND_PNG_SHA256[name] !== actual) {
+      fail(GENERATED, `${name} is stale — run \`node scripts/gen-brand-png-module.mjs\``);
+      continue;
+    }
+    const decoded = Buffer.from(EMBEDDED_BRAND_PNGS[name] ?? "", "base64");
+    const embedded = createHash("sha256").update(decoded).digest("hex");
+    if (embedded !== actual) {
+      fail(GENERATED, `${name} decodes to different bytes than brand/${name}`);
+    }
+  }
+}
+
+/* 11 · our own demo copy must never say "pay with" beside the mark — the one rule a fork breaks by accident */
+{
+  const SRC = "apps/vouchguard/src";
+  const NEGATED = /\b(?:never|not|no|without|cannot|can't|don't|do not|must not|must never)\b/i;
+  const files = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (/\.(tsx?|jsx?)$/.test(entry.name)) files.push(path);
+    }
+  };
+  if (existsSync(SRC)) walk(SRC);
+  for (const file of files) {
+    const text = readFileSync(file, "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    for (const sentence of text.split(/(?<=[.!?])\s+|\n{2,}/)) {
+      const match = sentence.match(/\bpay[\s-]?with\b/i);
+      if (!match) continue;
+      if (NEGATED.test(sentence)) continue;
+      const index = text.indexOf(match[0]);
+      const line = text.slice(0, index).split("\n").length;
+      fail(file, `line ${line}: affirmative "pay with" beside the mark — the mark is not a payment method; say never, or drop it`);
+    }
+  }
+}
 
 if (problems.length > 0) {
   console.error(`brand-assets: ${problems.length} problem(s)`);
