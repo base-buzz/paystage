@@ -470,7 +470,20 @@ export default async function LabPage() {
                 {Number(latestSupply.p90_price_usdc ?? 0).toLocaleString("en-US")}
               </>
             ) : null}
-            . Read {latestSupply.run_date}. A catalogue entry is a seller&apos;s claim, not a probe of that seller — we have not paid these endpoints.
+            . Read {latestSupply.run_date}.{" "}
+            {/*
+              #483: the denominator is ours, and it is smaller than a public one. x402scan paginates 6,200 settlement
+              recipients while this row counts payees that list a resource — a resource-side sample cannot see a recipient
+              who never advertises one. Saying 1,394 next to 6,200 without this sentence is the credibility failure we
+              spend the rest of this page catching.
+            */}
+            <em>
+              This count is resource-side: a payee appears here only if it lists something in the catalogue, so a recipient
+              that settles on chain without advertising is invisible to it — x402scan&apos;s 6,200 settlement recipients and this
+              figure measure different populations. Their top-ten average ask, $0.0147, sits beside our median $0.0100: two
+              methods, same order of magnitude.
+            </em>{" "}
+            A catalogue entry is a seller&apos;s claim, not a probe of that seller — we have not paid these endpoints.
           </p>
         ) : (
           <p style={{ marginTop: 12, fontSize: 14, opacity: 0.8 }}>
