@@ -130,6 +130,8 @@ if (reason === null) {
     "check-llms-txt.mjs",
     /* #468: every domain we own must have an agent entry point, and the two brands must name each other. */
     "check-agent-entry.mjs",
+    /* #476: reads the built HTML, so it runs after the build in both passes. */
+    "check-structured-data.mjs",
   ]) {
     const [script, ...scriptArgs] = cheap.split(" ");
     if (!existsSync(join(ROOT, "scripts", script))) continue;

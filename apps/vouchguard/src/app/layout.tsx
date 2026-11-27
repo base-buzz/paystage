@@ -43,9 +43,49 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const rootStyle = { ...tokenStyle(), ...view.cssVariables } as CSSProperties;
+/**
+ * Structured data (#476).
+ *
+ * Two entities, both true: the **Organization** behind this instance, and the **SoftwareApplication** an agent or an
+ * answer engine can describe without reading the page. The `sameAs` link is the machine-readable version of the sentence
+ * the page says in prose — this is the SME site, and PayStage is the engine it verifies against.
+ *
+ * What it deliberately does not carry: `aggregateRating`, `review`, `offers`. Invented markup is the machine-readable
+ * version of a false claim, and it is the kind a search engine penalises rather than corrects.
+ */
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${view.homepage}#organization`,
+      name: brand.name,
+      url: view.homepage,
+      sameAs: ["https://paystage.xyz"],
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": `${view.homepage}#software`,
+      name: brand.name,
+      description: view.description,
+      applicationCategory: "FinanceApplication",
+      operatingSystem: "iOS, Android",
+      url: view.homepage,
+      license: "https://github.com/base-buzz/paystage/blob/main/LICENSE",
+      codeRepository: "https://github.com/base-buzz/paystage",
+      isBasedOn: "https://paystage.xyz",
+    },
+  ],
+};
+
   return (
     <html lang="en" style={rootStyle}>
       <body>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger -- static, server-rendered, and not user input.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[200] focus:rounded-md focus:bg-deep focus:px-4 focus:py-2 focus:text-paper"
