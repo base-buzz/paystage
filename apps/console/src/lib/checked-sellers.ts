@@ -314,9 +314,17 @@ export function checkedSellersOversize(snapshot: CheckedSellersSnapshot): string
   if (h.oversize.length === 0) {
     return `${range} None exceeds the ${formatCount(h.limit)}-byte line many proxies allow.`;
   }
-  const named = h.oversize
+  /**
+   * Grouped by host: `agent402.tools` sends three of the seven, and listing it three times reads as a data error rather than a host
+   * with three heavy resources.
+   */
+  const byHost = new Map<string, number[]>();
+  for (const row of h.oversize) {
+    byHost.set(row.host, [...(byHost.get(row.host) ?? []), row.bytes]);
+  }
+  const named = [...byHost.entries()]
     .slice(0, 4)
-    .map((row) => `${row.host} at ${formatCount(row.bytes)}`)
+    .map(([host, sizes]) => `${host} at ${sizes.map((n) => formatCount(n)).join(" / ")}`)
     .join(", ");
   const more = h.oversize.length > 4 ? `, and ${formatCount(h.oversize.length - 4)} more` : "";
   return (
