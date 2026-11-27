@@ -8,6 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { CheckedSellersPanel } from "@/components/CheckedSellersPanel";
 import {
+  checkedSellersDenominators,
   checkedSellersDialects,
   CHECKED_SELLERS,
   checkedSellerView,
@@ -359,5 +360,30 @@ describe("challenge dialects", () => {
     const sentence = checkedSellersDialects({ ...CHECKED_SELLERS, dialectSplit: null });
     expect(sentence).toContain("not recorded");
     expect(sentence).not.toContain("0 of");
+  });
+});
+
+/**
+ * Both denominators (#499). The page's headlines count resources and a reader reads them as services; one host carries 29 of the
+ * 100 resources, so "7 of 96 exceed 8 KB" is also "5 of 34 hosts". The assertion pins both numbers and the carrier, so the sentence
+ * cannot quietly start describing one population with the other's words.
+ */
+describe("two denominators", () => {
+  it("publishes resources and hosts together", () => {
+    const d = CHECKED_SELLERS.denominators;
+    expect(d).not.toBeNull();
+    expect(d!.resources).toBe(100);
+    expect(d!.hosts).toBe(34);
+    expect(d!.resourcesOver8kb).toBe(7);
+    expect(d!.hostsOver8kb).toBe(5);
+    expect(d!.largestHost?.[0]).toBe("agent.pocket.network");
+    expect(d!.largestHost?.[1]).toBe(29);
+  });
+
+  it("says which denominator a count uses, and warns when it is not recorded", () => {
+    const sentence = checkedSellersDenominators(CHECKED_SELLERS);
+    expect(sentence).toContain("100 resources across 34 hosts");
+    expect(sentence).toContain("per **resource**, not per host");
+    expect(checkedSellersDenominators({ ...CHECKED_SELLERS, denominators: null })).toContain("not recorded");
   });
 });

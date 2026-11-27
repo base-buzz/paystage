@@ -95,6 +95,17 @@ export interface CheckedSellersSnapshot {
     total: number;
     noChallenge: { host: string; resource: string; status: number | string | null; firstStatus: number | string | null }[];
   } | null;
+  /**
+   * Both denominators (#499). This census counts **resources**, and one host can carry 29 of the 100, so "7 of 96 exceed 8 KB" is
+   * true per resource and **5 of 34** per host. Published together so a reader never has to guess which one a number uses.
+   */
+  denominators: {
+    resources: number;
+    hosts: number;
+    resourcesOver8kb: number;
+    hostsOver8kb: number;
+    largestHost: (string | number)[] | null;
+  } | null;
   rows: CheckedSellerRow[];
 }
 
@@ -251,5 +262,25 @@ export function checkedSellersDialects(snapshot: CheckedSellersSnapshot): string
     `${formatCount(split.v2)} of ${formatCount(split.total)} resources answered a v2 challenge, ${legacy}` +
     (split.both > 0 ? `, ${formatCount(split.both)} answered both` : "") +
     (split.none > 0 ? `, and ${formatCount(split.none)} answered none at all: ${named}.` : ".")
+  );
+}
+
+/**
+ * The two denominators (#499), in one sentence, because every headline on this page counts resources and a reader reads them as
+ * services. **`agent.pocket.network` alone carries 29 of the 100 resources**, so "7 of 96 exceed 8 KB" is also "5 of 34 hosts" —
+ * the same fact, two very different impressions.
+ */
+export function checkedSellersDenominators(snapshot: CheckedSellersSnapshot): string {
+  const d = snapshot.denominators;
+  if (!d || !Number.isFinite(d.resources) || !Number.isFinite(d.hosts) || d.hosts <= 0) {
+    return "The host count for this run was not recorded, so the page publishes resource counts only.";
+  }
+  const carrier = d.largestHost
+    ? ` — ${String(d.largestHost[0])} alone carries ${formatCount(Number(d.largestHost[1]))} of them`
+    : "";
+  return (
+    `${formatCount(d.resources)} resources across ${formatCount(d.hosts)} hosts${carrier}. ` +
+    `Every count on this page is per **resource**, not per host: the ${formatCount(d.resourcesOver8kb)} challenges over 8 KB ` +
+    `belong to ${formatCount(d.hostsOver8kb)} of those hosts.`
   );
 }

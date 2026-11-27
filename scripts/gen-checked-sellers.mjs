@@ -147,6 +147,8 @@ function finalize(snapshot) {
      * source run did not record it, in which case the page says it is not recorded rather than inventing a count. */
     methodSplit: snapshot.methodSplit ?? null,
     dialectSplit: snapshot.dialectSplit ?? null,
+    /** Both denominators (#499): resources and hosts. One host can carry 29 of the 100 resources. */
+    denominators: snapshot.denominators ?? null,
     rowsNamed: rows.length,
     entriesCoveredByName: rows.reduce((total, row) => total + row.endpointsChecked, 0),
     rows,
@@ -221,6 +223,23 @@ function fromProbeJson(path) {
       });
     }
   }
+  /**
+   * Both denominators (#499): this census counts **resources**, and one host can contribute many. `agent.pocket.network` alone
+   * carries 29 of the 100, so "7 of 96 exceed 8 KB" is true per resource and **5 of 34** per host — two different sentences that a
+   * reader cannot tell apart unless the page says which one it is using.
+   */
+  const hostSet = new Set(rows.map((row) => String(row?.host ?? "")).filter(Boolean));
+  const denominators = {
+    resources: rows.length,
+    hosts: hostSet.size,
+    resourcesOver8kb: rows.filter((row) => Number(row?.challenge_header_bytes) > 8192).length,
+    hostsOver8kb: new Set(rows.filter((row) => Number(row?.challenge_header_bytes) > 8192).map((row) => String(row?.host ?? ""))).size,
+    largestHost: [...rows.reduce((map, row) => {
+      const host = String(row?.host ?? "");
+      return map.set(host, (map.get(host) ?? 0) + 1);
+    }, new Map())].sort((a, b) => b[1] - a[1])[0] ?? null,
+  };
+
   const dialectSplit =
     rows.length > 0 && dialects.v2 + dialects.legacy + dialects.both + dialects.none === rows.length
       ? { ...dialects, total: rows.length, noChallenge: noChallenge.slice(0, 8) }
@@ -235,6 +254,7 @@ function fromProbeJson(path) {
 
   const snapshot = {
     dialectSplit,
+    denominators,
     verifiedOn: data.verifiedOn,
     timeZone: data.timeZone ?? "UTC",
     method: data.method,

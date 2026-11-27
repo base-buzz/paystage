@@ -79,6 +79,16 @@
       }
     ]
   },
+  "denominators": {
+    "resources": 100,
+    "hosts": 34,
+    "resourcesOver8kb": 7,
+    "hostsOver8kb": 5,
+    "largestHost": [
+      "agent.pocket.network",
+      29
+    ]
+  },
   "rowsNamed": 9,
   "entriesCoveredByName": 63,
   "rows": [

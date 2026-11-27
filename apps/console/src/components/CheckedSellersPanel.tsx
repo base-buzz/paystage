@@ -3,6 +3,7 @@ import {
   challengeLabel,
   checkedSellerView,
   checkedSellersCoverage,
+  checkedSellersDenominators,
   checkedSellersDialects,
   checkedSellersGap,
   checkedSellersMethod,
@@ -62,6 +63,10 @@ export function CheckedSellersPanel({ snapshot = CHECKED_SELLERS }: { snapshot?:
 
       <p style={{ marginTop: 10 }}>
         <strong>Challenge dialects.</strong> {checkedSellersDialects(snapshot)}
+      </p>
+
+      <p style={{ marginTop: 10 }}>
+        <strong>Two denominators.</strong> {checkedSellersDenominators(snapshot)}
       </p>
 
       <div
