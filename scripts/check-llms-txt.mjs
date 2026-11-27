@@ -73,6 +73,21 @@ for (const map of MAPS) {
     if (!routeExists(path)) problems.push(`${map.label}: link to ${path} has no route — a map with a dead end is worse than no map`);
   }
 
+  /**
+   * An empty section is a heading an agent reads and learns nothing from (#465). Its patch proposed a second script; the
+   * assertion belongs here, where the map is already parsed.
+   *
+   * The body is inside a template literal, so the end of the map is the backtick-semicolon — **not** `$`, which under the `m` flag
+   * matches every line end and silently produced seventeen false "empty section" reports on real content the first time this was
+   * written.
+   */
+  for (const [, title, textContent] of body.matchAll(/^## (.+)$([\s\S]*?)(?=^## |\n`;)/gm)) {
+    const meaningful = textContent.replace(/[\s`]+/g, "");
+    if (meaningful === "") {
+      problems.push(`${map.label}: the section "${title.trim()}" has no body — a heading with nothing under it is worse than no heading`);
+    }
+  }
+
   for (const page of CANONICAL[map.label] ?? []) {
     if (!new Set(paths).has(page)) problems.push(`${map.label}: the canonical page ${page} is not in the map — an agent will never find it`);
   }
@@ -83,4 +98,4 @@ if (problems.length > 0) {
   for (const problem of problems) console.error("  " + problem);
   process.exit(1);
 }
-console.log(`llms-txt: ${MAPS.length} map(s) with an H1, a blockquote, sections, live links and their canonical pages`);
+console.log(`llms-txt: ${MAPS.length} map(s) with an H1, a blockquote, non-empty sections, live links and their canonical pages`);
