@@ -28,6 +28,7 @@ import {
   type PayeeObservationStore,
 } from "./payee-observation-store.js";
 import { clientFromHeaders, provenanceFromHeaders, provenanceKeyFrom, recordEvent, sourceFromHeaders } from "./telemetry.js";
+import { payerFromPaymentHeader } from "./paid-quota.js";
 import { channelMiddleware } from "./channel.js";
 import { consumeFreeTierCall, freeTierMiddleware, secondsUntilFreeTierReset } from "./free-tier.js";
 import { paidQuotaMiddleware, paidQuotaState } from "./paid-quota.js";
@@ -338,6 +339,26 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
         }),
       );
 
+      /**
+       * The payer on a **refusal** (#489).
+       *
+       * A `do_not_pay` never settles, so there is no receipt to read a payer from — which is why `payer` was null on all 836 refusals
+       * and the question a manager asks ("who was stopped?") had no answer. But the caller has usually already sent a payment
+       * signature, and its `authorization.from` is readable *before* verification: that is the wallet claiming to pay.
+       *
+       * It is recorded as **claimed, not proven** — the column holds the same value a settled row would, and the row's
+       * `caller_provenance` still says whether anything vouched for the caller. Inventing nothing: when no signature is present, the
+       * payer stays null and the page says "not supplied" rather than guessing.
+       */
+      const claimedPayer =
+        payerFromPaymentHeader(
+          c.req.header("payment-signature") ??
+            c.req.header("PAYMENT-SIGNATURE") ??
+            c.req.header("x-payment") ??
+            c.req.header("X-PAYMENT") ??
+            null,
+        ) ?? null;
+
       // Telemetry: skip OPTIONS, health, and non-tool paths.
       if (method !== "OPTIONS" && tool !== null) {
         const parsed = threw ? null : await parseDecisionFromResponse(c.res);
@@ -366,6 +387,7 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
             tool,
             decision,
             reason_codes,
+            payer: claimedPayer,
             network,
             latency_ms: durationMs,
             request_id: requestId,

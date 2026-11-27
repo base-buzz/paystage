@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import { payerFromPaymentHeader } from "../src/paid-quota.js";
 import { createApp } from "../src/app.js";
 
 // Fake payTo for unit tests — never a real treasury address.
@@ -119,5 +120,24 @@ describe("hosted app", () => {
     });
     const res = await app.request("/health");
     expect(res.status).toBe(200);
+  });
+});
+
+/**
+ * The payer on a refusal (#489). A `do_not_pay` never settles, so nothing can be read from a receipt — but the caller's payment
+ * signature is already in the request, and its `authorization.from` is readable before verification. That is the wallet claiming to
+ * pay, and recording it is the difference between "836 refusals, none attributable" and a list a manager can act on.
+ *
+ * The assertion uses the same header extraction the quota uses, so the two cannot drift: `payerFromPaymentHeader` is the single
+ * reader, and it returns null rather than guessing when the header is absent or malformed.
+ */
+describe("refusal payer", () => {
+  it("reads the claimed payer out of an unverified payment signature", () => {
+    const header = Buffer.from(
+      JSON.stringify({ payload: { authorization: { from: "0xAbC0000000000000000000000000000000000001" } } }),
+    ).toString("base64");
+    expect(payerFromPaymentHeader(header)).toBe("0xabc0000000000000000000000000000000000001");
+    expect(payerFromPaymentHeader(null)).toBeNull();
+    expect(payerFromPaymentHeader("not-base64-json")).toBeNull();
   });
 });
