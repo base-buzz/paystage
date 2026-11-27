@@ -25,11 +25,14 @@ authority: it is not a payment card, it holds no money, and it cannot tap to pay
 - ${site}/ — what a pass is, in one screen
 - ${site}/brand — the mark and the kit, MIT, with the six steps to fork it for your own business
 - ${site}/dashboard — the passes this instance knows about, read live from the API
+- ${site}/pricing — free while in build, and what free does not include
+- ${site}/privacy — what this instance holds, and what deleting it does
+- ${site}/terms — what the software is, and what it is not
 
 ## Machine-readable
 
 - ${site}/llms.txt — this file
-- ${site}/.well-known/${(brand as { name: string }).name.toLowerCase()}.json — the descriptor for this issuer
+- ${site}/.well-known/vouchguard.json — the descriptor for this issuer
 - https://paystage.xyz/llms.txt — the engine's own map (tools, install, API)
 
 ## Verify a pass

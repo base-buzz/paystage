@@ -15,86 +15,72 @@
 import { existsSync, readFileSync } from "node:fs";
 
 /** Rendered from a route handler, so the words live in source; the check reads the same source the route serves. */
-const ROUTE = "apps/console/src/app/llms.txt/route.ts";
-const FULL = "apps/console/src/app/llms-full.txt/route.ts";
+/** Both maps are checked (#465): the brand site got its own, and a check that covers one domain is half a check. */
+const MAPS = [
+  { route: "apps/console/src/app/llms.txt/route.ts", full: "apps/console/src/app/llms-full.txt/route.ts", app: "apps/console/src/app", label: "paystage.xyz" },
+  { route: "apps/vouchguard/src/app/llms.txt/route.ts", full: null, app: "apps/vouchguard/src/app", label: "vouchguard.app" },
+];
 
-/** Canonical pages an agent should be able to reach from the map. Add to this list when a page becomes canonical. */
-const CANONICAL = ["/glossary", "/lab", "/mocks", "/lists", "/state-of-x402", "/try"];
+/** Canonical pages per site. Add to these lists when a page becomes canonical. */
+const CANONICAL = {
+  "paystage.xyz": ["/glossary", "/lab", "/mocks", "/lists", "/state-of-x402", "/try", "/docs", "/pricing"],
+  "vouchguard.app": ["/brand", "/pricing", "/privacy", "/terms"],
+};
 
 const problems = [];
 
-if (!existsSync(ROUTE)) {
-  console.error(`llms-txt: ${ROUTE} is missing — the map an agent reads first does not exist`);
-  process.exit(2);
+for (const map of MAPS) {
+  if (!existsSync(map.route)) {
+    problems.push(`${map.label}: no /llms.txt route (${map.route}) — an agent landing there has only HTML`);
+    continue;
+  }
+  if (map.full && !existsSync(map.full)) problems.push(`${map.label}: ${map.full} is missing — the full text is what an agent reads second`);
+
+  /*
+   * The route builds its body from template literals, so a full render is not available without running Next. What *is*
+   * checkable is the structure of the literal: the H1, the blockquote, the H2 headings and the links are all in the source,
+   * and a template is compiled from them in order. So this asserts on the source's own text.
+   */
+  const source = readFileSync(map.route, "utf8");
+  const body = source.slice(source.indexOf("export function GET") >= 0 ? source.indexOf("export function GET") : source.indexOf("export const dynamic"));
+
+  const h1 = body.match(/(?:^|[`\n])# ([^\n`]+)/m);
+  if (!h1) problems.push(`${map.label}: no H1 — the first line must be \`# <project name>\``);
+  else if (!/paystage|vouchguard/i.test(h1[1]) && !/^\$\{/.test(h1[1].trim())) problems.push(`${map.label}: the H1 is "${h1[1].slice(0, 40)}" — it should name the product`);
+
+  if (!/^> .+/m.test(body)) problems.push(`${map.label}: no blockquote summary — the format requires one line under the H1`);
+
+  const sections = [...body.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
+  if (sections.length < 2) problems.push(`${map.label}: only ${sections.length} H2 section(s) — a map with fewer than two is a stub`);
+
+  const site = /paystage\.xyz/;
+  const links = [
+    ...body.matchAll(/\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)/g),
+    ...body.matchAll(/(?:^|[\s(])(https?:\/\/(?:paystage\.xyz|vouchguard\.app)[^\s)`]*)/g),
+    ...body.matchAll(/\$\{site\}(\/[\w./-]+)/g),
+  ]
+    .map((m) => m[1])
+    .filter((url) => !/^https?:/.test(url) || site.test(url) || /vouchguard\.app/.test(url));
+  const paths = links.map((url) => url.replace(/^https?:\/\/[^/]+/, "").replace(/[.,)]$/, "") || "/");
+
+  const routeExists = (path) => {
+    const clean = path.replace(/[?#].*$/, "").replace(/\/$/, "");
+    if (clean === "") return true;
+    return [`${map.app}${clean}/page.tsx`, `${map.app}${clean}/page.ts`, `${map.app}${clean}.tsx`, `${map.app}${clean}/route.ts`].some((c) => existsSync(c));
+  };
+  for (const path of new Set(paths)) {
+    if (path.startsWith("http")) continue;
+    if (!routeExists(path)) problems.push(`${map.label}: link to ${path} has no route — a map with a dead end is worse than no map`);
+  }
+
+  for (const page of CANONICAL[map.label] ?? []) {
+    if (!new Set(paths).has(page)) problems.push(`${map.label}: the canonical page ${page} is not in the map — an agent will never find it`);
+  }
 }
-
-/**
- * The route builds its body from template literals, so a full render is not available without running Next. What *is*
- * checkable is the structure of the literal: the H1, the blockquote, the H2 headings and the links are all in the source,
- * and a template is compiled from them in order. So this asserts on the source's own text.
- */
-const source = readFileSync(ROUTE, "utf8");
-const body = source
-  .slice(source.indexOf('export const dynamic'))
-  .replace(/\\n/g, "\n")
-  .replace(/\$\{[^}]*\}/g, "x");
-
-// The body is a template literal, so the H1 arrives after a backtick rather than at the start of a line.
-const h1 = body.match(/(?:^|[`\n])# ([^\n`]+)/m);
-if (!h1) problems.push("no H1 — the first line must be `# <project name>`");
-else if (!/paystage/i.test(h1[1])) problems.push(`the H1 is "${h1[1].slice(0, 40)}" — it should name the project`);
-
-if (!/^> .+/m.test(body)) problems.push("no blockquote summary — the format requires one line under the H1");
-
-const sections = [...body.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
-if (sections.length < 2) problems.push(`only ${sections.length} H2 section(s) — a map with fewer than two sections is a stub`);
-
-/**
- * Links: markdown `[label](/path)`. Each must be a real route in the app (a directory with a page, or a file route),
- * which is checkable from the filesystem without starting a server.
- */
-/**
- * Links may be absolute (they are, for the site's own pages, so the file works when copied out of context) or
- * root-relative. Both are reduced to a path before the route check.
- */
-const SITE = /^https?:\/\/paystage\.xyz/;
-// Markdown links first, then bare URLs: the file uses the bare form in its list items, which the format allows.
-const links = [
-  ...body.matchAll(/\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)/g),
-  ...body.matchAll(/(?:^|[\s(])(https?:\/\/paystage\.xyz[^\s)`]*)/g),
-]
-  .map((m) => m[1])
-  .filter((url) => !/^https?:/.test(url) || SITE.test(url))
-  .map((url) => url.replace(SITE, "").replace(/[.,)]$/, "") || "/");
-const appDir = "apps/console/src/app";
-const routeExists = (path) => {
-  const clean = path.replace(/[?#].*$/, "").replace(/\/$/, "");
-  if (clean === "") return true;
-  const candidates = [
-    `${appDir}${clean}/page.tsx`,
-    `${appDir}${clean}/page.ts`,
-    `${appDir}${clean}.tsx`,
-    `${appDir}${clean}/route.ts`,
-  ];
-  return candidates.some((c) => existsSync(c));
-};
-for (const link of new Set(links)) {
-  if (!link.startsWith("/")) continue;
-  if (!routeExists(link)) problems.push(`link to ${link} has no route — a map with a dead end is worse than no map`);
-}
-
-for (const page of CANONICAL) {
-  if (!links.includes(page)) problems.push(`the canonical page ${page} is not in the map — an agent will never find it`);
-}
-
-if (!existsSync(FULL)) problems.push(`${FULL} is missing — the full text is what an agent reads second`);
 
 if (problems.length > 0) {
   console.error(`llms-txt: ${problems.length} problem(s)`);
   for (const problem of problems) console.error("  " + problem);
   process.exit(1);
 }
-console.log(
-  `llms-txt: H1 + blockquote + ${sections.length} section(s), ${new Set(links).size} link(s) all resolving, ` +
-    `${CANONICAL.length} canonical page(s) listed`,
-);
+console.log(`llms-txt: ${MAPS.length} map(s) with an H1, a blockquote, sections, live links and their canonical pages`);
