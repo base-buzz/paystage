@@ -861,6 +861,10 @@ export default async function LabPage() {
             <strong>Data as of {today}.</strong> Rows live in <code>probe_runs</code>, one per probe per run.
           </li>
         </ul>
+        <p style={{ marginTop: 16, fontSize: 13.5, lineHeight: 1.7, opacity: 0.8 }}>
+          Refusals are a record, not a probe: <a href="/lab/refusals">the refusals page</a> groups{" "}
+          <code>do_not_pay</code> by rule and by payer for the last seven days, and states the data&apos;s provenance.
+        </p>
       </section>
     </main>
   );

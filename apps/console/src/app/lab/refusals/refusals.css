@@ -1,0 +1,237 @@
+/* `/lab/refusals` (#472) — scoped so landing.css stays the shared surface. */
+
+.refusals-page {
+  min-height: 100vh;
+}
+
+.refusals-wrap {
+  max-width: 1040px;
+  padding-top: 104px;
+  padding-bottom: 72px;
+}
+
+.refusals-hero {
+  max-width: 900px;
+  margin-bottom: 28px;
+}
+
+.refusals-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-mint);
+}
+
+.refusals-eyebrow::before {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.refusals-hero h1 {
+  margin: 0 0 18px;
+  font-size: clamp(30px, 4.6vw, 50px);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  max-width: 22ch;
+}
+
+.refusals-lede {
+  margin: 0 0 14px;
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--lp-dim);
+  max-width: 84ch;
+}
+
+.refusals-lede--hero {
+  color: var(--lp-text);
+  font-size: 16.5px;
+}
+
+.refusals-lede code,
+.refusals-note code,
+.refusals-table code,
+.refusals-footer code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 0.92em;
+  color: var(--lp-mint);
+}
+
+.refusals-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 24px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--lp-line);
+}
+
+.refusals-facts dt {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.refusals-facts dd {
+  margin: 4px 0 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--lp-text);
+}
+
+/* The one sentence the page exists to say, so it gets the only filled band. */
+.refusals-control {
+  margin: 6px 0 22px;
+  padding: 18px 22px;
+  border: 1px solid color-mix(in oklab, var(--lp-mint) 42%, var(--lp-line));
+  border-radius: 14px;
+  background:
+    radial-gradient(700px 160px at 10% 0%, color-mix(in oklab, var(--lp-mint) 12%, transparent), transparent 72%),
+    var(--lp-panel);
+  color: var(--lp-text);
+  font-size: 17px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.refusals-panel {
+  margin-top: 20px;
+  padding: 22px 24px 24px;
+  border: 1px solid var(--lp-line);
+  border-radius: 16px;
+  background: var(--lp-panel);
+}
+
+.refusals-panel--provenance {
+  border-color: color-mix(in oklab, var(--lp-mint) 30%, var(--lp-line));
+}
+
+.refusals-panel h2 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  letter-spacing: -0.015em;
+}
+
+.refusals-panel h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+}
+
+.refusals-note {
+  margin: 0 0 16px;
+  max-width: 84ch;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--lp-dim);
+}
+
+.refusals-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.refusals-table th,
+.refusals-table td {
+  padding: 9px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--lp-line);
+}
+
+.refusals-table thead th {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-faint);
+  font-weight: 600;
+}
+
+.refusals-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.refusals-table tfoot th,
+.refusals-table tfoot td {
+  border-top: 1px solid var(--lp-line);
+  border-bottom: 0;
+  color: var(--lp-dim);
+  font-size: 12.5px;
+}
+
+.refusals-table--compact {
+  font-size: 13px;
+}
+
+.refusals-num {
+  text-align: right;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.refusals-table thead th:last-child,
+.refusals-table tfoot td:last-child {
+  text-align: right;
+}
+
+.refusals-caveat {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-left: 2px solid color-mix(in oklab, var(--lp-mint) 55%, var(--lp-line));
+  background: color-mix(in oklab, var(--lp-mint) 4%, transparent);
+  color: var(--lp-dim);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.refusals-empty {
+  margin: 0;
+  color: var(--lp-dim);
+  font-size: 14px;
+}
+
+.refusals-provenance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.refusals-footer {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--lp-line);
+  color: var(--lp-faint);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.refusals-footer p {
+  margin: 0 0 6px;
+}
+
+@media (max-width: 720px) {
+  .refusals-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .refusals-provenance-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .refusals-wrap {
+    padding-top: 88px;
+  }
+}
