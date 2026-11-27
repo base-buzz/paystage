@@ -109,6 +109,8 @@ no payment, no key. Runs daily in CI; history at https://paystage.xyz.
 
 ## Machine-readable
 
+- \`/directory\` — a dated catalogue of x402 sellers: what each sells, its price, method, chain and when we last checked. A listing
+  means the host answered a payment challenge; it does not mean anybody paid it. \`/directory.json\` is the same data for machines.
 - \`/.well-known/paystage.json\` — manifest: tools, verdicts, dependencies, env
   vars, endpoints, \`holds_keys\`, provenance and audit links.
 - \`/llms-full.txt\` — tool schemas, verdict semantics, policy schema, access surface.

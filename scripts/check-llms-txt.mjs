@@ -23,7 +23,7 @@ const MAPS = [
 
 /** Canonical pages per site. Add to these lists when a page becomes canonical. */
 const CANONICAL = {
-  "paystage.xyz": ["/glossary", "/lab", "/mocks", "/lists", "/state-of-x402", "/try", "/docs", "/pricing"],
+  "paystage.xyz": ["/glossary", "/lab", "/mocks", "/lists", "/state-of-x402", "/try", "/docs", "/pricing", "/directory"],
   "vouchguard.app": ["/brand", "/pricing", "/privacy", "/terms"],
 };
 
@@ -58,10 +58,22 @@ for (const map of MAPS) {
     ...body.matchAll(/\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)/g),
     ...body.matchAll(/(?:^|[\s(])(https?:\/\/(?:paystage\.xyz|vouchguard\.app)[^\s)`]*)/g),
     ...body.matchAll(/\$\{site\}(\/[\w./-]+)/g),
+    /**
+     * Paths written as inline code rather than links — \`/directory\` — because that is how the machine-readable section lists
+     * endpoints. Without this branch a canonical page can be *mentioned* in the map and still reported as missing, which would be a
+     * check failing on a true statement.
+     */
   ]
     .map((m) => m[1])
     .filter((url) => !/^https?:/.test(url) || site.test(url) || /vouchguard\.app/.test(url));
   const paths = links.map((url) => url.replace(/^https?:\/\/[^/]+/, "").replace(/[.,)]$/, "") || "/");
+
+  /**
+   * Paths *mentioned* as inline code rather than linked, e.g. \`/directory\` in the machine-readable section. Only the canonical
+   * check uses them: an inline-code path may be an endpoint on another host (`/health`, `/v1/public/status` are api.paystage.xyz),
+   * so treating every one as a site route would fail the check on true statements — the failure mode that gets a check disabled.
+   */
+  const mentions = [...body.matchAll(/\\?`(\/[\w./-]+)\\?`/g)].map((m) => m[1].replace(/\/$/, ""));
 
   const routeExists = (path) => {
     const clean = path.replace(/[?#].*$/, "").replace(/\/$/, "");
@@ -89,7 +101,7 @@ for (const map of MAPS) {
   }
 
   for (const page of CANONICAL[map.label] ?? []) {
-    if (!new Set(paths).has(page)) problems.push(`${map.label}: the canonical page ${page} is not in the map — an agent will never find it`);
+    if (!new Set([...paths, ...mentions]).has(page)) problems.push(`${map.label}: the canonical page ${page} is not in the map — an agent will never find it`);
   }
 }
 
