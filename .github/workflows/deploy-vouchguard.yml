@@ -77,6 +77,25 @@ jobs:
         working-directory: .
         run: node scripts/check-pass-assets.mjs
 
+      # The survey's three bindings, set from repository secrets so the Worker never needs a person at a keyboard. `wrangler secret put`
+      # is idempotent: it overwrites, so a rotated key ships with the next deploy instead of drifting.
+      - name: Survey bindings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SURVEY_SUPABASE_URL: ${{ secrets.SURVEY_SUPABASE_URL }}
+          SURVEY_SUPABASE_ANON_KEY: ${{ secrets.SURVEY_SUPABASE_ANON_KEY }}
+          SURVEY_IP_SALT: ${{ secrets.SURVEY_IP_SALT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SURVEY_SUPABASE_URL:-}" ]; then
+            echo "no survey secrets configured — /ask will honestly say the counter is not connected"
+            exit 0
+          fi
+          printf '%s' "$SURVEY_SUPABASE_URL"       | npx wrangler secret put SURVEY_SUPABASE_URL
+          printf '%s' "$SURVEY_SUPABASE_ANON_KEY"  | npx wrangler secret put SURVEY_SUPABASE_ANON_KEY
+          printf '%s' "$SURVEY_IP_SALT"            | npx wrangler secret put SURVEY_IP_SALT
+
       - name: Render the Worker config from brand.json
         run: node scripts/render-wrangler.mjs
 
