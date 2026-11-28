@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-28
+- **`v2026.11.28-release-mcp-0.8.19`** — tagged to publish `@paystage/mcp@0.8.19` and `@paystage/preflight@0.6.1`, whose built `dist/` still
+  differs from what npm serves, so a republish is refused. The first attempt also named `@paystage/n8n@0.1.0` and **failed with E404**:
+  npm does not let a Trusted Publisher create a *new* scoped package name — the same limitation the workflow already documents for
+  `mandate`. `n8n` is out of the three publish lists and stays `private: true` until its first publish claims the name, which is an npm
+  action on the operator's account rather than a workflow edit. Row #89 says so now instead of claiming the scope covered it.
+
 ## 2026-11-25
 - `@paystage/mcp@0.8.19`: **the curated ChatGPT surface and the payer-age signal, neither published yet.** HEAD's build differs
   from the published 0.8.18 in `dist/index.js` (it exports `CURATED_TOOL_NAMES`) and in the six files that carry the payer-age
