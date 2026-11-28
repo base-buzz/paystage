@@ -415,3 +415,33 @@ describe("@paystage/pass — the Google object carries the same mandate", () => 
     ).toThrow(/revoked/);
   });
 });
+
+/**
+ * The pass says, on its back, that it cannot update itself (#503).
+ *
+ * A `.pkpass` is a signed snapshot. Without a PassKit web service — device registration, an `authenticationToken`, APNs — Wallet cannot
+ * be told that a mandate was revoked, so the card on the phone keeps reading "active" after the server has revoked it. That is a real
+ * limitation of the artefact, not a wording problem, and the honest fix that costs nothing is to say so where the holder will read it:
+ * a field whose label is the sentence itself.
+ *
+ * The alternative (build the web service) is a separate row. What this test prevents is the limitation quietly disappearing from the
+ * copy while the behaviour stays the same.
+ */
+describe("the card's liveness limit is stated, not implied", () => {
+  it("carries a back field that says the card does not update", async () => {
+    const { mandate } = await signedMandate();
+    const artifact = await buildApplePass(mandate, {
+      certificatePath: fixture.path,
+      certificatePassword: fixture.password,
+      now: NOW,
+    });
+    const pass = JSON.parse(artifact.passJson.toString("utf8"));
+    const back = Object.fromEntries(pass.generic.backFields.map((field: { key: string; value: string }) => [field.key, field.value]));
+    const entry = pass.generic.backFields.find((f: { key: string }) => f.key === "liveness");
+
+    expect(back.liveness, "no liveness field on the back").toBeTruthy();
+    expect(String(entry?.label).toLowerCase()).toContain("does not update");
+    expect(back.liveness.toLowerCase()).toContain("snapshot");
+    expect(back.liveness.toLowerCase()).toContain("live answer");
+  });
+});

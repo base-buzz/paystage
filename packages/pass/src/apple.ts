@@ -52,6 +52,21 @@ function backFields(face: PassFace) {
     field("code", "SHORT CODE", face.shortCode),
     field("mandate", "MANDATE ID", face.serial),
     field("limits", "LIMITS", `${face.perPayment} per purchase; ${face.windowAmount} ${face.windowLabel}; expires ${face.expiryLabel}`),
+    /**
+     * The honest sentence about liveness (#503).
+     *
+     * A `.pkpass` is a **signed snapshot**, and Wallet cannot be told it changed without a web service that pushes an update — which this
+     * pass does not have. So the card on a phone keeps saying what it said when it was issued, and a revoked mandate leaves it reading
+     * "active". That is not a bug to hide behind wording: it is the reason the **link** is authoritative and the card is a receipt.
+     *
+     * Saying so on the back is what makes the product honest without pretending to infrastructure we do not run. The alternative — a
+     * web service with device registration and APNs — is a real thing to build, and it is a different row.
+     */
+    field(
+      "liveness",
+      "THIS PASS DOES NOT UPDATE",
+      "It is a signed snapshot from the moment it was issued; a phone cannot be told it changed. Revocation happens on the server, so this pass can read \"active\" after the mandate was revoked. The VERIFY link is the live answer — check it, not this pass.",
+    ),
     field(
       "revocation",
       "REVOCATION",

@@ -1,6 +1,6 @@
 {
   "tool": "scripts/record-brand-manifest.mjs",
-  "generatedAt": "2026-11-27T23:46:00.004Z",
+  "generatedAt": "2026-11-28T03:19:19.936Z",
   "masterHash": "dc85c79e65b86c8d086e7e579e4adf7ffbb19a81a50458688b2caa8c1762802c",
   "masters": {
     "scripts/lib/mark.mjs": "537b0d823d446be92a968a71d1144b28632bafb93c2f26e3272998566eb4c95e",
@@ -215,8 +215,8 @@
       "master": "dc85c79e65b86c8d086e7e579e4adf7ffbb19a81a50458688b2caa8c1762802c"
     },
     "apps/vouchguard/public/demo/vouch-demo.pkpass": {
-      "sha256": "63d451939b1aecd6233d8c18ccd16728f5d706fda70a84e733956a18f365ce98",
-      "bytes": 14242,
+      "sha256": "ce7c8b682806c094922d1d28210fb2421640f4a10875ae261c9ade3d9851729b",
+      "bytes": 14963,
       "master": "dc85c79e65b86c8d086e7e579e4adf7ffbb19a81a50458688b2caa8c1762802c"
     },
     "brand/favicon-16.png": {
