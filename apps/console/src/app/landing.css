@@ -2171,11 +2171,8 @@ html[data-theme="light"] .lp-aurora span,
   letter-spacing: -0.01em;
 }
 
-.site-brand-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-}
+/* The lockup's size and mask live in globals.css: the header renders on every route, and /console never loads
+   this file. `currentColor` here supplies the light/dark ink. */
 
 .site-nav {
   display: flex;

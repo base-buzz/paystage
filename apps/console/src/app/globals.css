@@ -119,11 +119,16 @@ body {
   text-decoration: none;
   font-weight: 600;
 }
-.site-brand-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+.site-brand-lockup {
+  /* 40 px tall is 121.5 px wide — the spec's 120 px lockup floor. Painted from the generated SVG as a mask so
+     `currentColor` makes it ink on paper or paper on ink from the header's own text colour; no second drawing. */
+  display: block;
+  width: 121.5px;
+  height: 40px;
   flex: none;
+  background-color: currentColor;
+  -webkit-mask: url("/mark-lockup.svg") no-repeat center / contain;
+  mask: url("/mark-lockup.svg") no-repeat center / contain;
 }
 
 .brand {

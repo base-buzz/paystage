@@ -29,6 +29,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { MARK, MARK_COLOURS, MARK_PALETTE, tierForWidth } from "./lib/mark.mjs";
+import { PAYSTAGE_MARK } from "./lib/paystage-mark.mjs";
 import {
   PACK_PNG_NAMES,
   PACK_SVG_NAMES,
@@ -605,6 +606,223 @@ for (const problem of freshnessProblems()) problems.push(problem);
   }
 }
 
+/* 12 · the PayStage mark — print, proportion, stroke, palette
+ *
+ * The four checks are read back out of the **built asset**, not out of the generator's constants. The ratio is
+ * wordmark width (the `textLength` the SVG actually renders to) ÷ the print height the SVG carries; the strokes are
+ * the values on the print group; the colours are scanned in source *and* pixels, because an opacity or a raster can
+ * smuggle a colour past a string search.
+ *
+ * Amber and teal are VouchGuard's. Green and red are verdict colours: allowed only on an asset whose name says
+ * verdict, never on the mark.
+ */
+const PS_PUBLIC = "apps/console/public";
+const PS_SVG = ["favicon.svg", "mark-lockup.svg", "mark-lockup-inverse.svg"];
+const PS_PNG = [
+  ["apple-touch-icon.png", 180, 180],
+  ["icon-512.png", 512, 512],
+  ["avatar-512.png", 512, 512],
+  ["og.png", 1200, 630],
+];
+const PS_ALL = [...PS_SVG, "favicon.ico", "wordmark.svg", ...PS_PNG.map(([name]) => name)];
+/** The old square logo the P-and-dot sweep replaced; still an asset a profile upload would pick up. */
+const PS_LEGACY = "assets/paystage-logo-400.png";
+
+const hexToRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const colourDistance = (a, b) => {
+  const [r1, g1, b1] = hexToRgb(a);
+  const [r2, g2, b2] = hexToRgb(b);
+  return Math.hypot(r1 - r2, g1 - g2, b1 - b2);
+};
+
+/** Colour hits in raw pixels. Antialiasing between ink and paper never lands near a saturated target. */
+function scanPixels(data, info, targets) {
+  const hits = Object.fromEntries(targets.map((hex) => [hex, 0]));
+  const rgb = targets.map((hex) => [hex, hexToRgb(hex)]);
+  for (let i = 0; i < data.length; i += info.channels) {
+    const alpha = info.channels === 4 ? data[i + 3] : 255;
+    if (alpha < 8) continue;
+    for (const [hex, [r, g, b]] of rgb) {
+      if (Math.hypot(data[i] - r, data[i + 1] - g, data[i + 2] - b) <= 24) hits[hex] += 1;
+    }
+  }
+  return hits;
+}
+
+async function scanPngColours(path, targets) {
+  if (!existsSync(path) || statSync(path).size === 0) return {};
+  const { data, info } = await sharp(path).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  return scanPixels(data, info, targets);
+}
+
+/** The ICO's PNG payloads are scanned too; otherwise the one asset every page loads is the unchecked one. */
+async function scanIcoColours(path, targets) {
+  const hits = Object.fromEntries(targets.map((hex) => [hex, 0]));
+  if (!existsSync(path) || statSync(path).size === 0) return hits;
+  const ico = readFileSync(path);
+  for (let i = 0, count = ico.readUInt16LE(4); i < count; i += 1) {
+    const entry = 6 + i * 16;
+    const length = ico.readUInt32LE(entry + 8);
+    const offset = ico.readUInt32LE(entry + 12);
+    const payload = ico.subarray(offset, offset + length);
+    if (payload[0] !== 0x89 || payload[1] !== 0x50) continue;
+    const { data, info } = await sharp(payload).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const found = scanPixels(data, info, targets);
+    for (const hex of targets) hits[hex] += found[hex];
+  }
+  return hits;
+}
+
+let psRatio = null;
+let psStandaloneStroke = null;
+let psLockupStroke = null;
+
+for (const name of PS_ALL) {
+  const path = join(PS_PUBLIC, name);
+  if (!existsSync(path)) fail(path, "is missing — run `node scripts/paystage-mark.mjs`");
+  else if (statSync(path).size === 0) fail(path, "is 0 bytes — run `node scripts/paystage-mark.mjs`");
+}
+for (const [name, width, height] of PS_PNG) await pngSize(join(PS_PUBLIC, name), width, height);
+if (!existsSync(PS_LEGACY)) fail(PS_LEGACY, "is missing — run `node scripts/paystage-mark.mjs`");
+else await pngSize(PS_LEGACY, 400, 400);
+
+/* 12a · the glyph is the nine-path set */
+for (const name of PS_SVG) {
+  const path = join(PS_PUBLIC, name);
+  const svg = requireSvg(path);
+  if (!svg) continue;
+  const group = svg.match(/<g\b[^>]*data-print-set="[^"]*"[^>]*>/)?.[0] ?? "";
+  if (!group) {
+    fail(path, "has no print group");
+  } else {
+    if (attr(group, "data-print-set") !== PAYSTAGE_MARK.glyph.set) {
+      fail(path, `print set is ${attr(group, "data-print-set")}, spec ${PAYSTAGE_MARK.glyph.set}`);
+    }
+    if (Number(attr(group, "data-print-grid")) !== PAYSTAGE_MARK.glyph.grid) {
+      fail(path, `print grid is ${attr(group, "data-print-grid")}, spec ${PAYSTAGE_MARK.glyph.grid}`);
+    }
+  }
+  const paths = [...svg.matchAll(/<path\b[^>]*data-glyph="\d+"[^>]*>/g)].map((m) => attr(m[0], "d"));
+  if (paths.length !== PAYSTAGE_MARK.glyph.paths.length) {
+    fail(path, `has ${paths.length} glyph path(s), Lucide fingerprint-pattern has ${PAYSTAGE_MARK.glyph.paths.length}`);
+  } else if (paths.some((d, index) => d !== PAYSTAGE_MARK.glyph.paths[index])) {
+    fail(path, "the glyph paths are not the canonical Lucide fingerprint-pattern set, in order");
+  }
+}
+
+/* 12b · the ratio is measured from the built lockup, never from the generator's constants */
+{
+  const path = join(PS_PUBLIC, "mark-lockup.svg");
+  const svg = requireSvg(path);
+  if (svg) {
+    const group = svg.match(/<g\b[^>]*data-print-height="[^"]*"[^>]*>/)?.[0] ?? "";
+    const text = svg.match(/<text\b[^>]*data-wordmark="1"[^>]*>/)?.[0] ?? "";
+    const height = num(group, "data-print-height");
+    const width = num(text, "textLength");
+    if (!group) fail(path, "print group does not carry data-print-height, so the ratio cannot be measured");
+    if (!text) fail(path, "wordmark does not carry textLength, so its width cannot be measured");
+    if (group && text) {
+      if (!(height > 0) || !(width > 0)) {
+        fail(path, `ratio inputs are ${width} ÷ ${height}; both must be positive`);
+      } else {
+        psRatio = width / height;
+        if (psRatio > PAYSTAGE_MARK.lockup.wordmarkCap) {
+          fail(
+            path,
+            `wordmark ÷ print = ${psRatio.toFixed(3)} (${width} ÷ ${height}), over the ${PAYSTAGE_MARK.lockup.wordmarkCap} cap — ` +
+              "do not raise the cap, change the face or the size",
+          );
+        }
+      }
+      // The declared height and the drawn scale must agree; a stale attribute would otherwise pass a dead file.
+      const scale = Number(/scale\(([\d.]+)\)/.exec(attr(group, "transform") ?? "")?.[1]);
+      if (!Number.isFinite(scale) || Math.abs(scale * PAYSTAGE_MARK.glyph.grid - height) > 0.5) {
+        fail(path, `data-print-height is ${height} but the drawn scale sets ${Number.isFinite(scale) ? (scale * PAYSTAGE_MARK.glyph.grid).toFixed(2) : "nothing"}`);
+      }
+    }
+  }
+}
+
+/* 12c · stroke 2.0 standalone, 2.2 in the lockup — read from the SVG */
+{
+  const favicon = requireSvg(join(PS_PUBLIC, "favicon.svg"));
+  const faviconGroup = favicon.match(/<g\b[^>]*data-print-set="[^"]*"[^>]*>/)?.[0] ?? "";
+  if (faviconGroup) psStandaloneStroke = num(faviconGroup, "data-print-stroke");
+  if (psStandaloneStroke !== PAYSTAGE_MARK.glyph.standaloneStroke) {
+    fail(join(PS_PUBLIC, "favicon.svg"), `print stroke is ${psStandaloneStroke}, spec ${PAYSTAGE_MARK.glyph.standaloneStroke} standalone`);
+  }
+  const strokes = [];
+  for (const name of ["mark-lockup.svg", "mark-lockup-inverse.svg"]) {
+    const svg = requireSvg(join(PS_PUBLIC, name));
+    if (!svg) continue;
+    const group = svg.match(/<g\b[^>]*data-print-set="[^"]*"[^>]*>/)?.[0] ?? "";
+    const stroke = group ? num(group, "data-print-stroke") : null;
+    strokes.push(stroke);
+    if (stroke !== PAYSTAGE_MARK.glyph.lockupStroke) {
+      fail(join(PS_PUBLIC, name), `print stroke is ${stroke}, spec ${PAYSTAGE_MARK.glyph.lockupStroke} in the lockup`);
+    }
+  }
+  if (strokes.length === 2 && new Set(strokes).size > 1) {
+    fail("apps/console/public", `the two lockups disagree on stroke (${strokes.join(" / ")})`);
+  }
+  psLockupStroke = strokes[0] ?? null;
+}
+
+/* 12d · no amber, no teal, and green/red only on a verdict asset */
+{
+  const VERDICT_NAME = /verdict/i;
+  for (const name of [...PS_SVG, "wordmark.svg"]) {
+    const path = join(PS_PUBLIC, name);
+    const svg = requireSvg(path);
+    if (!svg) continue;
+    for (const hex of svg.match(/#[0-9a-fA-F]{6}/g) ?? []) {
+      const upper = hex.toUpperCase();
+      if (PAYSTAGE_MARK.forbidden.some((banned) => banned.toUpperCase() === upper)) {
+        fail(path, `contains ${hex} — amber and teal belong to VouchGuard, never to this mark`);
+      } else if (
+        [PAYSTAGE_MARK.verdict.green, PAYSTAGE_MARK.verdict.red].some((verdict) => verdict.toUpperCase() === upper) &&
+        !VERDICT_NAME.test(name)
+      ) {
+        fail(path, `contains the verdict colour ${hex} — green and red are for verdicts, never for the mark`);
+      } else if (![PAYSTAGE_MARK.ink, PAYSTAGE_MARK.paper].some((token) => token.toUpperCase() === upper)) {
+        fail(path, `contains ${hex}, which is not in the PayStage mark palette (${PAYSTAGE_MARK.ink} / ${PAYSTAGE_MARK.paper})`);
+      }
+    }
+  }
+  for (const name of PS_ALL.filter((entry) => !entry.endsWith(".svg"))) {
+    const path = join(PS_PUBLIC, name);
+    const targets = [...PAYSTAGE_MARK.forbidden, ...(VERDICT_NAME.test(name) ? [] : [PAYSTAGE_MARK.verdict.green, PAYSTAGE_MARK.verdict.red])];
+    const hits = name === "favicon.ico" ? await scanIcoColours(path, targets) : await scanPngColours(path, targets);
+    for (const [hex, count] of Object.entries(hits)) {
+      if (count > 0) fail(path, `has ${count} pixel(s) at ${hex} — forbidden in a PayStage mark asset`);
+    }
+  }
+  {
+    const targets = [...PAYSTAGE_MARK.forbidden, PAYSTAGE_MARK.verdict.green, PAYSTAGE_MARK.verdict.red];
+    for (const [hex, count] of Object.entries(await scanPngColours(PS_LEGACY, targets))) {
+      if (count > 0) fail(PS_LEGACY, `has ${count} pixel(s) at ${hex} — forbidden in a PayStage mark asset`);
+    }
+  }
+}
+
+/* 12e · the ICO really is the favicon set (16/32/48), not a renamed single PNG */
+{
+  const path = join(PS_PUBLIC, "favicon.ico");
+  if (existsSync(path) && statSync(path).size > 0) {
+    const ico = readFileSync(path);
+    const count = ico.readUInt16LE(4);
+    const sizes = [];
+    for (let i = 0; i < count; i += 1) {
+      const entry = 6 + i * 16;
+      sizes.push(ico[entry] === 0 ? 256 : ico[entry]);
+    }
+    const expected = [16, 32, 48];
+    if (sizes.length !== expected.length || expected.some((size, index) => sizes[index] !== size)) {
+      fail(path, `has icon sizes ${sizes.join("/")}, expected ${expected.join("/")}`);
+    }
+  }
+}
+
 if (problems.length > 0) {
   console.error(`brand-assets: ${problems.length} problem(s)`);
   for (const problem of problems) console.error(`  ${problem}`);
@@ -620,4 +838,9 @@ console.log(
     `(${TICKET_RATIO}±${RATIO_TOLERANCE}) · ${MARK.scallop.count} scallops + ${MARK.notch.count} mid notches ` +
     `(r ${MARK.scallop.radius.toFixed(2)}/${MARK.notch.radius.toFixed(2)}) · print ${MARK.print.paths.length} Lucide paths, ` +
     `stroke ${MARK.print.stroke}/${MARK.print.grid} at ${(MARK.print.heightShare * 100).toFixed(0)}% H · no amber · tiers 142/89/64 + 29/58/87 · ledger fresh`,
+);
+console.log(
+  `brand-assets: PayStage mark — ${PAYSTAGE_MARK.glyph.paths.length} Lucide paths · ` +
+    `stroke ${psStandaloneStroke} standalone / ${psLockupStroke} in the lockup · ` +
+    `lockup ratio ${psRatio === null ? "unmeasured" : psRatio.toFixed(3)} (cap ${PAYSTAGE_MARK.lockup.wordmarkCap}) · no amber/teal · no verdict colours`,
 );

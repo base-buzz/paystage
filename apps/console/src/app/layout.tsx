@@ -18,6 +18,17 @@ export const metadata: Metadata = {
   alternates: {
     types: ALTERNATE_TYPES,
   },
+  // The mark, not a theme-coloured rectangle: SVG first for the tab, the ICO for the sizes that ignore SVG, and the
+  // 512 PNG for installers that want a raster. Apple gets its own 180 because iOS ignores the rest.
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   openGraph: {
     type: "website",
     url: "https://paystage.xyz",

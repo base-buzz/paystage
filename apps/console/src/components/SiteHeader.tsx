@@ -73,8 +73,10 @@ export function SiteHeader() {
     <header className="site-header" data-scrolled={scrolled ? "true" : "false"}>
       <div className="site-header-inner">
         <Link className="site-brand" href={lang === "zh" ? "/zh" : "/"} aria-label="PayStage">
-          <PpMark />
-          <span>PayStage</span>
+          {/* The lockup is the generated asset, not a second drawing: the header cannot drift from the favicon.
+              It is painted with `currentColor` as a mask, so the same file is ink on paper in light mode and paper
+              on ink in dark mode — including /console, which never imports the landing palette. */}
+          <span className="site-brand-lockup" aria-hidden="true" />
         </Link>
 
         <nav className="site-nav" aria-label={lang === "zh" ? "主导航" : "Primary"}>
@@ -156,18 +158,5 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
-  );
-}
-
-function PpMark() {
-  return (
-    <svg className="site-brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="7" fill="#0a0b0e" />
-      <path
-        d="M11 8h6.2c3.1 0 5.3 2 5.3 5s-2.2 5-5.3 5H14v6h-3V8zm3 2.6v4.8h3c1.5 0 2.4-.9 2.4-2.4s-.9-2.4-2.4-2.4h-3z"
-        fill="#6ee7b7"
-      />
-      <circle cx="23.5" cy="23.5" r="2.5" fill="#34d399" />
-    </svg>
   );
 }
