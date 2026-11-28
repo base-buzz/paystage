@@ -401,7 +401,9 @@ def test_pyproject_declares_hosted_url_version_and_no_dependencies():
     text = (PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8")
     assert re.search(r'^name = "paystage"$', text, re.MULTILINE)
     assert re.search(r'^version = "%s"$' % re.escape(VERSION), text, re.MULTILINE)
-    assert re.search(r'^requires-python = ">=3\.9"$', text, re.MULTILINE)
+    # The floor is asserted here so it cannot drift from the CI matrix: 3.9 is EOL and the runner no longer ships it, so a ">=3.9"
+    # claim would be a floor nothing tests.
+    assert re.search(r'^requires-python = ">=3\.10"$', text, re.MULTILINE)
     assert re.search(r"^dependencies = \[\]$", text, re.MULTILINE)
     assert 'Homepage = "https://api.paystage.xyz/mcp"' in text
     assert 'PayStage = "https://api.paystage.xyz/mcp"' in text
