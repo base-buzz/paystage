@@ -142,6 +142,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+      # The release plane is a listing surface too: mirrors that read GitHub Releases (Glama among them) saw nothing for fifteen days while the
+      # tags existed. Daily and non-failing, for the same reason as the listings check — a missing Release is a report, not a product failure.
+      - name: Newest tag has a GitHub Release
+        id: releases
+        continue-on-error: true
+        run: |
+          set +e
+          node scripts/check-releases.mjs > /tmp/releases.txt 2>&1
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+          tail -20 /tmp/releases.txt
+          echo "### GitHub Releases" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -20 /tmp/releases.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
       - name: Listing freshness
         id: listings
         continue-on-error: true

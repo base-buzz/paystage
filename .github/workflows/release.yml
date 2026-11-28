@@ -40,6 +40,11 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # `contents: write` is for the GitHub Release at the end of the stable branch, nothing else: the job already writes packages to npm and
+    # a release cannot be created with a read token. `id-token: write` stays for the npm Trusted Publisher.
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -117,6 +122,27 @@ jobs:
                 exit 1
               fi
             done
+
+            # A GitHub Release, because the tag alone is invisible to everything that mirrors releases rather than tags — Glama among them,
+            # which is why our MCP server was missing from its listing while the tag existed. The notes come from `releases/<tag>.md` in the
+            # repository so the body is reviewable in the PR that cuts the tag, `--verify-tag` stops it inventing a tag, and a `-canary` or
+            # `-rN` tag is marked prerelease so "Latest" stays on a stable build.
+            NOTES="releases/${GITHUB_REF_NAME}.md"
+            if [ ! -f "$NOTES" ]; then
+              # Not fatal: a release with generated notes beats no release. The guard reports the missing file so it gets written.
+              printf '## %s\n\nPackages published from this tag.\n' "${GITHUB_REF_NAME}" > /tmp/notes.md
+              NOTES=/tmp/notes.md
+              echo "no releases/${GITHUB_REF_NAME}.md in the repo — creating the Release with placeholder notes"
+            fi
+            if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+              echo "a Release for $GITHUB_REF_NAME already exists — leaving it alone"
+            else
+              CASE_FLAGS=""
+              case "$GITHUB_REF_NAME" in
+                *-canary*|*-r[0-9]*) CASE_FLAGS="--prerelease" ;;
+              esac
+              gh release create "$GITHUB_REF_NAME" --title "PayStage ${GITHUB_REF_NAME}" --notes-file "$NOTES" --verify-tag $CASE_FLAGS
+            fi
             exit 0
           fi
 
