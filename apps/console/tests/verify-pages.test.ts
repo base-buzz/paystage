@@ -207,6 +207,18 @@ describe("/v/:serial is the read-only counterparty record", () => {
     expect(html).not.toContain("refused-sentinel");
   });
 
+  it("answers do-not-trust when the record is revoked (#503)", async () => {
+    vi.stubEnv("PAYSTAGE_API", "");
+    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(payload("revoked"))));
+
+    const html = await renderRecord("vch-7F3");
+
+    expect(html).toContain("This pass was revoked on or before 27 Nov 2026. Do not rely on it.");
+    expect(html).toContain("do not trust");
+    expect(html).toContain("revoked");
+    expect(answerFor(payload("revoked")).status).toBe("revoked");
+  });
+
   it("renders the unknown sentence for an unknown serial", async () => {
     vi.stubEnv("PAYSTAGE_API", "");
     vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(unknownPayload())));

@@ -4,7 +4,13 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import MandatePage, { metadata, viewport } from "@/app/m/[serial]/page";
-import { HONESTY_LINE, MandateCard } from "@/components/MandateCard";
+import {
+  HONESTY_LINE,
+  MandateCard,
+  PASS_IS_A_RECEIPT,
+  REMOVAL_IS_NOT_REVOCATION,
+  REMOVE_PASS_GUIDANCE,
+} from "@/components/MandateCard";
 import {
   MANDATE_SERIAL_RE,
   STATUS_COPY,
@@ -48,6 +54,11 @@ function payload(status: MandateStatus, overrides: Partial<MandatePayload> = {})
 
 function renderCard(p: MandatePayload): string {
   return renderToStaticMarkup(createElement(MandateCard, { state: { kind: "record", payload: p, apiBase: "https://api.paystage.xyz" } }));
+}
+
+/** Text as a reader sees it: React escapes the quotes in the removal sentence. */
+function plain(html: string): string {
+  return html.replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&amp;/g, "&");
 }
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -102,6 +113,34 @@ describe("the four statuses render their word and their meaning", () => {
     const html = renderCard(payload("active"));
     expect(html.match(/requires a signature from the account that holds the authority/g) ?? []).toHaveLength(1);
     expect(html).not.toMatch(/<form\b|<input\b|<button\b/i);
+  });
+});
+
+describe("removing the card is explained and separated from revoking (#503)", () => {
+  it("tells the holder how to remove the pass from the phone", () => {
+    const html = renderCard(payload("active"));
+    expect(html).toContain(REMOVE_PASS_GUIDANCE);
+    expect(html).toContain("Wallet");
+    expect(html).toContain("long-press the pass");
+    expect(html).toContain("Remove Pass");
+  });
+
+  it("states the distinction word for word, and does not imply the card updates", () => {
+    const html = plain(renderCard(payload("active")));
+    expect(html).toContain(REMOVAL_IS_NOT_REVOCATION);
+    expect(html).toContain(
+      'Removing it from the phone does not revoke the mandate; anyone who kept a screenshot of the serial can still check it, and it will still say active. Revoking is what makes /verify answer "do not trust".',
+    );
+    expect(html).toContain(PASS_IS_A_RECEIPT);
+    expect(html).not.toMatch(/the pass will (update|change|refresh)|updates automatically/i);
+  });
+
+  it("keeps the removal guidance on a revoked record, next to the existing revoked language", () => {
+    const html = plain(renderCard(payload("revoked")));
+    expect(html).toContain(STATUS_COPY.revoked.meaning);
+    expect(html).toContain("/pass/mark-revoked.svg");
+    expect(html).toContain(REMOVE_PASS_GUIDANCE);
+    expect(html).toContain(REMOVAL_IS_NOT_REVOCATION);
   });
 });
 

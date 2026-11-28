@@ -20,6 +20,7 @@ import {
   type MandateMintOptions,
   type VerificationKey,
 } from "./routes/mandate-mint.js";
+import { createMandateRevokeRoutes, type MandateRevokeOptions } from "./routes/mandate-revoke.js";
 import { publishedReceiptJwks } from "./routes/receipt-key.js";
 import { supabaseMandateStore, type MandateStore } from "./mandate-store.js";
 import { BUNDLE_STORE_VAR, supabaseBundleStore, type BundleStore } from "./bundle-store.js";
@@ -80,6 +81,12 @@ export interface AppEnv {
    * no open default.
    */
   MANDATE_MINT_TOKEN?: string;
+  /**
+   * #503: the service token that may revoke a mandate (`POST /v1/mandate/:serial/revoke`). Optional:
+   * when unset the mint token is accepted, so an existing deployment gains the route without a new
+   * secret. Setting it lets a manager revoke without holding the token that can mint.
+   */
+  MANDATE_REVOKE_TOKEN?: string;
   /** #455: the tenant every minted row belongs to. Deployment configuration, never a request field. */
   MANDATE_TENANT_ID?: string;
   /** Free tier for callers with no payment and no account. Default on. */
@@ -124,6 +131,12 @@ export interface CreateAppOptions {
    * `RECEIPT_SIGNING_KEY_PKCS8` / `RECEIPT_SIGNING_KEYS_RETIRED`.
    */
   mandateMint?: Partial<Omit<MandateMintOptions, "store">>;
+  /**
+   * Test/deployment seam for the revoke route (#503): owner and verification key set. Defaults to
+   * `MANDATE_REVOKE_TOKEN` (else `MANDATE_MINT_TOKEN`) and the same published receipt key set the
+   * mint verifies against.
+   */
+  mandateRevoke?: Partial<Omit<MandateRevokeOptions, "store">>;
   /**
    * Test/deployment seam for the org-unit roll-up (#471). Defaults to the Supabase store when both
    * bindings are set; with none the route answers 503 rather than an invented zero total.
@@ -539,19 +552,31 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
   app.route("/", createRollupRoutes({ store: rollupStore }));
   // The mint (#455) is the write half of the same record: not a paid evaluation, and gated by a
   // service token rather than by x402, so it is mounted outside the payment middleware too.
+  const mandateVerificationKeys =
+    opts.mandateMint?.verificationKeys ??
+    (() =>
+      publishedReceiptJwks(
+        env as unknown as Record<string, string | undefined>,
+      ) as unknown as Promise<VerificationKey[]>);
   const mandateMintRoutes = createMandateMintRoutes({
     store: mandateStore,
     token: opts.mandateMint?.token ?? env.MANDATE_MINT_TOKEN,
     tenantId: opts.mandateMint?.tenantId ?? env.MANDATE_TENANT_ID,
-    verificationKeys:
-      opts.mandateMint?.verificationKeys ??
-      (() =>
-        publishedReceiptJwks(
-          env as unknown as Record<string, string | undefined>,
-        ) as unknown as Promise<VerificationKey[]>),
+    verificationKeys: mandateVerificationKeys,
     now: opts.mandateMint?.now,
   });
   app.route("/", mandateMintRoutes);
+  // The revoke (#503) is the other write on the same record. It is not a paid evaluation either: a
+  // manager or the issuer ending authority must not have to buy an evaluation to do it.
+  const mandateRevokeRoutes = createMandateRevokeRoutes({
+    store: mandateStore,
+    token:
+      opts.mandateRevoke?.token ??
+      (nonEmpty(env.MANDATE_REVOKE_TOKEN) ? env.MANDATE_REVOKE_TOKEN : env.MANDATE_MINT_TOKEN),
+    verificationKeys: opts.mandateRevoke?.verificationKeys ?? mandateVerificationKeys,
+    now: opts.mandateRevoke?.now,
+  });
+  app.route("/", mandateRevokeRoutes);
 
   const protect = opts.protect ?? true;
   if (protect) {

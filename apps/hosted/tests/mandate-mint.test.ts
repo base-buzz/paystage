@@ -98,6 +98,7 @@ function countingStore(): {
   let inserts = 0;
   const store: MandateStore = {
     get: (serial) => inner.get(serial),
+    getEnvelope: (serial) => inner.getEnvelope(serial),
     insert: async (row) => {
       inserts += 1;
       await inner.insert(row);
@@ -423,6 +424,7 @@ describe("POST /v1/mandate — the owner check", () => {
     // `get` lies once (the row appears between the pre-read and the insert), as a real race would.
     const racing: MandateStore = {
       get: async () => null,
+      getEnvelope: async () => null,
       insert: async (row) => {
         await inner.insert(row);
         throw new DuplicateMandateError(row.serial);
@@ -446,6 +448,7 @@ describe("POST /v1/mandate — the optional org unit (#471)", () => {
     return {
       store: {
         get: (serial) => inner.get(serial),
+        getEnvelope: (serial) => inner.getEnvelope(serial),
         insert: async (row) => {
           rows.push(row);
           await inner.insert(row);

@@ -26,17 +26,37 @@ import { PASS_TOKEN_CSS } from "@/lib/pass-token-css";
  * the same `vennMark()` by `scripts/render-pass-assets.mjs`, so it is not a second drawing either.
  *
  * It renders **only** fields the endpoint returned. No payee list, no spend history, no agent address,
- * no refusals — the proposal's §7 is a privacy boundary, not a styling choice. The write half is
- * deliberately absent: a change needs a signature from the account that holds the authority, and the
- * endpoint does not accept one yet, so the page says that once rather than offering a control that
- * cannot work.
+ * no refusals — the proposal's §7 is a privacy boundary, not a styling choice. There is still no
+ * control: ending a mandate is a signed statement sent by the issuer or manager to
+ * `POST /v1/mandate/:serial/revoke`, and a button on a public serial page would be a capability
+ * anyone with the link could press. The page explains both that path and the Wallet-only act of
+ * removing the card, because those are different things (#503).
  */
 
 export const HONESTY_LINE =
   "Revocation is instant server-side; this card is the record at the time above, and the QR is authoritative.";
 
+/**
+ * How to take the card off the phone (#503). This is a Wallet feature, not something this page can
+ * do: the pass is a receipt, and the link inside it is the live record.
+ */
+export const REMOVE_PASS_GUIDANCE =
+  "To remove the pass from this phone, open Wallet, long-press the pass, then choose Remove Pass.";
+
+/**
+ * The distinction the removal block exists for. Removing the card changes one phone; it does not
+ * change the record. Only a signed revocation statement does, which is why the sentence names
+ * `/verify` rather than a menu.
+ */
+export const REMOVAL_IS_NOT_REVOCATION =
+  "Removing it from the phone does not revoke the mandate; anyone who kept a screenshot of the serial can still check it, and it will still say active. Revoking is what makes /verify answer \"do not trust\".";
+
+/** Say plainly that the card is a receipt: it cannot repaint itself without a PassKit web service. */
+export const PASS_IS_A_RECEIPT =
+  "The pass card on the phone does not update itself; this page is the live record it points to.";
+
 export const WRITE_NOTE =
-  "Changing the limit, the payees or ending this mandate requires a signature from the account that holds the authority. The endpoint and this page do not support that yet.";
+  "Changing the limit or the payees requires a signature from the account that holds the authority. Ending the mandate is a signed revocation statement sent to the record service; this page is a record, not a control.";
 
 export type MandateViewState = MandateRead | { kind: "malformed"; serial: string };
 
@@ -132,6 +152,15 @@ export function MandateCard({ state }: { state: MandateViewState }) {
 
           <hr className="mandate-rule" />
           <p className="mandate-note">{HONESTY_LINE}</p>
+
+          <div className="mandate-removal">
+            <p className="mandate-note">
+              <strong>Removing the pass from the phone:</strong> {REMOVE_PASS_GUIDANCE}
+            </p>
+            <p className="mandate-note">{REMOVAL_IS_NOT_REVOCATION}</p>
+            <p className="mandate-note">{PASS_IS_A_RECEIPT}</p>
+          </div>
+
           <WriteNote />
 
           {known ? (

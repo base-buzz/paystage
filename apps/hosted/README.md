@@ -27,6 +27,7 @@ Set via `wrangler secret put <NAME>` (never commit values):
 | `CDP_API_KEY_ID` | required | — |
 | `CDP_API_KEY_SECRET` | required | — |
 | `MANDATE_MINT_TOKEN` | only to mint mandates | only to mint mandates |
+| `MANDATE_REVOKE_TOKEN` | optional; revoke only (falls back to the mint token when unset) | optional; revoke only (falls back to the mint token when unset) |
 | `MANDATE_TENANT_ID` | only to mint mandates | only to mint mandates |
 
 No private keys are stored in the Worker. `PAYSTAGE_PAYTO` is the treasury address that receives USDC; the CDP secrets are only used to authenticate to the facilitator.
@@ -40,6 +41,24 @@ tenant `MANDATE_TENANT_ID`. Unset either one and every mint is refused with `503
 mandate_mint_not_configured` — there is no open default. The envelope is verified against the receipt
 key set (`RECEIPT_SIGNING_KEY_PKCS8`), so a deployment that signs no receipts cannot mint either.
 Caller rule, response shape and the named refusals: [`docs/specs/mandate.md`](../../docs/specs/mandate.md#minting-a-mandate--post-v1mandate-455).
+
+## Revoking a mandate
+
+`POST /v1/mandate/:serial/revoke` ends a mandate. The body is the **signed revocation statement** the
+`revoke()` function in `@paystage/mandate` returns — not a wrapper, and not the envelope:
+
+```json
+{ "v": 1, "serial": "vch_…", "revoked_at": "2026-11-28T05:00:00.000Z", "kid": "…", "signature": "…", "reason": "optional" }
+```
+
+It is gated by `MANDATE_REVOKE_TOKEN` (`Authorization: Bearer …`), falling back to
+`MANDATE_MINT_TOKEN` when the separate token is unset, and verifies the statement against the same
+receipt key set as the mint. A manager can therefore hold a revoke-only token. A successful call
+answers `200 { serial, revoked_at, status: "revoked" }`; a serial with no row is `404`, and revoking
+an already-revoked serial is `409` carrying the **first** `revoked_at` with no second write. Unknown
+serial is `404` here rather than the read route's `200 unknown`, because a write has no safe
+"maybe". A revoked serial makes `GET /v1/mandate/:serial` answer `revoked` / `do_not_trust` and makes
+the paid evaluator refuse with `accept.mandate.revoked`.
 
 ## Deploy
 

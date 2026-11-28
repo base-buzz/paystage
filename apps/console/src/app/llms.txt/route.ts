@@ -126,6 +126,9 @@ no payment, no key. Runs daily in CI; history at https://paystage.xyz.
 - \`GET /v1/mandate/:serial\` — the mandate behind a Vouch pass: status, scope, principal and the
   verdict a seller should take. An unknown serial answers 200 with \`status: "unknown"\` (not 404),
   because a scanner needs an answer and "unknown" is one. Never cached.
+- \`POST /v1/mandate/:serial/revoke\` — revokes a mandate with the same signed statement a seller would verify: body is the
+  revocation object itself. Bearer-token gated, idempotent (a second call answers 409 with the first \`revoked_at\` and writes
+  nothing), 404 for an unknown serial. A revoked mandate makes every check answer \`do_not_trust\`.
 - \`POST /v1/guard-verdict\` — turn a preflight verdict into a receipt-shaped response.
 - \`/v1/public/cadence.json\` — release and check history. Read \`current\` for "did the last run pass" and
   \`all_recent_passing\` for the whole window; \`all_passing\` is the window and is kept only for one release under

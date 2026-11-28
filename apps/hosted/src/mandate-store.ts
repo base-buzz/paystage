@@ -81,7 +81,24 @@ export interface MandateWriter {
   revoke(serial: string, revocation: Revocation, revokedAt: string): Promise<void>;
 }
 
-export interface MandateStore extends MandateSource, MandateWriter {}
+/** The signed envelope plus the two revocation columns, read only by the revoke route (#503). */
+export interface StoredMandateEnvelope {
+  /** The exact object `verify` accepted at mint time. Never returned by the public read. */
+  envelope: Mandate;
+  state: MandateState;
+  revoked_at: string | null;
+}
+
+export interface MandateStore extends MandateSource, MandateWriter {
+  /**
+   * Read the immutable signed envelope and the revocation projection for one serial.
+   *
+   * Server-side only: the public `get` deliberately strips `envelope`, and this method exists because
+   * `revokeStoredMandate` needs the signed mandate to verify the revocation statement covers it. It is
+   * never wired into a public response, and it returns `null` for a serial with no row.
+   */
+  getEnvelope(serial: string): Promise<StoredMandateEnvelope | null>;
+}
 
 /**
  * A serial that already has a row (#455).
@@ -186,6 +203,29 @@ export function supabaseMandateStore(env: MandateStorageEnv): MandateStore | und
       if (!Array.isArray(rows)) throw new Error("mandate read returned a non-array body");
       if (rows.length === 0) return null;
       return toPublicRecord(rows[0]);
+    },
+
+    async getEnvelope(serial: string): Promise<StoredMandateEnvelope | null> {
+      // The write path is the only reader of `envelope`: a revocation statement can only be verified
+      // against the signed object, and the statement must name the serial the row owns.
+      const query =
+        `?serial=eq.${encodeURIComponent(serial)}` +
+        "&select=envelope,state,revoked_at" +
+        "&limit=1";
+      const res = await fetch(`${endpoint}${query}`, { headers: { ...headers(key), Prefer: "count=none" } });
+      if (!res.ok) {
+        // Status only: a PostgREST error body can echo row values, and this path is internal.
+        throw new Error(`mandate envelope read failed (HTTP ${res.status})`);
+      }
+      const rows = (await res.json()) as unknown;
+      if (!Array.isArray(rows)) throw new Error("mandate envelope read returned a non-array body");
+      if (rows.length === 0) return null;
+      const row = rows[0];
+      if (!isRecord(row) || !isRecord(row.envelope) || !isState(row.state)) {
+        throw new Error("mandate row has no readable envelope or state");
+      }
+      const revokedAt = typeof row.revoked_at === "string" ? row.revoked_at : null;
+      return { envelope: row.envelope as unknown as Mandate, state: row.state, revoked_at: revokedAt };
     },
 
     async insert(row: NewMandateRow): Promise<void> {
@@ -348,6 +388,11 @@ export function createMemoryMandateStore(seed: NewMandateRow[] = []): MandateSto
       const row = rows.get(serial);
       if (row === undefined) return null;
       return toPublicRecord(row);
+    },
+    async getEnvelope(serial: string): Promise<StoredMandateEnvelope | null> {
+      const row = rows.get(serial);
+      if (row === undefined) return null;
+      return { envelope: row.envelope, state: row.state, revoked_at: row.revoked_at };
     },
     async insert(row: NewMandateRow): Promise<void> {
       if (rows.has(row.serial)) throw new DuplicateMandateError(row.serial);

@@ -56,6 +56,7 @@ import { Hono } from "hono";
 import { verify, type Revocation, type VerifyOptions } from "@paystage/mandate";
 import { PROBLEMS } from "../problem.js";
 import { parseOrgUnitForTenant } from "../org-unit.js";
+import { bearerToken, constantTimeEqual } from "./service-auth.js";
 import {
   DuplicateMandateError,
   writeMandate,
@@ -108,36 +109,6 @@ function nonEmpty(value: string | undefined): value is string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
-/** `Authorization: Bearer <token>`, or null when the header is absent or another scheme. */
-function bearerToken(header: string | undefined): string | null {
-  if (header === undefined) return null;
-  const match = /^Bearer[ \t]+(\S+)$/i.exec(header.trim());
-  return match === null ? null : (match[1] ?? null);
-}
-
-/**
- * Compare two strings without an early exit.
- *
- * Both sides are SHA-256'd first so the loop length is fixed (32 bytes) regardless of the lengths of
- * the inputs: a byte-by-byte compare that returns on the first difference leaks the shared prefix of
- * the token and the time to guess the rest. The hash also means the presented token is never compared
- * in cleartext against the secret.
- */
-async function constantTimeEqual(presented: string, expected: string): Promise<boolean> {
-  const encoder = new TextEncoder();
-  const [a, b] = await Promise.all([
-    crypto.subtle.digest("SHA-256", encoder.encode(presented)),
-    crypto.subtle.digest("SHA-256", encoder.encode(expected)),
-  ]);
-  const left = new Uint8Array(a);
-  const right = new Uint8Array(b);
-  let difference = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    difference |= (left[index] ?? 0) ^ (right[index] ?? 0);
-  }
-  return difference === 0;
 }
 
 /** The signed revocation statements a caller has seen, or a refusal when the field is not a list. */

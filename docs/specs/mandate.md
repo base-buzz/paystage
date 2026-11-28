@@ -134,6 +134,7 @@ Deployment configuration for the route:
 | Variable | Meaning |
 |---|---|
 | `MANDATE_MINT_TOKEN` | Wrangler secret. The bearer token that may mint. Unset = every mint refused. |
+| `MANDATE_REVOKE_TOKEN` | Optional Wrangler secret. The bearer token that may revoke; when unset the mint token is accepted. Set it to give a manager revoke-only access. |
 | `MANDATE_TENANT_ID` | The tenant every minted row belongs to; RLS keys on it. Never a request field. |
 | `RECEIPT_SIGNING_KEY_PKCS8` | The key set an envelope is verified against (the published JWKS is derived from it). |
 
@@ -152,6 +153,39 @@ additive, independently verifiable, and can travel on any channel. `verify()` ac
 you have seen as `revocations`; an invalid statement that names the serial fails closed as `tampered`
 rather than letting the mandate read as live.
 
+### Revoking over HTTP — `POST /v1/mandate/:serial/revoke` (#503)
+
+Send the statement above as the request body, signed by the same key the envelope names, with
+`Authorization: Bearer <MANDATE_REVOKE_TOKEN>` (or `MANDATE_MINT_TOKEN` when no separate revoke
+token is configured):
+
+```sh
+curl -X POST https://api.paystage.xyz/v1/mandate/vch_…/revoke \
+  -H "authorization: Bearer $MANDATE_REVOKE_TOKEN" \
+  -H "content-type: application/json" \
+  --data @statement.json
+```
+
+The route reads the stored envelope, checks that the statement's `serial` matches the path, and runs
+`revokeStoredMandate` against the same published key set as the mint. It changes only `state`,
+`revoked_at` and `revocation`; the signed envelope is never edited.
+
+| Outcome | Body / status |
+|---|---|
+| Revoked now | `200 { "serial", "revoked_at", "status": "revoked" }` |
+| Already revoked | `409 mandate_already_revoked`, carrying the **first** `revoked_at`; no second write |
+| Unknown serial | `404 mandate_not_found` (unlike the read route's `200 unknown`, a write has no safe "maybe") |
+| Malformed body | `400 mandate_revocation_malformed` |
+| Statement does not verify or names another serial | `400 mandate_revocation_rejected` |
+| Bad/missing service token | `403 mandate_revoke_forbidden` |
+| Not configured (no store/token/key) | `503 mandate_revoke_not_configured` |
+
+After the write, `GET /v1/mandate/:serial` answers `status: "revoked"` with
+`verdict_for_seller: "do_not_trust"`, and the paid evaluator refuses with `accept.mandate.revoked`.
+
+**Removing the card is not revoking.** Wallet's Remove Pass changes one phone; it does not touch
+this record or `/verify`. Only the statement above does.
+
 ## What a seller must check
 
 1. **The signature and the key.** Run `verify()` against the published receipt key set. Treat
@@ -168,8 +202,8 @@ rather than letting the mandate read as live.
 6. **A revocation feed, when `revocable` is true.** If you never look, a revoked mandate looks active.
 
 The hosted lookup (`GET /v1/mandate/:serial`) answers `unknown` for a serial nobody has minted; the
-mint route above is the only writer, and `unknown` means do not trust the pass. Offline verification of
-a mandate you were handed does not depend on that endpoint.
+mint route is the only creator and the revoke route the only state change, and `unknown` means do not
+trust the pass. Offline verification of a mandate you were handed does not depend on that endpoint.
 
 ## What a verified mandate does not prove
 

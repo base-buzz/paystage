@@ -23,9 +23,10 @@ import { DEFAULT_TINT } from "@/lib/pass-tokens";
  *  3. **A camera must never see a framework error page.** A malformed serial renders a plain 200
  *     explanation before any fetch happens.
  *
- * Only the fields in the endpoint's body are rendered. The write half is deliberately absent: a change
- * requires a signature from the account holding the authority, which the endpoint does not yet accept,
- * so the page says that once and offers no control that cannot work.
+ * Only the fields in the endpoint's body are rendered. There is no revoke control here: a change
+ * requires a signed statement from the account holding the authority, sent to the service-token
+ * route, and a public page must not become a way to end someone else's mandate. The page explains
+ * the Wallet-only removal step and why removing the card is not revoking (#503).
  *
  * #440: the page is the pass, structurally. Its colours, type sizes and pad ratio come from
  * `apps/console/src/lib/pass-tokens.json` — the same file `scripts/lib/pass-face.mjs` renders the Wallet

@@ -40,6 +40,11 @@ export default function PrivacyPage() {
           <strong>We do not hold</strong> keys, funds, card numbers, payee balances or bank details. A pass carries a
           spending limit; it does not carry money.
         </p>
+        <p>
+          If you answer the one question on <code>/ask</code>, we store the answer, the page you answered from, the
+          referring page and a salted hash of your IP address with the day you answered — never the address itself — so
+          the same connection cannot answer twice in a day.
+        </p>
 
         <h2 className="mt-8 text-lg font-semibold text-ink">How long</h2>
         <p>

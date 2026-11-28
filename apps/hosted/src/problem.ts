@@ -453,6 +453,91 @@ export const PROBLEMS = {
       fix: "Issue the mandate with `generateSerial()` from @paystage/mandate. Serials are unguessable or they are not capabilities.",
       ...(instance !== undefined ? { instance } : {}),
     }),
+  /**
+   * The revoke route (#503): revocation is a signed statement plus a row update, not a deletion.
+   *
+   * Every refusal is named for the same reason the mint's are: a bad token, a malformed statement and
+   * an unknown serial are three different fixes, and a caller that cannot tell them apart will retry
+   * the wrong one.
+   */
+  mandateRevokeForbidden: (instance?: string) =>
+    problem({
+      status: 403,
+      code: "mandate_revoke_forbidden",
+      title: "Only the mandate service may revoke",
+      detail:
+        "Revocation ends an authority, so it is a service write rather than a public one. This request carried no service token, or a token this deployment does not hold.",
+      retriable: false,
+      fix: "Send `Authorization: Bearer <MANDATE_REVOKE_TOKEN>` (or the mint token when no separate revoke token is configured) from the issuer or manager backend.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateRevokeNotConfigured: (instance?: string) =>
+    problem({
+      status: 503,
+      code: "mandate_revoke_not_configured",
+      title: "Revocation is not configured on this deployment",
+      detail:
+        "A revocation needs a mandate store, a service token and a published receipt key. At least one of those is missing here, so the route refuses everyone rather than accepting a statement it cannot verify.",
+      retriable: false,
+      fix: "Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY, MANDATE_REVOKE_TOKEN (or MANDATE_MINT_TOKEN) and RECEIPT_SIGNING_KEY_PKCS8 on the deployment, then retry once.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateRevocationMalformed: (reason: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "mandate_revocation_malformed",
+      title: "The body is not a signed revocation statement",
+      detail: reason,
+      retriable: false,
+      field: "revocation",
+      fix: "Send the exact object `revoke()` from @paystage/mandate returned: `{ v, serial, revoked_at, [, reason], kid, signature }`. Do not wrap it and do not edit it after signing.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateNotFound: (serial: string, instance?: string) =>
+    problem({
+      status: 404,
+      code: "mandate_not_found",
+      title: "No mandate with that serial is stored here",
+      detail: `Serial ${JSON.stringify(serial)} has no row, so there is nothing to revoke.`,
+      retriable: false,
+      field: "serial",
+      fix: "Check the serial from the pass. A serial this deployment never minted cannot be revoked, and a typo must not silently become a no-op.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateAlreadyRevoked: (serial: string, revokedAt: string, instance?: string) =>
+    problem({
+      status: 409,
+      code: "mandate_already_revoked",
+      title: "This mandate is already revoked",
+      detail: `Serial ${JSON.stringify(serial)} was revoked at ${revokedAt}. The first revocation is the one this record keeps.`,
+      retriable: false,
+      field: "serial",
+      fix: "Treat this as success. Do not send a second statement expecting a new timestamp: the existing revocation stands.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateRevokeStoreUnavailable: (instance?: string) =>
+    problem({
+      status: 503,
+      code: "mandate_revoke_store_unavailable",
+      title: "The mandate store did not answer",
+      detail:
+        "The row could not be read or updated. This response cannot say whether the revocation was recorded, so retrying the same statement is safe: a second success or a 409 both mean it is in force.",
+      retriable: true,
+      retryAfterSeconds: 5,
+      fix: "Retry after the indicated delay. Do not tell a manager the pass is revoked until this call succeeds.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
+  mandateRevocationRejected: (reason: string, instance?: string) =>
+    problem({
+      status: 400,
+      code: "mandate_revocation_rejected",
+      title: "The revocation statement did not verify",
+      detail: reason,
+      retriable: false,
+      field: "revocation",
+      fix: "Sign the statement with the key named by its `kid` over the exact payload `revocationPayload()` returns, and make its `serial` match the path serial.",
+      ...(instance !== undefined ? { instance } : {}),
+    }),
   faucetAlreadyFunded: (resetsAt: string, hours: number, instance?: string) =>
     problem({
       status: 429,

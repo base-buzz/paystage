@@ -24,7 +24,7 @@ const MAPS = [
 /** Canonical pages per site. Add to these lists when a page becomes canonical. */
 const CANONICAL = {
   "paystage.xyz": ["/glossary", "/lab", "/mocks", "/lists", "/state-of-x402", "/try", "/docs", "/pricing", "/directory"],
-  "vouchguard.app": ["/brand", "/pricing", "/privacy", "/terms"],
+  "vouchguard.app": ["/brand", "/pricing", "/ask", "/privacy", "/terms"],
 };
 
 const problems = [];
