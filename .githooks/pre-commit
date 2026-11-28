@@ -24,6 +24,19 @@ for f in $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(mjs|js)
   fi
 done
 
+# PROVENANCE.md records a hash of the files it describes, so it goes stale the moment one of them changes — and the failure surfaced at
+# pre-push, after the work, which cost a second commit three times on 2026-11-28. Regenerating here moves the fix to before the commit:
+# same guarantee, one fewer commit, and the file can never be committed stale.
+if git diff --cached --name-only | grep -qE '^(SECURITY\.md|apps/hosted/README\.md|PROVENANCE\.md)$'; then
+  if ! node scripts/gen-provenance-table.mjs >/dev/null 2>&1; then
+    echo "pre-commit: could not regenerate PROVENANCE.md — commit blocked rather than committing a stale record"
+    fail=1
+  elif ! git diff --quiet PROVENANCE.md; then
+    git add PROVENANCE.md
+    echo "pre-commit: PROVENANCE.md regenerated and staged (it hashes the files it describes)"
+  fi
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "pre-commit: nothing committed."
   exit 1

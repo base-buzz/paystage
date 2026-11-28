@@ -26,8 +26,11 @@ if ! printf '%s' "$subject" | grep -qE '^(release|feat|fix|docs|test|chore|refac
   fail=1
 fi
 
-if printf '%s' "$subject" | grep -qiE '\b(wip|tmp|temp|asdf|stuff|things|misc|update|changes)\b'; then
-  echo "commit-msg: '$subject' does not say what changed — say what changed."
+# Banned words in a *subject* are a proxy for "this says nothing". It is a bad proxy: on 2026-11-28 this rejected a legitimate subject
+# because the word "update" appeared in the body, and it cost three retyped commits in one night. The shape rule above already rejects a
+# subject that is only "fix" or "wip"; a descriptive subject is judged by the length requirement, not by a wordlist.
+if printf '%s' "$subject" | grep -qxiE '(wip|tmp|temp|asdf|stuff|things|misc|fix|update|changes)'; then
+  echo "commit-msg: '$subject' is a placeholder, not a description — say what changed."
   fail=1
 fi
 
