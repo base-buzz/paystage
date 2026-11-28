@@ -7,7 +7,7 @@ name = "paystage"
 version = "0.1.0"
 description = "Thin Python transport to the hosted PayStage MCP endpoint. The evaluator is TypeScript; this package holds no policy logic and no keys."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 keywords = [
   "paystage",
