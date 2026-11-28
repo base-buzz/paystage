@@ -46,7 +46,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@paystage/policy": "0.4.0",
+    "@paystage/policy": "0.4.1",
     "@paystage/receipt-verify": "0.1.0"
   },
   "devDependencies": {

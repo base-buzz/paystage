@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-11-28
+- `@paystage/policy@0.4.1` — **the version finally matches the bytes.** npm serves a 0.4.0 whose `dist/schema.js` and `dist/types.d.ts`
+  differ from what this commit compiles, so the release workflow's assertion failed *after* mcp and preflight had already published. Eight
+  exact pins on `@paystage/policy` moved with it (`check-workspace-pins` named every one), and the lockfile was regenerated in the same
+  commit — the two steps that were missing the last time a release went wrong.
+
 - **`v2026.11.28-release-mcp-0.8.19`** — tagged to publish `@paystage/mcp@0.8.19` and `@paystage/preflight@0.6.1`, whose built `dist/` still
   differs from what npm serves, so a republish is refused. The first attempt also named `@paystage/n8n@0.1.0` and **failed with E404**:
   npm does not let a Trusted Publisher create a *new* scoped package name — the same limitation the workflow already documents for

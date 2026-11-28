@@ -74,7 +74,7 @@
     "prepublishOnly": "npm run typecheck && npm run build"
   },
   "dependencies": {
-    "@paystage/policy": "0.4.0"
+    "@paystage/policy": "0.4.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
