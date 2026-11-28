@@ -1,0 +1,26 @@
+{
+ "schema": "paystage/loadgen-spend@1",
+ "generatedAt": "2026-11-28T04:00:54.503Z",
+ "inputs": {
+  "payments": "apps/console/src/lib/payments-incoming.generated.json",
+  "gas": "docs/state/gas-distribution.json"
+ },
+ "cappedAt": {
+  "usd": 50,
+  "windowDays": 30
+ },
+ "settlements": 205,
+ "usdcMoved": "0.410000",
+ "usdcReturnedToOurselves": "0.410000",
+ "gas": {
+  "unitsPerSettlement": 85720,
+  "gasPriceGweiP90": 0.00500055,
+  "ethUsd": 1662.11,
+  "perSettlementUsd": 0.000712,
+  "burnedUsd": 0.1461,
+  "percentOfCap": 0.29,
+  "headroomUsd": 49.85
+ },
+ "provenance": "every payer is ours — the loadgen keys and the paid-e2e probe, listed in data/payments/known-payers.json",
+ "measuredOn": "2026-11-28T00:53:51.879Z"
+}
