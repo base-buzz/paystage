@@ -36,7 +36,9 @@ from paystage import (  # noqa: E402
 )
 from paystage.client import VERSION  # noqa: E402
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+# py/tests/test_client.py -> parents[0] is tests/, [1] is py/, [2] is the repository root. Off by one here reads
+# /home/runner/work/paystage/paystage/... in CI and every path assertion fails with a FileNotFoundError that looks like a missing file.
+REPO_ROOT = Path(__file__).resolve().parents[2]
 PAYMENT = {
     "x402Version": 2,
     "accepts": [

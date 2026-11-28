@@ -71,6 +71,65 @@ for (const path of files) {
   }
 }
 
+/**
+ * Python's version of the same mistake (#345): `Path(__file__).resolve().parents[N]` used as the repository root.
+ *
+ * `py/tests/test_client.py` said `parents[3]`, which is one directory **above** the checkout, so every path it built read
+ * `/home/runner/work/paystage/paystage/…` in CI and the suite failed with a FileNotFoundError that looked like a missing file. The
+ * JavaScript half of this check would never see it, and the failure only appears on a clean checkout — which is the whole reason this
+ * file exists.
+ */
+const pythonFiles = [];
+const walkPy = (dir) => {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    if (SKIP.has(entry.name)) continue;
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) walkPy(path);
+    else if (entry.name.endsWith(".py")) pythonFiles.push(path);
+  }
+};
+walkPy("py");
+for (const path of pythonFiles) {
+  const source = readFileSync(path, "utf8");
+  /**
+   * Only a variable named like a repository root is checked. `PACKAGE_ROOT = parents[1]` is `py/` and perfectly correct — assuming every
+   * `parents[N]` means the repo root was the first false positive this branch produced, and a check that cries wolf is a check that gets
+   * turned off.
+   */
+  for (const match of source.matchAll(/^([A-Z_][A-Z0-9_]*)\s*=\s*Path\(__file__\)\.resolve\(\)\.parents\[(\d+)\]/gm)) {
+    if (!/REPO/i.test(match[1]) || /PACKAGE/i.test(match[1])) continue;
+    if (!/packages\//.test(source)) continue;
+    checked += 1;
+    /** The repository root is the nearest ancestor that contains `packages/`; a `parents[N]` that overshoots it is the bug. */
+    let dir = dirname(resolve(path));
+    let depth = 0;
+    let candidate = null;
+    while (depth <= Number(match[2]) + 1) {
+      if (existsSync(join(dir, "packages"))) {
+        candidate = dir;
+        break;
+      }
+      dir = dirname(dir);
+      depth += 1;
+    }
+    let here = dirname(resolve(path));
+    for (let i = 0; i < Number(match[2]); i += 1) here = dirname(here);
+    if (candidate !== null && here !== candidate) {
+      problems.push({
+        path,
+        spec: `${match[1]} = parents[${match[2]}]`,
+        why: `resolves to ${here}, but the repository root is ${candidate}`
+      });
+    }
+  }
+}
+
 if (problems.length === 0) {
   console.log(`relative-imports: ${checked} relative import(s) across ${files.length} file(s), all resolve`);
 } else {
