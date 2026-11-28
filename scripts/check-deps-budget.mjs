@@ -96,6 +96,7 @@ async function measure(name, pkgDir) {
     } catch {
       throw new Error(`npm pack did not return JSON: ${packed.stdout.slice(0, 300)}`);
     }
+    const manifestPkg = JSON.parse(readFileSync(join(pkgDir, "package.json"), "utf8"));
     const tarball = join(packDir, manifest[0]?.filename ?? "");
     if (!existsSync(tarball)) throw new Error(`npm pack produced no tarball for ${name}`);
 
@@ -103,8 +104,42 @@ async function measure(name, pkgDir) {
       join(installDir, "package.json"),
       JSON.stringify({ name: "deps-budget-measure", version: "1.0.0", private: true }),
     );
+
+    /**
+     * Workspace dependencies are packed from this checkout too (#505).
+     *
+     * A release bumps `@paystage/*` versions in one commit, and the registry does not have those versions yet — so installing the tarball
+     * against the real registry fails with "could not measure", which is not a pass. The measurement is about *this commit's* dependency
+     * tree, so every workspace dependency it declares is packed locally and installed from those tarballs first; npm resolves the rest
+     * from the registry as usual.
+     */
+    const workspaceTarballs = [];
+    const declared = { ...(manifestPkg.dependencies ?? {}), ...(manifestPkg.peerDependencies ?? {}) };
+    for (const dep of Object.keys(declared)) {
+      if (!dep.startsWith("@paystage/")) continue;
+      const dirName = dep.replace("@paystage/", "");
+      const depDir = join(ROOT, "packages", dirName);
+      if (!existsSync(join(depDir, "package.json"))) continue;
+      const depPack = await npm(["pack", depDir, "--json", "--pack-destination", packDir], ROOT);
+      try {
+        const depManifest = JSON.parse(depPack.stdout);
+        const depTar = join(packDir, depManifest[0]?.filename ?? "");
+        if (existsSync(depTar)) workspaceTarballs.push(depTar);
+      } catch {
+        // A pack that returns no JSON is reported by the install below, with the file named.
+      }
+    }
+
     await npm(
-      ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--silent", tarball],
+      [
+        "install",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund",
+        "--silent",
+        tarball,
+        ...workspaceTarballs,
+      ],
       installDir,
     );
 
