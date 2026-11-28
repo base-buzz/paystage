@@ -63,6 +63,12 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
+      # The route contract and the page copy are the guards for the counted question (#511). They run
+      # here because this is the only workflow that ships vouchguard; a test step nowhere is a test step
+      # that never gates the deploy.
+      - name: Test
+        run: npm test
+
       - name: Brand assets (geometry, contrast, tier sizes)
         working-directory: .
         run: node scripts/check-brand-assets.mjs
@@ -96,7 +102,7 @@ jobs:
         run: |
           set -euo pipefail
           sleep 10
-          for path in / /brand /pricing /privacy /terms /llms.txt; do
+          for path in / /brand /pricing /ask /privacy /terms /llms.txt; do
             code=$(curl -s -o /dev/null -w '%{http_code}' "https://vouchguard.app${path}")
             [ "$code" = "200" ] || { echo "FAIL ${path} -> ${code}"; exit 1; }
             echo "ok   ${path}"

@@ -36,7 +36,10 @@ export default function DirectoryPage() {
     <main className="lp-wrap lp-prose directory-page">
       <p className="lp-note">
         <a href="/lists">Deny lists and the checked-seller probe</a> · <a href="/directory.json">/directory.json</a> ·{" "}
-        <a href="/directory.schema.json">JSON schema</a>
+        <a href="/directory.schema.json">JSON schema</a> ·{" "}
+        <a href="https://vouchguard.app/ask">
+          One question: would you put a team&apos;s agent spend behind a limit you can see?
+        </a>
       </p>
 
       <h1>x402 merchant directory</h1>

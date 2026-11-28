@@ -26,6 +26,7 @@ authority: it is not a payment card, it holds no money, and it cannot tap to pay
 - ${site}/brand — the mark and the kit, MIT, with the six steps to fork it for your own business
 - ${site}/dashboard — the passes this instance knows about, read live from the API
 - ${site}/pricing — free while in build, and what free does not include
+- ${site}/ask — one counted question about visible agent spending limits
 - ${site}/privacy — what this instance holds, and what deleting it does
 - ${site}/terms — what the software is, and what it is not
 
