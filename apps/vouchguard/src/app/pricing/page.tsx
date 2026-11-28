@@ -20,10 +20,22 @@ export const metadata: Metadata = {
 export default function PricingPage() {
   return (
     <main className="mx-auto max-w-2xl px-5 py-16">
-      <Badge variant="secondary">Free while in build</Badge>
-      <h1 className="mt-4 text-4xl font-bold tracking-tight text-ink">No card, no sales call</h1>
+      <Badge variant="secondary">Free until 1 March 2027</Badge>
+      <h1 className="mt-4 text-4xl font-bold tracking-tight text-ink">No card, no sales call — and a date</h1>
       <p className="mt-4 text-lg leading-relaxed text-ink/80">
-        {brand.name} is free to use while it is being built. There is no trial clock, no credit card and nothing to cancel.
+        {brand.name} is free to use until <strong>1 March 2027</strong>. There is no trial clock, no credit card and nothing to cancel
+        before then.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-ink/70">
+        From that date it is <strong>$19 a month per organisation</strong>: every pass, every verification page, and up to 10,000
+        checks. The number is not a forecast of what it is worth — it is settled cost. A hosted check costs us about
+        <strong> $0.00065</strong> to settle and a fraction of a cent to run, so 10,000 of them is a few dollars a month and $19
+        covers it with room. We would rather publish a price we can defend than one that sounds like a market.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-ink/70">
+        <strong>The first 25 organisations get founding terms:</strong> the price above, locked for as long as the account exists,
+        whether or not it rises for anybody else. Twenty-five because that is the number of early accounts one person can actually
+        answer for.
       </p>
 
       <Card className="mt-10">

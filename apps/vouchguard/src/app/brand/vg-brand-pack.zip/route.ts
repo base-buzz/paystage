@@ -26,7 +26,12 @@ export function GET() {
 
   const zip = buildBrandPack({ brand: brandJson, pngs, versionDate: PACK_VERSION_DATE });
 
-  return new Response(zip, {
+  /**
+   * `zip` is a `Uint8Array`, which the DOM `BodyInit` type in this TS version does not accept — the bytes are valid, the type is
+   * narrower than reality (`BufferSource` covers it at runtime). Casting here is honest: the alternative was an app whose typecheck
+   * is red on a tree nobody changed, which teaches everyone to ignore it.
+   */
+  return new Response(zip as unknown as BodyInit, {
     headers: {
       "content-type": "application/zip",
       "content-disposition": 'attachment; filename="vg-brand-pack.zip"',
