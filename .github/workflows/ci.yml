@@ -16,7 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
       - run: npm run build
       - run: npm run typecheck
       - run: npm run test
@@ -81,6 +82,7 @@ jobs:
       - run: node scripts/check-workflows.mjs
       - run: node scripts/check-script-bins.mjs
       - run: node scripts/check-route-docs.mjs
+      - run: node scripts/check-openapi-parity.mjs
       - run: node scripts/check-openapi-contract.mjs
       - run: node scripts/check-agent-discovery.mjs
       - run: node scripts/check-security.mjs

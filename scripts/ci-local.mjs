@@ -171,6 +171,10 @@ if (reason === null) {
     "check-llms-txt.mjs",
     /* #468: every domain we own must have an agent entry point, and the two brands must name each other. */
     "check-agent-entry.mjs",
+    /* The agent-facing endpoint lists and the OpenAPI document must be the same list. Sub-second, no network, and
+       exactly the kind of hand-maintained surface that drifts while every local run is green. */
+    "check-route-docs.mjs",
+    "check-openapi-parity.mjs",
     /* #476: reads the built HTML, so it runs after the build in both passes. */
     "check-structured-data.mjs",
   ]) {
@@ -355,6 +359,7 @@ try {
     "check-env-vars.mjs",
     "check-route-styles.mjs",
     "check-route-docs.mjs",
+    "check-openapi-parity.mjs",
     "check-directory.mjs",
     /* #490: the pricing page's "has anyone paid us" sentence must be the committed classifier snapshot, every transfer
        must be classified against the published list, and the last-external date must be derived, not typed. */

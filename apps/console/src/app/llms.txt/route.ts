@@ -120,6 +120,9 @@ no payment, no key. Runs daily in CI; history at https://paystage.xyz.
   host is not settling; the \`x-paystage-facilitator\` header says \`self\`, \`self-unconfigured\` or \`cdp\`, and \`/verify\` and
   \`/settle\` return 503 unless a local facilitator is loaded.
 - \`/v1/public/chain.json\` — the on-chain settlement summary.
+- \`GET /v1/public/rollup?unit=…\` — a unit's totals including every descendant. Mandate counts and the
+  descendant list are real; spend and refusals carry an explicit \`*_unavailable_reason\` when the event rows
+  cannot be attributed, so a zero is never read as a measured total.
 - \`/v1/public/example-receipt.json\` and \`/v1/public/example-key.json\` — one real signed receipt plus the public key that
   signed it, so the verdict format can be checked offline before a live bundle is trusted.
 - \`GET /runs/:id\` — one evidence bundle (events.jsonl, proof, receipt, summary.md), plus
