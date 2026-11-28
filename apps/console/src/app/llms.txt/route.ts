@@ -117,6 +117,8 @@ no payment, no key. Runs daily in CI; history at https://paystage.xyz.
 - \`/openapi.json\` — the OpenAPI 3.1 description of every hosted endpoint.
 - \`/health\`, \`/v1/public/status\` — liveness and the operational flags (failed settlements, facilitator errors).
 - \`/v1/public/chain.json\` — the on-chain settlement summary.
+- \`/v1/public/example-receipt.json\` and \`/v1/public/example-key.json\` — one real signed receipt plus the public key that
+  signed it, so the verdict format can be checked offline before a live bundle is trusted.
 - \`GET /runs/:id\` — one evidence bundle (events.jsonl, proof, receipt, summary.md), plus
   \`?format=json\` for all four as JSON. The id is the bundle_id returned by an evaluation.
 - \`GET /wallets/:address\` — stored observations about one payee, with the source and read date
