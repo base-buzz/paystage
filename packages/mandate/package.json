@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@paystage/policy": "0.4.1",
-    "@paystage/receipt-verify": "0.1.0"
+    "@paystage/receipt-verify": "0.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

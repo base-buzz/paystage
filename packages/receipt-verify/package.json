@@ -1,6 +1,6 @@
 {
   "name": "@paystage/receipt-verify",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "verify a PayStage verdict receipt without installing the server: fetch the published JWKS by kid, check the ES256 signature, expiry and payment binding. Same verdict shape as @paystage/mcp.",
   "license": "MIT",
   "type": "module",

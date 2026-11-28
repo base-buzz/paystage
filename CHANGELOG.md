@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-11-28
+- `@paystage/receipt-verify@0.1.1` and `@paystage/x402-guard@0.5.1` — the last two packages whose published `dist/` disagreed with the repo.
+  Found by walking every package with `assert-artifact --latest` instead of fixing one per release tag: each tag published what it could and
+  then failed on the next stale package, which is a slow way to discover a list. Now the list is empty and a release can go green.
+
 - `@paystage/policy@0.4.1` — **the version finally matches the bytes.** npm serves a 0.4.0 whose `dist/schema.js` and `dist/types.d.ts`
   differ from what this commit compiles, so the release workflow's assertion failed *after* mcp and preflight had already published. Eight
   exact pins on `@paystage/policy` moved with it (`check-workspace-pins` named every one), and the lockfile was regenerated in the same
