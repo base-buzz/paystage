@@ -22,7 +22,11 @@ Stored on the box under `/home/box/.secrets/`:
 
 ## Applying migrations
 
-Migrations live in `supabase/migrations/`. Apply them either:
+Migrations are **not tracked in this repository** (operator decision, 2026-11-28 — a public schema is a future mistake waiting to happen).
+They are applied from the operator's private copy. Do not re-add them: `scripts/check-migrations-private.mjs` fails the build if any path
+under `supabase/migrations/` is tracked again.
+
+Apply them either:
 
 - Via the Management API: `POST /v1/projects/{ref}/database/query` with the PAT, or
 - Via the Supabase CLI.

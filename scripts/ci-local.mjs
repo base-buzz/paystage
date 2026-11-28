@@ -121,6 +121,7 @@ if (reason === null) {
     "check-payments-incoming.mjs",
     "check-unit-economics.mjs",
     "check-relative-imports.mjs",
+    "check-migrations-private.mjs",
     "check-workspace-pins.mjs",
     /**
      * In `ci.yml` but not in this list until 2026-11-26, which is how a new package (`@paystage/mandate`) reached main
@@ -332,6 +333,7 @@ try {
     "check-payments-incoming.mjs",
     "check-unit-economics.mjs",
     "check-relative-imports.mjs",
+    "check-migrations-private.mjs",
     "check-workspace-pins.mjs",
     "check-workflows.mjs",
     "check-script-bins.mjs",

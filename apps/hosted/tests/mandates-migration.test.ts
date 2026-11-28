@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -12,11 +12,14 @@ import { describe, expect, it } from "vitest";
  * is the proof of syntax.
  */
 
-const SQL = readFileSync(
-  join(import.meta.dirname, "../../../supabase/migrations/20261126120000_mandates.sql"),
-  "utf8",
-);
-
+/**
+ * The migrations are no longer tracked (operator decision, 2026-11-28): the file exists in a developer's checkout and is absent in CI.
+ * An eager read would make every clean checkout red for a reason that is not a defect, so the suites below skip when it is missing and say
+ * why — a skipped test with a named reason is honest; a red one is noise.
+ */
+const SQL_PATH = join(import.meta.dirname, "../../../supabase/migrations/20261126120000_mandates.sql");
+const SQL = existsSync(SQL_PATH) ? readFileSync(SQL_PATH, "utf8") : null;
+const MIGRATION_SKIP = SQL === null ? "schema migrations are not published in this repository (docs/specs/supabase-ops.md)" : false;
 /** Negative assertions run on the statements, not on the prose: the comments name the anti-patterns. */
 const SQL_CODE = SQL.replace(/--[^\n]*/g, "");
 
@@ -26,7 +29,7 @@ function policies(): { name: string; body: string }[] {
   return [...SQL.matchAll(POLICY_RE)].map((match) => ({ name: match[1] ?? "", body: match[2] ?? "" }));
 }
 
-describe("the mandates table", () => {
+describe.skipIf(MIGRATION_SKIP)("the mandates table", () => {
   it("keys on serial and carries the signed envelope verbatim", () => {
     expect(SQL).toMatch(/create table if not exists public\.mandates/i);
     expect(SQL).toMatch(/serial text primary key/i);
@@ -49,7 +52,7 @@ describe("the mandates table", () => {
   });
 });
 
-describe("RLS and the tenant policy set ship in the same file", () => {
+describe.skipIf(MIGRATION_SKIP)("RLS and the tenant policy set ship in the same file", () => {
   it("enables row level security", () => {
     expect(SQL).toMatch(/alter table public\.mandates enable row level security/i);
   });

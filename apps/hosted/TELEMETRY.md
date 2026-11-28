@@ -69,7 +69,9 @@ non-zero rather than inventing a number.
 
 ## Schema / migrations
 
-Telemetry tables live under `supabase/migrations/`. Apply migrations with the
+Telemetry tables are created by migrations that are **deliberately not published in this repository** (operator decision, 2026-11-28): a
+schema in a public repo is a standing invitation to fork it into a half-applied state. The SQL lives with the operator and is applied to a
+project directly; the shapes are described below and in `docs/specs/mandate.md`. Apply migrations with the
 Supabase CLI:
 
 ```sh

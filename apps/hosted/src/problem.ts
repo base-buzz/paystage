@@ -179,7 +179,7 @@ export const PROBLEMS = {
       detail:
         "This deployment has no SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY, so there is nowhere to read a bundle from. The bundle table and its migration exist in the repo; the deployment is what is missing.",
       retriable: false,
-      fix: "Configure the two Supabase bindings and apply supabase/migrations/*_evidence_bundles.sql, then retry. Do not read this as an unknown id.",
+      fix: "Configure the two Supabase bindings and apply the evidence-bundles migration to your own project, then retry. Do not read this as an unknown id. (The migrations are not published in this repository.)",
       ...(instance !== undefined ? { instance } : {}),
     }),
   storageUnavailable: (instance?: string) =>
@@ -212,7 +212,7 @@ export const PROBLEMS = {
       detail:
         "This deployment has no SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY, so there is nowhere to read observations from. Do not read this as an address with no observations.",
       retriable: false,
-      fix: "Configure the two Supabase bindings and apply supabase/migrations/*_payee_observations.sql, then retry.",
+      fix: "Configure the two Supabase bindings and apply the payee-observations migration to your own project, then retry. (The migrations are not published in this repository.)",
       ...(instance !== undefined ? { instance } : {}),
     }),
   payeeStorageUnavailable: (instance?: string) =>
