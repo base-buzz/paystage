@@ -77,6 +77,9 @@ jobs:
         working-directory: .
         run: node scripts/check-pass-assets.mjs
 
+      - name: Render the Worker config from brand.json
+        run: node scripts/render-wrangler.mjs
+
       # The survey's three bindings, set from repository secrets so the Worker never needs a person at a keyboard. `wrangler secret put`
       # is idempotent: it overwrites, so a rotated key ships with the next deploy instead of drifting.
       - name: Survey bindings
@@ -92,12 +95,10 @@ jobs:
             echo "no survey secrets configured — /ask will honestly say the counter is not connected"
             exit 0
           fi
-          printf '%s' "$SURVEY_SUPABASE_URL"       | npx wrangler secret put SURVEY_SUPABASE_URL
-          printf '%s' "$SURVEY_SUPABASE_ANON_KEY"  | npx wrangler secret put SURVEY_SUPABASE_ANON_KEY
-          printf '%s' "$SURVEY_IP_SALT"            | npx wrangler secret put SURVEY_IP_SALT
-
-      - name: Render the Worker config from brand.json
-        run: node scripts/render-wrangler.mjs
+          # --config wrangler.toml, or wrangler reads the repo's wrangler.jsonc stub and addresses a worker name that does not exist
+          printf '%s' "$SURVEY_SUPABASE_URL"       | npx wrangler secret put SURVEY_SUPABASE_URL --config wrangler.toml
+          printf '%s' "$SURVEY_SUPABASE_ANON_KEY"  | npx wrangler secret put SURVEY_SUPABASE_ANON_KEY --config wrangler.toml
+          printf '%s' "$SURVEY_IP_SALT"            | npx wrangler secret put SURVEY_IP_SALT --config wrangler.toml
 
       - name: Build the site
         run: npm run build
