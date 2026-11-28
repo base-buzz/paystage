@@ -51,8 +51,13 @@ import {
   usdToAtomic,
   type SelfFacilitatorClient,
 } from "./self-facilitator.js";
-import { createFacilitatorRoutes } from "./routes/facilitator.js";
+import {
+  createFacilitatorRoutes,
+  withFacilitatorExtras,
+  type FacilitatorState,
+} from "./routes/facilitator.js";
 import type { FacilitatorEvmSigner } from "@x402/evm";
+import type { SupportedResponse } from "@x402/core/types";
 
 export interface AppEnv {
   PAYSTAGE_PAYTO: string;
@@ -330,6 +335,36 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
         }
       : undefined;
 
+  /**
+   * The base discovery document for `GET /supported`. It comes from the package's own
+   * `getSupported()` whenever a client exists, so `kinds`, the extension list and the signer
+   * addresses are the facilitator's real answer rather than a second copy of the config.
+   * With no client (CDP mode) the same envelope is built from config and `signers` stays
+   * empty: this host is not the signer, and naming Coinbase's address would describe them.
+   */
+  const baseSupported = async (): Promise<SupportedResponse> => {
+    if (selfFacilitator) return selfFacilitator.getSupported();
+    return {
+      kinds: [
+        {
+          x402Version: 2,
+          scheme: "exact",
+          network: cfg.network as `${string}:${string}`,
+        },
+      ],
+      extensions: [],
+      signers: {},
+    };
+  };
+
+  /**
+   * Which of the three states this process is in. `/supported` answers 200 in all of them;
+   * the header `x-paystage-facilitator` names the state so a monitor can separate "this host
+   * was never a facilitator" (cdp) from "configured but refusing" (self without a gas key).
+   */
+  const facilitatorState: FacilitatorState =
+    mode === "cdp" ? "cdp" : selfFacilitator ? "self" : "self-unconfigured";
+
   const app = new Hono<{ Variables: Variables }>();
   const bundleStore = opts.bundleStore ?? supabaseBundleStore(env);
   const payeeObservationStore =
@@ -526,6 +561,11 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
       ...(selfUnavailableReason !== undefined
         ? { unavailableReason: selfUnavailableReason }
         : {}),
+      // `/supported` answers 200 in every mode; only the body's signer set and the
+      // `x-paystage-facilitator` header vary. The verifier statement and asset are merged
+      // into the protocol's `extra` slot, never as top-level keys.
+      supported: async () => withFacilitatorExtras(await baseSupported(), cfg.network),
+      state: facilitatorState,
     }),
   );
 

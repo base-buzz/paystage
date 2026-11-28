@@ -1,5 +1,5 @@
 /**
- * The public facilitator HTTP surface: `POST /verify` and `POST /settle`.
+ * The public facilitator HTTP surface: `GET /supported`, `POST /verify`, `POST /settle`.
  *
  * x402 v2 vocabulary only. The body is the protocol's own `VerifyRequest` / `SettleRequest`
  * (`{ x402Version, paymentPayload, paymentRequirements }`), and the response is the
@@ -7,15 +7,46 @@
  * here: those are the v1 spelling, and a v2 facilitator that echoes them confuses clients
  * about which version they are speaking.
  *
- * Both endpoints return HTTP 200 for a well-formed request, including a payment the
+ * Both POST endpoints return HTTP 200 for a well-formed request, including a payment the
  * facilitator rejects (`isValid: false` / `success: false`). A 4xx means the *request* was
  * malformed, not that the payment was refused — that distinction is what lets an agent tell
  * "fix the body" from "this payment is no good".
+ *
+ * ## `/supported` answers in every mode, and says which mode it is in
+ *
+ * `GET /supported` is the discovery document every x402 facilitator exposes; its shape is
+ * `SupportedResponse` from `@x402/core` — `{ kinds: SupportedKind[], extensions, signers }`,
+ * with `SupportedKind = { x402Version, scheme, network, extra? }`. We copied the envelope
+ * from that type and from a real response (`https://x402.org/facilitator/supported`,
+ * captured 2026-11-28), not invented one.
+ *
+ * It returns **200 in all three states**, unlike `/verify`/`/settle`, which return 503
+ * whenever there is no local client. That is deliberate: a monitor needs to be able to tell
+ *
+ *   - `cdp` — `FACILITATOR_MODE` is not `self`; this host is not a facilitator and does not
+ *     settle for anyone (the address on chain is Coinbase's, not ours);
+ *   - `self-unconfigured` — mode is `self` but no gas key is loaded: **configured but
+ *     refusing**, the state this endpoint exists to make visible;
+ *   - `self` — mode is `self` and the gas signer is loaded: verify/settle are live.
+ *
+ * from `404 /supported` (the feature is not deployed). The state is carried in the
+ * `x-paystage-facilitator` response header rather than as a new JSON field, because
+ * `SupportedResponse` has no state field and a discovery document that invented one would
+ * no longer be the protocol's document.
  */
 import { Hono } from "hono";
 import type { Context } from "hono";
 import type { FacilitatorClient } from "@x402/core/server";
-import type { PaymentPayload, PaymentRequirements } from "@x402/core/types";
+import type {
+  PaymentPayload,
+  PaymentRequirements,
+  SupportedResponse,
+} from "@x402/core/types";
+import { USDC_BY_NETWORK } from "../self-facilitator.js";
+import { VERIFIER_STATEMENT } from "../x402.js";
+
+/** The three deployment states `/supported` distinguishes. */
+export type FacilitatorState = "self" | "self-unconfigured" | "cdp";
 
 export interface FacilitatorRouteOptions {
   /**
@@ -26,6 +57,44 @@ export interface FacilitatorRouteOptions {
   client: FacilitatorClient | null;
   /** Why `client` is null, surfaced to an operator without leaking configuration. */
   unavailableReason?: string;
+  /**
+   * The base discovery document, built from the facilitator or from config. Lazily called
+   * because the package's `getSupported()` is async.
+   */
+  supported: () => SupportedResponse | Promise<SupportedResponse>;
+  /** Which configuration this process is in; sent as the `x-paystage-facilitator` header. */
+  state: FacilitatorState;
+}
+
+/**
+ * Adds PayStage's own two facts to the package's discovery document.
+ *
+ * `SupportedKind` has no `asset` field, and the verifier statement is PayStage metadata, so
+ * both ride in `extra` — the protocol's open `Record<string, unknown>` extension slot, and
+ * the same slot the 402 challenge already uses for `extra.verifier` (see `x402.ts`). No
+ * top-level key is added: a discovery document with a sibling `asset` would not match
+ * `SupportedResponse` and indexers that validate the document may drop it.
+ *
+ * `extra.verifier` is identical to the object on `accepts[].extra.verifier`: one statement
+ * about who verifies, with which key and under what terms, so a client that read either
+ * document sees the same words.
+ */
+export function withFacilitatorExtras(
+  supported: SupportedResponse,
+  network: string,
+): SupportedResponse {
+  const asset = USDC_BY_NETWORK[network];
+  return {
+    ...supported,
+    kinds: supported.kinds.map((kind) => ({
+      ...kind,
+      extra: {
+        ...kind.extra,
+        ...(asset ? { asset } : {}),
+        verifier: VERIFIER_STATEMENT,
+      },
+    })),
+  };
 }
 
 interface ParsedBody {
@@ -97,39 +166,22 @@ export function createFacilitatorRoutes(opts: FacilitatorRouteOptions): Hono {
   };
 
   /**
-   * `GET /supported` — what this facilitator can verify and settle (#x402scan).
+   * `GET /supported` — the discovery document a facilitator registry points at.
    *
-   * The shape is the protocol's own `SupportedResponse` (`@x402/core`), not one invented here:
-   * `{ kinds: [{ x402Version, scheme, network, extra? }], extensions, signers }`. Every facilitator listed on
-   * x402scan.com/facilitators exposes it, and a registry entry pointing at a URL without it is an entry that cannot be
-   * discovered.
+   * The body is exactly `SupportedResponse` from `@x402/core`: `{ kinds, extensions, signers }`
+   * with `SupportedKind = { x402Version, scheme, network, extra? }`. Nothing is added at the
+   * top level — `configured` and a bare `x402Version` are *not* in that type, and an indexer
+   * that validates the document may drop or reject them. The mode is a header instead:
+   * `x-paystage-facilitator: self | self-unconfigured | cdp` (see the module comment above).
    *
-   * It answers **200 in both modes**, deliberately. `configured: false` tells a monitor (and a reader) that this
-   * deployment has the endpoint but is not settling — which is a different fact from "the endpoint is not there", and
-   * conflating the two is how an absence gets mistaken for a fault. `kinds` is what we *can* do when configured, so it
-   * is stated in both cases; `signers` is empty until a facilitator key is live, because a signer address we cannot
-   * settle from would be a lie with a checksum.
+   * `kinds` is what this deployment accepts when it settles; `signers` is the gas address the
+   * package reports from the live signer, and stays `{}` until one is loaded, because a signer
+   * address we cannot settle from would be a lie with a checksum.
    */
-  app.get("/supported", (c) => {
+  app.get("/supported", async (c) => {
     c.header("cache-control", "no-store");
-    return c.json({
-      x402Version: 2,
-      configured: opts.client !== null,
-      kinds: [
-        {
-          x402Version: 2,
-          scheme: "exact",
-          network: "eip155:8453",
-          extra: {
-            asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-            verifier: "paystage",
-            docs: "https://paystage.xyz/docs/x402",
-          },
-        },
-      ],
-      extensions: [],
-      signers: opts.client === null ? {} : { "eip155:8453": ["0x680228D4915ad9f46C1f72e1D80370b56a42405"] },
-    });
+    c.header("x-paystage-facilitator", opts.state);
+    return c.json(await opts.supported(), 200);
   });
 
   app.post("/verify", async (c) => {

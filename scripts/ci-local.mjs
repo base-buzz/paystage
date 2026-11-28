@@ -34,6 +34,29 @@ function git(argv, cwd = ROOT) {
 }
 
 /**
+ * Runs a check that depends on a third party and never fails the pass.
+ *
+ * `scripts/check-facilitator-gas.mjs` needs Base's RPC. A red gate on someone else's endpoint is the
+ * failure mode we keep deleting: on 2026-11-27 a shields.io 504 failed a cold run for a change that
+ * could not have caused it, and a gate that blocks on an outage gets bypassed with `--no-verify` and
+ * then protects nothing. So both "below the floor" (exit 10) and "RPC unreadable" (exit 2) are
+ * printed here as facts; the operator decision is a refill, not a red build. The script still
+ * separates the two exit codes for anyone who runs it directly.
+ */
+function runAdvisory(label, command, commandArgs, cwd) {
+  const started = Date.now();
+  try {
+    const out = execFileSync(command, commandArgs, { cwd, stdio: "pipe", encoding: "utf8", timeout: 120_000 });
+    console.log(`  advisory ${label} — exit 0 (${((Date.now() - started) / 1000).toFixed(0)}s)`);
+    for (const line of out.trim().split("\n")) console.log(`        ${line}`);
+  } catch (error) {
+    const output = `${error.stdout ?? ""}${error.stderr ?? ""}`.trim();
+    console.log(`  advisory ${label} — exit ${error.status ?? "?"}, not a gate`);
+    for (const line of output.split("\n").filter(Boolean).slice(-4)) console.log(`        ${line}`);
+  }
+}
+
+/**
  * What can only break on a fresh install?
  *
  * - a lockfile or a package manifest: the install itself changes;
@@ -172,6 +195,10 @@ if (reason === null) {
   // The seller example's critical test: removing the gate call must turn CI red.
   if (existsSync(join(ROOT, "examples/seller/seller.test.mjs"))) {
     runFast("test examples/seller", "node", ["--test", "examples/seller/seller.test.mjs"], ROOT);
+  }
+  // Advisory: the gas wallet's balance needs Base's RPC. See runAdvisory for why it cannot gate.
+  if (existsSync(join(ROOT, "scripts/check-facilitator-gas.mjs"))) {
+    runAdvisory("check-facilitator-gas", "node", [join("scripts", "check-facilitator-gas.mjs")], ROOT);
   }
   if (failedFast) {
     console.error("\nci-local: CI would fail on this commit. Fix it here, or push with --no-verify and say why.");
@@ -351,6 +378,16 @@ try {
     const [script, ...scriptArgs] = check.split(" ");
     if (!existsSync(join(worktree, "scripts", script))) continue;
     run(check, "node", [join("scripts", script), ...scriptArgs], worktree);
+  }
+
+  // Advisory: needs Base's RPC, so it reports but never sets `failed`. See runAdvisory.
+  if (existsSync(join(worktree, "scripts/check-facilitator-gas.mjs"))) {
+    runAdvisory(
+      "check-facilitator-gas",
+      "node",
+      [join(worktree, "scripts", "check-facilitator-gas.mjs")],
+      worktree,
+    );
   }
 } catch (error) {
   failed = true;

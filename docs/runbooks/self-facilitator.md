@@ -13,6 +13,17 @@ not ship an HTTP facilitator server or a local `FacilitatorClient`, so both are 
 
 ## What it does
 
+- `GET /supported` is the x402 discovery document: exactly `SupportedResponse` from
+  `@x402/core`, `{ kinds: [{ x402Version, scheme, network, extra? }], extensions, signers }`.
+  The network, scheme and USDC asset come from the deployment config; `extra.verifier` is the
+  same statement the 402 challenge carries. It answers **200 in every mode**, because a
+  registry or monitor has to be able to tell "deployed but refusing" from "not deployed". The
+  `x-paystage-facilitator` response header names the state:
+  - `self` — gas signer loaded; `/verify` and `/settle` are live;
+  - `self-unconfigured` — `FACILITATOR_MODE=self` but no gas key: `/supported` 200,
+    `/verify` and `/settle` 503 `facilitator_not_configured`;
+  - `cdp` — the default: this host is not a facilitator, `/supported` 200 describes the terms
+    the deployment accepts, `/verify` and `/settle` answer 503.
 - `POST /verify` accepts `{ x402Version: 2, paymentPayload, paymentRequirements }` and returns
   `{ isValid, invalidReason?, payer? }`. Rejections use a stable vocabulary:
   `invalid_signature`, `expired`, `not_yet_valid`, `insufficient`, `wrong_amount`,
@@ -20,8 +31,9 @@ not ship an HTTP facilitator server or a local `FacilitatorClient`, so both are 
 - `POST /settle` accepts the same body and broadcasts
   `transferWithAuthorization` through the gas wallet. It returns the protocol's
   `{ success, transaction, network, payer, errorReason? }`.
-- Both return HTTP 200 for a well-formed request even when the payment is refused; 4xx means
-  the request was malformed. Neither reads nor emits `X-PAYMENT-*` (that is the v1 spelling).
+- Both POST endpoints return HTTP 200 for a well-formed request even when the payment is
+  refused; 4xx means the request was malformed. Neither reads nor emits `X-PAYMENT-*` (that is
+  the v1 spelling).
 - Settlement is idempotent by the `payment-identifier` extension the challenge already
   advertises: a repeat of the same id returns the first response and does not broadcast again.
   With no id, the payment signature is the dedup key. The ledger is per isolate and keeps
@@ -52,6 +64,16 @@ Planning numbers at the 0.005 gwei the gas sampler measured:
 
 Budget the gas wallet for a few hundred settlements (a few thousandths of an ETH), not a
 large balance. Refill from the treasury only when the balance approaches zero.
+
+## Checking the gas wallet before it empties
+
+`node scripts/check-facilitator-gas.mjs` reads the balance and the current gas price from Base
+and prints both plus an estimate of settlements left. It exits **10** below 0.0005 ETH
+(~800 settlements at the measured 0.006 gwei), **2** when Base's RPC cannot be read, and **0**
+otherwise. `ci-local` runs it as an **advisory**: it needs the network, and a red build caused
+by someone else's RPC is the failure mode that trains people to pass `--no-verify`. A
+below-floor result is an operator decision — refill from the treasury, or set
+`FACILITATOR_MODE=cdp` until the wallet is funded. Read-only: no key, no transaction.
 
 ## Flipping the mode
 

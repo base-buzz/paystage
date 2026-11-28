@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { createApp, facilitatorMode } from "../src/app.js";
 import { buildPaymentMiddleware } from "../src/x402.js";
-import { createFacilitatorRoutes } from "../src/routes/facilitator.js";
+import {
+  createFacilitatorRoutes,
+  withFacilitatorExtras,
+} from "../src/routes/facilitator.js";
 import { createSelfFacilitator } from "../src/self-facilitator.js";
 import type { PaymentRequirements } from "@x402/core/types";
 import {
+  GAS,
   NETWORK,
   PAY_TO,
   TX,
@@ -23,6 +27,26 @@ function selfClient() {
   return { client, calls };
 }
 
+/**
+ * Direct-route harness. `/supported` needs a discovery document and a state, so give it a
+ * minimal one here; the app-level wiring is asserted in the FACILITATOR_MODE block below.
+ */
+function facilitatorApp(client: ReturnType<typeof createSelfFacilitator> | null) {
+  return createFacilitatorRoutes({
+    client,
+    state: client ? "self" : "cdp",
+    supported: () =>
+      withFacilitatorExtras(
+        {
+          kinds: [{ x402Version: 2, scheme: "exact", network: NETWORK }],
+          extensions: [],
+          signers: {},
+        },
+        NETWORK,
+      ),
+  });
+}
+
 async function post(
   app: { request: (...args: any[]) => Response | Promise<Response> },
   path: string,
@@ -38,7 +62,7 @@ async function post(
 describe("POST /verify", () => {
   it("returns validity, the payer and no error for a valid payment", async () => {
     const { client } = selfClient();
-    const app = createFacilitatorRoutes({ client });
+    const app = facilitatorApp(client);
     const req = requirements();
     const payload = await signedPayload({ requirements: req });
     const res = await post(app, "/verify", {
@@ -54,7 +78,7 @@ describe("POST /verify", () => {
 
   it("returns 200 with a named reason for a rejected payment", async () => {
     const { client } = selfClient();
-    const app = createFacilitatorRoutes({ client });
+    const app = facilitatorApp(client);
     const req = requirements();
     const payload = await signedPayload({ requirements: req, to: "0x1111111111111111111111111111111111111111" });
     const res = await post(app, "/verify", {
@@ -70,7 +94,7 @@ describe("POST /verify", () => {
 
   it("rejects malformed requests with 400 and does not pretend to verify", async () => {
     const { client } = selfClient();
-    const app = createFacilitatorRoutes({ client });
+    const app = facilitatorApp(client);
     const res = await post(app, "/verify", { x402Version: 1 });
     expect(res.status).toBe(400);
   });
@@ -79,7 +103,7 @@ describe("POST /verify", () => {
 describe("POST /settle", () => {
   it("returns the v2 settlement shape", async () => {
     const { client } = selfClient();
-    const app = createFacilitatorRoutes({ client });
+    const app = facilitatorApp(client);
     const req = requirements();
     const payload = await signedPayload({ requirements: req });
     const res = await post(app, "/settle", {
@@ -99,7 +123,7 @@ describe("POST /settle", () => {
 
   it("settles a repeated payment id once over HTTP and returns the first hash", async () => {
     const { client, calls } = selfClient();
-    const app = createFacilitatorRoutes({ client });
+    const app = facilitatorApp(client);
     const req = requirements();
     const payload = await signedPayload({ requirements: req });
     payload.extensions = {
@@ -122,7 +146,7 @@ describe("POST /settle", () => {
       signer,
       policy: { payTo: PAY_TO, network: NETWORK, asset: USDC, minimumAmount: "2000" },
     });
-    const app = createFacilitatorRoutes({ client });
+    const app = facilitatorApp(client);
     const req = requirements();
     const payload = await signedPayload({ requirements: req });
     const res = await post(app, "/settle", {
@@ -140,7 +164,7 @@ describe("POST /settle", () => {
 describe("v2 vocabulary", () => {
   it("never emits an X-PAYMENT-* header", async () => {
     const { client } = selfClient();
-    const app = createFacilitatorRoutes({ client });
+    const app = facilitatorApp(client);
     const req = requirements();
     const payload = await signedPayload({ requirements: req });
     for (const path of ["/verify", "/settle"]) {
@@ -239,6 +263,64 @@ describe("FACILITATOR_MODE", () => {
     });
     expect(res.status).toBe(200);
     expect(((await res.json()) as Record<string, unknown>).isValid).toBe(true);
+  });
+
+  it("answers /supported 200 in cdp mode and still refuses verify and settle", async () => {
+    const app = createApp(
+      env({ CDP_API_KEY_ID: "id", CDP_API_KEY_SECRET: "secret" }),
+      { protect: false },
+    );
+    const res = await app.request("/supported");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-paystage-facilitator")).toBe("cdp");
+    const body = (await res.json()) as {
+      kinds: Array<{ x402Version: number; scheme: string; network: string; extra?: Record<string, unknown> }>;
+      extensions: string[];
+      signers: Record<string, string[]>;
+    };
+    expect(body.kinds).toHaveLength(1);
+    const cdpKind = body.kinds[0]!;
+    expect(cdpKind).toMatchObject({ x402Version: 2, scheme: "exact", network: NETWORK });
+    expect(cdpKind.extra?.asset).toBe(USDC);
+    expect(body.extensions).toEqual([]);
+    // No local signer: naming an address we cannot settle from would be a lie with a checksum.
+    expect(body.signers).toEqual({});
+    expect((await post(app, "/verify", { x402Version: 2 })).status).toBe(503);
+    expect((await post(app, "/settle", { x402Version: 2 })).status).toBe(503);
+  });
+
+  it("answers /supported 200 in self mode without a gas key and names the refusing state", async () => {
+    const app = createApp(env({ FACILITATOR_MODE: "self" }), { protect: false });
+    const res = await app.request("/supported");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-paystage-facilitator")).toBe("self-unconfigured");
+    const body = (await res.json()) as {
+      kinds: Array<{ extra?: Record<string, unknown> }>;
+      signers: Record<string, string[]>;
+    };
+    expect(body.kinds[0]?.extra?.asset).toBe(USDC);
+    expect(body.kinds[0]?.extra?.verifier).toMatchObject({ who: "PayStage" });
+    expect(body.signers).toEqual({});
+    // Configured but refusing: the gas key is absent, so verify/settle stay closed.
+    expect((await post(app, "/verify", { x402Version: 2 })).status).toBe(503);
+    expect((await post(app, "/settle", { x402Version: 2 })).status).toBe(503);
+  });
+
+  it("reports the live gas signer in self mode, under the package's family key", async () => {
+    const { signer } = makeSigner();
+    const app = createApp(env({ FACILITATOR_MODE: "self" }), {
+      protect: false,
+      facilitatorSigner: signer,
+    });
+    const res = await app.request("/supported");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-paystage-facilitator")).toBe("self");
+    const body = (await res.json()) as {
+      kinds: Array<{ x402Version: number; scheme: string; network: string }>;
+      signers: Record<string, string[]>;
+    };
+    expect(body.kinds[0]!).toMatchObject({ x402Version: 2, scheme: "exact", network: NETWORK });
+    expect(body.signers).toEqual({ "eip155:*": [GAS] });
   });
 
   it("fails closed in self mode without a gas key instead of falling back to CDP", async () => {

@@ -116,6 +116,9 @@ no payment, no key. Runs daily in CI; history at https://paystage.xyz.
 - \`/llms-full.txt\` — tool schemas, verdict semantics, policy schema, access surface.
 - \`/openapi.json\` — the OpenAPI 3.1 description of every hosted endpoint.
 - \`/health\`, \`/v1/public/status\` — liveness and the operational flags (failed settlements, facilitator errors).
+- \`GET /supported\` — the x402 facilitator discovery document (\`{ kinds, extensions, signers }\`). Answers 200 even when this
+  host is not settling; the \`x-paystage-facilitator\` header says \`self\`, \`self-unconfigured\` or \`cdp\`, and \`/verify\` and
+  \`/settle\` return 503 unless a local facilitator is loaded.
 - \`/v1/public/chain.json\` — the on-chain settlement summary.
 - \`/v1/public/example-receipt.json\` and \`/v1/public/example-key.json\` — one real signed receipt plus the public key that
   signed it, so the verdict format can be checked offline before a live bundle is trusted.
