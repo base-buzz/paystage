@@ -1,0 +1,24 @@
+{
+ "sampledAt": "2026-11-28T00:53:51.879Z",
+ "rpc": "https://mainnet.base.org",
+ "blocksRequested": 129600,
+ "blocks": 129601,
+ "truncated": false,
+ "head": 63184014,
+ "oldestBlock": 63054414,
+ "ethUsd": 1662.11,
+ "gasUnits": 65000,
+ "gwei": {
+  "p10": 0.005,
+  "p50": 0.005,
+  "p90": 0.00500055,
+  "max": 0.005532658
+ },
+ "usd": {
+  "p10": 0.00054018575,
+  "p50": 0.00054018575,
+  "p90": 0.0005402451704325,
+  "max": 0.0005977326022447
+ },
+ "p90Within10pctOfQuoted": false
+}

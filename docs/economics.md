@@ -6,6 +6,28 @@ One line, because this is the number that decides whether per-call pricing is vi
 > Measured 2026-11-27: gas price **0.006 gwei**, ETH **$1,665.44**, **65,000** gas for an EIP-3009 transfer
 > (`$0.000650` = 65,000 × 0.006 gwei × $1,665.44).
 
+## The gas price is a distribution, and a calm sample is not a bound
+
+A single reading cannot say what the floor does on a busy afternoon, so it was sampled: **129,601 blocks (~3 days,
+2026-11-25 → 2026-11-28)** via `bin/gas-distribution.mjs`, paged backwards because public RPCs truncate `eth_feeHistory`.
+
+| | gwei | cost per transfer |
+|---|---|---|
+| p10 | 0.005000 | $0.000540 |
+| p50 | 0.005000 | $0.000540 |
+| **p90** | **0.005001** | **$0.000540** |
+| max | 0.005533 | $0.000598 |
+
+**Two things this sample does not say**, and the honest reading is the second one:
+
+1. **Base sat on its 0.005 gwei floor for the whole sample.** The p90 is 0.2% above the p50 — there is no distribution to speak of
+   here, only a floor.
+2. **Therefore the sample contains no busy period**, and a p90 over three quiet days is not a bound on a spike. The `$0.000650`
+   planning figure stays, because it is *conservative* against what we measured (20% above the p90) rather than because it was right.
+
+What the sample does establish: our published floor is not optimistic. If anything it overstates settlement cost, which is the safe
+direction to be wrong in. When a busy period appears in a sample, this table is where it shows up.
+
 ## Why it is written down
 
 Because a price that is 32% gas has an expiry date that nobody wrote on it: at **0.0092 gwei** — one and a half times
