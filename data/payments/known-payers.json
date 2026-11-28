@@ -1,0 +1,76 @@
+{
+  "schema": "paystage-known-payers/v1",
+  "note": "Wallets this project operates or has operated. The incoming-payment classifier treats a payer on this list as ours and any other readable payer as external. An address we cannot name here is never guessed into 'ours': it lands in 'external', and a transfer whose payer cannot be read at all lands in 'unknown'.",
+  "updated": "2026-11-28",
+  "addresses": [
+    {
+      "address": "0xC64A71E150Cd21EBC4b12695850bED6B067743Bc",
+      "label": "loadgen-key-1",
+      "role": "loadgen",
+      "source": "docs/specs/payment-clip.md; ops/docs/state/log-loadgen.md; ops/bin/first-payer-alert.mjs"
+    },
+    {
+      "address": "0x3306B824dE09248a6cb3DDD5D2c390a8E21Cfa22",
+      "label": "loadgen-key-2",
+      "role": "loadgen",
+      "source": "ops/docs/state/log-loadgen.md"
+    },
+    {
+      "address": "0xBed514A4d7496c368971a6bb26a9163f17f9f9aD",
+      "label": "loadgen-key-3",
+      "role": "loadgen",
+      "source": "ops/docs/state/log-loadgen.md"
+    },
+    {
+      "address": "0x73fb4a47f3afae0649f640e11a466bf89ad8def9",
+      "label": "paid-e2e-ci",
+      "role": "probe",
+      "source": "ops/bin/first-payer-alert.mjs; apps/hosted/scripts/e2e-paid.mjs"
+    },
+    {
+      "address": "0xB85d5A03D3467FB95866D7966834CC780e364E05",
+      "label": "loadgen-1-retired",
+      "role": "loadgen",
+      "retired": true,
+      "source": "ops/docs/plan/PLAN.md"
+    },
+    {
+      "address": "0x4d432213cF6797cCB8C3b31E49d80C907fE607fa",
+      "label": "loadgen-2-retired",
+      "role": "loadgen",
+      "retired": true,
+      "source": "ops/docs/plan/PLAN.md"
+    },
+    {
+      "address": "0xAB7ACC5d92861E24f6E0468c2c4aeec879F67bB6",
+      "label": "loadgen-3-retired",
+      "role": "loadgen",
+      "retired": true,
+      "source": "ops/docs/plan/PLAN.md"
+    },
+    {
+      "address": "0x35d65fDFe4B8E13f68638E73aCE8b35992FA494a",
+      "label": "sepolia-throwaway",
+      "role": "probe",
+      "source": "ops/docs/plan/PLAN.md"
+    },
+    {
+      "address": "0x9cf6c7eBa6546998AFA1c1d8a9B124193a7cbe1e",
+      "label": "deployer",
+      "role": "operator",
+      "source": "ops/docs/plan/PLAN.md"
+    },
+    {
+      "address": "0x552163d84229865Ca11f2860369239eCf0Eb9Dcb",
+      "label": "dev",
+      "role": "operator",
+      "source": "ops/docs/plan/PLAN.md"
+    },
+    {
+      "address": "0x1b2272A2Ca1792e8497A8d45Fd3eb8665AE88fAE",
+      "label": "treasury-payto",
+      "role": "operator",
+      "source": "packages/loadgen/src/pay.ts; ops/docs/plan/PLAN.md"
+    }
+  ]
+}

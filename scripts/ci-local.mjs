@@ -116,6 +116,9 @@ if (reason === null) {
     /* #497: the directory page and its JSON must read one snapshot, every row must be dated and sourced, and a demand
        figure may not appear without x402scan's name and capture date. */
     "check-directory.mjs",
+    /* #490: the pricing page's "has anyone paid us" sentence must be the committed classifier snapshot, every transfer
+       must be classified against the published list, and the last-external date must be derived, not typed. */
+    "check-payments-incoming.mjs",
     "check-unit-economics.mjs",
     "check-workspace-pins.mjs",
     /**
@@ -323,6 +326,9 @@ try {
     "check-route-styles.mjs",
     "check-route-docs.mjs",
     "check-directory.mjs",
+    /* #490: the pricing page's "has anyone paid us" sentence must be the committed classifier snapshot, every transfer
+       must be classified against the published list, and the last-external date must be derived, not typed. */
+    "check-payments-incoming.mjs",
     "check-unit-economics.mjs",
     "check-workspace-pins.mjs",
     "check-workflows.mjs",

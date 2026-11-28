@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import "../landing.css";
+import { INCOMING, assertClassified, formatSentence } from "@/lib/payments-incoming";
+
+/** A build with an unclassified transfer is a build whose published count cannot be trusted. */
+assertClassified(INCOMING);
+const CHECKED_ON = INCOMING.generatedAt.slice(0, 10);
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -47,6 +52,56 @@ export default function PricingPage() {
           <p className="mt-2 text-sm text-ink/50">0.002 USDC at $1 ≈ $0.002. Ten thousand calls ≈ $20.</p>
         </div>
       </div>
+
+      <section className="mt-10 rounded-lg border border-ink/10 bg-ink/[0.02] p-5" aria-labelledby="paid-us">
+        <h2 id="paid-us" className="text-lg font-semibold text-ink">
+          Has anyone actually paid us?
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink/80">
+          <strong>{formatSentence(INCOMING)}</strong>
+        </p>
+        <p className="mt-2 text-xs leading-relaxed text-ink/60">
+          Checked {CHECKED_ON} over Base mainnet blocks {INCOMING.window.fromBlock.toLocaleString("en-US")}–
+          {INCOMING.window.toBlock.toLocaleString("en-US")} ({INCOMING.window.label}). This sentence is generated from{" "}
+          <code className="rounded bg-ink/5 px-1 py-0.5">apps/console/src/lib/payments-incoming.generated.json</code>, the
+          committed output of <code className="rounded bg-ink/5 px-1 py-0.5">bin/payments-incoming.mjs</code>; the
+          classifier and the address list are in the repository.
+        </p>
+        {INCOMING.counts.external === 0 ? (
+          <p className="mt-2 text-sm leading-relaxed text-ink/80">
+            Zero external means exactly that: every transfer in this window came from a wallet on the published list
+            below. It is not a claim about demand outside the window, and it is not a statement that the window is long
+            enough.
+          </p>
+        ) : (
+          <p className="mt-2 text-sm leading-relaxed text-ink/80">
+            The last external transfer was on {INCOMING.lastExternal?.date}. A transfer is not a customer, and this page
+            does not call one.
+          </p>
+        )}
+        <p className="mt-3 text-sm leading-relaxed text-ink/80">
+          <strong>Explorer caveat.</strong> Our address&apos;s <code className="rounded bg-ink/5 px-1 py-0.5">tx_count</code>{" "}
+          on any block explorer includes these transfers. Until an external payment exists, quoting that number as demand
+          would be quoting ourselves.
+        </p>
+        <details open className="mt-4 text-sm text-ink/80">
+          <summary className="cursor-pointer font-medium text-ink">
+            The {INCOMING.knownPayers.length} addresses this classifier treats as ours
+          </summary>
+          <ul className="mt-2 space-y-1 text-xs leading-relaxed text-ink/70">
+            {INCOMING.knownPayers.map((payer) => (
+              <li key={payer.address}>
+                <code className="rounded bg-ink/5 px-1 py-0.5">{payer.address}</code> — {payer.label} ({payer.role}
+                {payer.retired ? ", retired" : ""}) · source: {payer.source}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs leading-relaxed text-ink/60">
+            Published in <code className="rounded bg-ink/5 px-1 py-0.5">{INCOMING.knownPayersSource}</code>. Any readable
+            payer not on this list is external; a transfer with no readable payer is unknown.
+          </p>
+        </details>
+      </section>
 
       <section className="mt-10 space-y-3 text-sm leading-relaxed text-ink/80">
         <h2 className="text-lg font-semibold text-ink">What this is not</h2>
