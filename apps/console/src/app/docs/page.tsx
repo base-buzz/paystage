@@ -130,6 +130,30 @@ npx -y -p @paystage/mcp paystage-verify receipt.json --key key.json
         </p>
       </section>
 
+      <section className="mt-12" id="challenge-size">
+        <h2 className="text-2xl font-bold tracking-tight text-ink">3 · Size your buffer for the challenge</h2>
+        <p className="mt-3 text-sm leading-relaxed text-ink/80">
+          A 402 challenge is a base64-encoded JSON object in the{" "}
+          <code className="text-xs">PAYMENT-REQUIRED</code> header, and it is not small. Measured across{" "}
+          <strong>96 live x402 sellers</strong> on 2026-11-27: the smallest was <strong>1,216 bytes</strong>, the median{" "}
+          <strong>3,142 bytes</strong>, and the largest <strong>10,164 bytes</strong>. A 4 KB logging or header buffer truncates more
+          than a third of that market silently — the client sees a malformed challenge, not an error that names a size.
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-ink/80">
+          Where the challenge came from, if you want to check the sample:{" "}
+          <a className="underline decoration-ink/30 underline-offset-2" href="/lists">
+            /lists
+          </a>{" "}
+          carries every resource with its measured header size, and the ones over 8,192 bytes are named — the line many gateways and
+          proxies apply to a whole header block.
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-ink/80">
+          Our own challenge is <strong>2,028 bytes</strong> and asserted under 2,048 in CI, because the fix on our side is not to be
+          one of the large ones. If you are writing a client, size for <strong>16 KB</strong> of header and log the byte count when a
+          challenge fails to parse: &ldquo;too large&rdquo; and &ldquo;malformed&rdquo; are different bugs.
+        </p>
+      </section>
+
       <section className="mt-12 space-y-2 text-sm leading-relaxed text-ink/80">
         <h2 className="text-lg font-semibold text-ink">Where to go next</h2>
         <p>
