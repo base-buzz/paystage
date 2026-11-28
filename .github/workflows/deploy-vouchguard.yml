@@ -1,0 +1,101 @@
+# Deploy vouchguard.app (the brand site) from CI.
+#
+# Why this exists: the brand site had **no CI deploy at all**. Every copy change to `/pricing`, `/brand` or the lander sat in `main`
+# until somebody ran `npm run deploy:prod` on a machine with a logged-in wrangler — which is why the dated price shipped in the repo
+# and stayed invisible on the site. Deploys belong to the same gate as everything else.
+#
+# What it deploys:
+#   apps/vouchguard -> Worker `vouchguard` -> vouchguard.app
+#
+# The Worker name and domain are NOT literals here: `scripts/render-wrangler.mjs` writes the gitignored `wrangler.toml` from the
+# repo-root `brand.json`, so a fork cannot commit one host's values.
+
+name: deploy-vouchguard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/vouchguard/**"
+      - "packages/pass/**"
+      - "brand.json"
+      - "scripts/render-wrangler.mjs"
+      - ".github/workflows/deploy-vouchguard.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vouchguard
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: apps/vouchguard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: apps/vouchguard/package-lock.json
+
+      # The brand site consumes workspace packages through `file:` paths.
+      - name: Install workspace dependencies
+        working-directory: .
+        run: npm ci
+
+      - name: Build workspace packages
+        working-directory: .
+        run: npm run build
+
+      - name: Install site dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Brand assets (geometry, contrast, tier sizes)
+        working-directory: .
+        run: node scripts/check-brand-assets.mjs
+
+      - name: Pass assets (Apple's sizes, provenance comments)
+        working-directory: .
+        run: node scripts/check-pass-assets.mjs
+
+      - name: Render the Worker config from brand.json
+        run: node scripts/render-wrangler.mjs
+
+      - name: Build the site
+        run: npm run build
+
+      - name: Build Worker bundle (OpenNext)
+        run: npx opennextjs-cloudflare build
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/vouchguard
+          command: deploy
+          wranglerVersion: "4"
+
+      - name: Smoke test the live domain
+        run: |
+          set -euo pipefail
+          sleep 10
+          for path in / /brand /pricing /privacy /terms /llms.txt; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://vouchguard.app${path}")
+            [ "$code" = "200" ] || { echo "FAIL ${path} -> ${code}"; exit 1; }
+            echo "ok   ${path}"
+          done
+          echo "deployed: $(curl -s https://vouchguard.app/llms.txt | head -1)"
