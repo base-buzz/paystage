@@ -49,7 +49,6 @@ function backFields(face: PassFace) {
       "A Vouch spending pass issued under a signed mandate. It records what an agent was authorised to spend; it is not money and it cannot tap to pay.",
     ),
     field("verify", "VERIFY", face.verificationUrl),
-    field("code", "SHORT CODE", face.shortCode),
     field("mandate", "MANDATE ID", face.serial),
     field("limits", "LIMITS", `${face.perPayment} per purchase; ${face.windowAmount} ${face.windowLabel}; expires ${face.expiryLabel}`),
     /**
@@ -129,7 +128,11 @@ function passJson(mandate: Mandate, face: PassFace, identity: { passTypeIdentifi
         format: "PKBarcodeFormatQR",
         message: face.verificationUrl,
         messageEncoding: "iso-8859-1",
-        altText: face.shortCode,
+        /**
+         * The serial, not the short code (#502). Apple draws this under the QR as the typeable reference, and the verify page
+         * resolves a serial — printing `vch-000` there invited a person to type something that answers "unknown".
+         */
+        altText: face.serial,
       },
     ],
   };

@@ -24,6 +24,12 @@ const nextConfig: NextConfig = {
     return [
       { source: "/verify", destination: `${engine}/verify`, permanent: true },
       { source: "/v/:serial", destination: `${engine}/v/:serial`, permanent: true },
+      /**
+       * The pass's own QR says `paystage.xyz/m/<serial>`, and this domain answered 404 to anyone who edited the host (#502). A stranger
+       * retyping a link — or a scanner that normalises to the site they came from — should land on the same page, not on a 404 that
+       * reads as "the pass is fake".
+       */
+      { source: "/m/:serial", destination: `${engine}/m/:serial`, permanent: true },
     ];
   },
 };

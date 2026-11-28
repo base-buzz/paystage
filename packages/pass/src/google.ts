@@ -77,7 +77,8 @@ function genericObject(face: PassFace, classId: string, id: string) {
     barcode: {
       type: "QR_CODE",
       value: face.verificationUrl,
-      alternateText: face.shortCode,
+      // The serial, not a short code: the verify page resolves serials, so a compact label under the code was unusable (#502).
+      alternateText: face.serial,
     },
     linksModuleData: {
       uris: [{ uri: face.verificationUrl, description: "Verify this pass" }],

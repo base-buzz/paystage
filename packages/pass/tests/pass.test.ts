@@ -253,7 +253,7 @@ describe("@paystage/pass — the Apple archive", () => {
       expect.objectContaining({
         format: "PKBarcodeFormatQR",
         message: `https://paystage.xyz/m/${mandate.serial}`,
-        altText: shortCode(mandate.serial),
+        altText: mandate.serial,
       }),
     ]);
     expect(back.verify).toBe(verificationUrl(mandate.serial));
@@ -377,7 +377,7 @@ describe("@paystage/pass — the Google object carries the same mandate", () => 
       barcode: {
         type: "QR_CODE",
         value: `https://paystage.xyz/m/${mandate.serial}`,
-        alternateText: shortCode(mandate.serial),
+        alternateText: mandate.serial,
       },
     });
     expect(modules).toMatchObject({
@@ -443,5 +443,32 @@ describe("the card's liveness limit is stated, not implied", () => {
     expect(String(entry?.label).toLowerCase()).toContain("does not update");
     expect(back.liveness.toLowerCase()).toContain("snapshot");
     expect(back.liveness.toLowerCase()).toContain("live answer");
+  });
+});
+
+/**
+ * The code printed under the QR is the serial, because that is the only thing the verify page resolves (#502).
+ *
+ * The old altText was `vch-000` — derived from the last three characters of the serial — which looks typeable and answers "unknown" if
+ * you type it. A pass whose printed reference cannot resolve is worse than one with no reference, and the test pins the serial so the
+ * two cannot drift apart again.
+ */
+describe("the printed reference resolves", () => {
+  it("prints the serial under the QR, not a short code", async () => {
+    const { mandate } = await signedMandate();
+    const artifact = await buildApplePass(mandate, {
+      certificatePath: fixture.path,
+      certificatePassword: fixture.password,
+      now: NOW,
+    });
+    const pass = JSON.parse(artifact.passJson.toString("utf8"));
+    expect(pass.barcodes).toHaveLength(1);
+    expect(pass.barcodes[0].altText).toBe(mandate.serial);
+    expect(pass.barcodes[0].message).toContain(encodeURIComponent(mandate.serial));
+    // The unusable SHORT CODE field is gone from both style keys.
+    for (const style of [pass.generic, pass.posterGeneric]) {
+      if (!style) continue;
+      expect(style.backFields.map((f: { key: string }) => f.key)).not.toContain("code");
+    }
   });
 });

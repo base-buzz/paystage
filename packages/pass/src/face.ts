@@ -71,7 +71,14 @@ export function mandateState(mandate: Mandate, input: StateInput = {}): MandateS
   return "active";
 }
 
-/** The short, readable-aloud reference the QR's altText carries. Mirrors `scripts/lib/pass-face.mjs`. */
+/**
+ * The short, readable-aloud reference (#502) — **kept for continuity, no longer printed as a code**.
+ *
+ * It was the QR's `altText` and the pass's SHORT CODE field, and it identifies nothing: `vch_DemoPass2026Vouch0000` reduces to
+ * `vch-000`, and the verify page cannot resolve a short code at all — it wants the serial. A code that looks typeable and is not is
+ * worse than no code, so the pass now prints the serial where a human reads it and this function is used only where a compact label is
+ * genuinely wanted (a log line, not a document).
+ */
 export function shortCode(serial: string): string {
   const clean = String(serial ?? "").replace(/[^a-z0-9]/gi, "").toUpperCase();
   return `vch-${(clean.slice(-3) || "000").padStart(3, "0")}`;
