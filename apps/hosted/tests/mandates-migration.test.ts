@@ -21,12 +21,12 @@ const SQL_PATH = join(import.meta.dirname, "../../../supabase/migrations/2026112
 const SQL = existsSync(SQL_PATH) ? readFileSync(SQL_PATH, "utf8") : null;
 const MIGRATION_SKIP = SQL === null ? "schema migrations are not published in this repository (docs/specs/supabase-ops.md)" : false;
 /** Negative assertions run on the statements, not on the prose: the comments name the anti-patterns. */
-const SQL_CODE = SQL.replace(/--[^\n]*/g, "");
+const SQL_CODE = (SQL ?? "").replace(/--[^\n]*/g, "");
 
 const POLICY_RE = /create policy\s+(\w+)\s+on\s+public\.mandates\s+([\s\S]*?);/g;
 
 function policies(): { name: string; body: string }[] {
-  return [...SQL.matchAll(POLICY_RE)].map((match) => ({ name: match[1] ?? "", body: match[2] ?? "" }));
+  return [...(SQL ?? "").matchAll(POLICY_RE)].map((match) => ({ name: match[1] ?? "", body: match[2] ?? "" }));
 }
 
 describe.skipIf(MIGRATION_SKIP)("the mandates table", () => {
