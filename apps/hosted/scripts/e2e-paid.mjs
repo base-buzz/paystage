@@ -12,7 +12,7 @@ import { wrapFetchWithPaymentFromConfig, decodePaymentResponseHeader } from "@x4
 import { ExactEvmScheme } from "@x402/evm";
 import { privateKeyToAccount } from "viem/accounts";
 // #431: this CI job proves itself to the gate. Absent PAYSTAGE_PROVENANCE_KEY → `{}`, gate says `unknown`.
-import { provenanceHeaders } from "../../packages/loadgen/src/provenance.mjs";
+import { provenanceHeaders } from "../../../packages/loadgen/src/provenance.mjs";
 
 const KEY_FILE =
   process.env.PAYSTAGE_E2E_KEY_FILE ||

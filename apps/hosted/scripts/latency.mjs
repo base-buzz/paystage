@@ -15,7 +15,7 @@
  */
 import { performance } from "node:perf_hooks";
 // #431: latency runs are our traffic too. Absent key → `{}`, gate records `unknown`.
-import { provenanceHeaders } from "../../packages/loadgen/src/provenance.mjs";
+import { provenanceHeaders } from "../../../packages/loadgen/src/provenance.mjs";
 
 const args = process.argv.slice(2);
 const arg = (name, fallback) => {
