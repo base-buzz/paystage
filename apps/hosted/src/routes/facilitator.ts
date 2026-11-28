@@ -96,6 +96,42 @@ export function createFacilitatorRoutes(opts: FacilitatorRouteOptions): Hono {
     );
   };
 
+  /**
+   * `GET /supported` — what this facilitator can verify and settle (#x402scan).
+   *
+   * The shape is the protocol's own `SupportedResponse` (`@x402/core`), not one invented here:
+   * `{ kinds: [{ x402Version, scheme, network, extra? }], extensions, signers }`. Every facilitator listed on
+   * x402scan.com/facilitators exposes it, and a registry entry pointing at a URL without it is an entry that cannot be
+   * discovered.
+   *
+   * It answers **200 in both modes**, deliberately. `configured: false` tells a monitor (and a reader) that this
+   * deployment has the endpoint but is not settling — which is a different fact from "the endpoint is not there", and
+   * conflating the two is how an absence gets mistaken for a fault. `kinds` is what we *can* do when configured, so it
+   * is stated in both cases; `signers` is empty until a facilitator key is live, because a signer address we cannot
+   * settle from would be a lie with a checksum.
+   */
+  app.get("/supported", (c) => {
+    c.header("cache-control", "no-store");
+    return c.json({
+      x402Version: 2,
+      configured: opts.client !== null,
+      kinds: [
+        {
+          x402Version: 2,
+          scheme: "exact",
+          network: "eip155:8453",
+          extra: {
+            asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            verifier: "paystage",
+            docs: "https://paystage.xyz/docs/x402",
+          },
+        },
+      ],
+      extensions: [],
+      signers: opts.client === null ? {} : { "eip155:8453": ["0x680228D4915ad9f46C1f72e1D80370b56a42405"] },
+    });
+  });
+
   app.post("/verify", async (c) => {
     c.header("cache-control", "no-store");
     if (!opts.client) return unavailable(c);
