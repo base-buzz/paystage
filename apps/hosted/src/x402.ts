@@ -1,6 +1,7 @@
 import { paymentMiddleware } from "@x402/hono";
 import { x402ResourceServer } from "@x402/hono";
 import { HTTPFacilitatorClient } from "@x402/core/server";
+import type { FacilitatorClient as CoreFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { withStaticSupported } from "./facilitator-cache.js";
@@ -220,11 +221,19 @@ export function buildRoutesConfig(cfg: X402Config) {
   };
 }
 
+/**
+ * The resource server only needs `verify`/`settle`/`getSupported`. The local index-signature
+ * type exists for the cast into `x402ResourceServer`; a class instance that implements the
+ * package's own `FacilitatorClient` is equally valid input, so accept both rather than
+ * forcing every caller to cast.
+ */
+export type PaymentFacilitatorClient = FacilitatorClient | CoreFacilitatorClient;
+
 export function buildPaymentMiddleware(
   cfg: X402Config,
-  facilitatorClient?: FacilitatorClient,
+  facilitatorClient?: PaymentFacilitatorClient,
 ): MiddlewareHandler {
-  const server = buildResourceServer(cfg, facilitatorClient);
+  const server = buildResourceServer(cfg, facilitatorClient as FacilitatorClient | undefined);
   const routes = buildRoutesConfig(cfg);
   // Workers: do not sync facilitator on start (no long-lived process).
   return paymentMiddleware(

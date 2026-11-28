@@ -43,12 +43,25 @@ import {
   type X402Config,
 } from "./x402.js";
 import { legacyPaymentHeaderMiddleware } from "./legacy-headers.js";
+import {
+  USDC_BY_NETWORK,
+  createSelfFacilitator,
+  signerFromPrivateKey,
+  usdToAtomic,
+  type SelfFacilitatorClient,
+} from "./self-facilitator.js";
+import { createFacilitatorRoutes } from "./routes/facilitator.js";
+import type { FacilitatorEvmSigner } from "@x402/evm";
 
 export interface AppEnv {
   PAYSTAGE_PAYTO: string;
   PAYSTAGE_PRICE?: string;
   PAYSTAGE_NETWORK?: string;
   FACILITATOR_URL?: string;
+  /** `self` runs our own facilitator; unset/`cdp` keeps the Coinbase CDP facilitator. */
+  FACILITATOR_MODE?: string;
+  /** Gas-wallet private key for `FACILITATOR_MODE=self`. Worker secret; never logged. */
+  FACILITATOR_GAS_PRIVATE_KEY?: string;
   PAID_QUOTA_ENABLED?: string;
   PAID_QUOTA_DAILY_LIMIT?: string;
   CDP_API_KEY_ID?: string;
@@ -84,6 +97,11 @@ type Variables = {
 
 export interface CreateAppOptions {
   facilitatorClient?: FacilitatorClient;
+  /**
+   * Test seam for the self facilitator's gas signer. Production builds the signer from
+   * `FACILITATOR_GAS_PRIVATE_KEY`; tests pass a stub so no key or RPC is involved.
+   */
+  facilitatorSigner?: FacilitatorEvmSigner;
   protect?: boolean;
   /** Test/deployment seam for evidence-bundle storage; defaults to the Supabase store. */
   bundleStore?: BundleStore;
@@ -218,9 +236,14 @@ function classifyStatus(status: number): {
   return { facilitator_status: null, error_class: null };
 }
 
+export function facilitatorMode(env: AppEnv): "self" | "cdp" {
+  return env.FACILITATOR_MODE === "self" ? "self" : "cdp";
+}
+
 export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Variables: Variables }> {
+  const mode = facilitatorMode(env);
   const facilitatorAuth: FacilitatorAuth | undefined =
-    nonEmpty(env.CDP_API_KEY_ID) && nonEmpty(env.CDP_API_KEY_SECRET)
+    mode === "cdp" && nonEmpty(env.CDP_API_KEY_ID) && nonEmpty(env.CDP_API_KEY_SECRET)
       ? { apiKeyId: env.CDP_API_KEY_ID, apiKeySecret: env.CDP_API_KEY_SECRET }
       : undefined;
 
@@ -233,6 +256,66 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
     facilitatorUrl: env.FACILITATOR_URL ?? "https://x402.org/facilitator",
     facilitatorAuth,
   };
+
+  /**
+   * Self-facilitator selection. `FACILITATOR_MODE=self` never falls back to CDP: if the gas
+   * key is missing the paid routes fail closed and the public endpoints answer 503, because
+   * a deployment that says "self" and silently spends Coinbase's facilitator is a lie about
+   * who settled the payment.
+   */
+  let selfFacilitator: SelfFacilitatorClient | null = null;
+  let selfUnavailableReason: string | undefined;
+  if (mode === "self") {
+    const signer =
+      opts.facilitatorSigner ??
+      (nonEmpty(env.FACILITATOR_GAS_PRIVATE_KEY)
+        ? signerFromPrivateKey(env.FACILITATOR_GAS_PRIVATE_KEY, cfg.network)
+        : null);
+    if (signer) {
+      selfFacilitator = createSelfFacilitator({
+        signer,
+        policy: {
+          payTo: cfg.payTo,
+          network: cfg.network,
+          asset: USDC_BY_NETWORK[cfg.network],
+          minimumAmount: usdToAtomic(cfg.price),
+        },
+      });
+    } else {
+      selfUnavailableReason = "FACILITATOR_MODE=self is set but FACILITATOR_GAS_PRIVATE_KEY is not.";
+    }
+  } else {
+    selfUnavailableReason = "FACILITATOR_MODE is not self.";
+  }
+
+  /**
+   * A self-mode app with no signer still has to answer. It advertises the local kind so the
+   * resource server can build a challenge, then refuses every verify/settle: an explicit
+   * failure, never a quiet delegation to someone else's facilitator.
+   */
+  const unconfiguredSelf: FacilitatorClient | undefined =
+    mode === "self" && !selfFacilitator
+      ? {
+          getSupported: async () => ({
+            kinds: [
+              {
+                x402Version: 2,
+                scheme: "exact",
+                network: cfg.network as `${string}:${string}`,
+              },
+            ],
+            extensions: [],
+            signers: {},
+          }),
+          verify: async () => ({ isValid: false, invalidReason: "facilitator_not_configured" }),
+          settle: async () => ({
+            success: false,
+            errorReason: "facilitator_not_configured",
+            transaction: "",
+            network: cfg.network as `${string}:${string}`,
+          }),
+        }
+      : undefined;
 
   const app = new Hono<{ Variables: Variables }>();
   const bundleStore = opts.bundleStore ?? supabaseBundleStore(env);
@@ -420,6 +503,19 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
 
   app.route("/", healthRoutes);
 
+  // The public facilitator surface. Mounted before the payment gate and the free tier: these
+  // endpoints verify/settle *other* requests, they are not themselves a paid route. In CDP
+  // mode they answer 503 rather than proxying, so the answer says who actually settles.
+  app.route(
+    "/",
+    createFacilitatorRoutes({
+      client: selfFacilitator,
+      ...(selfUnavailableReason !== undefined
+        ? { unavailableReason: selfUnavailableReason }
+        : {}),
+    }),
+  );
+
   // Public status feed — must be mounted BEFORE payment middleware.
   app.route("/", publicStatusRoutes);
   app.route("/", receiptKeyRoutes);
@@ -530,7 +626,10 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
     // the receipt echoed the payer, and the row still said null.
     app.use("*", settlementCaptureMiddleware());
 
-    const payMw = buildPaymentMiddleware(cfg, opts.facilitatorClient);
+    const payMw = buildPaymentMiddleware(
+      cfg,
+      opts.facilitatorClient ?? selfFacilitator ?? unconfiguredSelf,
+    );
     app.use("*", (c, next) => (c.get("paystageFree") === true ? next() : payMw(c, next)));
   }
 
