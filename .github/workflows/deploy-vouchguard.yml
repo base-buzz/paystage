@@ -86,7 +86,10 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/vouchguard
-          command: deploy
+          # `--config wrangler.toml` is required: the repo also carries a `wrangler.jsonc` stub (name + observability only), and
+          # wrangler prefers it over the rendered TOML — which is how the first run of this workflow failed with "Missing
+          # entry-point". The TOML is the one `render-wrangler.mjs` writes from brand.json.
+          command: deploy --config wrangler.toml
           wranglerVersion: "4"
 
       - name: Smoke test the live domain
