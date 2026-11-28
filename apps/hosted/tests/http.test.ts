@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { payerFromPaymentHeader } from "../src/paid-quota.js";
 import { createApp } from "../src/app.js";
+import { VERIFIER_STATEMENT } from "../src/x402.js";
 
 // Fake payTo for unit tests — never a real treasury address.
 const FAKE_PAYTO = "0x000000000000000000000000000000000000dEaD";
@@ -114,12 +115,200 @@ describe("hosted app", () => {
     expect(amount === "2000" || price === "$0.002").toBe(true);
   });
 
+  it("states who verifies, by what key, under what terms, and where to re-check (#484)", async () => {
+    const app = createApp(baseEnv, {
+      facilitatorClient: mockFacilitatorClient(),
+    });
+
+    // Every paid route, because a statement on one of three is not "every challenge".
+    for (const path of [
+      "/v1/paid/evaluate_mcp_payment",
+      "/v1/evaluate_mcp_payment",
+      "/v1/evaluate_outstanding_auths",
+    ]) {
+      const res = await app.request(path, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      expect(res.status, path).toBe(402);
+
+      const hdr = res.headers.get("payment-required");
+      expect(hdr, path).toBeTruthy();
+      const decoded = JSON.parse(
+        Buffer.from(hdr as string, "base64").toString("utf8"),
+      ) as {
+        accepts: Array<{ extra?: { verifier?: Record<string, string> } }>;
+      };
+
+      // Every accepts[] entry carries it, because it describes that entry's terms.
+      for (const accept of decoded.accepts) {
+        const verifier = accept.extra?.verifier;
+        expect(verifier, path).toBeTruthy();
+        expect(verifier?.who).toBe("PayStage");
+        expect(verifier?.key).toBe("https://api.paystage.xyz/.well-known/paystage-receipt-key.json");
+        expect(verifier?.terms).toBe("https://paystage.xyz/docs#verify");
+        expect(verifier?.recheck).toBe("https://api.paystage.xyz/runs/{id}?format=receipt");
+        // The limit is inside the challenge, not only on a web page.
+        expect(verifier?.covers).toContain("authority");
+        expect(verifier?.covers).toContain("not delivery or quality");
+        expect(verifier).toEqual(VERIFIER_STATEMENT);
+      }
+    }
+  });
+
+  it("keeps every challenge under 2,048 bytes after adding the verifier (#484/#494)", async () => {
+    const app = createApp(baseEnv, {
+      facilitatorClient: mockFacilitatorClient(),
+    });
+    // All three routes, because the paid alias and the auths route carry longer resource
+    // descriptions than the main one and were the first to cross the line (#484).
+    for (const path of [
+      "/v1/paid/evaluate_mcp_payment",
+      "/v1/evaluate_mcp_payment",
+      "/v1/evaluate_outstanding_auths",
+    ]) {
+      const res = await app.request(path, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const hdr = res.headers.get("payment-required") as string;
+      const bytes = Buffer.byteLength(hdr, "utf8");
+      // Before #484 the main route was 1,740 bytes in this harness (1,752 live); the other
+      // two were larger. The live deployment adds 14 bytes for the api.paystage.xyz
+      // resource URL, so keep real headroom rather than fitting the test environment.
+      expect(bytes, path).toBeLessThan(2048);
+      expect(bytes, path).toBeGreaterThan(1900);
+    }
+  });
+
   it("does not protect health route", async () => {
     const app = createApp(baseEnv, {
       facilitatorClient: mockFacilitatorClient(),
     });
     const res = await app.request("/health");
     expect(res.status).toBe(200);
+  });
+});
+
+/**
+ * The settlement response is the other half of the claim (#484). A verifier statement says
+ * who will check; `PAYMENT-RESPONSE` is the record that lets anyone check afterwards. The
+ * claim must be testable, so this drives a real paid request through the middleware and
+ * reads the transaction hash and network out of the header the buyer receives.
+ */
+const USDC = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+const TX_HASH = `0x${"ab".repeat(32)}`;
+const PAYER = "0x00000000000000000000000000000000000000A1";
+
+/** A body the evaluator accepts, so a paid request reaches the handler and settles. */
+const EVALUATION_BODY = {
+  payment_required: {
+    x402Version: 2,
+    accepts: [
+      {
+        scheme: "exact",
+        network: "eip155:84532",
+        amount: "2000",
+        payTo: FAKE_PAYTO,
+        maxTimeoutSeconds: 60,
+        asset: USDC,
+      },
+    ],
+  },
+  policy: {
+    version: 1,
+    max_amount: { value: "1.00", asset: "USDC", decimals: 6 },
+    allowed_pay_to: [FAKE_PAYTO],
+    allowed_assets: [{ symbol: "USDC", decimals: 6, address: USDC, network: "eip155:84532" }],
+    allowed_networks: ["eip155:84532"],
+    max_timeout_seconds: 300,
+    unknown_payee: "review",
+  },
+};
+
+function paidFacilitatorClient() {
+  return {
+    getSupported: vi.fn().mockResolvedValue({
+      kinds: [{ x402Version: 2, scheme: "exact", network: "eip155:84532" }],
+    }),
+    verify: vi.fn().mockResolvedValue({ isValid: true, payer: PAYER }),
+    settle: vi.fn().mockResolvedValue({
+      success: true,
+      transaction: TX_HASH,
+      network: "eip155:84532",
+      payer: PAYER,
+    }),
+  };
+}
+
+/** Build the `PAYMENT-SIGNATURE` value a client would send, accepted terms copied verbatim. */
+async function signedPaymentHeader(app: ReturnType<typeof createApp>): Promise<string> {
+  const challenge = await app.request("/v1/evaluate_mcp_payment", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(EVALUATION_BODY),
+  });
+  const decoded = JSON.parse(
+    Buffer.from(challenge.headers.get("payment-required") as string, "base64").toString("utf8"),
+  ) as { accepts: unknown[] };
+  return Buffer.from(
+    JSON.stringify({
+      x402Version: 2,
+      accepted: decoded.accepts[0],
+      payload: { authorization: { from: PAYER }, signature: `0x${"11".repeat(65)}` },
+    }),
+  ).toString("base64");
+}
+
+describe("settlement response", () => {
+  it("carries the transaction hash and network, in v2 vocabulary", async () => {
+    const app = createApp(baseEnv, { facilitatorClient: paidFacilitatorClient() });
+    const header = await signedPaymentHeader(app);
+    const res = await app.request("/v1/evaluate_mcp_payment", {
+      method: "POST",
+      headers: { "content-type": "application/json", "payment-signature": header },
+      body: JSON.stringify(EVALUATION_BODY),
+    });
+    expect(res.status).toBe(200);
+
+    const raw = res.headers.get("payment-response");
+    expect(raw).toBeTruthy();
+    const settled = JSON.parse(Buffer.from(raw as string, "base64").toString("utf8")) as {
+      success?: boolean;
+      transaction?: string;
+      network?: string;
+      payer?: string;
+    };
+    expect(settled.success).toBe(true);
+    expect(settled.transaction).toBe(TX_HASH);
+    expect(settled.network).toBe("eip155:84532");
+    expect(settled.payer?.toLowerCase()).toBe(PAYER.toLowerCase());
+
+    // The launch-era spelling is accepted on input but never emitted.
+    expect(res.headers.get("x-payment-response")).toBeNull();
+  });
+
+  it("accepts the launch-era X-PAYMENT spelling and logs which header was seen (#484)", async () => {
+    const app = createApp(baseEnv, { facilitatorClient: paidFacilitatorClient() });
+    const header = await signedPaymentHeader(app);
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((line: unknown) => {
+      logged.push(String(line));
+    });
+    try {
+      const res = await app.request("/v1/evaluate_mcp_payment", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-payment": header },
+        body: JSON.stringify(EVALUATION_BODY),
+      });
+      expect(res.status).toBe(200);
+      expect(res.headers.get("payment-response")).toBeTruthy();
+    } finally {
+      spy.mockRestore();
+    }
+    expect(logged.some((line) => line.includes("legacy_payment_header_seen") && line.includes("x-payment"))).toBe(true);
   });
 });
 

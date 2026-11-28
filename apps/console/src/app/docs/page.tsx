@@ -61,20 +61,72 @@ export default function DocsPage() {
         </p>
       </section>
 
-      <section className="mt-12">
-        <h2 className="text-2xl font-bold tracking-tight text-ink">3 · Verify a receipt</h2>
+      <section className="mt-12" id="verify">
+        <h2 className="text-2xl font-bold tracking-tight text-ink">
+          3 · Verify a receipt, and know who verified the payment
+        </h2>
         <p className="mt-2 text-sm leading-relaxed text-ink/70">
-          A receipt is signed with the key published at{" "}
-          <code className="rounded bg-ink/5 px-1 py-0.5 text-xs">/.well-known/paystage-receipt-key.json</code>. Verification
-          works offline once you have that key.
+          Every 402 challenge we emit carries the same statement in{" "}
+          <code className="rounded bg-ink/5 px-1 py-0.5 text-xs">accepts[].extra.verifier</code>, so a buyer reads it
+          before signing — not after settlement.
+        </p>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-ink/70">
+          <li>
+            <strong className="text-ink">Who verifies:</strong> PayStage, the service at{" "}
+            <code className="rounded bg-ink/5 px-1 py-0.5 text-xs">api.paystage.xyz</code>.
+          </li>
+          <li>
+            <strong className="text-ink">By what key:</strong> the published receipt key set at{" "}
+            <a
+              href="https://api.paystage.xyz/.well-known/paystage-receipt-key.json"
+              className="text-deep hover:underline"
+            >
+              https://api.paystage.xyz/.well-known/paystage-receipt-key.json
+            </a>
+            . Each receipt names its <code className="rounded bg-ink/5 px-1 py-0.5 text-xs">kid</code>, so rotating the
+            key does not invalidate earlier receipts.
+          </li>
+          <li>
+            <strong className="text-ink">Under what terms:</strong>{" "}
+            <a href="https://paystage.xyz/docs#verify" className="text-deep hover:underline">
+              https://paystage.xyz/docs#verify
+            </a>{" "}
+            — this page, and the same wording in that challenge field, are the terms.
+          </li>
+          <li>
+            <strong className="text-ink">Where the result can be re-checked:</strong> the public run bundle at{" "}
+            <code className="rounded bg-ink/5 px-1 py-0.5 text-xs">https://api.paystage.xyz/runs/&#123;id&#125;</code>,
+            and its signed receipt at{" "}
+            <code className="rounded bg-ink/5 px-1 py-0.5 text-xs">
+              https://api.paystage.xyz/runs/&#123;id&#125;?format=receipt
+            </code>
+            . The <code className="rounded bg-ink/5 px-1 py-0.5 text-xs">PAYMENT-RESPONSE</code> settlement header
+            carries <code className="rounded bg-ink/5 px-1 py-0.5 text-xs">success</code>,{" "}
+            <code className="rounded bg-ink/5 px-1 py-0.5 text-xs">transaction</code> (the payment&rsquo;s on-chain
+            hash) and <code className="rounded bg-ink/5 px-1 py-0.5 text-xs">network</code>.
+          </li>
+        </ul>
+        <p className="mt-4 text-sm leading-relaxed text-ink/70">
+          Verification covers <strong className="text-ink">authority, not delivery or quality</strong>: the gate checks
+          that the payment was authorised by the payer for this payee, asset and amount until a deadline; it does not
+          check that what was bought was any good. A receipt proves what was decided, over which inputs, by which key —
+          not that the decision was right.
+        </p>
+        <p className="mt-4 text-sm leading-relaxed text-ink/70">
+          One real receipt you can check offline. It was captured from the live service on 2026-11-20, and the key
+          beside it is the public half that signed it. The receipt expired five minutes after issue, so the command
+          exits 5 — signature valid, but past its own expiry. That distinction is the point.
         </p>
         <pre className="mt-3 overflow-x-auto rounded-md border border-ink/10 bg-ink/[0.03] px-4 py-3 text-xs leading-relaxed text-ink">
-          <code>{`npx -y -p @paystage/mcp paystage-verify receipt.json
-# 0 valid · 1 invalid · 2 unsigned · 3 unverifiable`}</code>
+          <code>{`curl -sS https://api.paystage.xyz/v1/public/example-receipt.json -o receipt.json
+curl -sS https://api.paystage.xyz/v1/public/example-key.json -o key.json
+npx -y -p @paystage/mcp paystage-verify receipt.json --key key.json
+# 0 valid · 1 invalid · 2 unsigned · 3 unverifiable · 5 expired`}</code>
         </pre>
         <p className="mt-2 text-xs text-ink/50">
-          Exit 3 is distinct from exit 1 on purpose: <em>&ldquo;could not check&rdquo;</em> is not{" "}
-          <em>&ldquo;forged&rdquo;</em>, and a tool that conflates them is worse than no tool.
+          The verifier reads both files and makes no network request. Exit 3 is distinct from exit 1 on purpose:{" "}
+          <em>&ldquo;could not check&rdquo;</em> is not <em>&ldquo;forged&rdquo;</em>, and a tool that conflates them is
+          worse than no tool.
         </p>
       </section>
 

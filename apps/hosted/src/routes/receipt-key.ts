@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { RECEIPT_ALG, RECEIPT_KEY_ID, publicKeyJwk } from "../receipt.js";
+import { EXAMPLE_KEY, EXAMPLE_RECEIPT } from "../example-receipt.js";
 
 export const receiptKeyRoutes = new Hono();
 
@@ -93,3 +94,18 @@ receiptKeyRoutes.get("/v1/public/receipt-key.json", async (c) => {
   const { kid, use, alg, ...jwk } = active as Record<string, unknown> & { kid?: string };
   return c.json({ configured: true, alg: RECEIPT_ALG, key_id: kid, jwk, keys }, 200, CACHE);
 });
+
+/**
+ * The example a stranger checks offline (#484).
+ *
+ * A real receipt and the single JWK that signed it, served from the public API so the docs
+ * page can give two `curl`s and one verifier command. Both are public by construction: the
+ * receipt is an accounting record, and the key is the public half already published at
+ * `/.well-known/paystage-receipt-key.json`.
+ */
+receiptKeyRoutes.get("/v1/public/example-receipt.json", (c) =>
+  c.json(EXAMPLE_RECEIPT, 200, { ...CACHE, "content-disposition": 'inline; filename="example-receipt.json"' }),
+);
+receiptKeyRoutes.get("/v1/public/example-key.json", (c) =>
+  c.json(EXAMPLE_KEY, 200, { ...CACHE, "content-disposition": 'inline; filename="example-key.json"' }),
+);

@@ -117,18 +117,66 @@ function bazaarInfo(summary: string, bodySchema: Record<string, unknown>) {
   };
 }
 
+/**
+ * Compact descriptions are deliberate (#484): `PAYMENT-REQUIRED` must stay under 2,048
+ * bytes (#494), and the verifier statement is worth more to a buyer than indexer prose that
+ * repeats itself. Each field below still says what it is.
+ */
 const PAYMENT_BODY_SCHEMA = {
   type: "object",
   required: ["payment_required", "policy"],
   properties: {
-    payment_required: {
-      type: "object",
-      description: "The decoded x402 challenge the agent is considering signing",
-    },
-    policy: { type: "object", description: "The spend policy to evaluate it against" },
-    agent_id: { type: "string", description: "Optional identifier for per-agent budgets" },
+    payment_required: { type: "object", description: "Decoded x402 challenge" },
+    policy: { type: "object", description: "Spend policy" },
+    agent_id: { type: "string", description: "Optional agent id" },
   },
 };
+
+/**
+ * Who verifies the payment, by what key, under what terms, and where the result can be
+ * re-checked (#484).
+ *
+ * A 402 can say who *will* verify, which a block explorer cannot: the chain says who
+ * settled, afterwards. This is that statement, carried on every accepts[] entry because it
+ * describes that entry's payment terms.
+ *
+ * **It lives in `extra`, not at the top level.** `PaymentRequirements.extra` is the
+ * protocol's own extension slot (`Record<string, unknown>` in `@x402/core`), it is merged
+ * through `buildPaymentRequirementsFromOptions` and `ExactEvmScheme`, and it survives
+ * `structuredClone` on the response path. A sibling key such as `accepts[].verifier` is not
+ * in the PaymentRequirements schema; clients that validate the document may drop or reject
+ * it, and x402scan-style indexers only read the documented fields.
+ *
+ * **It states the limit in the challenge.** `covers` says *authority, not delivery or
+ * quality*: the gate checks that the payer authorised this payee, asset and amount until a
+ * deadline. It does not check whether what was bought was any good. A buyer must not infer
+ * more, and a gate that implies more is lying.
+ *
+ * Values are absolute URLs that resolve on the live deployment:
+ *  - `key` — the published receipt JWKS (rotation is additive; receipts name a `kid`);
+ *  - `terms` — the human-readable statement on the docs page, same wording as this object;
+ *  - `recheck` — the public evidence bundle for a past run, with `?format=receipt` for the
+ *    signed receipt. `{id}` is the content-addressed bundle id (SHA-256 of the inputs).
+ */
+export const VERIFIER_STATEMENT = {
+  who: "PayStage",
+  key: "https://api.paystage.xyz/.well-known/paystage-receipt-key.json",
+  terms: "https://paystage.xyz/docs#verify",
+  recheck: "https://api.paystage.xyz/runs/{id}?format=receipt",
+  covers:
+    "authority, not delivery or quality: it checks the payment was authorised, not that what was bought was any good",
+} as const;
+
+/** One payment option with the verifier attached. All paid routes share it. */
+function paymentOption(cfg: X402Config) {
+  return {
+    scheme: "exact",
+    price: cfg.price,
+    network: cfg.network,
+    payTo: cfg.payTo,
+    extra: { verifier: VERIFIER_STATEMENT },
+  };
+}
 
 /**
  * The paid-only alias (#150).
@@ -142,41 +190,20 @@ export const PAID_ALIAS = "/v1/paid/evaluate_mcp_payment";
 export function buildRoutesConfig(cfg: X402Config) {
   return {
     [`POST ${PAID_ALIAS}`]: {
-      accepts: [
-        {
-          scheme: "exact",
-          price: cfg.price,
-          network: cfg.network,
-          payTo: cfg.payTo,
-        },
-      ],
-      description: "Paid-only alias of evaluate_mcp_payment, for indexers and crawlers that require a challenge",
+      accepts: [paymentOption(cfg)],
+      description: "Paid-only alias",
       mimeType: "application/json",
-      extensions: bazaarInfo("Should this x402 payment be signed? (paid-only alias)", PAYMENT_BODY_SCHEMA),
+      extensions: bazaarInfo("Sign this payment?", PAYMENT_BODY_SCHEMA),
     },
     "POST /v1/evaluate_mcp_payment": {
-      accepts: [
-        {
-          scheme: "exact",
-          price: cfg.price,
-          network: cfg.network,
-          payTo: cfg.payTo,
-        },
-      ],
-      description: "Evaluate MCP payment against spend policy",
+      accepts: [paymentOption(cfg)],
+      description: "Evaluate an MCP payment",
       mimeType: "application/json",
-      extensions: bazaarInfo("Should this x402 payment be signed?", PAYMENT_BODY_SCHEMA),
+      extensions: bazaarInfo("Sign this payment?", PAYMENT_BODY_SCHEMA),
     },
     "POST /v1/evaluate_outstanding_auths": {
-      accepts: [
-        {
-          scheme: "exact",
-          price: cfg.price,
-          network: cfg.network,
-          payTo: cfg.payTo,
-        },
-      ],
-      description: "Evaluate outstanding EIP-3009 authorizations against spend policy",
+      accepts: [paymentOption(cfg)],
+      description: "Evaluate EIP-3009 auths",
       mimeType: "application/json",
       extensions: bazaarInfo(
         "Which outstanding EIP-3009 authorisations need attention?",

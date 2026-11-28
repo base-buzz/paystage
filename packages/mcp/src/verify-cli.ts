@@ -57,13 +57,11 @@ function usage(): string {
     "  --payment <f>  check the receipt was issued for this payment JSON",
     "",
     "Exit codes:",
-    "  0 valid · 1 invalid · 2 unsigned · 3 unverifiable · 4 inputs-mismatch · 5 stale",
-    "  6 payment-mismatch · 7 expired",
-    "  8 chain-gap (a receipt is missing, reordered or starts mid-chain)",
+    "  0 valid · 1 invalid · 2 unsigned · 3 unverifiable · 4 inputs-mismatch · 5 expired or stale",
+    "  6 payment-mismatch · 8 chain-gap (a receipt is missing, reordered or starts mid-chain)",
     "  4 means the receipt is genuine but does not cover the inputs you supplied",
-    "  5 means the receipt is genuine but older than --max-age allows",
+    "  5 means the receipt is genuine but past its own expires_at, or older than --max-age allows",
     "  6 means the receipt is genuine but was issued for a different payment",
-    "  7 means the receipt is genuine but its own expires_at has passed",
     "  8 means the chain has a first gap; the gap names the receipts either side",
   ].join("\n");
 }

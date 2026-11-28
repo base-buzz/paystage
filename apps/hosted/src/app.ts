@@ -42,6 +42,7 @@ import {
   type FacilitatorClient,
   type X402Config,
 } from "./x402.js";
+import { legacyPaymentHeaderMiddleware } from "./legacy-headers.js";
 
 export interface AppEnv {
   PAYSTAGE_PAYTO: string;
@@ -503,6 +504,10 @@ export function createApp(env: AppEnv, opts: CreateAppOptions = {}): Hono<{ Vari
         note: "one drip per address per 24h; the response says when it resets",
       }),
     );
+
+    // Accept launch-era header spellings on input, and log which arrived (#484). Before the
+    // free tier and the quota so both see the same `payment-signature` the gate will read.
+    app.use("*", legacyPaymentHeaderMiddleware());
 
     // Free tier first: a caller without a payment signature may still be served, up to a
     // daily per-IP allowance. Marked on the context so the payment middleware steps aside
