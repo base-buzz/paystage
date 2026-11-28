@@ -97,7 +97,7 @@ function filteredRegistrar(server: McpServer, only: ReadonlySet<string>): ToolRe
  * `scripts/check-client-id.mjs` fails CI when the two disagree, which is the guard that makes a constant safe.
  */
 export const CLIENT_PACKAGE = "@paystage/mcp";
-export const CLIENT_ID = `${CLIENT_PACKAGE}/0.8.18`;
+export const CLIENT_ID = `${CLIENT_PACKAGE}/0.8.19`;
 
 const DEFAULT_NETWORK = "base";
 

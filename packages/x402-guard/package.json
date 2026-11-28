@@ -66,7 +66,7 @@
   ],
   "dependencies": {
     "@paystage/policy": "0.4.0",
-    "@paystage/preflight": "0.6.0",
+    "@paystage/preflight": "0.6.1",
     "@paystage/receipt-verify": "0.1.0",
     "@x402/extensions": "^2.29.0"
   },

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-25
+- `@paystage/mcp@0.8.19`: **the curated ChatGPT surface and the payer-age signal, neither published yet.** HEAD's build differs
+  from the published 0.8.18 in `dist/index.js` (it exports `CURATED_TOOL_NAMES`) and in the six files that carry the payer-age
+  rule; `assert-artifact` reports the same drift `#421` did. npm refuses a republish, so without this bump the next tag would
+  publish nothing for the umbrella package and the workflow would report success.
+- `@paystage/preflight@0.6.1`: **401 lines of evaluate.js the published 0.6.0 does not contain** (#409 payer-age, #442's curated
+  surface), plus `server.json` and the `PREFLIGHT_VERSION` constant in `src/demo.ts` — all three have to move together or the
+  registry entry describes a version nobody can install.
+
 ## 2026-11-24
 - `@paystage/mcp@0.8.18`: **republishes what 0.8.17 does not contain.** The source gained `evaluate_batch`, `request_testnet_funds`,
   `normalizePaymentRequired` and the two receipt verifiers after that tag, so the published tarball was older than the repo — the
