@@ -113,20 +113,40 @@ async function measure(name, pkgDir) {
      * tree, so every workspace dependency it declares is packed locally and installed from those tarballs first; npm resolves the rest
      * from the registry as usual.
      */
+    /**
+     * Workspace dependencies are packed from this checkout, **transitively** (#505, #507).
+     *
+     * A release bumps several `@paystage/*` versions at once, and the registry does not have them yet — so installing the tarball against
+     * the real registry fails with "could not measure", which is not a pass. Packing only the direct dependencies was not enough: ai-sdk →
+     * preflight (packed) → policy@0.4.1 (not published) still resolved policy from the registry and failed with ETARGET. So the closure of
+     * `@paystage/*` dependencies is walked and every package in it is packed and installed from its tarball.
+     */
     const workspaceTarballs = [];
-    const declared = { ...(manifestPkg.dependencies ?? {}), ...(manifestPkg.peerDependencies ?? {}) };
-    for (const dep of Object.keys(declared)) {
-      if (!dep.startsWith("@paystage/")) continue;
-      const dirName = dep.replace("@paystage/", "");
-      const depDir = join(ROOT, "packages", dirName);
-      if (!existsSync(join(depDir, "package.json"))) continue;
-      const depPack = await npm(["pack", depDir, "--json", "--pack-destination", packDir], ROOT);
-      try {
-        const depManifest = JSON.parse(depPack.stdout);
-        const depTar = join(packDir, depManifest[0]?.filename ?? "");
-        if (existsSync(depTar)) workspaceTarballs.push(depTar);
-      } catch {
-        // A pack that returns no JSON is reported by the install below, with the file named.
+    const seen = new Set();
+    const queue = [pkgDir];
+    while (queue.length > 0) {
+      const dir = queue.shift();
+      if (seen.has(dir)) continue;
+      seen.add(dir);
+      const manifestPath = join(dir, "package.json");
+      if (!existsSync(manifestPath)) continue;
+      const pkg = JSON.parse(readFileSync(manifestPath, "utf8"));
+      const deps = { ...(pkg.dependencies ?? {}), ...(pkg.peerDependencies ?? {}) };
+      for (const dep of Object.keys(deps)) {
+        if (!dep.startsWith("@paystage/")) continue;
+        const depDir = join(ROOT, "packages", dep.replace("@paystage/", ""));
+        if (!existsSync(join(depDir, "package.json"))) continue;
+        queue.push(depDir);
+        // Pack every workspace package in the closure except the target, which is installed from its own tarball below.
+        if (resolve(depDir) === resolve(pkgDir)) continue;
+        const depPack = await npm(["pack", depDir, "--json", "--pack-destination", packDir], ROOT);
+        try {
+          const depManifest = JSON.parse(depPack.stdout);
+          const depTar = join(packDir, depManifest[0]?.filename ?? "");
+          if (existsSync(depTar)) workspaceTarballs.push(depTar);
+        } catch {
+          // A pack that returns no JSON is reported by the install below, with the file named.
+        }
       }
     }
 
