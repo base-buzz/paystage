@@ -157,7 +157,15 @@ const STRUCTURED_DATA = {
   ],
 };
 
+import { x402ScanListingSentence } from "@/lib/x402scan-listing";
+
 export default function LandingPage() {
+  /**
+   * Rendered only when their index actually has us (#484). While the snapshot says we are not listed this is `null` and the page is
+   * byte-for-byte what it was — which is the point: the claim appears the day it becomes true, without anyone editing the copy on that
+   * day.
+   */
+  const listing = x402ScanListingSentence();
   return (
     <div className="lp">
 
@@ -177,7 +185,13 @@ export default function LandingPage() {
       </div>
       <div className="lp-grain" aria-hidden="true" />
       <ScrollReveal />
-        <section className="lp-hero">
+        {listing ? (
+        <p className="lp-hero-note" style={{ marginBottom: 12, opacity: 0.75 }}>
+          {listing}
+        </p>
+      ) : null}
+
+      <section className="lp-hero">
           <div className="lp-wrap lp-hero-grid">
             <div>
               <p className="lp-eyebrow">
